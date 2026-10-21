@@ -41,7 +41,7 @@ mvnw.cmd --batch-mode --no-transfer-progress verify
 
 The build verifies the Maven reactor and packages the intentionally empty modules;
 there are no application tests yet. GitHub Actions runs the same build on Java 21
-for pushes and pull requests.
+for pushes and pull requests, and supports manual runs.
 
 ## License
 
