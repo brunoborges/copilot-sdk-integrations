@@ -1,0 +1,37 @@
+package io.github.brunoborges.copilot.autoconfigure;
+
+import java.time.Duration;
+import java.util.Map;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.bind.DefaultValue;
+import org.springframework.util.Assert;
+
+/** @param agents execution settings keyed by Copilot agent name */
+@ConfigurationProperties("copilot")
+public record CopilotAgentsProperties(Map<String, Agent> agents) {
+
+    public CopilotAgentsProperties {
+        agents = agents == null ? Map.of() : Map.copyOf(agents);
+    }
+
+    /**
+     * @param model model override; omitted values retain the annotation/runtime choice
+     * @param reasoningEffort model-specific reasoning effort override
+     * @param responseTimeout maximum response wait, excluding session lookup and cleanup
+     */
+    public record Agent(
+            String model,
+            String reasoningEffort,
+            @DefaultValue("60s") Duration responseTimeout) {
+
+        public Agent {
+            Assert.isTrue(model == null || !model.isBlank(), "Agent model must not be blank");
+            Assert.isTrue(reasoningEffort == null || !reasoningEffort.isBlank(), "Agent reasoning-effort must not be blank");
+            Assert.notNull(responseTimeout, "Agent response-timeout is required");
+            Assert.isTrue(responseTimeout.compareTo(Duration.ofMillis(1)) >= 0
+                            && responseTimeout.compareTo(Duration.ofNanos(Long.MAX_VALUE)) <= 0,
+                    "Agent response-timeout must be at least 1ms and representable in nanoseconds");
+        }
+    }
+}
