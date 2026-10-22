@@ -75,11 +75,26 @@ The binding type is `CopilotAgentsProperties`, whose `agents()` map contains
 | `copilot.agents.<name>.response-timeout` | Duration | `60s` | At least `1ms`, representable in signed 64-bit nanoseconds. Bounds SDK response waiting; synchronous agent methods also wait at most this long in total. |
 | `copilot.agents.<name>.mcp-servers` | List of strings | Annotation selection | Replace the agent's selected property server / SDK bean names. Omitted retains annotation; empty list selects none. Blank, duplicate, missing, or ambiguous references fail initialization. |
 | `copilot.agents.<name>.provider` | String | Annotation selection | Replace the agent's BYOK provider (property or SDK `ProviderConfig` bean name). Omitted retains annotation; empty selects none. Whitespace-only, missing, or ambiguous references, or a provider without a model, fail initialization. |
+| `copilot.agents.<name>.available-tools` | List of strings | Annotation `availableTools` | SDK tool allow-list (`name`, `builtin:`, `custom:`, `mcp:` patterns). Empty list clears the annotation value. `custom:*`/`mcp:*` are appended for the agent's own tools/MCP servers unless scoped explicitly. |
+| `copilot.agents.<name>.excluded-tools` | List of strings | Annotation `excludedTools` | SDK tool deny-list. Combining it with `available-tools` fails initialization. |
+| `copilot.agents.<name>.built-in-tools` | Boolean | Annotation `builtInTools` (`true`) | `false` excludes `builtin:*`; cannot be combined with `available-tools`. |
+| `copilot.agents.<name>.excluded-built-in-agents` | List of strings | Annotation value | Runtime built-in sub-agents to hide. |
+| `copilot.agents.<name>.working-directory` | String | Annotation value, then runtime default | Session working directory for runtime tools. Empty restores the runtime default; whitespace-only fails. |
+| `copilot.agents.<name>.additional-directories` | List of strings | Annotation value | Extra directories the session may access. |
+| `copilot.agents.<name>.hooks` | List of strings | Annotation `hooks` | `CopilotAgentHooks` bean names, run after `@GlobalCopilotAgentHooks` beans. |
+| `copilot.agents.<name>.permissions.allow` | List of strings | Empty | Permission request kinds to approve (`shell`, `write`, `read`, `mcp`, `custom-tool`, `url`, `memory`, `hook`). |
+| `copilot.agents.<name>.permissions.allow-tools` | List of strings | Empty | Custom/MCP tool names to approve. |
+| `copilot.agents.<name>.permissions.allow-mcp-servers` | List of strings | Empty | MCP server names whose tool calls are approved. |
+| `copilot.agents.<name>.permissions.allow-agent-tools` | Boolean | `false` | Approve the agent's own declared custom tools. |
+| `copilot.agents.<name>.permissions.allow-read-only` | Boolean | `false` | Approve `read` requests and read-only MCP calls. |
 
 Response waiting excludes queueing, connection/session metadata lookup,
 creation/resumption, and cleanup. It is not a total request deadline.
-Instructions, in-process tools, listeners, permission handlers, and customizers
-remain annotation/bean configuration, not additional properties under this map.
+Instructions, in-process tools, listeners, permission handler beans, and
+customizers remain annotation/bean configuration. `permissions.*` builds a
+policy only when no `permissionHandler` bean is selected (combining both fails
+initialization); with neither, every permission request is rejected. See
+[Tool governance, permissions, and hooks](governance.html).
 
 Explicit lower-case, kebab-case names make property configuration easiest.
 For keys containing punctuation that Spring Boot map binding would otherwise
@@ -261,7 +276,7 @@ an application/environment secret, not a new SDK GitHub authentication property.
 Precedence is:
 
 1. Spring Boot resolves property sources using its standard rules.
-2. Per-agent `model`/`reasoning-effort`, `mcp-servers`, and `provider` properties override annotation values.
+2. Per-agent `model`/`reasoning-effort`, `mcp-servers`, `provider`, tool governance, and `hooks` properties override annotation values.
 3. Omitted model/reasoning settings leave those choices to SDK/runtime defaults.
 4. Customizers run after declarative session settings, subject to the managed
    ID/permission/streaming invariants described above.
@@ -272,6 +287,6 @@ options bean changes ownership/mapping as described below.
 
 ---
 
-**Previous:** [Events and customizers](events.html)
+**Previous:** [Tool governance, permissions, and hooks](governance.html)
 
 **Next:** [Reactive streaming](streaming.html)

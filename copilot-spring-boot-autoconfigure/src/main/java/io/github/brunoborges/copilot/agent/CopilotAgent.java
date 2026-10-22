@@ -52,8 +52,9 @@ public @interface CopilotAgent {
     String reasoningEffort() default "";
 
     /**
-     * Name of an SDK {@code PermissionHandler} bean. When empty, a handler that logs and rejects every
-     * permission request is used; an approving handler is never selected implicitly.
+     * Name of an SDK {@code PermissionHandler} bean. When empty, the {@code copilot.agents.<name>.permissions.*}
+     * policy is used if configured; otherwise a handler that logs and rejects every permission request is used.
+     * An approving handler is never selected implicitly. See {@link CopilotPermissionPolicies}.
      */
     String permissionHandler() default "";
 
@@ -81,4 +82,52 @@ public @interface CopilotAgent {
 
     /** Names of {@link CopilotAgentCustomizer} beans applied after declarative session settings. */
     String[] customizers() default {};
+
+    /**
+     * Runtime tool allow-list sent as the SDK {@code availableTools} session option. Entries are tool names
+     * (such as {@code view}) or source-qualified patterns ({@code builtin:<name>}, {@code custom:<name>},
+     * {@code mcp:<name>}, each accepting {@code *}). The runtime applies the allow-list to every tool source, so
+     * {@code custom:*} is appended when the agent registers {@link #tools()} and {@code mcp:*} when it selects
+     * {@link #mcpServers()}, unless the list already contains a pattern for that source. Empty means no allow-list.
+     * {@code copilot.agents.<name>.available-tools} replaces this selection when set.
+     */
+    String[] availableTools() default {};
+
+    /**
+     * Runtime tool deny-list sent as the SDK {@code excludedTools} session option, using the same patterns as
+     * {@link #availableTools()}. The runtime ignores it when an allow-list is present, so combining both fails
+     * startup. {@code copilot.agents.<name>.excluded-tools} replaces this selection when set.
+     */
+    String[] excludedTools() default {};
+
+    /**
+     * Built-in subagent names hidden from the session (SDK {@code excludedBuiltInAgents}).
+     * {@code copilot.agents.<name>.excluded-built-in-agents} replaces this selection when set.
+     */
+    String[] excludedBuiltInAgents() default {};
+
+    /**
+     * Whether the runtime's built-in tools (shell, file, web, ...) are available. {@code false} adds
+     * {@code builtin:*} to the excluded tools and cannot be combined with {@link #availableTools()}; list the
+     * wanted built-ins there instead. Overridden by {@code copilot.agents.<name>.built-in-tools}.
+     */
+    boolean builtInTools() default true;
+
+    /**
+     * Session working directory for built-in file and shell tools; empty retains the runtime default.
+     * Overridden by {@code copilot.agents.<name>.working-directory}.
+     */
+    String workingDirectory() default "";
+
+    /**
+     * Directories the agent may access beyond the working directory.
+     * {@code copilot.agents.<name>.additional-directories} replaces this selection when set.
+     */
+    String[] additionalDirectories() default {};
+
+    /**
+     * Names of {@link CopilotAgentHooks} beans applied, in order, after every {@link GlobalCopilotAgentHooks}
+     * bean. {@code copilot.agents.<name>.hooks} replaces this selection when set.
+     */
+    String[] hooks() default {};
 }

@@ -19,7 +19,9 @@ title: Security and troubleshooting
 - Scope conversation keys to the application and authorized user/tenant.
   Session IDs and their hashes are not authorization checks.
 - Denying permission requests is not a runtime sandbox or proof that every
-  operation will request permission.
+  operation will request permission. Narrow the visible tools and approve
+  only what is needed with [tool governance, permission policies, and
+  hooks](governance.html); avoid `CopilotPermissionPolicies.allowAll()`.
 - Explicit SDK tool flags are preserved. Never assume registering tools
   implicitly approves them or that a default handler overrides every SDK flag.
 - Keep tokens out of annotation literals, committed configuration, and logs.

@@ -114,6 +114,7 @@ html[data-theme="dark"] {
             <item name="MCP servers" href="mcp.html"/>
             <item name="BYOK providers" href="byok.html"/>
             <item name="Events and customizers" href="events.html"/>
+            <item name="Tool governance and hooks" href="governance.html"/>
         </menu>
         <menu name="Reference">
             <item name="Configuration" href="configuration.html"/>

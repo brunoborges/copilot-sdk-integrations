@@ -30,7 +30,8 @@ public record CopilotAgentDefinition(
         String name, String typeName, String model, String reasoningEffort, Duration responseTimeout,
         SystemMessageConfig systemMessage, PermissionHandler permissions, List<ToolDefinition> tools,
         Map<String, McpServerConfig> mcpServers, ProviderConfig provider,
-        List<CopilotAgentListener> listeners, List<CopilotAgentCustomizer> customizers) {
+        List<CopilotAgentListener> listeners, List<CopilotAgentCustomizer> customizers,
+        CopilotAgentGovernance governance) {
 
     private static final Logger log = Logger.getLogger(CopilotAgentDefinition.class.getName());
     private static final PermissionHandler DENY = (request, invocation) -> {
@@ -95,15 +96,18 @@ public record CopilotAgentDefinition(
                 ? settings.provider() : resolve(annotation.provider(), environment);
         Assert.isTrue(providerName.isEmpty() || !model.isEmpty(),
                 "Copilot agent " + name + ": a BYOK provider requires a model");
+        var tools = SpringToolBindings.bind(annotation.tools(), beans, environment);
+        var mcpServers = McpServerBindings.bind(settings != null && settings.mcpServers() != null
+                ? settings.mcpServers() : Arrays.asList(annotation.mcpServers()), beans, environment);
+        var policy = CopilotAgentGovernance.permissions(name, settings, !permissionBean.isEmpty(), tools);
         return new CopilotAgentDefinition(name, type.getName(), model, reasoning,
                 settings == null ? CopilotAgentsProperties.DEFAULT_RESPONSE_TIMEOUT : settings.responseTimeout(), systemMessage,
-                permissionBean.isEmpty() ? DENY : beans.getBean(permissionBean, PermissionHandler.class),
-                SpringToolBindings.bind(annotation.tools(), beans, environment),
-                McpServerBindings.bind(settings != null && settings.mcpServers() != null
-                        ? settings.mcpServers() : Arrays.asList(annotation.mcpServers()), beans, environment),
+                permissionBean.isEmpty() ? (policy == null ? DENY : policy) : beans.getBean(permissionBean, PermissionHandler.class),
+                tools, mcpServers,
                 ProviderBindings.bind(providerName, beans),
                 beans(annotation.listeners(), CopilotAgentListener.class, beans, environment),
-                beans(annotation.customizers(), CopilotAgentCustomizer.class, beans, environment));
+                beans(annotation.customizers(), CopilotAgentCustomizer.class, beans, environment),
+                CopilotAgentGovernance.create(name, annotation, settings, tools, mcpServers, beans, environment));
     }
 
     private static String resolve(String value, Environment environment) {

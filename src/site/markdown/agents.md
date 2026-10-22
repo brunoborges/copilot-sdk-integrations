@@ -35,12 +35,19 @@ conversation-bound instance. Both forms share the same declarative settings.
 | `systemMessage` | `String` | `""` | Name of a `SystemMessageConfig` bean. The bean owns the mode; do not combine it with instruction content/resource attributes or a non-default `instructionsMode`. |
 | `model` | `String` | `""` | Optional SDK model. Empty leaves selection to the runtime. A per-agent property overrides this value. |
 | `reasoningEffort` | `String` | `""` | Optional model-specific reasoning effort. A per-agent property overrides this value. |
-| `permissionHandler` | `String` | `""` | Name of an SDK `PermissionHandler` bean. Empty selects the integration's rejection handler, not an arbitrary handler found by type. |
+| `permissionHandler` | `String` | `""` | Name of an SDK `PermissionHandler` bean. Empty selects the integration's rejection handler (or a policy from `copilot.agents.<name>.permissions.*`), not an arbitrary handler found by type. See [`CopilotPermissionPolicies`](governance.html#ready-made-permission-policies). |
 | `tools` | `String[]` | `{}` | Explicit tool bean names: individual `ToolDefinition` objects or SDK-annotated Spring services. |
 | `mcpServers` | `String[]` | `{}` | Names from `copilot.mcp.servers` or native SDK `McpServerConfig` beans. Per-agent properties replace this selection. See [MCP servers](mcp.html). |
 | `provider` | `String` | `""` | Name from `copilot.providers` or a native SDK `ProviderConfig` bean, used as a BYOK model provider. Requires a model. Per-agent properties replace this selection. See [BYOK providers](byok.html). |
 | `listeners` | `String[]` | `{}` | Names of `CopilotAgentListener` beans, invoked in listed order for each attached session's events. |
 | `customizers` | `String[]` | `{}` | Names of `CopilotAgentCustomizer` beans, applied in listed order. |
+| `availableTools` | `String[]` | `{}` | SDK tool allow-list across built-in, custom, and MCP tools; the agent's own tools/MCP servers are kept unless scoped explicitly. See [Tool governance](governance.html). |
+| `excludedTools` | `String[]` | `{}` | SDK tool deny-list. Mutually exclusive with `availableTools`. |
+| `excludedBuiltInAgents` | `String[]` | `{}` | Runtime built-in sub-agents to hide. |
+| `builtInTools` | `boolean` | `true` | `false` hides every built-in tool (`builtin:*`). Cannot be combined with `availableTools`. |
+| `workingDirectory` | `String` | `""` | Session working directory for runtime tool operations. Empty uses the runtime default. |
+| `additionalDirectories` | `String[]` | `{}` | Extra directories the session may access. |
+| `hooks` | `String[]` | `{}` | Names of `CopilotAgentHooks` beans, run after global hooks in listed order. See [hooks](governance.html#session-hooks-as-spring-beans). |
 
 Annotation string values support Spring property placeholders. Whitespace-only
 values are invalid; empty strings on optional attributes mean unset. Instruction
