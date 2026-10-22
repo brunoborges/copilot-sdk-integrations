@@ -105,7 +105,8 @@ public class CopilotEndpoint {
     public SessionsDescriptor sessions() {
         var result = query(client::listSessions, sessions -> sessions.stream().filter(Objects::nonNull)
                 .filter(session -> properties.includeAllSessions() || managed(session))
-                .map(session -> new SessionDescriptor(session.getSessionId(), session.getSummary(),
+                .map(session -> new SessionDescriptor(session.getSessionId(),
+                        properties.showSessionSummaries() ? session.getSummary() : null,
                         session.getStartTime(), session.getModifiedTime(), session.isRemote(), managed(session)))
                 .toList());
         return new SessionsDescriptor(result.state(), result.reason(), result.value());

@@ -271,8 +271,13 @@ class CopilotActuatorTests {
                     new CopilotEndpoint.ModelDescriptor("gpt-5", "GPT-5", "enabled", List.of("low", "high"), "low"));
             var sessions = (CopilotEndpoint.SessionsDescriptor) endpoint.section("sessions");
             assertThat(sessions.sessions()).containsExactly(new CopilotEndpoint.SessionDescriptor(
-                    "agent-abc", "Summary", "2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z", false, true));
+                    "agent-abc", null, "2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z", false, true));
         });
+        endpointRunner.withPropertyValues("management.endpoints.web.exposure.include=copilot",
+                "copilot.endpoint.show-session-summaries=true").run(context ->
+                        assertThat(context.getBean(CopilotEndpoint.class).sessions().sessions())
+                                .extracting(CopilotEndpoint.SessionDescriptor::summary)
+                                .containsExactly("Summary"));
         endpointRunner.withPropertyValues("management.endpoints.web.exposure.include=copilot",
                 "copilot.endpoint.include-all-sessions=true").run(context ->
                         assertThat(context.getBean(CopilotEndpoint.class).sessions().sessions())

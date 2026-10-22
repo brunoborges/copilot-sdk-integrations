@@ -19,6 +19,9 @@ import org.springframework.util.Assert;
  * {@link OAuth2AuthorizedClientManager} is used, it may also refresh expired tokens and read the current
  * servlet request. Without an authenticated user or authorized client, the invocation fails unless ambient
  * fallback is enabled, in which case the client's ambient credentials are used.
+ *
+ * <p>Sessions are partitioned by registration ID and principal name, so users never resume each other's
+ * conversations. Unauthenticated callers under ambient fallback share one unpartitioned space.
  */
 public final class OAuth2CopilotTokenResolver implements CopilotTokenResolver {
 
@@ -55,10 +58,18 @@ public final class OAuth2CopilotTokenResolver implements CopilotTokenResolver {
     }
 
     @Override
+    public String partitionKey(String agentName, String conversationId) {
+        Authentication authentication = authenticated();
+        if (authentication == null) {
+            return ambientFallback ? SHARED : missing("no authenticated user");
+        }
+        return "oauth2:" + registrationId + ":" + authentication.getName();
+    }
+
+    @Override
     public String resolveToken(CopilotAgentContext context) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()
-                || authentication instanceof AnonymousAuthenticationToken) {
+        Authentication authentication = authenticated();
+        if (authentication == null) {
             return missing("no authenticated user");
         }
         OAuth2AuthorizedClient client = manager != null
@@ -69,6 +80,12 @@ public final class OAuth2CopilotTokenResolver implements CopilotTokenResolver {
             return missing("no authorized client for the current user");
         }
         return client.getAccessToken().getTokenValue();
+    }
+
+    private static Authentication authenticated() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken ? null : authentication;
     }
 
     private String missing(String reason) {

@@ -11,13 +11,16 @@ import org.springframework.util.Assert;
  * @param startClient whether the endpoint may start a lazily configured client that is not yet connected
  * @param showInstructions whether agent system instructions are included in the {@code agents} view
  * @param includeAllSessions whether the {@code sessions} view lists sessions not created by this starter
+ * @param showSessionSummaries whether the {@code sessions} view includes runtime-generated session summaries,
+ *        which may contain prompt or business content
  */
 @ConfigurationProperties("copilot.endpoint")
 public record CopilotEndpointProperties(
         @DefaultValue("5s") Duration timeout,
         @DefaultValue("false") boolean startClient,
         @DefaultValue("false") boolean showInstructions,
-        @DefaultValue("false") boolean includeAllSessions) {
+        @DefaultValue("false") boolean includeAllSessions,
+        @DefaultValue("false") boolean showSessionSummaries) {
 
     public CopilotEndpointProperties {
         requirePositive(timeout, "copilot.endpoint.timeout");

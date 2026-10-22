@@ -44,7 +44,7 @@ All three are applied to both newly created and resumed sessions, before
 @CopilotAgent(
         tools = "orderTools",
         mcpServers = "docs",
-        availableTools = {"view", "grep"},
+        availableTools = {"view", "grep", "custom:*", "mcp:*"},
         workingDirectory = "${app.workspace}")
 public interface SupportAgent {
     String answer(@ConversationId String id, @UserMessage String question);
@@ -71,11 +71,11 @@ Semantics, as defined by the SDK and runtime:
 - When `availableTools` is set, the runtime ignores `excludedTools`. The
   integration therefore rejects configurations that set both, rather than
   silently dropping the deny-list.
-- To keep an agent's own tools usable when an allow-list is set, the integration
-  appends `custom:*` when the agent declares `tools` and the list has no
-  `custom:` entry, and appends `mcp:*` when it selects `mcpServers` and the list
-  has no `mcp:` entry. Write explicit `custom:`/`mcp:` entries to narrow those
-  sources yourself; they are then left unchanged.
+- The integration never widens an allow-list. Because the list also filters the
+  agent's own tools, startup fails when an agent declares `tools` but the list
+  has no `custom:` entry, or selects `mcpServers` but the list has no `mcp:`
+  entry. Add `custom:*`/`mcp:*`, or name specific tools such as `custom:echo`
+  and `mcp:docs-search`, to state exactly which of them the model may use.
 - `builtInTools = false` (or `built-in-tools: false`) hides every built-in tool
   by excluding `builtin:*`, leaving only the agent's custom and MCP tools. It
   cannot be combined with an allow-list: list the built-in tools you want

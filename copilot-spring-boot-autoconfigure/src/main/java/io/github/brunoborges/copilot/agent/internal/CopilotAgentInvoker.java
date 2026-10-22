@@ -31,6 +31,7 @@ import com.github.copilot.rpc.ToolDefinition;
 import com.github.copilot.generated.AssistantMessageEvent;
 import com.github.copilot.generated.AssistantUsageEvent;
 import io.github.brunoborges.copilot.agent.CopilotAgentContext;
+import io.github.brunoborges.copilot.agent.CopilotTokenResolver;
 import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
 import io.github.brunoborges.copilot.agent.CopilotAgentEvent;
 import io.github.brunoborges.copilot.agent.CopilotConversationNotFoundException;
@@ -124,14 +125,18 @@ public final class CopilotAgentInvoker implements AutoCloseable {
                 return CompletableFuture.failedFuture(
                         new IllegalArgumentException("Conversation identity and @UserMessage must be non-blank strings"));
             }
-            String sessionId = sessionId(definition, conversationId);
-            var context = new CopilotAgentContext(definition.name(), conversationId, sessionId);
+            CopilotAgentContext context;
             InvocationState state;
             try {
-                state = capture(definition, context);
+                var resolver = definition.tokenResolver();
+                String partition = resolver == null ? null : resolver.partitionKey(definition.name(), conversationId);
+                context = new CopilotAgentContext(definition.name(), conversationId,
+                        sessionId(definition, conversationId, partition));
+                state = capture(definition, context, partition);
             } catch (RuntimeException ex) {
                 return CompletableFuture.failedFuture(ex);
             }
+            String sessionId = context.sessionId();
             var result = new CompletableFuture<String>();
             result.whenComplete((ignored, error) -> {
                 if (result.isCancelled()) {
@@ -189,9 +194,15 @@ public final class CopilotAgentInvoker implements AutoCloseable {
     }
 
     /** Resolves the caller's token and context on the caller thread so request-bound state is available. */
-    private InvocationState capture(CopilotAgentDefinition definition, CopilotAgentContext context) {
+    private InvocationState capture(CopilotAgentDefinition definition, CopilotAgentContext context, String partition) {
         var resolver = definition.tokenResolver();
         String token = resolver == null ? null : resolver.resolveToken(context);
+        if (token != null && partition == null) {
+            throw new IllegalStateException("Copilot agent '" + definition.name() + "': token resolver "
+                    + resolver.getClass().getName() + " returned a per-caller token without a partition key; "
+                    + "override CopilotTokenResolver.partitionKey to isolate sessions per caller, or return "
+                    + "CopilotTokenResolver.SHARED to share them");
+        }
         return new InvocationState(token, propagation.capture());
     }
 
@@ -393,7 +404,7 @@ public final class CopilotAgentInvoker implements AutoCloseable {
             CopilotAgentTelemetry.Call observation, boolean streaming, CopilotAgentLifetime.Lease owner,
             InvocationState state) {
         // Null is the SDK's documented not-found result; lookup errors must not create a new conversation.
-        if (client.getSessionMetadata(context.sessionId()).join() == null) {
+        if (state.join(client.getSessionMetadata(context.sessionId()), definition.responseTimeout(), null) == null) {
             if (owner.requiresHistory()) {
                 throw new CopilotConversationNotFoundException(definition.name());
             }
@@ -424,7 +435,7 @@ public final class CopilotAgentInvoker implements AutoCloseable {
             Assert.isTrue(context.sessionId().equals(config.getSessionId()), "Agent customizers must not change the session ID");
             Assert.notNull(config.getOnPermissionRequest(), "Agent customizers must not remove the permission handler");
             config.setOnPermissionRequest(propagatedPermissions(ownedPermissions(config.getOnPermissionRequest(), owner), state));
-            var session = client.createSession(config).join();
+            var session = state.join(client.createSession(config), definition.responseTimeout(), CopilotAgentInvoker::closeQuietly);
             owner.sessionOpened();
             return session;
         }
@@ -455,9 +466,17 @@ public final class CopilotAgentInvoker implements AutoCloseable {
         config.setTools(propagatedTools(observedTools(config.getTools(), observation, owner), state));
         Assert.notNull(config.getOnPermissionRequest(), "Agent customizers must not remove the permission handler");
         config.setOnPermissionRequest(propagatedPermissions(ownedPermissions(config.getOnPermissionRequest(), owner), state));
-        var session = client.resumeSession(context.sessionId(), config).join();
+        var session = state.join(client.resumeSession(context.sessionId(), config), definition.responseTimeout(), CopilotAgentInvoker::closeQuietly);
         owner.sessionOpened();
         return session;
+    }
+
+    private static void closeQuietly(CopilotSession session) {
+        try {
+            session.close();
+        } catch (Exception ex) {
+            log.log(Level.WARNING, "Failed to close an abandoned Copilot session", ex);
+        }
     }
 
     private static PermissionHandler ownedPermissions(
@@ -525,9 +544,17 @@ public final class CopilotAgentInvoker implements AutoCloseable {
     }
 
     public static String sessionId(CopilotAgentDefinition definition, String conversationId) {
+        return sessionId(definition, conversationId, null);
+    }
+
+    /** A null or {@link CopilotTokenResolver#SHARED} partition yields the unpartitioned ID. */
+    static String sessionId(CopilotAgentDefinition definition, String conversationId, String partition) {
         try {
-            byte[] identity = (definition.typeName() + "\0" + definition.name() + "\0" + conversationId)
-                    .getBytes(StandardCharsets.UTF_8);
+            String identity0 = definition.typeName() + "\0" + definition.name() + "\0" + conversationId;
+            if (partition != null && !partition.isEmpty()) {
+                identity0 += "\0" + partition;
+            }
+            byte[] identity = identity0.getBytes(StandardCharsets.UTF_8);
             return "agent-" + HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(identity));
         } catch (NoSuchAlgorithmException ex) {
             throw new IllegalStateException("Required SHA-256 digest is unavailable", ex);

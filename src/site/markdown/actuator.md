@@ -121,6 +121,8 @@ does not fail. Models list `id`, `name`, `policyState`,
 `sessionId`, `summary`, `startTime`, `modifiedTime`, `remote`, and `managed`.
 By default only sessions created by this starter (`agent-` prefix) are listed;
 set `copilot.endpoint.include-all-sessions=true` to include all runtime sessions.
+`summary` is `null` unless `copilot.endpoint.show-session-summaries=true`,
+because runtime-generated summaries can contain prompt or business content.
 
 <a id="info-contribution"></a>
 

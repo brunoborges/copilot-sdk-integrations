@@ -9,6 +9,7 @@ title: Per-user authentication
 **In this chapter**
 
 - [Token resolvers](#token-resolvers)
+- [Session isolation](#session-isolation)
 - [Global and per-agent selection](#global-and-per-agent-selection)
 - [Spring Security OAuth2 client](#spring-security-oauth2-client)
 - [Caller context in tools and handlers](#caller-context-in-tools-and-handlers)
@@ -31,7 +32,17 @@ interface:
 ```java
 @Bean
 CopilotTokenResolver copilotTokens(UserTokenStore store) {
-    return context -> store.gitHubTokenFor(currentUserId());   // null = ambient auth
+    return new CopilotTokenResolver() {
+        @Override
+        public String resolveToken(CopilotAgentContext context) {
+            return store.gitHubTokenFor(currentUserId());   // null = ambient auth
+        }
+
+        @Override
+        public String partitionKey(String agentName, String conversationId) {
+            return currentUserId();                         // isolates sessions per user
+        }
+    };
 }
 ```
 
@@ -43,6 +54,28 @@ CopilotTokenResolver copilotTokens(UserTokenStore store) {
 | Exception | The returned future fails (or the stream errors); no SDK work is started and no capacity is consumed. |
 | Application | The captured token is set when the session is created **and** when it is resumed; every turn re-supplies it. |
 | Customizers | Run first. If a customizer already set `gitHubToken` or `gitHubTokenProvider`, the resolved token is not applied. |
+
+<a id="session-isolation"></a>
+
+### Session isolation
+
+Agent session IDs are derived from the agent and the conversation ID. Without
+more, two users presenting the same conversation ID would share, and resume,
+the same session and its history. `partitionKey(agentName, conversationId)`
+runs on the calling thread before `resolveToken` and returns a stable,
+non-secret caller key (for example the principal name). It is hashed into the
+session ID, so each caller gets their own session for the same conversation ID.
+`CopilotAgentContext.sessionId()` reflects the partitioned ID.
+
+| `partitionKey` result | Behavior |
+| --- | --- |
+| Non-empty string | Sessions are isolated per key. |
+| `CopilotTokenResolver.SHARED` (`""`) | Deliberately shared: the unpartitioned session ID is used. |
+| `null` (the default) | Allowed only when `resolveToken` returns `null`; an invocation that resolves a token without a partition key fails before any SDK work. |
+
+The OAuth2 resolver partitions by registration ID and principal name. Under
+`ambient-fallback`, unauthenticated callers share the unpartitioned space.
+Changing the partition key (for example renaming users) starts new sessions.
 
 For `Flux` methods the resolver runs when the stream is subscribed. In WebFlux
 applications, enable Reactor's automatic context propagation
@@ -138,9 +171,10 @@ identity explicitly.
 - Tokens are never logged. `toString` output of internal state and the OAuth2
   resolver omit them, and observations do not tag them.
 - A per-session token selects the identity used for the runtime's GitHub
-  calls; it does not authorize access to a conversation. Keep scoping
-  conversation keys to the authorized user.
-- Resuming another user's conversation with your token is an application
+  calls. Session isolation comes from the [partition key](#session-isolation),
+  so return a key that identifies the authenticated caller, never a value the
+  caller controls.
+- Sharing conversations across users (`SHARED`) is an application
   authorization decision; the integration does not check it.
 - Context propagation does not cross process boundaries such as remote MCP
   servers.

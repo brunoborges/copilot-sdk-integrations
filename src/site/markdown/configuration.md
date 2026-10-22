@@ -81,7 +81,7 @@ The binding type is `CopilotAgentsProperties`, whose `agents()` map contains
 | `copilot.agents.<name>.response-timeout` | Duration | `60s` | At least `1ms`, representable in signed 64-bit nanoseconds. Bounds SDK response waiting; synchronous agent methods also wait at most this long in total. |
 | `copilot.agents.<name>.mcp-servers` | List of strings | Annotation selection | Replace the agent's selected property server / SDK bean names. Omitted retains annotation; empty list selects none. Blank, duplicate, missing, or ambiguous references fail initialization. |
 | `copilot.agents.<name>.provider` | String | Annotation selection | Replace the agent's BYOK provider (property or SDK `ProviderConfig` bean name). Omitted retains annotation; empty selects none. Whitespace-only, missing, or ambiguous references, or a provider without a model, fail initialization. |
-| `copilot.agents.<name>.available-tools` | List of strings | Annotation `availableTools` | SDK tool allow-list (`name`, `builtin:`, `custom:`, `mcp:` patterns). Empty list clears the annotation value. `custom:*`/`mcp:*` are appended for the agent's own tools/MCP servers unless scoped explicitly. |
+| `copilot.agents.<name>.available-tools` | List of strings | Annotation `availableTools` | SDK tool allow-list (`name`, `builtin:`, `custom:`, `mcp:` patterns). Empty list clears the annotation value. Must include `custom:`/`mcp:` entries when the agent declares tools/MCP servers; never widened. |
 | `copilot.agents.<name>.excluded-tools` | List of strings | Annotation `excludedTools` | SDK tool deny-list. Combining it with `available-tools` fails initialization. |
 | `copilot.agents.<name>.built-in-tools` | Boolean | Annotation `builtInTools` (`true`) | `false` excludes `builtin:*`; cannot be combined with `available-tools`. |
 | `copilot.agents.<name>.excluded-built-in-agents` | List of strings | Annotation value | Runtime built-in sub-agents to hide. |
@@ -218,6 +218,7 @@ auto-configuration package. See [Actuator](actuator.html).
 | `copilot.endpoint.start-client` | Boolean | `false` | Let the endpoint start a lazily configured client that is not connected. |
 | `copilot.endpoint.show-instructions` | Boolean | `false` | Include agent system instruction content in the `agents` view. |
 | `copilot.endpoint.include-all-sessions` | Boolean | `false` | List all runtime sessions instead of only starter-created (`agent-`) sessions. |
+| `copilot.endpoint.show-session-summaries` | Boolean | `false` | Include runtime-generated session summaries, which may contain prompt or business content. |
 
 Standard Actuator keys also apply: `management.health.copilot.enabled`,
 `management.info.copilot.enabled`, `management.endpoint.copilot.access`, and

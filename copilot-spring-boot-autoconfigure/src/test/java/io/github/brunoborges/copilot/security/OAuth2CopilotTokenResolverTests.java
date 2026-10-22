@@ -63,6 +63,19 @@ class OAuth2CopilotTokenResolverTests {
     }
 
     @Test
+    void partitionsSessionsByRegistrationAndPrincipal() {
+        var service = mock(OAuth2AuthorizedClientService.class);
+        var strict = new OAuth2CopilotTokenResolver(service, "github");
+        var fallback = new OAuth2CopilotTokenResolver(service, "github", true);
+        assertThatThrownBy(() -> strict.partitionKey("agent", "one")).hasMessageContaining("no authenticated user");
+        assertThat(fallback.partitionKey("agent", "one")).isEqualTo(CopilotTokenResolver.SHARED);
+        authenticate("alice");
+        assertThat(strict.partitionKey("agent", "one")).isEqualTo("oauth2:github:alice");
+        authenticate("bob");
+        assertThat(fallback.partitionKey("agent", "one")).isEqualTo("oauth2:github:bob");
+    }
+
+    @Test
     void missingUserOrClientFailsUnlessAmbientFallbackIsEnabled() {
         var service = mock(OAuth2AuthorizedClientService.class);
         var strict = new OAuth2CopilotTokenResolver(service, "github");

@@ -84,6 +84,17 @@ class GovernanceTests {
     }
 
     @Test
+    void allowListsThatHideTheAgentsOwnToolSourcesFailStartup() {
+        registerToolAndMcp();
+        var noCustom = agentSettings("governedAgent", List.of("view", "mcp:*"), null, null, null, null, null, null);
+        assertThatThrownBy(() -> definition(GovernedAgent.class, noCustom))
+                .hasMessageContaining("hides every Spring tool").hasMessageContaining("custom:*");
+        var noMcp = agentSettings("governedAgent", List.of("view", "custom:echo"), null, null, null, null, null, null);
+        assertThatThrownBy(() -> definition(GovernedAgent.class, noMcp))
+                .hasMessageContaining("hides every MCP server tool").hasMessageContaining("mcp:*");
+    }
+
+    @Test
     void explicitSourcePatternsAreNotWidened() {
         registerToolAndMcp();
         var settings = agentSettings("governedAgent", List.of("custom:echo", "mcp:docs-search"), null, null, null, null, null, null);
@@ -555,7 +566,7 @@ class GovernanceTests {
         }
     }
 
-    @CopilotAgent(tools = "echo", mcpServers = "docs", availableTools = {"view", "builtin:grep"},
+    @CopilotAgent(tools = "echo", mcpServers = "docs", availableTools = {"view", "builtin:grep", "custom:*", "mcp:*"},
             excludedBuiltInAgents = "explore", workingDirectory = "/srv/work", additionalDirectories = "/srv/shared")
     public interface GovernedAgent {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);

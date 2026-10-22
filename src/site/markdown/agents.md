@@ -41,7 +41,7 @@ conversation-bound instance. Both forms share the same declarative settings.
 | `provider` | `String` | `""` | Name from `copilot.providers` or a native SDK `ProviderConfig` bean, used as a BYOK model provider. Requires a model. Per-agent properties replace this selection. See [BYOK providers](byok.html). |
 | `listeners` | `String[]` | `{}` | Names of `CopilotAgentListener` beans, invoked in listed order for each attached session's events. |
 | `customizers` | `String[]` | `{}` | Names of `CopilotAgentCustomizer` beans, applied in listed order. |
-| `availableTools` | `String[]` | `{}` | SDK tool allow-list across built-in, custom, and MCP tools; the agent's own tools/MCP servers are kept unless scoped explicitly. See [Tool governance](governance.html). |
+| `availableTools` | `String[]` | `{}` | SDK tool allow-list across built-in, custom, and MCP tools; must include `custom:`/`mcp:` entries when the agent declares tools/MCP servers. See [Tool governance](governance.html). |
 | `excludedTools` | `String[]` | `{}` | SDK tool deny-list. Mutually exclusive with `availableTools`. |
 | `excludedBuiltInAgents` | `String[]` | `{}` | Runtime built-in sub-agents to hide. |
 | `builtInTools` | `boolean` | `true` | `false` hides every built-in tool (`builtin:*`). Cannot be combined with `availableTools`. |

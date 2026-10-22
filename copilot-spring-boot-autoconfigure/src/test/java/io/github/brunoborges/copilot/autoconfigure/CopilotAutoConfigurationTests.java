@@ -263,7 +263,7 @@ class CopilotAutoConfigurationTests {
                     "copilot.health.timeout", "copilot.health.start-client",
                     "copilot.health.require-authentication", "copilot.endpoint.timeout",
                     "copilot.endpoint.start-client", "copilot.endpoint.show-instructions",
-                    "copilot.endpoint.include-all-sessions", "management.endpoint.copilot.access",
+                    "copilot.endpoint.include-all-sessions", "copilot.endpoint.show-session-summaries", "management.endpoint.copilot.access",
                     "management.endpoint.copilot.cache.time-to-live",
                     "copilot.security.oauth2.registration-id", "copilot.security.oauth2.ambient-fallback");
             for (var property : properties) {

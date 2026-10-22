@@ -3,7 +3,11 @@ package io.github.brunoborges.copilot.agent.internal;
 import java.time.Duration;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -74,6 +78,48 @@ final class InvocationState {
         }
         response.cancel(false);
         return response;
+    }
+
+    /**
+     * Waits for a session-opening operation while honouring cancellation and a bounded timeout. When the wait is
+     * abandoned, a value that still arrives later is handed to {@code abandoned} so it can be released.
+     */
+    <T> T join(CompletableFuture<T> operation, Duration timeout, Consumer<? super T> abandoned) {
+        var view = awaiting(operation.copy());
+        try {
+            return view.get(timeout.toNanos(), TimeUnit.NANOSECONDS);
+        } catch (ExecutionException ex) {
+            throw new CompletionException(ex.getCause());
+        } catch (CancellationException ex) {
+            release(operation, abandoned);
+            throw ex;
+        } catch (TimeoutException ex) {
+            view.cancel(false);
+            release(operation, abandoned);
+            throw new CompletionException(ex);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            view.cancel(false);
+            release(operation, abandoned);
+            var cancelled = new CancellationException("Interrupted while opening the Copilot session");
+            cancelled.initCause(ex);
+            throw cancelled;
+        }
+    }
+
+    private static <T> void release(CompletableFuture<T> operation, Consumer<? super T> abandoned) {
+        if (abandoned == null) {
+            return;
+        }
+        operation.thenAccept(value -> {
+            try {
+                if (value != null) {
+                    abandoned.accept(value);
+                }
+            } catch (RuntimeException ex) {
+                log.log(Level.WARNING, "Failed to release an abandoned Copilot session", ex);
+            }
+        });
     }
 
     /** Best-effort runtime abort of the in-flight turn; failures are logged, never thrown. */

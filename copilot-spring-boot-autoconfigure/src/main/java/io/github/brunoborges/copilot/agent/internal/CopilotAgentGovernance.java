@@ -66,15 +66,15 @@ public record CopilotAgentGovernance(List<String> availableTools, List<String> e
         Assert.isTrue(available.isEmpty() || excluded.isEmpty(), "Copilot agent " + agent
                 + ": available-tools and excluded-tools are mutually exclusive because the runtime ignores the "
                 + "deny-list when an allow-list is set");
+        // The runtime filters every tool source; an explicit allow-list is never widened, so require it to
+        // name the agent's own tool sources rather than silently hiding or exposing them.
         if (!available.isEmpty()) {
-            available = new ArrayList<>(available);
-            // The runtime filters every tool source, so keep the agent's own tools usable unless explicitly scoped.
-            if (!tools.isEmpty() && available.stream().noneMatch(name -> name.startsWith("custom:"))) {
-                available.add("custom:*");
-            }
-            if (!mcpServers.isEmpty() && available.stream().noneMatch(name -> name.startsWith("mcp:"))) {
-                available.add("mcp:*");
-            }
+            Assert.isTrue(tools.isEmpty() || available.stream().anyMatch(name -> name.startsWith("custom:")),
+                    "Copilot agent " + agent + ": available-tools hides every Spring tool bound to the agent; add "
+                            + "\"custom:*\" or specific \"custom:<tool>\" entries, or remove the agent's tools");
+            Assert.isTrue(mcpServers.isEmpty() || available.stream().anyMatch(name -> name.startsWith("mcp:")),
+                    "Copilot agent " + agent + ": available-tools hides every MCP server tool bound to the agent; add "
+                            + "\"mcp:*\" or specific \"mcp:<server>/<tool>\" entries, or remove the agent's MCP servers");
         }
         List<String> agents = select(settings, CopilotAgentsProperties.Agent::excludedBuiltInAgents,
                 annotation.excludedBuiltInAgents(), environment);

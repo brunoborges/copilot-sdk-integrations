@@ -107,6 +107,29 @@ class RuntimeControlTests {
     }
 
     @Test
+    void cancellationReleasesCapacityWhenSessionLookupNeverCompletes() throws Exception {
+        var lookupStarted = new CountDownLatch(1);
+        var session = session(reply("unused"));
+        when(client.getSessionMetadata(anyString())).thenAnswer(invocation -> {
+            lookupStarted.countDown();
+            return new CompletableFuture<SessionMetadata>();
+        }).thenReturn(CompletableFuture.completedFuture(null));
+        when(client.createSession(any())).thenAnswer(invocation -> {
+            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            return CompletableFuture.completedFuture(session);
+        });
+        try (var invoker = invoker()) {
+            var agent = agent(TestAgent.class, invoker);
+            var first = agent.answer("one", "hello");
+            assertThat(lookupStarted.await(5, TimeUnit.SECONDS)).isTrue();
+            assertThat(first.cancel(true)).isTrue();
+            awaitStopped(1);
+            verify(client, never()).createSession(any());
+            assertCapacityReleasedOnce(agent, session);
+        }
+    }
+
+    @Test
     void cancellationDuringTheTurnAbortsTheSessionBeforeClosingIt() throws Exception {
         var response = new CompletableFuture<AssistantMessageEvent>();
         var sent = new CountDownLatch(1);
@@ -207,22 +230,36 @@ class RuntimeControlTests {
     // --- per-user authentication ---------------------------------------------------------------------------
 
     @Test
-    void globalTokenResolverRunsOnTheCallerThreadAndAuthenticatesCreateAndResume() throws Exception {
+    void globalTokenResolverRunsOnTheCallerThreadAndIsolatesSessionsPerCaller() throws Exception {
         var resolverThread = new AtomicReference<Thread>();
         var contexts = new CopyOnWriteArrayList<CopilotAgentContext>();
-        beans.registerSingleton("tokens", (CopilotTokenResolver) context -> {
-            resolverThread.set(Thread.currentThread());
-            contexts.add(context);
-            return "user-token-" + SecurityContextHolder.getContext().getAuthentication().getName();
+        beans.registerSingleton("tokens", new CopilotTokenResolver() {
+            @Override
+            public String resolveToken(CopilotAgentContext context) {
+                resolverThread.set(Thread.currentThread());
+                contexts.add(context);
+                return "user-token-" + currentUser();
+            }
+
+            @Override
+            public String partitionKey(String agentName, String conversationId) {
+                return currentUser();
+            }
         });
         var session = session(reply("reply"));
-        when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null))
-                .thenReturn(CompletableFuture.completedFuture(new SessionMetadata()));
+        var known = java.util.concurrent.ConcurrentHashMap.<String>newKeySet();
+        when(client.getSessionMetadata(anyString())).thenAnswer(invocation -> CompletableFuture.completedFuture(
+                known.contains(invocation.<String>getArgument(0)) ? new SessionMetadata() : null));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            String id = invocation.<SessionConfig>getArgument(0).getSessionId();
+            known.add(id);
+            when(session.getSessionId()).thenReturn(id);
             return CompletableFuture.completedFuture(session);
         });
-        when(client.resumeSession(anyString(), any())).thenReturn(CompletableFuture.completedFuture(session));
+        when(client.resumeSession(anyString(), any())).thenAnswer(invocation -> {
+            when(session.getSessionId()).thenReturn(invocation.<String>getArgument(0));
+            return CompletableFuture.completedFuture(session);
+        });
         try (var invoker = invoker()) {
             var agent = agent(TestAgent.class, invoker);
             SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("alice", "n/a", "ROLE_USER"));
@@ -230,15 +267,62 @@ class RuntimeControlTests {
             assertThat(resolverThread.get()).isSameAs(Thread.currentThread());
             SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("bob", "n/a", "ROLE_USER"));
             agent.answer("one", "second").get(5, TimeUnit.SECONDS);
+            SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("alice", "n/a", "ROLE_USER"));
+            agent.answer("one", "third").get(5, TimeUnit.SECONDS);
             ArgumentCaptor<SessionConfig> created = ArgumentCaptor.captor();
+            ArgumentCaptor<String> resumedId = ArgumentCaptor.captor();
             ArgumentCaptor<ResumeSessionConfig> resumed = ArgumentCaptor.captor();
-            verify(client).createSession(created.capture());
-            verify(client).resumeSession(anyString(), resumed.capture());
-            assertThat(created.getValue().getGitHubToken()).isEqualTo("user-token-alice");
-            assertThat(resumed.getValue().getGitHubToken()).isEqualTo("user-token-bob");
+            verify(client, org.mockito.Mockito.times(2)).createSession(created.capture());
+            verify(client).resumeSession(resumedId.capture(), resumed.capture());
+            assertThat(created.getAllValues()).extracting(SessionConfig::getGitHubToken)
+                    .containsExactly("user-token-alice", "user-token-bob");
+            var aliceSession = created.getAllValues().get(0).getSessionId();
+            assertThat(created.getAllValues().get(1).getSessionId()).isNotEqualTo(aliceSession);
+            assertThat(resumedId.getValue()).isEqualTo(aliceSession);
+            assertThat(resumed.getValue().getGitHubToken()).isEqualTo("user-token-alice");
             assertThat(contexts).extracting(CopilotAgentContext::agentName).containsOnly("test-agent");
             assertThat(contexts).extracting(CopilotAgentContext::conversationId).containsOnly("one");
+            assertThat(contexts).extracting(CopilotAgentContext::sessionId).startsWith(aliceSession);
         }
+    }
+
+    @Test
+    void tokenWithoutPartitionKeyFailsClosedBeforeSdkWork() throws Exception {
+        beans.registerSingleton("tokens", (CopilotTokenResolver) context -> "user-token");
+        try (var invoker = invoker()) {
+            var result = agent(TestAgent.class, invoker).answer("one", "hello");
+            assertThatThrownBy(() -> result.get(5, TimeUnit.SECONDS)).cause()
+                    .isInstanceOf(IllegalStateException.class).hasMessageContaining("partition key");
+            verifyNoInteractions(client);
+        }
+    }
+
+    @Test
+    void sharedPartitionKeepsTheUnpartitionedSessionId() throws Exception {
+        beans.registerSingleton("tokens", shared(context -> "user-token"));
+        var session = session(reply("reply"));
+        newSessions(session);
+        try (var invoker = invoker()) {
+            agent(TestAgent.class, invoker).answer("one", "hello").get(5, TimeUnit.SECONDS);
+            ArgumentCaptor<SessionConfig> created = ArgumentCaptor.captor();
+            verify(client).createSession(created.capture());
+            assertThat(created.getValue().getSessionId())
+                    .isEqualTo(CopilotAgentInvoker.sessionId(definition(TestAgent.class), "one"));
+        }
+    }
+
+    private static CopilotTokenResolver shared(CopilotTokenResolver tokens) {
+        return new CopilotTokenResolver() {
+            @Override
+            public String resolveToken(CopilotAgentContext context) {
+                return tokens.resolveToken(context);
+            }
+
+            @Override
+            public String partitionKey(String agentName, String conversationId) {
+                return SHARED;
+            }
+        };
     }
 
     @Test
@@ -257,8 +341,8 @@ class RuntimeControlTests {
 
     @Test
     void perAgentResolverWinsAndAmbiguousGlobalSelectionFailsStartup() throws Exception {
-        beans.registerSingleton("first", (CopilotTokenResolver) context -> "first-token");
-        beans.registerSingleton("second", (CopilotTokenResolver) context -> "second-token");
+        beans.registerSingleton("first", shared(context -> "first-token"));
+        beans.registerSingleton("second", shared(context -> "second-token"));
         assertThatThrownBy(() -> definition(TestAgent.class)).isInstanceOf(NoUniqueBeanDefinitionException.class);
         assertThat(definition(SecondTokenAgent.class).tokenResolver()).isSameAs(beans.getBean("second"));
         var session = session(reply("reply"));
@@ -273,7 +357,7 @@ class RuntimeControlTests {
 
     @Test
     void customizerTokenProviderIsNotOverridden() throws Exception {
-        beans.registerSingleton("tokens", (CopilotTokenResolver) context -> "resolved");
+        beans.registerSingleton("tokens", shared(context -> "resolved"));
         beans.registerSingleton("rotating", (CopilotAgentCustomizer) new CopilotAgentCustomizer() {
             @Override
             public void customize(CopilotAgentContext context, SessionConfig config) {
