@@ -12,5 +12,6 @@
   },
   "files": ["dist"],
   "scripts": { "build": "tsc -p tsconfig.json", "typecheck": "tsc -p tsconfig.json --noEmit" },
-  "dependencies": { "@github/copilot-sdk": "^1.0.26", "zod": "^4.0.0" }
+  "dependencies": { "@github/copilot-sdk": "^1.0.26", "zod": "^4.0.0" },
+  "devDependencies": { "ai": "^7.0.0" }
 }

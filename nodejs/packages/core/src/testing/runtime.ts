@@ -13,6 +13,7 @@ import type {
   SessionHooks,
   Tool,
   ToolInvocation,
+  ToolSet,
   ToolResultObject,
 } from "@github/copilot-sdk";
 import type { ClientFactory, ClientLike, SessionLike, StructuredSchema } from "../types.js";
@@ -629,6 +630,13 @@ export class CopilotTestRuntime {
         );
       }
 
+      if (!isCustomToolEnabled(name, config)) {
+        return await fail(
+          `Tool "${name}" is not available on session ${state.id}: it is filtered out by availableTools/excludedTools`,
+          "tool_not_available",
+        );
+      }
+
       let hookAllowed = false;
       if (hooks?.onPreToolUse) {
         const pre = await raceAbort(
@@ -782,6 +790,19 @@ function toPermissionResult(result: PermissionRequestResult): PermissionResult {
     default:
       return result as PermissionResult;
   }
+}
+
+/**
+ * Mirrors the runtime's ToolSet filtering for custom tools: a tool is enabled when `availableTools`
+ * is unset or matches it (`custom:*`, `custom:<name>`, `<name>`), and `excludedTools` does not.
+ */
+function isCustomToolEnabled(name: string, config: AnySessionConfig): boolean {
+  const matchesEntry = (entry: string) => entry === "custom:*" || entry === `custom:${name}` || entry === name;
+  const list = (value: string[] | ToolSet | undefined) =>
+    value === undefined ? undefined : Array.isArray(value) ? value : value.toArray();
+  const available = list(config.availableTools);
+  if (available !== undefined && !available.some(matchesEntry)) return false;
+  return !(list(config.excludedTools) ?? []).some(matchesEntry);
 }
 
 function isToolResultObject(value: unknown): value is ToolResultObject {

@@ -15,3 +15,10 @@ export {
   type TestTurn,
   type TestUsage,
 } from "./script.js";
+export {
+  createTestCopilot,
+  silentLogger,
+  TEST_COPILOT_DEFAULTS,
+  type CreateTestCopilotOptions,
+  type TestCopilot,
+} from "./copilot.js";

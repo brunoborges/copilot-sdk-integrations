@@ -55,7 +55,9 @@ export function defineCopilotTool<T>(def: CopilotToolDefinition<T>): CopilotTool
  * Converts every accepted tool shape into SDK `Tool`s.
  *
  * - `CopilotToolDefinition` (`name` + `execute`): wrapped with argument validation, context, and result conversion.
- * - SDK `Tool` (`name`, optional `handler`): passed through unchanged.
+ * - SDK `Tool` (`name`, optional `handler`): passed through unchanged, unless `options.getContext` is
+ *   set, in which case the handler is wrapped so it runs inside that context (the SDK invokes handlers
+ *   from its JSON-RPC connection, outside the caller's async scope).
  * - Record of AI SDK `tool()`s: each entry becomes an SDK tool named by its key; entries without
  *   `execute` become declaration-only tools (no handler); `needsApproval` is reported in `approvalRequired`.
  *
@@ -83,7 +85,7 @@ export function toSdkTools(inputs: ToolInput[] | undefined, options: ToSdkToolsO
       if (typeof candidate.execute === "function") {
         add(fromCopilotTool(defineCopilotTool(input as CopilotToolDefinition), resolveContext));
       } else if (candidate.handler === undefined || typeof candidate.handler === "function") {
-        add(input as Tool);
+        add(options.getContext ? bindSdkTool(input as Tool, resolveContext) : (input as Tool));
       } else {
         throw new CopilotConfigurationError(`Tool "${candidate.name}" has a non-function handler`);
       }
@@ -134,6 +136,17 @@ type Validator = (value: unknown) => Promise<Validation>;
 interface ResolvedSchema {
   parameters: Record<string, unknown>;
   validate?: Validator;
+}
+
+/** Wraps an SDK tool's handler so it runs with the turn's `CopilotContext`. */
+function bindSdkTool(tool: Tool, resolveContext: () => CopilotContext): Tool {
+  const handler = tool.handler;
+  if (!handler) return tool;
+  return {
+    ...tool,
+    handler: (args: unknown, invocation: ToolInvocation) =>
+      runWithCopilotContext(resolveContext(), () => handler(args, invocation)),
+  } as Tool;
 }
 
 function fromCopilotTool(def: CopilotToolDefinition, resolveContext: () => CopilotContext): Tool {

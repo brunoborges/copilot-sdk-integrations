@@ -436,6 +436,9 @@ expect(moduleRef.get(CopilotTestRuntime).prompts).toEqual(["Where is order 42?"]
 - `CopilotTestingModule` swaps the client for the core's scripted runtime: replies,
   streaming, tool calls into real `@CopilotTool` providers, permission requests,
   failures, recorded prompts. No runtime process, credentials, or paid requests.
+- Without NestJS, `createTestCopilot({ script })` from `@copilot-sdk-integrations/core/testing`
+  returns `{ copilot, runtime, stop }` (async-disposable) with test-friendly defaults (silent
+  logger, throwaway `baseDirectory`, short timeouts).
 - An optional `CopilotContainer` (Testcontainers for Node.js) runs a real runtime in
   integration tests, mirroring the Spring test module.
 
