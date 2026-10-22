@@ -16,7 +16,8 @@ injection, lifecycle management, security context, observability, and testing.
 | Java | [Spring Boot](https://spring.io/projects/spring-boot) | [`spring-boot/`](spring-boot/) | Available (unreleased) |
 | Java | [Quarkus](https://quarkus.io/) | [`quarkus/`](quarkus/) | Available (unreleased) |
 | .NET | ASP.NET Core / Generic Host, [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`, .NET Aspire | `dotnet/` | Under consideration |
-| Python | [FastAPI](https://fastapi.tiangolo.com/), [Django](https://www.djangoproject.com/) | `python/` | Under consideration |
+| Python | [Django](https://www.djangoproject.com/) | [`python/django/`](python/django/) | Design proposal ([DESIGN.md](python/django/DESIGN.md)) |
+| Python | [FastAPI](https://fastapi.tiangolo.com/) | `python/` | Under consideration |
 | Node.js | [NestJS](https://nestjs.com/), [Vercel AI SDK](https://ai-sdk.dev/) provider | `nodejs/` | Under consideration |
 
 ## Design goals
