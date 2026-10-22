@@ -15,7 +15,7 @@ injection, lifecycle management, security context, observability, and testing.
 | --- | --- | --- | --- |
 | Java | [Spring Boot](https://spring.io/projects/spring-boot) | [`spring-boot/`](spring-boot/) | Available (unreleased) |
 | Java | [Quarkus](https://quarkus.io/) | `quarkus/` | Planned |
-| .NET | ASP.NET Core / Generic Host, [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`, .NET Aspire | `dotnet/` | Under consideration |
+| .NET | [Aspire](https://aspire.dev/) (AppHost resource + client integration, [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`) | [`dotnet-aspire/`](dotnet-aspire/) | Design ([draft](dotnet-aspire/docs/design.md)) |
 | Python | [FastAPI](https://fastapi.tiangolo.com/), [Django](https://www.djangoproject.com/) | `python/` | Under consideration |
 | Node.js | [NestJS](https://nestjs.com/), [Vercel AI SDK](https://ai-sdk.dev/) provider | `nodejs/` | Under consideration |
 
@@ -48,8 +48,9 @@ and the documentation landing page) live at the root.
 
 ```
 .
-├── spring-boot/   # Spring Boot starter (Java, Maven)
-└── .github/       # CI workflows and documentation landing page
+├── spring-boot/     # Spring Boot starter (Java, Maven)
+├── dotnet-aspire/   # Aspire integration (.NET), design phase
+└── .github/         # CI workflows and documentation landing page
 ```
 
 ## Contributing
