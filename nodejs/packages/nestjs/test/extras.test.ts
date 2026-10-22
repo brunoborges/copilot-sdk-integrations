@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
@@ -446,7 +447,7 @@ describe("CopilotAgents.respondToPermission", () => {
 });
 
 describe("@UserMessageFrom template resolution", () => {
-  const dir = mkdtempSync(join(process.cwd(), ".templates-test-"));
+  const dir = mkdtempSync(join(tmpdir(), "copilot-templates-test-"));
   mkdirSync(join(dir, "prompts"));
   writeFileSync(join(dir, "prompts", "greet.md"), "Greet {{name}} warmly.");
   afterAll(() => rmSync(dir, { recursive: true, force: true }));
