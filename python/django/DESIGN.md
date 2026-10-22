@@ -1,6 +1,6 @@
 # Copilot for Django — design
 
-Status: **Draft / proposal.** Nothing in this document is implemented yet.
+Status: **M1 and M2 implemented** (`python/core`, `python/django`); M3–M5 remain proposals. See README.md for deviations.
 
 This document designs `copilot-django`, a Django integration for the
 [GitHub Copilot SDK for Python](https://github.com/github/copilot-sdk/tree/main/python)
