@@ -43,11 +43,14 @@ framework's idioms:
 ## Repository layout
 
 Each integration is a self-contained project in its own top-level directory, with its
-own build, README, and documentation. Shared repository files (license, CI workflows,
-and the documentation landing page) live at the root.
+own build, README, and documentation. The Java integrations share the
+framework-neutral agent API and engine in [`java-core/`](java-core/), which both Maven builds
+include as a reactor module. Shared repository files (license, CI workflows, and the
+documentation landing page) live at the root.
 
 ```
 .
+├── java-core/     # Shared Java agent API and engine (copilot-agent-core)
 ├── spring-boot/   # Spring Boot starter (Java, Maven)
 ├── quarkus/       # Quarkus extension (Java, Maven)
 ├── nodejs/        # Node.js core, NestJS module, and AI SDK adapter (TypeScript; in development)

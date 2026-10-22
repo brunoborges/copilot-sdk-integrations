@@ -6,7 +6,7 @@ import java.util.Set;
 
 import io.github.brunoborges.copilot.agent.CopilotAgent;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentFactoryBean;
+import io.github.brunoborges.copilot.autoconfigure.internal.CopilotAgentFactoryBean;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.FactoryBean;
@@ -40,7 +40,7 @@ public final class CopilotAgentsRegistrar implements ImportBeanDefinitionRegistr
             return;
         }
         Set<String> packages = new LinkedHashSet<>();
-        var enable = metadata.getAnnotationAttributes("io.github.brunoborges.copilot.agent.EnableCopilotAgents");
+        var enable = metadata.getAnnotationAttributes(EnableCopilotAgents.class.getName());
         if (enable != null) {
             packages.addAll(List.of((String[]) enable.get("basePackages")));
             for (var type : (Class<?>[]) enable.get("basePackageClasses")) {
@@ -65,7 +65,7 @@ public final class CopilotAgentsRegistrar implements ImportBeanDefinitionRegistr
             for (var candidate : scanner.findCandidateComponents(environment.resolveRequiredPlaceholders(basePackage))) {
                 Class<?> type = ClassUtils.resolveClassName(candidate.getBeanClassName(), resources.getClassLoader());
                 Assert.isTrue(type.isInterface(), "@CopilotAgent must annotate an interface: " + type.getName());
-                String name = CopilotAgentDefinition.name(type, environment);
+                String name = CopilotAgentDefinition.name(type, environment::resolveRequiredPlaceholders);
                 if (registry.containsBeanDefinition(name)) {
                     var existing = registry.getBeanDefinition(name);
                     Assert.isTrue(type.equals(existing.getAttribute("copilot.agentType")),

@@ -21,6 +21,10 @@
             <artifactId>quarkus-jackson</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.github.brunoborges</groupId>
+            <artifactId>copilot-agent-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.github</groupId>
             <artifactId>copilot-sdk-java</artifactId>
         </dependency>

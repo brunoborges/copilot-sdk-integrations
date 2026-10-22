@@ -54,7 +54,8 @@ been published yet.
 
 | Module | Artifact | Purpose |
 | --- | --- | --- |
-| `runtime` | `copilot-quarkus` | The extension: agent API, configuration, CDI beans, and optional integrations. |
+| `../java-core` | `copilot-agent-core` | Shared with the Spring Boot starter: the `@CopilotAgent` API and the framework-neutral agent engine. |
+| `runtime` | `copilot-quarkus` | The extension: configuration, CDI bean binding, and optional integrations. |
 | `deployment` | `copilot-quarkus-deployment` | Build steps: agent discovery and validation, synthetic agent beans, hook catalog, endpoint routes. |
 | `test` | `copilot-quarkus-test` | Scripted `CopilotTestRuntime` and the `CopilotContainerTestResource` for Testcontainers. |
 | `example` | (not published) | A Quarkus REST application with conversational, bound, and streaming agents. |

@@ -4,10 +4,12 @@ on:
   push:
     branches: [main]
     paths:
+      - 'java-core/**'
       - 'quarkus/**'
       - '.github/workflows/quarkus.yml'
   pull_request:
     paths:
+      - 'java-core/**'
       - 'quarkus/**'
       - '.github/workflows/quarkus.yml'
   workflow_dispatch:
@@ -29,6 +31,8 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-          cache-dependency-path: 'quarkus/**/pom.xml'
+          cache-dependency-path: |
+            quarkus/**/pom.xml
+            java-core/pom.xml
       - name: Build
         run: ./mvnw --batch-mode --no-transfer-progress verify
