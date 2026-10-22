@@ -56,7 +56,7 @@ jobs:
           cp -R spring-boot/target/site _site/spring-boot
           cp -R quarkus/target/site _site/quarkus
           cp -R nodejs/site/dist _site/nodejs
-          cp .github/pages/index.html _site/index.html
+          cp .github/pages/index.html .github/pages/dotnet-bot.png _site/
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
