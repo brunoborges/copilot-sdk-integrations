@@ -90,8 +90,8 @@ Use language labels such as `java`, `xml`, `yaml`, `json`, or `sh`; unlabelled
 or explicitly plain-text blocks remain plain. Syntax colors follow the same
 light/dark theme as the documentation. The header's **Theme** selector offers
 **System**, **Light**, and **Dark**. Your choice is remembered across visits;
-System follows changes to your device preference. A valid `?clawpilotTheme=light`
-or `?clawpilotTheme=dark` link overrides the saved choice until you change it.
+System follows changes to your device preference. A valid `?theme=light`
+or `?theme=dark` link overrides the saved choice until you change it.
 The version, checksum, source URL, and
 BSD license are recorded under `src/site/resources/js/vendor/`. Keep the
 license and notice when updating the bundle; no runtime CDN request is made.

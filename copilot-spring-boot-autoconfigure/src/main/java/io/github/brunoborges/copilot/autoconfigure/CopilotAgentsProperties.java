@@ -13,6 +13,9 @@ import org.springframework.util.Assert;
 @ConfigurationProperties("copilot")
 public record CopilotAgentsProperties(Map<String, Agent> agents) {
 
+    /** Response timeout applied to agents without explicit execution settings. */
+    public static final Duration DEFAULT_RESPONSE_TIMEOUT = Duration.ofSeconds(60);
+
     public CopilotAgentsProperties {
         agents = agents == null ? Map.of() : Map.copyOf(agents);
     }

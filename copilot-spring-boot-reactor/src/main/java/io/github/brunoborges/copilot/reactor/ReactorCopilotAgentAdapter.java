@@ -4,6 +4,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -95,7 +96,7 @@ public final class ReactorCopilotAgentAdapter implements CopilotAgentReturnTypeA
                         sink.tryEmitComplete();
                     } else {
                         Throwable cause = error;
-                        while (cause instanceof java.util.concurrent.CompletionException && cause.getCause() != null) {
+                        while (cause instanceof CompletionException && cause.getCause() != null) {
                             cause = cause.getCause();
                         }
                         sink.tryEmitError(cause);

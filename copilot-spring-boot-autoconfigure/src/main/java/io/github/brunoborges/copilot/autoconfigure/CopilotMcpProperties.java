@@ -74,12 +74,19 @@ public record CopilotMcpProperties(Map<String, Server> servers) {
                 Assert.isTrue(command == null && args.isEmpty() && env.isEmpty() && workingDirectory == null,
                         "An HTTP MCP server cannot declare command, args, env, or working-directory");
                 Assert.hasText(url, "An HTTP MCP server requires a url");
-                URI address = URI.create(url);
+                String message = "MCP url must be an absolute HTTP(S) address without credentials or a fragment";
+                URI address;
+                try {
+                    address = URI.create(url);
+                } catch (IllegalArgumentException ex) {
+                    // URI parser messages echo the input, which may contain credentials or tokens.
+                    throw new IllegalArgumentException(message);
+                }
                 Assert.isTrue(("http".equalsIgnoreCase(address.getScheme()) || "https".equalsIgnoreCase(address.getScheme()))
                                 && address.getHost() != null && address.getRawUserInfo() == null
                                 && address.getRawFragment() == null
                                 && (address.getPort() == -1 || (address.getPort() >= 1 && address.getPort() <= 65535)),
-                        "MCP url must be an absolute HTTP(S) address without credentials or a fragment");
+                        message);
             }
         }
 

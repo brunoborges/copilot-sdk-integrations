@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
 import com.github.copilot.SystemMessageMode;
@@ -33,7 +34,7 @@ public record CopilotAgentDefinition(
     private static final Logger log = Logger.getLogger(CopilotAgentDefinition.class.getName());
     private static final PermissionHandler DENY = (request, invocation) -> {
         log.warning("Copilot agent denied permission request of kind '" + request.getKind() + "'.");
-        return java.util.concurrent.CompletableFuture.completedFuture(
+        return CompletableFuture.completedFuture(
                 PermissionRequestResult.reject("No permission handler was configured for this agent."));
     };
 
@@ -90,7 +91,7 @@ public record CopilotAgentDefinition(
                 ? settings.reasoningEffort() : resolve(annotation.reasoningEffort(), environment);
         String permissionBean = resolve(annotation.permissionHandler(), environment);
         return new CopilotAgentDefinition(name, type.getName(), model, reasoning,
-                settings == null ? Duration.ofSeconds(60) : settings.responseTimeout(), systemMessage,
+                settings == null ? CopilotAgentsProperties.DEFAULT_RESPONSE_TIMEOUT : settings.responseTimeout(), systemMessage,
                 permissionBean.isEmpty() ? DENY : beans.getBean(permissionBean, PermissionHandler.class),
                 SpringToolBindings.bind(annotation.tools(), beans, environment),
                 McpServerBindings.bind(settings != null && settings.mcpServers() != null

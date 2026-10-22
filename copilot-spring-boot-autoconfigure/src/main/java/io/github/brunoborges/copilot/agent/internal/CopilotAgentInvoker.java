@@ -6,20 +6,23 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.function.Consumer;
 
 import com.github.copilot.CopilotClient;
 import com.github.copilot.CopilotSession;
 import com.github.copilot.rpc.MessageOptions;
+import com.github.copilot.rpc.PermissionHandler;
 import com.github.copilot.rpc.ResumeSessionConfig;
 import com.github.copilot.rpc.SessionConfig;
 import com.github.copilot.rpc.ToolDefinition;
@@ -330,8 +333,8 @@ public final class CopilotAgentInvoker implements AutoCloseable {
         return session;
     }
 
-    private static com.github.copilot.rpc.PermissionHandler ownedPermissions(
-            com.github.copilot.rpc.PermissionHandler permissions, CopilotAgentLifetime.Lease owner) {
+    private static PermissionHandler ownedPermissions(
+            PermissionHandler permissions, CopilotAgentLifetime.Lease owner) {
         if (!owner.bound()) {
             return permissions;
         }
@@ -342,7 +345,7 @@ public final class CopilotAgentInvoker implements AutoCloseable {
         };
     }
 
-    private java.util.List<ToolDefinition> observedTools(java.util.List<ToolDefinition> tools,
+    private List<ToolDefinition> observedTools(List<ToolDefinition> tools,
             CopilotAgentTelemetry.Call observation, CopilotAgentLifetime.Lease owner) {
         if (tools == null || (telemetry == CopilotAgentTelemetry.NOOP && !owner.bound())) {
             return tools;
@@ -355,7 +358,7 @@ public final class CopilotAgentInvoker implements AutoCloseable {
                 return response.whenComplete((value, error) -> {
                     var failure = finishObservation(call, error, false);
                     if (error == null && failure != null) {
-                        throw new java.util.concurrent.CompletionException(failure);
+                        throw new CompletionException(failure);
                     }
                 });
             } catch (RuntimeException | Error ex) {

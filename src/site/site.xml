@@ -13,7 +13,7 @@
 <meta name="description" content="Guides and API reference for using the Copilot Java SDK with Spring Boot."/>
 <script>
   (() => {
-    const param = new URLSearchParams(window.location.search).get("clawpilotTheme");
+    const param = new URLSearchParams(window.location.search).get("theme");
     const modes = ["system", "light", "dark"];
     let saved;
     try {
@@ -95,13 +95,6 @@ html[data-theme="dark"] {
 </style>
 <script defer="defer" src="./js/vendor/highlight-11.12.0.min.js"></script>
 <script defer="defer" src="./js/site.js"></script>
-<!--
-THESIS: A technical reading surface, not a marketing landing page.
-OWN-WORLD: Clawpilot neutral surfaces, rose links, Segoe UI, and monospace only for code.
-STORY: Choose an integration path, read a focused chapter, and find exact contracts quickly.
-FIRST VIEWPORT: Project identity, compact version context, chapter sidebar, and readable article.
-FORM: Maven-native chapter navigation; responsive reading measure and scrollable code/reference tables.
--->
         ]]></head>
         <links>
             <item name="GitHub" href="https://github.com/brunoborges/copilot-spring-boot"/>

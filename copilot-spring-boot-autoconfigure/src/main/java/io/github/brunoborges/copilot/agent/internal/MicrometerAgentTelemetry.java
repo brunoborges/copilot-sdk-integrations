@@ -2,7 +2,9 @@ package io.github.brunoborges.copilot.agent.internal;
 
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
@@ -90,8 +92,7 @@ public final class MicrometerAgentTelemetry implements CopilotAgentTelemetry {
         @Override
         public void error(Throwable error) {
             Throwable cause = error;
-            while ((cause instanceof java.util.concurrent.CompletionException
-                    || cause instanceof java.util.concurrent.ExecutionException) && cause.getCause() != null) {
+            while ((cause instanceof CompletionException || cause instanceof ExecutionException) && cause.getCause() != null) {
                 cause = cause.getCause();
             }
             outcome = cause instanceof TimeoutException ? "timeout" : "error";
