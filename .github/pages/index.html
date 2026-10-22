@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Copilot SDK Integrations — Documentation</title>
   <meta name="description" content="Framework integrations for the GitHub Copilot SDKs. Choose an integration to view its documentation.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%238957e5' d='M23.922 16.992c-.861 1.495-5.859 5.023-11.922 5.023-6.063 0-11.061-3.528-11.922-5.023A.641.641 0 0 1 0 16.736v-2.869a.841.841 0 0 1 .053-.22c.372-.935 1.347-2.292 2.605-2.656.167-.429.414-1.055.644-1.517a10.195 10.195 0 0 1-.052-1.086c0-1.331.282-2.499 1.132-3.368.397-.406.89-.717 1.474-.952 1.399-1.136 3.392-2.093 6.122-2.093 2.731 0 4.767.957 6.166 2.093.584.235 1.077.546 1.474.952.85.869 1.132 2.037 1.132 3.368 0 .368-.014.733-.052 1.086.23.462.477 1.088.644 1.517 1.258.364 2.233 1.721 2.605 2.656a.832.832 0 0 1 .053.22v2.869a.641.641 0 0 1-.078.256Z'/%3E%3C/svg%3E">
   <style>
     :root {
       color-scheme: light dark;
@@ -14,6 +15,14 @@
       --border: #d1d9e0;
       --card: #f6f8fa;
       --accent: #0969da;
+      --copilot-1: #8957e5;
+      --copilot-2: #0969da;
+      --copilot-3: #1f883d;
+      --spring: #6db33f;
+      --java: #e76f00;
+      --code-bg: #0d1117;
+      --code-fg: #e6edf3;
+      --glow: rgba(137, 87, 229, 0.18);
     }
     @media (prefers-color-scheme: dark) {
       :root {
@@ -23,34 +32,145 @@
         --border: #3d444d;
         --card: #151b23;
         --accent: #4493f8;
+        --copilot-1: #ab7df8;
+        --copilot-2: #4493f8;
+        --copilot-3: #3fb950;
+        --code-bg: #010409;
+        --glow: rgba(171, 125, 248, 0.22);
       }
     }
     * { box-sizing: border-box; }
+    html { background: var(--bg); }
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
-      background: var(--bg);
+      background:
+        radial-gradient(60rem 30rem at 50% -10rem, var(--glow), transparent 70%),
+        var(--bg);
+      background-repeat: no-repeat;
       color: var(--fg);
       line-height: 1.5;
     }
+    a { color: var(--accent); }
     main {
-      max-width: 52rem;
+      max-width: 60rem;
       margin: 0 auto;
-      padding: 4rem 1.5rem 3rem;
+      padding: 1.5rem 1.5rem 3rem;
     }
-    h1 { font-size: 2.25rem; margin: 0 0 0.5rem; }
-    .lead { color: var(--muted); font-size: 1.125rem; margin: 0 0 2.5rem; }
-    h2 { font-size: 1.25rem; margin: 0 0 1rem; }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 3rem;
+      font-size: 0.875rem;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: inherit;
+      text-decoration: none;
+    }
+    .brand svg { width: 1.5rem; height: 1.5rem; fill: currentColor; }
+    .gh-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: inherit;
+      text-decoration: none;
+    }
+    .gh-link:hover, .gh-link:focus-visible { border-color: var(--accent); outline: none; }
+    .gh-link svg { width: 1rem; height: 1rem; fill: currentColor; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 2.5rem;
+      align-items: center;
+      margin-bottom: 3.5rem;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.2rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--muted);
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+    .eyebrow svg { width: 0.95rem; height: 0.95rem; fill: var(--copilot-1); }
+    h1 {
+      font-size: clamp(2.25rem, 5vw, 3.25rem);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin: 1rem 0 0.75rem;
+    }
+    h1 .grad {
+      background: linear-gradient(90deg, var(--copilot-1), var(--copilot-2) 55%, var(--copilot-3));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .lead { color: var(--muted); font-size: 1.125rem; margin: 0 0 1.5rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.6rem 1.1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      color: inherit;
+      background: var(--card);
+    }
+    .btn.primary {
+      border-color: transparent;
+      color: #fff;
+      background: linear-gradient(135deg, var(--copilot-1), var(--copilot-2));
+    }
+    .btn:hover, .btn:focus-visible { filter: brightness(1.08); outline: none; }
+
+    /* Integration diagram: Copilot <-> SDK <-> frameworks */
+    .diagram {
+      margin: 0;
+      position: relative;
+      padding: 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      background: var(--card);
+    }
+    .diagram svg.flow { display: block; width: 100%; height: auto; }
+    .diagram .node-label { font: 600 12px -apple-system, "Segoe UI", sans-serif; fill: var(--fg); }
+    .diagram .node-sub { font: 11px -apple-system, "Segoe UI", sans-serif; fill: var(--muted); }
+    .diagram .node { fill: var(--bg); stroke: var(--border); }
+    .diagram .wire { fill: none; stroke: url(#wire); stroke-width: 2; stroke-dasharray: 6 6; animation: flow 1.2s linear infinite; }
+    @keyframes flow { to { stroke-dashoffset: -12; } }
+    @media (prefers-reduced-motion: reduce) { .diagram .wire { animation: none; } }
+
+    h2 { font-size: 1.375rem; margin: 0 0 0.35rem; }
+    .section-lead { color: var(--muted); margin: 0 0 1.25rem; }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
       gap: 1rem;
       list-style: none;
       padding: 0;
       margin: 0;
     }
     .card {
-      display: block;
+      position: relative;
+      display: flex;
+      flex-direction: column;
       height: 100%;
       padding: 1.25rem;
       border: 1px solid var(--border);
@@ -58,13 +178,34 @@
       background: var(--card);
       color: inherit;
       text-decoration: none;
-      transition: border-color 120ms ease, transform 120ms ease;
+      overflow: hidden;
+      transition: border-color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 3px;
+      background: var(--brand, var(--accent));
     }
     a.card:hover, a.card:focus-visible {
-      border-color: var(--accent);
+      border-color: var(--brand, var(--accent));
       transform: translateY(-2px);
+      box-shadow: 0 8px 24px -12px var(--brand, var(--accent));
       outline: none;
     }
+    .card .logos { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .card .logo {
+      display: grid;
+      place-items: center;
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 0.6rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+    .card .logo svg { width: 1.6rem; height: 1.6rem; }
+    .card .plus { color: var(--muted); font-weight: 600; }
     .card .lang {
       font-size: 0.75rem;
       font-weight: 600;
@@ -72,43 +213,269 @@
       text-transform: uppercase;
       color: var(--muted);
     }
-    .card h3 { margin: 0.25rem 0 0.5rem; font-size: 1.25rem; }
-    .card p { margin: 0; color: var(--muted); font-size: 0.9375rem; }
-    .card .go { display: inline-block; margin-top: 0.75rem; color: var(--accent); font-weight: 600; }
+    .card h3 { margin: 0.15rem 0 0.5rem; font-size: 1.25rem; }
+    .card p { margin: 0; color: var(--muted); font-size: 0.9375rem; flex: 1; }
+    .card .go { display: inline-block; margin-top: 0.9rem; color: var(--accent); font-weight: 600; }
+    .card.soon {
+      border-style: dashed;
+      background: transparent;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--muted);
+      min-height: 12rem;
+    }
+    .card.soon::before { display: none; }
+    .card.soon .next {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      list-style: none;
+      padding: 0;
+      margin: 0.6rem 0 0.9rem;
+    }
+    .card.soon .next li {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--fg);
+    }
+    .card.soon .next .logo { margin: 0; }
+    .card.soon .next svg { width: 1.6rem; height: 1.6rem; opacity: 1; margin: 0; }
+    .card.soon svg { width: 2rem; height: 2rem; fill: var(--muted); opacity: 0.6; margin-bottom: 0.5rem; }
+
+    .code {
+      margin-top: 3.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 2rem;
+      align-items: center;
+    }
+    .hero > *, .code > * { min-width: 0; }
+    .code ul { margin: 0; padding-left: 1.1rem; color: var(--muted); }
+    .code li { margin: 0.35rem 0; }
+    .window {
+      border-radius: 0.75rem;
+      overflow: hidden;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 40px -24px rgba(0, 0, 0, 0.6);
+    }
+    .window .bar {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 0.8rem;
+      border-bottom: 1px solid #30363d;
+      color: #9198a1;
+      font-size: 0.75rem;
+    }
+    .window .dot { width: 0.65rem; height: 0.65rem; border-radius: 50%; background: #30363d; }
+    .window .bar .file { margin-left: 0.5rem; }
+    .window pre {
+      margin: 0;
+      padding: 1rem 1.1rem;
+      overflow: hidden;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      color: var(--code-fg);
+      font: 0.8125rem/1.6 ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    }
+    .tok-a { color: #d2a8ff; }
+    .tok-k { color: #ff7b72; }
+    .tok-s { color: #a5d6ff; }
+    .tok-t { color: #ffa657; }
+
     footer {
-      margin-top: 3rem;
+      margin-top: 3.5rem;
       padding-top: 1.5rem;
       border-top: 1px solid var(--border);
       color: var(--muted);
       font-size: 0.875rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.5rem;
     }
-    footer a { color: var(--accent); }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    @media (max-width: 48rem) {
+      .hero, .code { grid-template-columns: 1fr; }
+      .actions .btn { flex: 1 1 auto; justify-content: center; }
+      .topbar { margin-bottom: 2rem; }
+    }
   </style>
 </head>
 <body>
-  <main>
-    <h1>Copilot SDK Integrations</h1>
-    <p class="lead">
-      Framework integrations for the
-      <a href="https://github.com/github/copilot-sdk">GitHub Copilot SDKs</a>.
-      Which integration would you like to read about?
-    </p>
+  <!-- Logo sources: GitHub Copilot and GitHub marks from Primer Octicons (MIT);
+       Spring, OpenJDK, .NET, and Node.js marks from Simple Icons (CC0). Trademarks belong to their owners. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-copilot" viewBox="0 0 24 24">
+        <path d="M23.922 16.992c-.861 1.495-5.859 5.023-11.922 5.023-6.063 0-11.061-3.528-11.922-5.023A.641.641 0 0 1 0 16.736v-2.869a.841.841 0 0 1 .053-.22c.372-.935 1.347-2.292 2.605-2.656.167-.429.414-1.055.644-1.517a10.195 10.195 0 0 1-.052-1.086c0-1.331.282-2.499 1.132-3.368.397-.406.89-.717 1.474-.952 1.399-1.136 3.392-2.093 6.122-2.093 2.731 0 4.767.957 6.166 2.093.584.235 1.077.546 1.474.952.85.869 1.132 2.037 1.132 3.368 0 .368-.014.733-.052 1.086.23.462.477 1.088.644 1.517 1.258.364 2.233 1.721 2.605 2.656a.832.832 0 0 1 .053.22v2.869a.641.641 0 0 1-.078.256ZM12.172 11h-.344a4.323 4.323 0 0 1-.355.508C10.703 12.455 9.555 13 7.965 13c-1.725 0-2.989-.359-3.782-1.259a2.005 2.005 0 0 1-.085-.104L4 11.741v6.585c1.435.779 4.514 2.179 8 2.179 3.486 0 6.565-1.4 8-2.179v-6.585l-.098-.104s-.033.045-.085.104c-.793.9-2.057 1.259-3.782 1.259-1.59 0-2.738-.545-3.508-1.492a4.323 4.323 0 0 1-.355-.508h-.016.016Zm.641-2.935c.136 1.057.403 1.913.878 2.497.442.544 1.134.938 2.344.938 1.573 0 2.292-.337 2.657-.751.384-.435.558-1.15.558-2.361 0-1.14-.243-1.847-.705-2.319-.477-.488-1.319-.862-2.824-1.025-1.487-.161-2.192.138-2.533.529-.269.307-.437.808-.438 1.578v.021c0 .265.021.562.063.893Zm-1.626 0c.042-.331.063-.628.063-.894v-.02c-.001-.77-.169-1.271-.438-1.578-.341-.391-1.046-.69-2.533-.529-1.505.163-2.347.537-2.824 1.025-.462.472-.705 1.179-.705 2.319 0 1.211.175 1.926.558 2.361.365.414 1.084.751 2.657.751 1.21 0 1.902-.394 2.344-.938.475-.584.742-1.44.878-2.497Z"/>
+        <path d="M14.5 14.25a1 1 0 0 1 1 1v2a1 1 0 0 1-2 0v-2a1 1 0 0 1 1-1Zm-5 0a1 1 0 0 1 1 1v2a1 1 0 0 1-2 0v-2a1 1 0 0 1 1-1Z"/>
+      </symbol>
+      <symbol id="i-github" viewBox="0 0 24 24">
+        <path d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943"/>
+      </symbol>
+      <symbol id="i-spring" viewBox="0 0 24 24">
+        <path d="M21.8537 1.4158a10.4504 10.4504 0 0 1-1.284 2.2471A11.9666 11.9666 0 1 0 3.8518 20.7757l.4445.3951a11.9543 11.9543 0 0 0 19.6316-8.2971c.3457-3.0126-.568-6.8649-2.0743-11.458zM5.5805 20.8745a1.0174 1.0174 0 1 1-.1482-1.4323 1.0396 1.0396 0 0 1 .1482 1.4323zm16.1991-3.5806c-2.9385 3.9263-9.2601 2.5928-13.2852 2.7904 0 0-.7161.0494-1.4323.1481 0 0 .2717-.1234.6174-.2469 2.8398-.9877 4.1732-1.1853 5.9018-2.0743 3.2349-1.6545 6.4698-5.2844 7.1118-9.0379-1.2347 3.6053-4.9881 6.7167-8.3959 7.9761-2.3459.8643-6.5685 1.7039-6.5685 1.7039l-.1729-.0988c-2.8645-1.4076-2.9632-7.6304 2.2718-9.6306 2.2966-.889 4.4696-.395 6.9637-.9877 2.6422-.6174 5.7043-2.5929 6.939-5.1857 1.3828 4.1732 3.062 10.643.0493 14.6434z"/>
+      </symbol>
+      <symbol id="i-java" viewBox="0 0 24 24">
+        <path d="M11.915 0 11.7.215C9.515 2.4 7.47 6.39 6.046 10.483c-1.064 1.024-3.633 2.81-3.711 3.551-.093.87 1.746 2.611 1.55 3.235-.198.625-1.304 1.408-1.014 1.939.1.188.823.011 1.277-.491a13.389 13.389 0 0 0-.017 2.14c.076.906.27 1.668.643 2.232.372.563.956.911 1.667.911.397 0 .727-.114 1.024-.264.298-.149.571-.33.91-.5.68-.34 1.634-.666 3.530-.604 1.903.062 2.872.39 3.559.704.687.314 1.15.664 1.925.664.767 0 1.395-.336 1.807-.9.412-.563.631-1.33.72-2.24.06-.623.055-1.32 0-2.066.454.45 1.117.604 1.213.424.29-.53-.816-1.314-1.013-1.937-.198-.624 1.642-2.366 1.549-3.236-.08-.748-2.707-2.568-3.748-3.586C16.428 6.374 14.308 2.394 12.130.215zm.175 6.038a2.95 2.95 0 0 1 2.943 2.942 2.95 2.95 0 0 1-2.943 2.943A2.95 2.95 0 0 1 9.148 8.98a2.950 2.950 0 0 1 2.942-2.942zM8.685 7.983a3.515 3.515 0 0 0-.145.997c0 1.951 1.6 3.55 3.55 3.55 1.95 0 3.55-1.598 3.55-3.55 0-.329-.046-.648-.132-.951.334.095.64.208.915.336a42.699 42.699 0 0 1 2.042 5.829c.678 2.545 1.01 4.92.846 6.607-.082.844-.29 1.51-.606 1.94-.315.431-.713.651-1.315.651-.593 0-.932-.27-1.673-.61-.741-.338-1.825-.694-3.792-.758-1.974-.064-3.073.293-3.821.669-.375.188-.659.373-.911.5s-.466.2-.752.2c-.53 0-.876-.209-1.160-.64-.285-.43-.474-1.101-.545-1.948-.141-1.693.176-4.069.823-6.614a43.155 43.155 0 0 1 1.934-5.783c.348-.167.749-.31 1.192-.425zm-3.382 4.362a.216.216 0 0 1 .13.031c-.166.56-.323 1.116-.463 1.665a33.849 33.849 0 0 0-.547 2.555 3.9 3.9 0 0 0-.2-.39c-.58-1.012-.914-1.642-1.16-2.08.315-.24 1.679-1.755 2.24-1.781zm13.394.01c.562.027 1.926 1.543 2.24 1.783-.246.438-.58 1.068-1.16 2.08a4.428 4.428 0 0 0-.163.309 32.354 32.354 0 0 0-.562-2.49 40.579 40.579 0 0 0-.482-1.652.216.216 0 0 1 .127-.03z"/>
+      </symbol>
+      <symbol id="i-dotnet" viewBox="0 0 24 24">
+        <path d="M24 8.77h-2.468v7.565h-1.425V8.77h-2.462V7.53H24zm-6.852 7.565h-4.821V7.53h4.63v1.24h-3.205v2.494h2.953v1.234h-2.953v2.604h3.396zm-6.708 0H8.882L4.78 9.863a2.896 2.896 0 0 1-.258-.51h-.036c.032.189.048.592.048 1.21v5.772H3.157V7.53h1.659l3.965 6.32c.167.261.275.442.323.54h.024c-.04-.233-.06-.629-.06-1.185V7.529h1.372zm-8.703-.693a.868.829 0 0 1-.869.829.868.829 0 0 1-.868-.83.868.829 0 0 1 .868-.828.868.829 0 0 1 .869.829Z"/>
+      </symbol>
+      <symbol id="i-node" viewBox="0 0 24 24">
+        <path d="M11.998,24c-0.321,0-0.641-0.084-0.922-0.247l-2.936-1.737c-0.438-0.245-0.224-0.332-0.08-0.383 c0.585-0.203,0.703-0.25,1.328-0.604c0.065-0.037,0.151-0.023,0.218,0.017l2.256,1.339c0.082,0.045,0.197,0.045,0.272,0l8.795-5.076 c0.082-0.047,0.134-0.141,0.134-0.238V6.921c0-0.099-0.053-0.192-0.137-0.242l-8.791-5.072c-0.081-0.047-0.189-0.047-0.271,0 L3.075,6.68C2.99,6.729,2.936,6.825,2.936,6.921v10.15c0,0.097,0.054,0.189,0.139,0.235l2.409,1.392 c1.307,0.654,2.108-0.116,2.108-0.89V7.787c0-0.142,0.114-0.253,0.256-0.253h1.115c0.139,0,0.255,0.112,0.255,0.253v10.021 c0,1.745-0.95,2.745-2.604,2.745c-0.508,0-0.909,0-2.026-0.551L2.28,18.675c-0.57-0.329-0.922-0.945-0.922-1.604V6.921 c0-0.659,0.353-1.275,0.922-1.603l8.795-5.082c0.557-0.315,1.296-0.315,1.848,0l8.794,5.082c0.57,0.329,0.924,0.944,0.924,1.603 v10.15c0,0.659-0.354,1.273-0.924,1.604l-8.794,5.078C12.643,23.916,12.324,24,11.998,24z M19.099,13.993 c0-1.9-1.284-2.406-3.987-2.763c-2.731-0.361-3.009-0.548-3.009-1.187c0-0.528,0.235-1.233,2.258-1.233 c1.807,0,2.473,0.389,2.747,1.607c0.024,0.115,0.129,0.199,0.247,0.199h1.141c0.071,0,0.138-0.031,0.186-0.081 c0.048-0.054,0.074-0.123,0.067-0.196c-0.177-2.098-1.571-3.076-4.388-3.076c-2.508,0-4.004,1.058-4.004,2.833 c0,1.925,1.488,2.457,3.895,2.695c2.88,0.282,3.103,0.703,3.103,1.269c0,0.983-0.789,1.402-2.642,1.402 c-2.327,0-2.839-0.584-3.011-1.742c-0.02-0.124-0.126-0.215-0.253-0.215h-1.137c-0.141,0-0.254,0.112-0.254,0.253 c0,1.482,0.806,3.248,4.655,3.248C17.501,17.007,19.099,15.91,19.099,13.993z"/>
+      </symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24">
+        <path d="M12 3.5a.75.75 0 0 1 .75.75v7h7a.75.75 0 0 1 0 1.5h-7v7a.75.75 0 0 1-1.5 0v-7h-7a.75.75 0 0 1 0-1.5h7v-7A.75.75 0 0 1 12 3.5Z"/>
+      </symbol>
+    </defs>
+  </svg>
 
-    <h2>Choose an integration</h2>
-    <ul class="grid">
-      <li>
-        <a class="card" href="spring-boot/">
-          <span class="lang">Java</span>
-          <h3>Spring Boot</h3>
-          <p>Auto-configured client, typed agents, Spring beans as tools, Actuator, Micrometer, and test support.</p>
-          <span class="go">View documentation →</span>
-        </a>
-      </li>
-    </ul>
+  <main>
+    <nav class="topbar" aria-label="Site">
+      <a class="brand" href="./">
+        <svg aria-hidden="true"><use href="#i-copilot"/></svg>
+        Copilot SDK Integrations
+      </a>
+      <a class="gh-link" href="https://github.com/brunoborges/copilot-sdk-integrations">
+        <svg aria-hidden="true"><use href="#i-github"/></svg>
+        Source on GitHub
+      </a>
+    </nav>
+
+    <section class="hero">
+      <div>
+        <span class="eyebrow">
+          <svg aria-hidden="true"><use href="#i-copilot"/></svg>
+          Built on the GitHub Copilot SDKs
+        </span>
+        <h1>Bring <span class="grad">GitHub Copilot</span> into the frameworks you already use</h1>
+        <p class="lead">
+          Framework integrations for the
+          <a href="https://github.com/github/copilot-sdk">GitHub Copilot SDKs</a>:
+          idiomatic configuration, typed agents, tools, and observability —
+          wired the way your framework expects.
+        </p>
+        <div class="actions">
+          <a class="btn primary" href="spring-boot/getting-started.html">Get started with Spring Boot →</a>
+          <a class="btn" href="#integrations">Browse integrations</a>
+        </div>
+      </div>
+
+      <figure class="diagram" aria-labelledby="diagram-caption">
+        <svg class="flow" viewBox="0 24 320 192" role="img" aria-labelledby="diagram-title">
+          <title id="diagram-title">GitHub Copilot connects through the Copilot SDK to framework integrations such as Spring Boot on Java</title>
+          <defs>
+            <linearGradient id="wire" gradientUnits="userSpaceOnUse" x1="92" x2="242" y1="0" y2="0">
+              <stop offset="0" stop-color="#8957e5"/>
+              <stop offset="1" stop-color="#6db33f"/>
+            </linearGradient>
+            <linearGradient id="copilot-fill" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0" stop-color="#8957e5"/>
+              <stop offset="1" stop-color="#0969da"/>
+            </linearGradient>
+          </defs>
+
+          <path class="wire" d="M92 120 C 120 120, 120 120, 140 120"/>
+          <path class="wire" d="M206 120 C 225 120, 225 70, 242 70"/>
+          <path class="wire" d="M206 120 C 225 120, 225 170, 242 170"/>
+
+          <!-- Copilot -->
+          <rect class="node" x="12" y="78" width="80" height="84" rx="14"/>
+          <use href="#i-copilot" x="34" y="90" width="36" height="36" fill="url(#copilot-fill)"/>
+          <text class="node-label" x="52" y="144" text-anchor="middle">Copilot</text>
+
+          <!-- SDK -->
+          <rect class="node" x="140" y="90" width="66" height="60" rx="12"/>
+          <text class="node-label" x="173" y="118" text-anchor="middle">SDK</text>
+          <text class="node-sub" x="173" y="134" text-anchor="middle">Java</text>
+
+          <!-- Spring Boot -->
+          <rect class="node" x="242" y="34" width="66" height="72" rx="12"/>
+          <use href="#i-spring" x="259" y="44" width="32" height="32" fill="#6db33f"/>
+          <text class="node-label" x="275" y="96" text-anchor="middle">Spring</text>
+
+          <!-- More -->
+          <rect class="node" x="242" y="134" width="66" height="72" rx="12" stroke-dasharray="4 4"/>
+          <use href="#i-plus" x="261" y="146" width="28" height="28" fill="currentColor" opacity="0.5"/>
+          <text class="node-sub" x="275" y="194" text-anchor="middle">More soon</text>
+        </svg>
+        <figcaption id="diagram-caption" class="sr-only">Integration architecture overview.</figcaption>
+      </figure>
+    </section>
+
+    <section id="integrations" aria-labelledby="integrations-title">
+      <h2 id="integrations-title">Choose an integration</h2>
+      <p class="section-lead">Which integration would you like to read about?</p>
+      <ul class="grid">
+        <li>
+          <a class="card" href="spring-boot/" style="--brand: #6db33f">
+            <span class="logos" aria-hidden="true">
+              <span class="logo"><svg fill="#6db33f"><use href="#i-spring"/></svg></span>
+              <span class="plus">+</span>
+              <span class="logo"><svg fill="#e76f00"><use href="#i-java"/></svg></span>
+            </span>
+            <span class="lang">Java</span>
+            <h3>Spring Boot</h3>
+            <p>Auto-configured client, typed agents, Spring beans as tools, Actuator, Micrometer, and test support.</p>
+            <span class="go">View documentation →</span>
+          </a>
+        </li>
+        <li>
+          <div class="card soon">
+            <svg aria-hidden="true"><use href="#i-plus"/></svg>
+            <strong>More integrations are planned</strong>
+            <span>Next up:</span>
+            <ul class="next" aria-label="Planned ecosystems">
+              <li><span class="logo"><svg style="fill:#512bd4" aria-hidden="true"><use href="#i-dotnet"/></svg></span>.NET</li>
+              <li><span class="logo"><svg style="fill:#5fa04e" aria-hidden="true"><use href="#i-node"/></svg></span>Node.js</li>
+            </ul>
+            <span>Follow the repository for updates.</span>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <section class="code" aria-labelledby="code-title">
+      <div>
+        <h2 id="code-title">Agents as plain interfaces</h2>
+        <p class="section-lead">Declare what you need; the integration does the wiring.</p>
+        <ul>
+          <li>Conversation history owned by the Copilot runtime</li>
+          <li>Spring beans exposed as Copilot tools</li>
+          <li>Local and remote MCP servers per agent</li>
+          <li>Micrometer observations and Actuator health</li>
+        </ul>
+      </div>
+      <div class="window">
+        <div class="bar" aria-hidden="true">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span class="file">SpringAdvisor.java</span>
+        </div>
+<pre><code><span class="tok-a">@CopilotAgent</span>(
+    name = <span class="tok-s">"spring-advisor"</span>,
+    instructions = <span class="tok-s">"Explain Spring Boot concepts concisely."</span>)
+<span class="tok-k">public interface</span> <span class="tok-t">SpringAdvisor</span> {
+    <span class="tok-t">CompletableFuture</span>&lt;<span class="tok-t">String</span>&gt; answer(
+        <span class="tok-a">@ConversationId</span> <span class="tok-t">String</span> conversationId,
+        <span class="tok-a">@UserMessage</span> <span class="tok-t">String</span> question);
+}</code></pre>
+      </div>
+    </section>
 
     <footer>
-      More integrations are planned.
-      Source on <a href="https://github.com/brunoborges/copilot-sdk-integrations">GitHub</a>.
+      <span>GitHub Copilot, Spring, Java, .NET, and Node.js are trademarks of their respective owners.</span>
+      <span>Source on <a href="https://github.com/brunoborges/copilot-sdk-integrations">GitHub</a>.</span>
     </footer>
   </main>
 </body>
