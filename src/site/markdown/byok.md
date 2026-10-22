@@ -129,4 +129,4 @@ to get a fresh configuration.
 
 **Previous:** [MCP servers](mcp.html)
 
-**Next:** [Events and customizers](events.html)
+**Next:** [Per-user authentication](authentication.html)

@@ -50,7 +50,7 @@ custom IDs, and persistence in the same backing store.
 | --- | --- |
 | Admission and initial observation | Calling thread; capacity checks are non-blocking. |
 | Agent SDK operation and cleanup | Java virtual-thread execution, bounded by the shared invocation limits. |
-| Tool methods and native event listeners | SDK callback execution; not implicitly a Spring web request scope. |
+| Tool methods, permission handlers, and native event listeners | SDK callback execution; not a Spring web request scope. Caller thread-local context (security context, MDC, observation) is restored when Micrometer Context Propagation is present. See [Per-user authentication](authentication.html#caller-context-in-tools-and-handlers). |
 | Future continuations | Normal `CompletableFuture` rules unless the application supplies an asynchronous executor. |
 | Reactive callbacks | SDK/subscription/operator context; use explicit Reactor scheduling when appropriate. |
 
@@ -65,7 +65,7 @@ custom IDs, and persistence in the same backing store.
 | Bound resume/history continuation cannot find the session | `CopilotConversationNotFoundException`; no replacement conversation is created. |
 | Cached bound proxy used after handle close | Failed invocation; a cold stream errors when subscribed. |
 | Listener failure | Logged; other observers continue; otherwise successful invocation fails after cleanup. |
-| Response timeout | Failed future/stream; it is not an end-to-end deadline or guaranteed runtime abort. |
+| Response timeout | Failed future/stream with outcome `timeout`; the integration requests a runtime abort of the turn (`CopilotSession.abort()`). It bounds response waiting, not an end-to-end deadline. |
 | Stream overflow | `CopilotAgentStreamOverflowException` after buffered events drain. |
 | Call after invoker shutdown | Failed result; queued work not yet executing SDK operations is rejected. |
 
@@ -73,10 +73,26 @@ Asynchronous causes can be wrapped by standard `CompletionException` or
 `ExecutionException` when using `join()` or `get()`. Cleanup failures are not
 converted to empty successful replies.
 
+Cancelling the returned future (`cancel(...)`), or cancelling a reactive
+subscription, stops waiting for the reply and asks the runtime to abort the
+in-flight turn through `CopilotSession.abort()`. The abort is requested before
+the session is closed and waited for up to 10 seconds; an abort failure is
+logged at `WARNING` and never replaces the cancellation. The observation
+outcome is `cancelled`.
+
+| Cancelled when | Effect |
+| --- | --- |
+| Queued, before SDK work starts | Skipped; no session is opened. |
+| While the session is being created/resumed | No message is sent; the session is closed. No abort is needed. |
+| While waiting for the reply | Abort, then close. |
+| After completion | No-op. |
+
 Cancellation does not release a conversation lock or execution reservation
-while actual work still owns resources. Queued calls are skipped when
-cancellation is observed before SDK work begins; their bookkeeping remains
-bounded until retirement. Shutdown rejects new work and waits for active work
+while actual work still owns resources: the next call on the same conversation
+and the shared capacity wait for the abort and session cleanup, and are
+released exactly once. Abort is best-effort: tokens already consumed are still
+billed, and a runtime may finish a tool call already in progress. Queued calls
+skipped before SDK work begins keep their bookkeeping bounded until retirement. Shutdown rejects new work and waits for active work
 and cleanup. There is no independent hard shutdown deadline that overrides SDK
 behavior.
 

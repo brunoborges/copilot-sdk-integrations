@@ -14,6 +14,7 @@ title: Configuration reference
 - [BYOK properties](#byok-properties)
 - [Execution properties](#execution-properties)
 - [Observation properties](#observation-properties)
+- [Security properties](#security-properties)
 - [Reactor properties](#reactor-properties)
 - [Configuration examples and precedence](#configuration-examples-and-precedence)
 
@@ -178,6 +179,18 @@ The Micrometer observation and core libraries and an `ObservationRegistry` bean
 are required for built-in instrumentation. A `MeterRegistry` bean is optional.
 Adding Spring Boot Actuator is the usual way to supply the registries/handlers.
 Without activation, ordinary agent use works with no-op telemetry.
+
+<a id="security-properties"></a>
+
+## Security properties
+
+Active only when `spring-security-oauth2-client` is on the classpath. See
+[Per-user authentication](authentication.html).
+
+| Property | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `copilot.security.oauth2.registration-id` | String | Unset | OAuth2 client registration whose user access token is sent as each session's GitHub token. Setting it creates an `OAuth2CopilotTokenResolver`. |
+| `copilot.security.oauth2.ambient-fallback` | Boolean | `false` | Fall back to ambient client authentication instead of failing when there is no authenticated user or authorized client. |
 
 <a id="reactor-properties"></a>
 

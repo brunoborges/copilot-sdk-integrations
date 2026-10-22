@@ -259,7 +259,8 @@ class CopilotAutoConfigurationTests {
                     "copilot.working-directory", "copilot.log-level", "copilot.cli-url",
                     "copilot.tcp-connection-token", "copilot.agents", "copilot.mcp.servers", "copilot.providers",
                     "copilot.observations.enabled",
-                    "copilot.execution.max-concurrent-invocations", "copilot.execution.max-outstanding-invocations");
+                    "copilot.execution.max-concurrent-invocations", "copilot.execution.max-outstanding-invocations",
+                    "copilot.security.oauth2.registration-id", "copilot.security.oauth2.ambient-fallback");
             for (var property : properties) {
                 assertThat(property.get("description").asText()).isNotBlank();
                 if (property.get("name").asText().equals("copilot.startup-timeout")) {

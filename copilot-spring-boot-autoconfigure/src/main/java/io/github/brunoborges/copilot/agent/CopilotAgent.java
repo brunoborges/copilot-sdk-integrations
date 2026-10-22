@@ -81,4 +81,11 @@ public @interface CopilotAgent {
 
     /** Names of {@link CopilotAgentCustomizer} beans applied after declarative session settings. */
     String[] customizers() default {};
+
+    /**
+     * Name of a {@link CopilotTokenResolver} bean that supplies the per-invocation GitHub token. When empty, a
+     * single {@code CopilotTokenResolver} bean (or the {@code @Primary} one) applies; without one, sessions use
+     * the client's ambient authentication.
+     */
+    String tokenResolver() default "";
 }

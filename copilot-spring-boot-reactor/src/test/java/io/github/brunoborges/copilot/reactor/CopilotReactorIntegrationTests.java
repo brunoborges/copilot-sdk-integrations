@@ -36,6 +36,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
 
 class CopilotReactorIntegrationTests {
 
@@ -115,10 +116,12 @@ class CopilotReactorIntegrationTests {
     }
 
     @Test
-    void cancellationDoesNotAbortSdkWorkOrReleaseCapacityBeforeCleanup() {
+    void cancellationAbortsSdkWorkAndReleasesCapacityOnlyAfterCleanup() {
         var client = mock(CopilotClient.class);
         var session = mock(CopilotSession.class);
         var response = new CompletableFuture<AssistantMessageEvent>();
+        var abort = new CompletableFuture<Void>();
+        when(session.abort()).thenReturn(abort);
         var started = new CountDownLatch(1);
         var reply = new AssistantMessageEvent();
         var data = mock(AssistantMessageEvent.AssistantMessageEventData.class);
@@ -143,11 +146,15 @@ class CopilotReactorIntegrationTests {
                         var subscriber = agent.stream("first", "hello").subscribe();
                         assertThat(started.await(5, TimeUnit.SECONDS)).isTrue();
                         subscriber.dispose();
-                        assertThat(response.isCancelled()).isFalse();
+                        verify(session, timeout(5000)).abort();
+                        assertThat(response.isCancelled()).isTrue();
                         verify(session, never()).close();
                         StepVerifier.create(agent.stream("other", "hello"))
                                 .expectError(RejectedExecutionException.class).verify(java.time.Duration.ofSeconds(5));
+                        abort.complete(null);
+                        verify(session, timeout(5000)).close();
                     } finally {
+                        abort.complete(null);
                         response.complete(reply);
                     }
                 });

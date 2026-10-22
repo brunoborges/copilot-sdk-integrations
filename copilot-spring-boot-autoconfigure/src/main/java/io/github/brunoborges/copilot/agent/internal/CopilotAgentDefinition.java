@@ -20,6 +20,7 @@ import com.github.copilot.rpc.ToolDefinition;
 import io.github.brunoborges.copilot.agent.CopilotAgent;
 import io.github.brunoborges.copilot.agent.CopilotAgentCustomizer;
 import io.github.brunoborges.copilot.agent.CopilotAgentListener;
+import io.github.brunoborges.copilot.agent.CopilotTokenResolver;
 import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.core.env.Environment;
@@ -30,7 +31,16 @@ public record CopilotAgentDefinition(
         String name, String typeName, String model, String reasoningEffort, Duration responseTimeout,
         SystemMessageConfig systemMessage, PermissionHandler permissions, List<ToolDefinition> tools,
         Map<String, McpServerConfig> mcpServers, ProviderConfig provider,
-        List<CopilotAgentListener> listeners, List<CopilotAgentCustomizer> customizers) {
+        List<CopilotAgentListener> listeners, List<CopilotAgentCustomizer> customizers,
+        CopilotTokenResolver tokenResolver) {
+
+    public CopilotAgentDefinition(String name, String typeName, String model, String reasoningEffort,
+            Duration responseTimeout, SystemMessageConfig systemMessage, PermissionHandler permissions,
+            List<ToolDefinition> tools, Map<String, McpServerConfig> mcpServers, ProviderConfig provider,
+            List<CopilotAgentListener> listeners, List<CopilotAgentCustomizer> customizers) {
+        this(name, typeName, model, reasoningEffort, responseTimeout, systemMessage, permissions, tools, mcpServers,
+                provider, listeners, customizers, null);
+    }
 
     private static final Logger log = Logger.getLogger(CopilotAgentDefinition.class.getName());
     private static final PermissionHandler DENY = (request, invocation) -> {
@@ -103,7 +113,15 @@ public record CopilotAgentDefinition(
                         ? settings.mcpServers() : Arrays.asList(annotation.mcpServers()), beans, environment),
                 ProviderBindings.bind(providerName, beans),
                 beans(annotation.listeners(), CopilotAgentListener.class, beans, environment),
-                beans(annotation.customizers(), CopilotAgentCustomizer.class, beans, environment));
+                beans(annotation.customizers(), CopilotAgentCustomizer.class, beans, environment),
+                tokenResolver(annotation, beans, environment));
+    }
+
+    private static CopilotTokenResolver tokenResolver(CopilotAgent annotation, BeanFactory beans, Environment environment) {
+        String selected = resolve(annotation.tokenResolver(), environment);
+        // An ambiguous global selection fails startup instead of silently falling back to ambient credentials.
+        return selected.isEmpty() ? beans.getBeanProvider(CopilotTokenResolver.class).getIfAvailable()
+                : beans.getBean(selected, CopilotTokenResolver.class);
     }
 
     private static String resolve(String value, Environment environment) {
