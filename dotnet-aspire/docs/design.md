@@ -1,19 +1,20 @@
 # Copilot SDK for Aspire: design
 
-Status: **Draft** · Targets: Aspire 13.x, .NET 10, `GitHub.Copilot.SDK` 1.0.x.
+Status: **Preview — implemented, not yet published to NuGet** · Targets: Aspire 13.x,
+`GitHub.Copilot.SDK` 1.0.x. The hosting package targets `net8.0`; the client
+package targets `net10.0` and `net8.0`.
 
-This document proposes the Aspire integration for the
+This document describes the Aspire integration for the
 [GitHub Copilot SDK for .NET](https://github.com/github/copilot-sdk/tree/main/dotnet).
 It is deliberately **thin and orchestration-focused**. Everything an application
-does with Copilot (agents, `IChatClient`, tools, identity, governance, testing)
+does with Copilot (agents, `IChatClient`, tools, identity, permissions, testing)
 lives in the [core .NET integration](../../dotnet-core/docs/design.md). This
 package set only:
 
-- **models, runs, secures, and deploys** the Copilot runtime as an AppHost
-  resource, and wires other Aspire resources (MCP servers, BYOK model
-  deployments) into it; and
+- **runs, secures, and wires** the Copilot runtime as an AppHost resource, and
+  connects other Aspire resources (MCP servers, BYOK model endpoints) to it; and
 - **connects** service projects to it with Aspire's client-integration
-  conventions, delegating to the core packages.
+  conventions, delegating to the core package.
 
 This mirrors how Aspire layers on libraries elsewhere: `Aspire.Npgsql` on
 `Npgsql`, `Aspire.OpenAI` on `OpenAI`.
@@ -33,11 +34,10 @@ This mirrors how Aspire layers on libraries elsewhere: `Aspire.Npgsql` on
    works, since core reads connection strings itself.
 3. **End-to-end traces on the dashboard.** App request → Copilot turn → model
    call → tool callback in the app, as one distributed trace.
-4. **Aspire-native wiring.** MCP servers and BYOK model deployments modeled in
-   the AppHost are connected by reference, not copied into configuration.
+4. **Aspire-native wiring.** MCP servers and BYOK model endpoints modeled in the
+   AppHost are connected by reference, not copied into configuration.
 5. **Secure, deployable runtime.** Secrets as parameters, a generated connection
-   token, internal-only ingress, and persisted session state on `aspire publish`
-   / `azd up`.
+   token, internal-only ingress, and persisted session state.
 
 ### Non-goals
 
@@ -51,17 +51,16 @@ This mirrors how Aspire layers on libraries elsewhere: `Aspire.Npgsql` on
 
 | Concern | Core (`dotnet-core`) | Aspire (`dotnet-aspire`) |
 | --- | --- | --- |
-| Runtime process | Managed stdio runtime for single apps, or connect to `Endpoint` | Runs the runtime as a resource (executable / container / existing) |
+| Runtime process | SDK-managed runtime for single apps, or connect to `Endpoint` | Runs the runtime as a resource (executable / container / existing) |
 | Connection settings | `Copilot:Endpoint`, `Copilot:ConnectionToken`, or a connection string | Produces the connection string |
 | GitHub service token | `Copilot:GitHubToken` | Secret parameter injected into the **runtime** |
 | `IChatClient`, conversations, tools | ✅ | — (uses core) |
-| Per-user identity, permissions, approvals, audit | ✅ | — |
+| Per-user identity, permissions, approvals | ✅ | — |
 | MCP servers | `Copilot:McpServers` configuration | `WithMcpServer(resource)` produces that configuration |
-| BYOK provider | `Copilot:Provider` configuration | `WithProvider(resource)` produces that configuration |
+| BYOK provider | `Copilot:Provider` or connection string keys | `WithProvider(resource)` produces the connection string keys |
 | Health checks | `AddHealthChecks().AddCopilot()` (opt-in) | AppHost health check on the resource; the client package turns core's on by default |
 | Telemetry | MEAI GenAI telemetry on `IChatClient` | Runtime OTLP wiring to the dashboard; the client package enables the MEAI source by default |
 | Testing | Fake `IChatClient` | `Aspire.Hosting.Testing` against the real runtime resource |
-| Deployment | — | Container, secrets, volume, internal ingress |
 
 ---
 
@@ -73,7 +72,7 @@ flowchart LR
         R["CopilotRuntimeResource<br/>'copilot'"]
         M["CopilotModelResource<br/>'chat' (gpt-5.x)"]
         MCP["MCP server resource<br/>(project / container)"]
-        BYOK["Aspire AI resource<br/>(OpenAI / Foundry / Ollama)"]
+        BYOK["Model endpoint<br/>(OpenAI / Azure OpenAI / Ollama)"]
         R --> M
         MCP -. WithMcpServer .-> R
         BYOK -. WithProvider .-> M
@@ -96,15 +95,12 @@ flowchart LR
 | Package (working name) | Used in | Depends on |
 | --- | --- | --- |
 | `CopilotSdk.Aspire.Hosting` | AppHost | `Aspire.Hosting`, `GitHub.Copilot.SDK` (bundled runtime, health pings) |
-| `CopilotSdk.Aspire` | Service projects | `CopilotSdk.Extensions.Hosting` (core) |
+| `CopilotSdk.Aspire` | Service projects | `CopilotSdk.Extensions.Hosting` (core), `OpenTelemetry.Extensions.Hosting` |
 
 > **Naming.** The `Aspire.*` NuGet prefix is reserved by Microsoft, so the
 > working prefix is `CopilotSdk.Aspire`, aligned with core's `CopilotSdk.*`.
 > Following Aspire convention, extension methods live in the `Aspire.Hosting`
-> (AppHost) and `Microsoft.Extensions.Hosting` (client) namespaces. If upstreamed
-> to the Aspire Community Toolkit, the packages would become
-> `CommunityToolkit.Aspire.Hosting.GitHub.Copilot` and
-> `CommunityToolkit.Aspire.GitHub.Copilot`.
+> (AppHost) and `Microsoft.Extensions.Hosting` (client) namespaces.
 
 ---
 
@@ -126,48 +122,52 @@ builder.Build().Run();
 ```
 
 That is all a developer writes to get a running, authenticated (via the
-developer's logged-in Copilot user), observable runtime during `aspire run`.
+developer's signed-in Copilot user), observable runtime during `aspire run`.
+Plain `WithReference(runtime)` or `WithReference(model)` is enough: MCP server
+and reasoning-effort settings are injected into every referencing resource
+automatically, so there is no separate `WithCopilot` call.
 
 ### 4.2 Resource model
 
 ```csharp
-public sealed class CopilotRuntimeResource(string name)
-    : Resource(name), IResourceWithConnectionString, IResourceWithEnvironment,
-      IResourceWithEndpoints, IResourceWithWaitSupport
+public sealed class CopilotRuntimeResource : ExecutableResource, IResourceWithConnectionString
 {
     public EndpointReference PrimaryEndpoint { get; }            // "tcp"
     public ParameterResource ConnectionTokenParameter { get; }   // generated secret
     public ParameterResource? GitHubTokenParameter { get; }      // optional secret
+    public IResource? InnerResource { get; }                     // the container or connection string after a swap
+    public IReadOnlyList<CopilotModelResource> Models { get; }
     public ReferenceExpression ConnectionStringExpression { get; }
     // Endpoint=tcp://{host}:{port};ConnectionToken={token}
 }
 
-public sealed class CopilotModelResource(string name, string model, CopilotRuntimeResource parent)
-    : Resource(name), IResourceWithParent<CopilotRuntimeResource>, IResourceWithConnectionString
+public sealed class CopilotModelResource : Resource, IResourceWithParent<CopilotRuntimeResource>, IResourceWithConnectionString
 {
     public string Model { get; }
-    // {parent connection string};Model={model}[;Provider=...]
+    public string? ReasoningEffort { get; }
+    public CopilotProviderReference? Provider { get; }
+    // {runtime connection string};Model={model}[;Provider=...;ProviderEndpoint=...;ProviderKey=...;WireApi=...]
 }
 ```
 
-`CopilotModelResource` mirrors `AddOpenAI(...).AddModel(...)` and
-`AddAzureAIFoundry(...).AddDeployment(...)`: projects reference *the model they
-use*, and the client integration picks up endpoint and model from one connection
-string. Referencing the runtime directly (`WithReference(copilot)`) is also
-supported when an app selects models itself.
+`CopilotModelResource` mirrors `AddOpenAI(...).AddModel(...)`: projects
+reference *the model they use*, and the client integration picks up endpoint
+and model from one connection string. Referencing the runtime directly
+(`WithReference(copilot)`) is also supported when an app selects models itself.
+
+`RunAsContainer()` and `AsExisting(...)` swap the running resource for a
+`CopilotContainerResource` or a connection string with the same name. The
+runtime resource delegates its annotations to the swapped-in resource, so
+builder calls made before or after the swap still apply.
 
 ### 4.3 How the runtime runs
 
-The runtime has no official container image, but the `GitHub.Copilot.SDK`
-package already downloads and checksum-verifies a pinned `copilot-runtime` for
-the build RID. The hosting package takes advantage of that:
-
 | Mode | When | What runs |
 | --- | --- | --- |
-| **Executable** (default for `aspire run`) | Local development | The SDK-bundled `copilot-runtime` from the AppHost output, started as an Aspire executable resource with `--headless --host 127.0.0.1 --port {endpoint}`. No CLI install. `WithCliPath(path)` or `COPILOT_CLI_PATH` overrides it. |
-| **Container** (`.RunAsContainer()`, and always for publish) | CI, Linux parity, deployment | A Dockerfile shipped with the package (Debian slim + checksum-verified CLI release, same version the SDK pins) via `WithDockerfile`, or `.WithImage(...)` for a prebuilt image in your registry. Binds `0.0.0.0` inside the container. |
-| **Existing** | Shared or remotely managed runtime | Standard Aspire: `builder.AddConnectionString("copilot")`, or `AddCopilot("copilot").AsExisting(endpoint, token)`. Nothing is started. |
-| **Client-managed** (no resource) | Single-service apps that don't need a shared runtime | No AppHost resource; the client integration falls back to the SDK default (stdio child process). Still gets lifecycle, health, telemetry, and `IChatClient`. |
+| **Executable** (default for `aspire run`) | Local development | `--headless --host 127.0.0.1 --port {endpoint}`. The executable is resolved from `COPILOT_CLI_PATH`, then the `copilot-runtime` that `GitHub.Copilot.SDK` places in the AppHost output (`runtimes/{rid}/native/copilot-runtime`), then `copilot` on `PATH`. `WithCliPath(path)` overrides it. No CLI install needed. |
+| **Container** (`RunAsContainer()`, and always in publish mode) | CI, Linux parity, deployment | Built from a Dockerfile shipped with the package (Debian slim + the checksum-verified CLI release the SDK pins), unless `WithImage(...)` selects a prebuilt image. Binds `0.0.0.0:3000` inside the container, internal-only endpoint. |
+| **Existing** | Shared or remotely managed runtime | `AddCopilot("copilot").AsExisting(endpoint, token)`, or plain `builder.AddConnectionString("copilot")`. Nothing is started. |
+| **Client-managed** (no resource) | Single-service apps | No AppHost resource; core starts the SDK-managed runtime itself. |
 
 All modes surface the same connection string, so service code never changes.
 
@@ -180,58 +180,53 @@ var copilot = builder.AddCopilot("copilot")
     .WithGitHubToken(token);     // → COPILOT_GITHUB_TOKEN on the runtime
 ```
 
-- **Executable mode without a token** uses the developer's logged-in Copilot
+- **Executable mode without a token** uses the developer's signed-in Copilot
   user: zero-config local development.
-- **Container and publish modes** require a token. If none is supplied,
-  `AddCopilot` creates a `{name}-github-token` secret parameter so the dashboard
-  prompts for it (Aspire interactive parameters) and `aspire publish` emits it as
-  a deployment secret. Credentials never appear in code or `appsettings.json`.
-- A **connection token** is always generated
-  (`CreateDefaultPasswordParameter`) and passed to the runtime as
-  `COPILOT_CONNECTION_TOKEN` and to clients through the connection string. The
-  endpoint is internal-only (`isExternal: false`) when published.
-- Per-user tokens are a *session* concern handled by the core integration
-  ([per-user identity](../../dotnet-core/docs/design.md#8-identity)), not a
-  runtime setting.
+- **Container mode** requires a token. Unless `WithGitHubToken` is called,
+  `RunAsContainer` adds a `{name}-github-token` secret parameter, which the
+  dashboard prompts for and publish emits as a deployment secret.
+- A **connection token** is always generated (`{name}-connection-token`) and
+  passed to the runtime as `COPILOT_CONNECTION_TOKEN` and to clients through the
+  connection string. `WithConnectionToken(parameter)` replaces it.
+- Per-user tokens are a *session* concern handled by core
+  ([runtime and identity](../../dotnet-core/docs/design.md#8-runtime-and-identity)),
+  not a runtime setting.
 
-### 4.5 Storage
+### 4.5 Storage and runtime settings
 
 ```csharp
-copilot.WithDataVolume();                       // named volume at COPILOT_HOME (container)
-copilot.WithDataBindMount("./.copilot-data");
-copilot.WithLifetime(ContainerLifetime.Persistent);
+copilot.WithDataVolume();                       // named volume at COPILOT_HOME (container mode)
+copilot.WithDataBindMount("./.copilot-data");   // bind mount (container) or COPILOT_HOME (executable)
+copilot.WithHomeDirectory("./.copilot-home");   // COPILOT_HOME for executable mode
+copilot.WithLogLevel(CopilotLogLevel.Debug);    // --log-level
 ```
 
 Session state lives under `COPILOT_HOME`; persisting it is what lets
 conversation resume survive restarts. Executable mode defaults `COPILOT_HOME` to
-an AppHost-scoped directory (not the developer's `~/.copilot`) so Aspire runs
-don't mix with interactive CLI sessions; `WithHomeDirectory(path)` overrides it.
+an AppHost-scoped directory under the local application data folder (not the
+developer's `~/.copilot`), so Aspire runs don't mix with interactive CLI
+sessions.
 
 ### 4.6 Observability wiring
 
-The runtime exports OTLP over **HTTP** only (`http/json` or `http/protobuf`), so
-`AddCopilot` applies `WithOtlpExporter(OtlpProtocol.HttpProtobuf)` and sets
-`COPILOT_OTEL_ENABLED=true`. Because the SDK propagates `traceparent` on
+The runtime exports OTLP over **HTTP** only, so `AddCopilot` applies
+`WithOtlpExporter(OtlpProtocol.HttpProtobuf)` and sets
+`COPILOT_OTEL_ENABLED=true` only when Aspire supplies an OTLP endpoint (the
+dashboard is running). Because the SDK propagates `traceparent` on
 create/resume/send and restores it on tool callbacks, the dashboard shows one
-trace spanning the API request, the Copilot turn, model calls, and tool execution
-back in the app. `WithMessageContentCapture()` opts in to
+trace spanning the API request, the Copilot turn, model calls, and tool
+execution back in the app. `WithMessageContentCapture()` opts in to
 `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` (off by default).
 
-### 4.7 Health, dashboard state, and commands
+### 4.7 Health
 
-- **Health check** (on by default): connects with the SDK and calls `PingAsync`
-  and `GetAuthStatusAsync`. Unhealthy until authenticated, so `WaitFor(copilot)`
-  means "ready to serve prompts".
-- **Dashboard properties**: runtime version, auth status and login, active
-  session count, available models (`ListModelsAsync`).
-- **Dashboard commands** (`WithCommand`): *List models*, *List sessions*,
-  *Delete idle sessions*, *Check authentication*. Destructive commands require
-  confirmation.
+The AppHost health check connects with the SDK and calls `PingAsync` and
+`GetAuthStatusAsync`. It is Unhealthy until the runtime answers and is signed
+in (or every model uses a BYOK provider), so `WaitFor(copilot)` means "ready to
+serve prompts". Dashboard properties and commands (list models, list sessions)
+are deferred.
 
 ### 4.8 MCP servers as resources
-
-Aspire already models MCP servers as projects or containers. Let the AppHost
-connect them to Copilot instead of copying URLs into configuration:
 
 ```csharp
 var docs = builder.AddProject<Projects.DocsMcp>("docs-mcp");
@@ -240,31 +235,33 @@ var copilot = builder.AddCopilot("copilot")
     .WithMcpServer(docs, path: "/mcp", tools: ["search_docs", "get_page"]);
 ```
 
-`WithMcpServer` adds a wait dependency and flows
-`Copilot__McpServers__docs-mcp__Url` (resolved for the **runtime's** network
-context, because the runtime, not the app, makes the MCP calls) plus the
-allow-listed tools to every project referencing this runtime or its models.
-Stdio MCP servers stay configuration-only (they run in the runtime's process
-space). Only the server's listed tools are allowed
-([core §7](../../dotnet-core/docs/design.md#7-permissions)).
+`WithMcpServer` makes the runtime wait for the server and flows
+`Copilot__McpServers__docs-mcp__Type=http`, `__Url` (resolved for the
+**runtime's** network, because the runtime, not the app, makes the MCP calls),
+and `__Tools__{i}` to every resource referencing this runtime or its models.
+Core exposes only listed tools
+([core §7](../../dotnet-core/docs/design.md#7-permissions)); with no `tools`,
+the app must list them in `Copilot:McpServers:{server}:Tools` itself. Stdio MCP
+servers stay configuration-only.
 
-### 4.9 BYOK through existing Aspire AI resources
+### 4.9 Models: reasoning effort and BYOK
 
 ```csharp
-var foundry = builder.AddAzureAIFoundry("foundry");
-var gpt     = foundry.AddDeployment("gpt", "gpt-5.2-codex", "2026-01-01", "OpenAI");
+var openai = builder.AddConnectionString("openai");   // Endpoint=https://...;Key=...
 
-var chat = copilot.AddModel("chat", "gpt-5.2-codex")
-                  .WithProvider(gpt, wireApi: CopilotWireApi.Responses);
+var chat = copilot.AddModel("chat", "gpt-5.4")
+                  .WithReasoningEffort("high")
+                  .WithProvider(openai, wireApi: CopilotWireApi.Responses);
 ```
 
-`WithProvider` composes the referenced resource's endpoint and key into the model
-connection string (`Provider=azure;ProviderEndpoint=...;ProviderKey=...`), which
-the client turns into `SessionConfig.Provider`. Supported sources: OpenAI,
-Azure OpenAI / Foundry, Ollama (Community Toolkit), and any
-`IResourceWithConnectionString` exposing an OpenAI-compatible endpoint. "Use
-Copilot's agent runtime with my own model" becomes a one-liner, while sessions
-still run in the Copilot runtime.
+- `WithReasoningEffort` flows as the `Copilot__ReasoningEffort` environment
+  variable to resources that reference the model.
+- `WithProvider(provider, wireApi?, type?)` reads the resource's `Uri` or
+  `Endpoint` and `Key` connection properties (or connection string keys) and
+  adds `Provider=...;ProviderEndpoint=...;ProviderKey=...;WireApi=...` to the
+  model connection string, which core turns into `SessionConfig.Provider`. The
+  type is inferred as `azure` for Azure OpenAI and Foundry resources, otherwise
+  `openai`. Keyless (Microsoft Entra ID) providers are not supported yet.
 
 ### 4.10 AppHost API summary
 
@@ -279,21 +276,21 @@ WithCliPath(string path) · WithHomeDirectory(string path) · WithLogLevel(Copil
 WithGitHubToken(IResourceBuilder<ParameterResource> token)
 WithConnectionToken(IResourceBuilder<ParameterResource> token)
 WithDataVolume(string? name = null) · WithDataBindMount(string source)
-WithMcpServer(IResourceBuilder<IResourceWithEndpoints> server, string path = "/mcp", string[]? tools = null)
+WithMcpServer(IResourceBuilder<IResourceWithEndpoints> server, string path = "/mcp", string[]? tools = null, string? endpointName = null)
 WithMessageContentCapture(bool enabled = true)
 
 // model
 WithReasoningEffort(string effort)
-WithProvider(IResourceBuilder<IResourceWithConnectionString> provider, CopilotWireApi? wireApi = null)
+WithProvider(IResourceBuilder<IResourceWithConnectionString> provider, CopilotWireApi? wireApi = null, string? type = null)
 ```
 
 ---
 
 ## 5. Client integration (service projects)
 
-The client package is a thin adapter: it turns an Aspire connection string into
-core options, turns on health checks and telemetry by Aspire convention, and
-returns the core builder. Everything after that is the core API.
+The client package is a thin adapter: it points core at an Aspire connection
+string, turns on health checks and telemetry by Aspire convention, and returns
+the core builder. Everything after that is the core API.
 
 ### 5.1 Usage
 
@@ -316,25 +313,30 @@ ICopilotBuilder AddKeyedCopilotClient(this IHostApplicationBuilder builder, stri
     Action<CopilotOptions>? configure = null, Action<CopilotClientSettings>? configureSettings = null);
 ```
 
-It calls core's `AddCopilot()` / `AddCopilot(name)` with `ConnectionName` set, and then:
+They call core's `AddCopilot()` / `AddCopilot(connectionName)` with
+`ConnectionName` set, and then:
 
 | Step | Behavior |
 | --- | --- |
-| Connection string | Parses `ConnectionStrings:{connectionName}` (`Endpoint`, `ConnectionToken`, `Model`, `Provider*`, `McpServers*`) into `Copilot:Endpoint`, `Copilot:ConnectionToken`, `Copilot:Model`, `Copilot:Provider`, and `Copilot:McpServers`. Uses core's parser, so core alone can also read it ([core §3.5](../../dotnet-core/docs/design.md#35-using-core-with-or-without-aspire)); this package adds Aspire settings and defaults. |
-| Settings | Binds `Aspire:Copilot:Client` and `Aspire:Copilot:Client:{connectionName}` (`DisableHealthChecks`, `DisableTracing`, `DisableMetrics`, `HealthCheckTimeout`), per Aspire precedence rules. |
+| Connection string | Core reads `ConnectionStrings:{connectionName}` (`Endpoint`, `ConnectionToken`, `Model`, `Provider`, `ProviderEndpoint`, `ProviderKey`, `WireApi`) ([core §3.3](../../dotnet-core/docs/design.md#33-configuration)). MCP servers and reasoning effort arrive as `Copilot__*` environment variables. |
+| Settings | Binds `Aspire:Copilot:Client` and `Aspire:Copilot:Client:{connectionName}` into `CopilotClientSettings` (`DisableHealthChecks`, `DisableTracing`, `DisableMetrics`, `HealthCheckTimeout`), then `configureSettings`. |
 | Health | Registers core's health check as `copilot_{connectionName}` (tag `ready`) unless disabled. |
-| Telemetry | Adds the MEAI GenAI source and meter to OpenTelemetry unless disabled, so `AddServiceDefaults()` exports them. |
-| Defaults | `Mode = Empty` (shared runtime); a missing connection string fails at startup with an actionable message. |
+| Telemetry | Adds the `Experimental.Microsoft.Extensions.AI` source and meter to OpenTelemetry unless disabled, so `AddServiceDefaults()` exports them. |
+| Validation | A missing connection string (and no `Copilot:Endpoint`) fails startup validation with a hint to call `WithReference`. |
 
 Configuration in `Copilot:*` (instructions, agents, and so on) still applies on
 top, exactly as in a non-Aspire app.
+
+**Keyed clients share one runtime.** Every agent uses one `CopilotClient`; when
+the default agent has no endpoint, it takes the one from the keyed client's
+connection string. Keyed clients pointing at different runtimes are not
+supported.
 
 ### 5.3 Connection string format
 
 ```
 Endpoint=tcp://localhost:52431;ConnectionToken=<secret>;Model=gpt-5.4
   [;Provider=azure;ProviderEndpoint=https://...;ProviderKey=<secret>;WireApi=responses]
-  [;McpServers=docs-mcp]   (URLs and tools flow as Copilot__McpServers__* environment variables)
 ```
 
 Keys are case-insensitive and versioned additively; unknown keys are ignored
@@ -347,32 +349,27 @@ with a warning so AppHost and service package versions can drift.
 Application behavior is tested by faking `IChatClient`
 ([core §11](../../dotnet-core/docs/design.md#11-testing-and-other-frameworks)).
 Distributed-app tests use `Aspire.Hosting.Testing` as usual, against the real
-runtime resource (or a local BYOK model through `WithProvider`). A dedicated
-test-runtime package is deferred until core has a scripted runtime.
+runtime resource.
 
 Hosting unit tests verify the resource model: environment, arguments, endpoints,
-connection string expression, manifest/publish output, and health check wiring.
+connection string expressions, container and existing swaps, and reference
+wiring.
 
 ---
 
 ## 7. Deployment
 
-`aspire publish` / `azd up` produce:
+In publish mode the runtime always runs as a container (bundled Dockerfile or
+`WithImage`) with an internal-only TCP endpoint, the GitHub token and connection
+token as secrets, and `COPILOT_HOME` on a volume when `WithDataVolume()` is
+used.
 
-- A container for the runtime (bundled Dockerfile or `WithImage`) with
-  internal-only ingress on its TCP port.
-- Secrets for the GitHub token and the generated connection token.
-- A persistent volume (for example, Azure Files on Container Apps) for
-  `COPILOT_HOME` when `WithDataVolume()` is used.
-- OTLP wired to the target's telemetry backend.
-
-Documentation guidance: one runtime per trust boundary; `Mode = Empty` plus
-per-user tokens for multi-user services; scale-out needs sticky session routing
-or shared session storage (link to the SDK scaling guide).
+Guidance: one runtime per trust boundary; per-user tokens for multi-user
+services; scale-out needs sticky session routing or shared session storage.
 
 ---
 
-## 8. Proposed repository layout
+## 8. Repository layout
 
 ```
 dotnet-aspire/
@@ -380,49 +377,30 @@ dotnet-aspire/
 ├── docs/design.md                         # this document
 ├── CopilotSdk.Aspire.slnx                 # references ../dotnet-core/src projects
 ├── src/
-│   ├── CopilotSdk.Aspire.Hosting/         # resources, Dockerfile, health check, commands
-│   └── CopilotSdk.Aspire/                 # connection string → core options, service defaults
-├── samples/
-│   ├── CopilotSample.AppHost/             # runtime + model + MCP server + API (+ BYOK variant)
-│   ├── CopilotSample.ServiceDefaults/
-│   ├── CopilotSample.Api/                 # reuses the core SupportApi shape
-│   └── CopilotSample.DocsMcp/             # tiny HTTP MCP server
+│   ├── CopilotSdk.Aspire.Hosting/         # resources, Dockerfile, health check
+│   └── CopilotSdk.Aspire/                 # client integration over core
 └── tests/
     ├── CopilotSdk.Aspire.Hosting.Tests/
-    ├── CopilotSdk.Aspire.Tests/
-    └── CopilotSdk.Aspire.EndToEnd.Tests/
+    └── CopilotSdk.Aspire.Tests/
 ```
 
-CI: a job scoped to `dotnet-aspire/**` **and** `dotnet-core/**`, since Aspire
-builds on core.
+A sample AppHost (runtime, model, MCP server, and API) is still to come.
 
 ---
 
 ## 9. Open questions
 
 1. **Package prefix.** `CopilotSdk.Aspire.*` vs. targeting the Aspire Community
-   Toolkit from day one.
-2. **Default run mode.** Bundled-runtime executable (fast, no Docker) vs.
-   container (Linux parity, matches publish). Proposal: executable for run,
-   container for publish.
-3. **MCP URL resolution.** Confirm the Aspire 13 API for resolving an endpoint
-   in the *runtime's* network context when the value is delivered to a different
-   resource (the app).
-4. **Connection string scope.** Should MCP and provider details travel in the
-   connection string or as separate `Copilot__*` environment variables? Proposal:
-   endpoint/token/model in the connection string, the rest as environment
-   variables.
-5. **Folder layout.** Separate `dotnet-core/` and `dotnet-aspire/` vs. one
-   `dotnet/` solution (see core open questions).
+   Toolkit (`CommunityToolkit.Aspire.Hosting.GitHub.Copilot`) from day one.
+2. **Multiple runtimes.** Keyed clients share one runtime today. Should a
+   service be able to connect to several?
 
 ---
 
 ## 10. Phasing
 
-Aspire phases trail the matching core phases.
-
-| Phase | Scope |
-| --- | --- |
-| **1. Run and connect** | `AddCopilot` (executable, container, existing), `AddModel`, secrets, connection string, OTLP wiring, AppHost health check; `AddCopilotClient` over core phase 1; sample AppHost and API. |
-| **2. Aspire-native wiring** | `WithMcpServer(resource)`, `WithProvider(resource)`, dashboard properties and commands. |
-| **3. Publish** | Publish/azd validation, documentation chapters. |
+| Phase | Scope | Status |
+| --- | --- | --- |
+| **1. Run and connect** | `AddCopilot` (executable, container, existing), `AddModel`, secrets, connection string, OTLP wiring, AppHost health check; `AddCopilotClient` over core. | ✅ Done; sample AppHost to come |
+| **2. Aspire-native wiring** | `WithMcpServer(resource)`, `WithProvider(resource)`, `WithReasoningEffort`. | ✅ Done |
+| **3. Dashboard and publish** | Dashboard properties and commands, publish/azd validation, keyless providers, documentation chapters. | Planned |

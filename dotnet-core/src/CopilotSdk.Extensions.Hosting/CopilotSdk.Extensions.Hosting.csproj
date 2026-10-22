@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
+    <TargetFramework></TargetFramework>
     <RootNamespace>CopilotSdk.Extensions.Hosting</RootNamespace>
     <Description>Integrates the GitHub Copilot SDK with the .NET Generic Host: registers a Microsoft.Extensions.AI IChatClient, owns the CopilotClient lifecycle, and binds configuration.</Description>
   </PropertyGroup>
