@@ -3,8 +3,24 @@
 Spring Boot starter for the [Copilot SDK for Java](https://github.com/github/copilot-sdk/tree/main/java), targeting
 **Spring Boot 4.1.1** and **Java 21**.
 
-See [DOCS.md](DOCS.md) for the API and configuration reference, including a
-linked table of contents, defaults, validation rules, and extension contracts.
+Read the [published documentation](https://brunoborges.github.io/copilot-spring-boot/).
+
+See [DOCS.md](DOCS.md) for the chaptered documentation and Maven Site build
+instructions. The canonical API/configuration chapters live in `src/site/markdown/`.
+
+## Documentation site
+
+Build the project-owned Maven skin, then generate the root documentation:
+
+```sh
+./mvnw --batch-mode --no-transfer-progress -pl copilot-spring-boot-site-skin -am install
+./mvnw --batch-mode --no-transfer-progress -N site
+```
+
+Open `target/site/index.html`, or run `./mvnw -N site:run` and browse
+`http://localhost:8080`. Stop preview with `Ctrl+C`. These commands do not make
+model requests. The site includes chapter navigation, readable reference tables,
+local light/dark styling, and mobile navigation.
 
 ## Status
 
@@ -25,6 +41,7 @@ permission approval and experimental in-process hosting are not provided.
 | Module | Purpose |
 | --- | --- |
 | `copilot-spring-boot-parent` | Root Maven parent and reactor with shared dependency and plugin management. |
+| `copilot-spring-boot-site-skin` | Internal Maven documentation layout, not an application dependency. |
 | `copilot-spring-boot-autoconfigure` | Client/options beans, typed agent proxies, properties, metadata, and lifecycle management. The SDK is an optional dependency. |
 | `copilot-spring-boot-starter` | Dependency-only JAR combining the SDK, auto-configuration module, and Spring Boot starter. |
 | `copilot-spring-boot-reactor` | Optional Reactor integration providing bounded `Flux<CopilotAgentEvent>` agent methods; not included in the basic starter. |

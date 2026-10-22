@@ -20,3 +20,7 @@ jobs:
           cache: maven
       - name: Build
         run: ./mvnw --batch-mode --no-transfer-progress verify
+      - name: Install documentation skin
+        run: ./mvnw --batch-mode --no-transfer-progress -pl copilot-spring-boot-site-skin -am install
+      - name: Build documentation site
+        run: ./mvnw --batch-mode --no-transfer-progress -N site

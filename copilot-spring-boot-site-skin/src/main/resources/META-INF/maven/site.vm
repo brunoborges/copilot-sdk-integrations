@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  $!site.body.head
+  <title>$esc.xml($title)</title>
+  <link rel="stylesheet" href="$relativePath/css/site.css"/>
+  $!headContent
+</head>
+<body>
+  <header id="banner">
+    <a id="bannerLeft" href="$relativePath/index.html">$esc.xml($site.name)</a>
+  </header>
+  <div id="breadcrumbs">
+    <span>Version $esc.xml($project.version)</span>
+    <div class="project-links">
+#foreach($item in $site.body.links)
+      <a href="$esc.xml($item.href)">$esc.xml($item.name)</a>
+#end
+    </div>
+  </div>
+  <div class="docs-layout">
+    <aside id="leftColumn">
+      <div id="navcolumn">
+#foreach($menu in $site.body.menus)
+        <p class="nav-heading">$esc.xml($menu.name)</p>
+        <ul>
+#foreach($item in $menu.items)
+#if($item.href == $currentFilePath)
+          <li><strong aria-current="page">$esc.xml($item.name)</strong></li>
+#else
+          <li><a href="$relativePath/$esc.xml($item.href)">$esc.xml($item.name)</a></li>
+#end
+#end
+        </ul>
+#end
+      </div>
+    </aside>
+    <main id="bodyColumn">
+      <article id="contentBox">
+        $bodyContent
+      </article>
+    </main>
+  </div>
+  <footer id="footer">$!site.body.footer</footer>
+</body>
+</html>
