@@ -70,7 +70,8 @@ Suspended turns are held in a process-local `CopilotApprovalStore`:
 
 - The default is `defaultApprovalStore`. Pass `approvals: createApprovalStore({ ttlMs })` to use your own.
 - If an approval is not answered within `ttlMs` (default 10 minutes), the turn is aborted.
-- A new user message in the same conversation replaces a turn that is still waiting.
+- Only the owner can answer an approval. The store records the `conversationId` and the principal (`context.principal`, else the ambient `getCopilotContext()` principal) of the request that started the turn. A response from another conversation or principal is treated like an unknown approval: the client gets the same "expired or unknown" tool error, and the suspended turn is left untouched. Approvals of ephemeral turns (no `conversationId`) match on the principal alone, so set a principal when you use them.
+- A new user message in the same conversation (from the same principal) replaces a turn that is still waiting.
 - With several replicas, use sticky sessions so that each conversation always reaches the same process.
 - Core's `approvalWindow` (default 120 s) still applies: an unanswered approval is denied when it runs out.
 

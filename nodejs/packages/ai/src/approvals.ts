@@ -9,15 +9,22 @@ export interface CopilotApprovalStoreOptions {
   ttlMs?: number;
 }
 
+/** @internal Who may answer an approval: the conversation and principal of the request that started the turn. */
+export interface ApprovalOwner {
+  conversationId: string | undefined;
+  principal: string | undefined;
+}
+
 interface PendingApproval {
   respond(response: PermissionResponse): void;
   toolCallId: string;
   pump: TurnPump;
+  owner: ApprovalOwner;
 }
 
 interface SuspendedTurn {
   pump: TurnPump;
-  conversationId: string | undefined;
+  owner: ApprovalOwner;
   timer: ReturnType<typeof setTimeout>;
 }
 
@@ -71,16 +78,20 @@ export class CopilotApprovalStore {
     this.approvals.delete(approvalId);
   }
 
-  /** @internal */
-  get(approvalId: string): PendingApproval | undefined {
-    return this.approvals.get(approvalId);
+  /**
+   * @internal Returns a pending approval only when `owner` matches the one recorded when it was
+   * registered; a mismatch looks exactly like an unknown id, so ids can't be probed.
+   */
+  get(approvalId: string, owner: ApprovalOwner): PendingApproval | undefined {
+    const pending = this.approvals.get(approvalId);
+    return pending && sameOwner(pending.owner, owner) ? pending : undefined;
   }
 
   /** @internal Keeps a turn alive between HTTP requests. */
-  suspend(pump: TurnPump, conversationId: string | undefined): void {
+  suspend(pump: TurnPump, owner: ApprovalOwner): void {
     const timer = setTimeout(() => void this.abort(pump), this.ttlMs);
     timer.unref?.();
-    this.suspended.set(pump, { pump, conversationId, timer });
+    this.suspended.set(pump, { pump, owner, timer });
   }
 
   /** @internal */
@@ -97,9 +108,9 @@ export class CopilotApprovalStore {
     return pump;
   }
 
-  /** @internal Aborts suspended turns of a conversation (a new user message supersedes them). */
-  async abortConversation(conversationId: string): Promise<void> {
-    const pumps = [...this.suspended.values()].filter((t) => t.conversationId === conversationId).map((t) => t.pump);
+  /** @internal Aborts the owner's suspended turns of a conversation (a new user message supersedes them). */
+  async abortConversation(owner: ApprovalOwner): Promise<void> {
+    const pumps = [...this.suspended.values()].filter((t) => sameOwner(t.owner, owner)).map((t) => t.pump);
     await Promise.all(pumps.map((pump) => this.abort(pump)));
   }
 
@@ -110,6 +121,10 @@ export class CopilotApprovalStore {
     }
     await pump.close();
   }
+}
+
+function sameOwner(a: ApprovalOwner, b: ApprovalOwner): boolean {
+  return a.conversationId === b.conversationId && a.principal === b.principal;
 }
 
 /** Creates a process-local approval store. */

@@ -1,7 +1,7 @@
 import type { ServerResponse } from "node:http";
 import { createUIMessageStreamResponse, isToolUIPart, type UIMessage, type UIMessageChunk } from "ai";
-import type { AgentHandle, CopilotAgentEvent, SendOptions } from "@copilot-sdk-integrations/core";
-import { defaultApprovalStore, type CopilotApprovalStore } from "./approvals.js";
+import { getCopilotContext, type AgentHandle, type CopilotAgentEvent, type SendOptions } from "@copilot-sdk-integrations/core";
+import { defaultApprovalStore, type ApprovalOwner, type CopilotApprovalStore } from "./approvals.js";
 import {
   definedInit,
   pipeUIMessageStreamToResponse,
@@ -98,12 +98,14 @@ const EXPIRED_APPROVAL = "The approval request expired or is unknown to this ser
 export function streamCopilotChat(options: StreamCopilotChatOptions): ReadableStream<UIMessageChunk> {
   const { agent, messages, conversationId, approvals = defaultApprovalStore, signal, tools, context, timeout, ...streamOptions } = options;
   const request = fromUIMessages(messages, conversationId === undefined ? {} : { conversationId });
+  // Approvals can only be answered (and suspended turns resumed) by the conversation and principal that started the turn.
+  const owner: ApprovalOwner = { conversationId, principal: context?.principal ?? getCopilotContext()?.principal };
 
   if (request.approvalResponses.length > 0) {
     let pump: TurnPump | undefined;
     const prefix: UIMessageChunk[] = [];
     for (const response of request.approvalResponses) {
-      const pending = approvals.get(response.approvalId);
+      const pending = approvals.get(response.approvalId, owner);
       if (!pending) {
         prefix.push({ type: "tool-output-error", toolCallId: response.toolCallId, errorText: EXPIRED_APPROVAL, ...dynamicFlag(streamOptions) });
         continue;
@@ -117,7 +119,7 @@ export function streamCopilotChat(options: StreamCopilotChatOptions): ReadableSt
     return pumpToStream(resumed, {
       suspendOnApproval: true,
       prefix,
-      onSuspend: () => approvals.suspend(resumed, conversationId),
+      onSuspend: () => approvals.suspend(resumed, owner),
     });
   }
 
@@ -132,19 +134,19 @@ export function streamCopilotChat(options: StreamCopilotChatOptions): ReadableSt
   if (tools !== undefined) sendOptions.tools = tools;
   if (context !== undefined) sendOptions.context = context;
   if (timeout !== undefined) sendOptions.timeout = timeout;
-  const before = conversationId !== undefined ? approvals.abortConversation(conversationId) : Promise.resolve();
+  const before = conversationId !== undefined ? approvals.abortConversation(owner) : Promise.resolve();
   const events = deferred(before, () => agent.stream(sendOptions));
 
   const pump: TurnPump = new TurnPump(events, {
     ...streamOptions,
     abort: () => controller.abort(),
-    onApproval: (approval) => approvals.register(approval.approvalId, { respond: approval.respond, toolCallId: approval.toolCallId, pump }),
+    onApproval: (approval) => approvals.register(approval.approvalId, { respond: approval.respond, toolCallId: approval.toolCallId, pump, owner }),
     onResolved: (approvalId) => approvals.unregister(approvalId),
   });
   bindSignal(pump, signal, approvals);
   return pumpToStream(pump, {
     suspendOnApproval: true,
-    onSuspend: () => approvals.suspend(pump, conversationId),
+    onSuspend: () => approvals.suspend(pump, owner),
   });
 }
 

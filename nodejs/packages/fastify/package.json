@@ -1,0 +1,55 @@
+{
+  "name": "@copilot-sdk-integrations/fastify",
+  "version": "0.1.0",
+  "description": "Fastify plugin for the GitHub Copilot SDK",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "typesVersions": { "*": { "ai": ["./dist/ai/index.d.ts"], "testing": ["./dist/testing/index.d.ts"] } },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./ai": {
+      "types": "./dist/ai/index.d.ts",
+      "default": "./dist/ai/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "default": "./dist/testing/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@copilot-sdk-integrations/core": "0.1.0",
+    "fastify-plugin": "^6.0.0",
+    "zod": "^4.0.0"
+  },
+  "peerDependencies": {
+    "@copilot-sdk-integrations/ai": "0.1.0",
+    "ai": "^7.0.0",
+    "fastify": "^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@copilot-sdk-integrations/ai": {
+      "optional": true
+    },
+    "ai": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@copilot-sdk-integrations/ai": "0.1.0",
+    "@fastify/under-pressure": "^9.2.0",
+    "ai": "^7.0.0",
+    "fastify": "^5.12.0"
+  }
+}

@@ -1,4 +1,4 @@
-import { getCopilotContext, type Copilot } from "@copilot-sdk-integrations/core";
+import { copilotErrorToHttp, CopilotIntegrationError, getCopilotContext, type Copilot } from "@copilot-sdk-integrations/core";
 import { createApprovalStore, pipeCopilotChatToResponse, pipeCopilotEventsToResponse, type CopilotApprovalStore } from "@copilot-sdk-integrations/ai";
 import type { UIMessage } from "ai";
 import express, { type NextFunction, type Request, type Response } from "express";
@@ -75,9 +75,15 @@ export function createApp({ copilot, notebook = new Notebook(), approvals = crea
     res.status(["stopping", "stopped", "failed"].includes(health.state) ? 503 : 200).json(health);
   });
 
+  // Copilot errors map to 429 (with Retry-After), 409, 404, 504, 499, 503, or 502; anything else is a 500.
   app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
-    console.error(error);
-    res.status(500).json({ error: "Copilot request failed" });
+    const { status, headers } = error instanceof CopilotIntegrationError ? copilotErrorToHttp(error) : { status: 500, headers: {} };
+    if (status >= 500) console.error(error);
+    if (res.headersSent) {
+      res.end();
+      return;
+    }
+    res.set(headers).status(status).json({ error: status === 500 ? "Copilot request failed" : error.message });
   });
 
   return app;

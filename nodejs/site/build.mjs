@@ -16,7 +16,7 @@ const sdkVersion = JSON.parse(readFileSync(join(here, "..", "packages", "core", 
 
 const site = {
   name: "Copilot SDK for Node.js",
-  description: "Guides and API reference for using the GitHub Copilot SDK with NestJS, the Vercel AI SDK, and plain Node.js.",
+  description: "Guides and API reference for using the GitHub Copilot SDK with NestJS, Fastify, the Vercel AI SDK, and plain Node.js.",
   links: [
     { name: "GitHub", href: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/nodejs" },
     { name: "Copilot Node SDK", href: "https://github.com/github/copilot-sdk/tree/main/nodejs" },
@@ -27,6 +27,7 @@ const site = {
       items: [
         ["Documentation", "index"],
         ["Getting started (NestJS)", "getting-started"],
+        ["Fastify plugin", "fastify"],
         ["Core without a framework", "core"],
       ],
     },
@@ -57,7 +58,7 @@ const site = {
       ],
     },
   ],
-  footer: `Copilot SDK integrations for Node.js &middot; ${version} &middot; Node.js 20.19+ / 22.12+ &middot; NestJS 11/12 &middot; AI SDK 7 &middot; Copilot SDK ${sdkVersion}`,
+  footer: `Copilot SDK integrations for Node.js &middot; ${version} &middot; Node.js 20.19+ / 22.12+ &middot; NestJS 11/12 &middot; Fastify 5 &middot; AI SDK 7 &middot; Copilot SDK ${sdkVersion}`,
 };
 
 // ---------------------------------------------------------------------------

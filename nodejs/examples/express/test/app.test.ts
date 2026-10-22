@@ -83,6 +83,12 @@ describe("express example", () => {
     expect(notes.body).toHaveLength(1);
   });
 
+  it("maps Copilot errors to HTTP statuses", async () => {
+    const { app } = setup((rt) => rt.failStart("no runtime"));
+    const res = await request(app).post("/api/ask").send({ question: "What is libuv?" }).expect(503);
+    expect(res.body.error).toMatch(/failed to start/);
+  });
+
   it("reports health without starting the runtime", async () => {
     const { app, runtime } = setup(() => {});
     const res = await request(app).get("/health").expect(200);

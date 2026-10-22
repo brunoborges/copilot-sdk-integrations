@@ -49,8 +49,9 @@ Versions surveyed: `@github/copilot-sdk` 1.0.26, `@nestjs/core` 12.2, `@nestjs/t
   server-side framework in Node.js, used for the same kind of applications as Spring
   Boot.
 
-NestJS isn't the only target. Express, Fastify, Hono, and Koa applications use the
-framework-agnostic core directly (§3).
+NestJS isn't the only target. Express, Hono, and Koa applications use the
+framework-agnostic core directly (§3), and Fastify applications use the
+`@copilot-sdk-integrations/fastify` plugin, designed in [DESIGN-FASTIFY.md](DESIGN-FASTIFY.md).
 
 ---
 
@@ -62,12 +63,15 @@ flowchart TB
   Core["core: client manager, agents, tools, governance, conversations, events, testing"]
   AI["ai: AI SDK provider, Agent adapter, UI message stream"]
   Nest["nestjs: CopilotModule, decorators, DI, Terminus, CLS"]
-  Apps["Express / Fastify / Hono apps"]
+  Fastify["fastify: plugin, decorators, hooks, SSE, useChat routes"]
+  Apps["Express / Hono apps"]
 
   SDK --> Core
   Core --> AI
   Core --> Nest
   AI --> Nest
+  Core --> Fastify
+  AI --> Fastify
   Core --> Apps
 ```
 
@@ -76,6 +80,7 @@ flowchart TB
 | `@copilot-sdk-integrations/core` | Client manager, agent definitions and execution, tool adapters, governance, conversation manager, session store interface, event model, test runtime | `@github/copilot-sdk`, `zod` |
 | `@copilot-sdk-integrations/ai` | `copilot()` AI SDK provider, AI SDK `Agent` adapter, Copilot event to UI message stream mapping | core, `ai` |
 | `@copilot-sdk-integrations/nestjs` | `CopilotModule`, decorators, discovery, CLS context, Terminus indicator, testing module | core, `@nestjs/common`, `@nestjs/core`; optional `ai`, `@nestjs/terminus`, `rxjs` |
+| `@copilot-sdk-integrations/fastify` | `copilotPlugin`, decorators, context hook, error handler, SSE, health and info routes; `./ai` `useChat` routes; `./testing` ([DESIGN-FASTIFY.md](DESIGN-FASTIFY.md)) | core, `fastify-plugin`; peer `fastify ^5`; optional `ai` |
 
 Packages live in an npm workspace under `nodejs/packages/*` and are released together
 with one version, like the Spring Boot reactor modules. Toolchain: TypeScript, Vitest,

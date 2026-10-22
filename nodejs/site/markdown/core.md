@@ -5,7 +5,8 @@ title: Core without a framework
 # Core without a framework
 
 `@copilot-sdk-integrations/core` is the framework-agnostic layer. It works from Express,
-Fastify, Hono, a queue worker, or a script. The NestJS and AI SDK packages are built on it.
+Hono, a queue worker, or a script. The NestJS, Fastify, and AI SDK packages are built on it;
+Fastify apps use the [Fastify plugin](fastify.md) instead of wiring the core by hand.
 
 **In this chapter**
 

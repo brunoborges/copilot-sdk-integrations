@@ -22,6 +22,7 @@ npm install @copilot-sdk-integrations/ai @copilot-sdk-integrations/core ai
 
 - [Chat UIs with useChat](#chat-uis-with-usechat)
 - [Express and NestJS](#express-and-nestjs)
+- [Fastify](#fastify)
 - [Tool approvals](#tool-approvals)
 - [UI message stream mapping](#ui-message-stream-mapping)
 - [AI SDK provider](#ai-sdk-provider)
@@ -92,6 +93,13 @@ async chat(@Body() body: { id: string; messages: UIMessage[] }, @Res() res: Resp
 In NestJS, inject the core instance with `@InjectCopilot()` and pass a definition, or use the
 `AgentHandle` of a functional agent (`@InjectAgent("support")`). Cancelling the stream, for
 example when the browser disconnects, aborts the Copilot turn.
+
+## Fastify
+
+The [Fastify plugin](fastify.md#usechat-and-approvals)'s `./ai` entry point wraps these
+helpers: `reply.copilotChat({ agent: "support" })` answers a `useChat` request with the request's
+context and disconnect signal, a per-user conversation id, and an app-wide approval store, and
+`reply.copilotUIStream(events)` streams any event iterable.
 
 ## Tool approvals
 

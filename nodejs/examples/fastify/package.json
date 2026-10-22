@@ -1,0 +1,24 @@
+{
+  "name": "@copilot-sdk-integrations/example-fastify",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Fastify 5 example using the @copilot-sdk-integrations/fastify plugin",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/server.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@copilot-sdk-integrations/ai": "0.1.0",
+    "@copilot-sdk-integrations/core": "0.1.0",
+    "@copilot-sdk-integrations/fastify": "0.1.0",
+    "ai": "^7.0.0",
+    "fastify": "^5.12.0",
+    "zod": "^4.0.0"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  }
+}

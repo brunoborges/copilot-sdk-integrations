@@ -1,4 +1,6 @@
-import type { CopilotAgentEvent } from "@copilot-sdk-integrations/core";
+import { serializeAgentEvent, type CopilotAgentEvent } from "@copilot-sdk-integrations/core";
+
+export { serializeAgentEvent };
 import type { MessageEvent } from "@nestjs/common";
 import { Observable, map, type OperatorFunction } from "rxjs";
 
@@ -36,20 +38,6 @@ export function observeAgentStream<T>(start: (signal: AbortSignal) => AsyncItera
 /** Converts any async iterable (for example `agent.stream(...)` from core) to an Observable. */
 export function fromAsyncIterable<T>(iterable: AsyncIterable<T>): Observable<T> {
   return observeAgentStream(() => iterable);
-}
-
-/** A JSON-serializable view of an event (drops `respond`, flattens errors). */
-export function serializeAgentEvent(event: CopilotAgentEvent): Record<string, unknown> {
-  switch (event.type) {
-    case "permission-request": {
-      const { respond: _respond, ...rest } = event;
-      return rest;
-    }
-    case "error":
-      return { type: "error", error: { name: event.error.name, message: event.error.message } };
-    default:
-      return { ...event };
-  }
 }
 
 /** Maps an event to a Nest SSE `MessageEvent` (`event: <type>`, JSON data). */
