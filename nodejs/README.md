@@ -1,6 +1,6 @@
 # Copilot for Node.js
 
-Status: **design**. Nothing is implemented or published yet.
+Status: **in development, not published**.
 
 Integrations for the
 [Copilot SDK for Node.js/TypeScript](https://github.com/github/copilot-sdk/tree/main/nodejs):
@@ -21,5 +21,28 @@ export abstract class SupportAgent {
   abstract answer(@ConversationId() id: string, @Message() question: string): Promise<string>;
 }
 ```
+
+## Packages
+
+| Package | Purpose |
+| --- | --- |
+| [`@copilot-sdk-integrations/core`](packages/core/) | Client lifecycle, typed agents, tools, governance, conversations, and the scripted test runtime |
+| [`@copilot-sdk-integrations/ai`](packages/ai/) | AI SDK provider and UI message stream adapter |
+| [`@copilot-sdk-integrations/nestjs`](packages/nestjs/) | `CopilotModule`, decorators, Terminus health indicator, and testing module |
+
+## Building
+
+Install Node.js `^20.19 || >=22.12`. The packages live in an npm workspace.
+
+```sh
+cd nodejs
+npm install
+npm run build
+npm test
+```
+
+Tests use the scripted test runtime; they need neither Copilot credentials nor a
+running Copilot runtime and make no paid requests. GitHub Actions runs the same build
+on Node.js 20, 22, and 24 for pushes and pull requests.
 
 Read the full design in [DESIGN.md](DESIGN.md).

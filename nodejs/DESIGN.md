@@ -1,7 +1,7 @@
 # Copilot for Node.js: shared core and NestJS module
 
-Status: **draft for review**. Nothing here is implemented yet. API and package names are
-working names.
+Status: **approved; implementation in progress**. API and package names are working
+names.
 
 This document designs the Node.js integrations for the
 [Copilot SDK for Node.js/TypeScript](https://github.com/github/copilot-sdk/tree/main/nodejs)
@@ -77,7 +77,7 @@ flowchart TB
 | `@copilot-sdk-integrations/ai` | `copilot()` AI SDK provider, AI SDK `Agent` adapter, Copilot event to UI message stream mapping | core, `ai` |
 | `@copilot-sdk-integrations/nestjs` | `CopilotModule`, decorators, discovery, CLS context, Terminus indicator, testing module | core, `@nestjs/common`, `@nestjs/core`; optional `ai`, `@nestjs/terminus`, `rxjs` |
 
-Packages live in a pnpm workspace under `nodejs/packages/*` and are released together
+Packages live in an npm workspace under `nodejs/packages/*` and are released together
 with one version, like the Spring Boot reactor modules. Toolchain: TypeScript (ESM and
 CJS builds), Vitest, Node.js `^20.19 || >=22.12` (the SDK's floor), and a CI workflow
 scoped to `nodejs/**`.
