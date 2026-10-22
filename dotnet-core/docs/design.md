@@ -151,7 +151,8 @@ app.Run();
 ### 5.2 API
 
 ```csharp
-ICopilotBuilder AddCopilot(this IServiceCollection services, Action<CopilotOptions>? configure = null);
+ICopilotBuilder AddCopilot(this IServiceCollection services, Action<CopilotOptions>? configure = null,
+    string connectionName = "copilot");                                // optional connection-string fallback (§5.3)
 ICopilotBuilder AddCopilot(this IServiceCollection services, IConfiguration section);
 ICopilotBuilder AddKeyedCopilot(this IServiceCollection services, string name, ...); // multiple runtimes
 
@@ -228,6 +229,29 @@ validators (AOT-friendly) and fail fast: unknown MCP server or provider names,
 non-loopback endpoints without a token, invalid durations, and so on.
 Configuration overrides code for agent profiles, so operators can change a model
 or tighten tools without a rebuild.
+
+**Connection strings.** Core also understands the connection-string format
+(`Endpoint=tcp://host:port;ConnectionToken=...;Model=...`). If
+`Copilot:Client:Endpoint` is not set and `ConnectionStrings:copilot` exists (or
+the name passed to `AddCopilot(connectionName: "...")`), core parses it into
+`Copilot:Client` and the default agent model. Explicit `Copilot:*` values win.
+This lets an app consume a runtime from an Aspire AppHost, or any host that
+emits connection strings, **without** referencing the Aspire client package.
+The parser lives in core, and `CopilotSdk.Aspire` reuses it.
+
+### 5.4 Using core with or without Aspire
+
+Core has no dependency on Aspire. Aspire is an optional layer on top:
+
+| Setup | Packages | Runtime | Registration |
+| --- | --- | --- | --- |
+| Single app, local or simple deploy | Core | Managed stdio (SDK-bundled runtime) | `services.AddCopilot()` |
+| App connecting to a shared runtime | Core | Your own headless runtime | `services.AddCopilot()` + `Copilot:Client:Endpoint` |
+| Aspire AppHost, plain core client | Core (+ `CopilotSdk.Aspire.Hosting` in AppHost) | AppHost resource | `services.AddCopilot()` (reads the connection string) |
+| Aspire end to end | Core + `CopilotSdk.Aspire` | AppHost resource | `builder.AddCopilotClient("chat")`, which also enables health checks and telemetry by Aspire convention |
+
+All four return the same `ICopilotBuilder`, so agent, tool, and governance code
+does not change between them.
 
 ---
 

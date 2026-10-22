@@ -323,7 +323,7 @@ It calls core's `AddCopilot()` / `AddKeyedCopilot()` and then:
 
 | Step | Behavior |
 | --- | --- |
-| Connection string | Parses `ConnectionStrings:{connectionName}` (`Endpoint`, `ConnectionToken`, `Model`, `Provider*`, `McpServers*`) into `Copilot:Client`, the default agent model, `Copilot:Providers`, and `Copilot:McpServers`. |
+| Connection string | Parses `ConnectionStrings:{connectionName}` (`Endpoint`, `ConnectionToken`, `Model`, `Provider*`, `McpServers*`) into `Copilot:Client`, the default agent model, `Copilot:Providers`, and `Copilot:McpServers`. Uses core's parser, so core alone can also read it ([core §5.4](../../dotnet-core/docs/design.md#54-using-core-with-or-without-aspire)); this package adds Aspire settings and defaults. |
 | Settings | Binds `Aspire:Copilot:Client` and `Aspire:Copilot:Client:{connectionName}` (`DisableHealthChecks`, `DisableTracing`, `DisableMetrics`, `HealthCheckTimeout`), per Aspire precedence rules. |
 | Health | Registers core's `CopilotHealthCheck` as `copilot_{connectionName}` (tag `ready`) unless disabled. |
 | Telemetry | Adds core's `ActivitySource`/`Meter` and MEAI GenAI instrumentation to OpenTelemetry unless disabled, so `AddServiceDefaults()` exports them. |

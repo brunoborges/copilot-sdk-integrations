@@ -9,6 +9,10 @@ features (agents, `IChatClient`, tools, permissions, testing) come from the
 [core .NET integration](../dotnet-core/), which this package builds on, the same
 way `Aspire.Npgsql` builds on `Npgsql`.
 
+The client package is optional. A service that uses only core can still read
+the AppHost's connection string. The client package adds Aspire's health-check
+and telemetry defaults.
+
 > **Status: design phase.** No code or packages yet. Read the
 > [design document](docs/design.md) and open an issue or PR with feedback.
 
