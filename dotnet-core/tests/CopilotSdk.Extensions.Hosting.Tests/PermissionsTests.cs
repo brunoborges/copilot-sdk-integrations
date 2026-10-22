@@ -77,10 +77,11 @@ public sealed class PermissionsTests
     public async Task RequiresApproval_UsesOnApproval(bool approve)
     {
         PermissionRequest? seen = null;
-        using var sp = Build(o => o.OnApproval = (request, services, ct) =>
+        using var sp = Build(o => o.OnApproval = call =>
         {
-            seen = request;
-            Assert.NotNull(services);
+            seen = call.Request;
+            Assert.Equal("delete_user", call.ToolName);
+            Assert.NotNull(call.Services);
             return ValueTask.FromResult(approve);
         });
         var request = CustomTool("delete_user");
@@ -104,10 +105,10 @@ public sealed class PermissionsTests
         var user = new AsyncLocal<string?>();
         string? seenUser = null;
         IServiceProvider? seenServices = null;
-        using var sp = Build(o => o.OnApproval = (request, services, ct) =>
+        using var sp = Build(o => o.OnApproval = call =>
         {
             seenUser = user.Value;
-            seenServices = services;
+            seenServices = call.Services;
             return ValueTask.FromResult(true);
         });
         using var turnServices = new ServiceCollection().BuildServiceProvider();
@@ -131,10 +132,35 @@ public sealed class PermissionsTests
         Assert.Same(turnServices, seenServices);
     }
 
+    [Theory]
+    [InlineData(50, true)]
+    [InlineData(400, false)]
+    public async Task OnApproval_CanReadTypedArguments(decimal amount, bool expectApproved)
+    {
+        using var sp = Build(o => o.OnApproval = call => ValueTask.FromResult(call.GetArgument<decimal>("Amount") < 100));
+        var request = new PermissionRequestCustomTool
+        {
+            ToolName = "delete_user",
+            ToolDescription = "d",
+            Args = System.Text.Json.JsonSerializer.SerializeToElement(new { orderId = "1002", amount }),
+        };
+
+        var decision = await GetHandler(sp)(request, Invocation());
+
+        if (expectApproved)
+        {
+            Assert.IsType<PermissionDecisionApproveOnce>(decision);
+        }
+        else
+        {
+            Assert.IsType<PermissionDecisionReject>(decision);
+        }
+    }
+
     [Fact]
     public async Task OnApprovalThrows_IsRejected()
     {
-        using var sp = Build(o => o.OnApproval = (_, _, _) => throw new InvalidOperationException("boom"));
+        using var sp = Build(o => o.OnApproval = _ => throw new InvalidOperationException("boom"));
 
         var decision = await GetHandler(sp)(CustomTool("delete_user"), Invocation());
 

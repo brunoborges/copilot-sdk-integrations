@@ -1,3 +1,4 @@
+using System.Text.Json;
 using GitHub.Copilot;
 using GitHub.Copilot.Rpc;
 using Microsoft.Extensions.Logging;
@@ -41,7 +42,7 @@ internal sealed partial class CopilotPermissionsSessionConfigurator(
         switch (request)
         {
             case PermissionRequestCustomTool customTool when tools.ApprovalRequired.Contains(customTool.ToolName):
-                return ApproveAsync(agentName, request, invocation);
+                return ApproveAsync(agentName, customTool, invocation);
 
             case PermissionRequestCustomTool customTool when tools.ToolNames.Contains(customTool.ToolName):
                 return Task.FromResult(PermissionDecision.ApproveOnce());
@@ -55,7 +56,7 @@ internal sealed partial class CopilotPermissionsSessionConfigurator(
         }
     }
 
-    private async Task<PermissionDecision> ApproveAsync(string agentName, PermissionRequest request, PermissionInvocation invocation)
+    private async Task<PermissionDecision> ApproveAsync(string agentName, PermissionRequestCustomTool request, PermissionInvocation invocation)
     {
         if (options.Get(agentName).OnApproval is not { } onApproval)
         {
@@ -64,11 +65,13 @@ internal sealed partial class CopilotPermissionsSessionConfigurator(
 
         try
         {
+            var arguments = ToJsonElement(request.Args);
             var approved = await CopilotToolFactory.RunInTurnAsync(
                 turns,
                 rootServices,
                 invocation.SessionId,
-                async (services, ct) => await onApproval(request, services, ct).ConfigureAwait(false),
+                async (services, ct) => await onApproval(
+                    new CopilotApprovalRequest(request.ToolName, arguments, request, services, ct)).ConfigureAwait(false),
                 CancellationToken.None).ConfigureAwait(false);
 
             return approved ? PermissionDecision.ApproveOnce() : PermissionDecision.Reject(NotApprovedFeedback);
@@ -79,6 +82,14 @@ internal sealed partial class CopilotPermissionsSessionConfigurator(
             return PermissionDecision.Reject(NotApprovedFeedback);
         }
     }
+
+    private static JsonElement ToJsonElement(object? args) => args switch
+    {
+        JsonElement element => element,
+        null => default,
+        string json => JsonDocument.Parse(json).RootElement.Clone(),
+        _ => JsonSerializer.SerializeToElement(args, args.GetType(), JsonSerializerOptions.Web),
+    };
 
     /// <summary>
     /// An MCP tool is allowed when its server is configured on the agent and the server's

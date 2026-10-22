@@ -191,6 +191,32 @@ public sealed class ChatClientTests
     }
 
     [Fact]
+    public async Task ResponseSchema_IsMadeStrict()
+    {
+        await using var f = Create();
+        f.Gateway.Setup = s => s.OnSendAndWait = (_, _, _) =>
+            Task.FromResult<AssistantMessageEvent?>(FakeEvents.Assistant("""{"category":"billing","priority":2}"""));
+
+        await f.Chat.GetResponseAsync<Triage>("classify", cancellationToken: TestContext.Current.CancellationToken);
+
+        var schema = System.Text.Json.JsonSerializer.SerializeToElement(Assert.Single(f.Session.Sent).ResponseSchema);
+        Assert.False(schema.GetProperty("additionalProperties").GetBoolean());
+        Assert.Equal(2, schema.GetProperty("required").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task TrailingUserMessages_AreCombinedIntoOnePrompt()
+    {
+        await using var f = Create();
+
+        await f.Chat.GetResponseAsync(
+            [new(ChatRole.User, "first"), new(ChatRole.User, "second")],
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal("first\n\nsecond", Assert.Single(f.Session.Sent).Prompt);
+    }
+
+    [Fact]
     public async Task SameConversation_IsSerialized()
     {
         await using var f = Create();

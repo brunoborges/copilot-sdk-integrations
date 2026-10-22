@@ -84,10 +84,11 @@ public sealed class CopilotOptions
     public Func<IServiceProvider, CancellationToken, Task<string?>>? GitHubTokenProvider { get; set; }
 
     /// <summary>
-    /// Decides permission requests for tools marked with <see cref="RequiresApprovalAttribute"/>.
-    /// Return <see langword="true"/> to approve. When <see langword="null"/>, such requests are denied.
+    /// Decides calls to tools marked with <see cref="RequiresApprovalAttribute"/>.
+    /// Return <see langword="true"/> to approve. When <see langword="null"/>, such calls are denied.
     /// </summary>
-    public Func<PermissionRequest, IServiceProvider, CancellationToken, ValueTask<bool>>? OnApproval { get; set; }
+    /// <example><c>o.OnApproval = call => ValueTask.FromResult(call.GetArgument&lt;decimal&gt;("amount") &lt; 100);</c></example>
+    public Func<CopilotApprovalRequest, ValueTask<bool>>? OnApproval { get; set; }
 
     internal List<Action<CopilotClientOptions>> ClientConfigurations { get; } = [];
 

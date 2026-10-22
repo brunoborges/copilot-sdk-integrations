@@ -464,39 +464,47 @@ internal sealed class CopilotChatClient : IChatClient
                     "new user message instead of replaying the transcript.");
             }
 
-            ChatMessage? lastUser = null;
-            for (var i = list.Count - 1; i >= 0; i--)
+            // The new turn is every user message after the last assistant message (e.g. MEAI may append the
+            // schema prompt as a separate user message); earlier history already lives in the runtime session.
+            var start = list.Count;
+            while (start > 0 && list[start - 1].Role != ChatRole.Assistant)
             {
-                if (list[i].Role == ChatRole.User)
-                {
-                    lastUser = list[i];
-                    break;
-                }
+                start--;
             }
 
-            if (lastUser is null)
+            var userMessages = list.Skip(start).Where(m => m.Role == ChatRole.User).ToList();
+            if (userMessages.Count == 0)
             {
                 throw new ArgumentException("The request must contain a user message.", nameof(messages));
             }
 
             List<Attachment>? attachments = null;
-            foreach (var content in lastUser.Contents)
+            var promptBuilder = new StringBuilder();
+            foreach (var userMessage in userMessages)
             {
-                if (content is DataContent data)
+                if (!string.IsNullOrWhiteSpace(userMessage.Text))
                 {
-                    attachments ??= [];
-                    attachments.Add(new AttachmentBlob
-                    {
-                        Data = Convert.ToBase64String(data.Data.Span),
-                        MimeType = data.MediaType,
-                        DisplayName = data.Name,
-                    });
+                    AppendParagraph(promptBuilder, userMessage.Text);
                 }
 
-                // TODO: map UriContent and other content kinds to Copilot attachments when there is a clear equivalent.
+                foreach (var content in userMessage.Contents)
+                {
+                    if (content is DataContent data)
+                    {
+                        attachments ??= [];
+                        attachments.Add(new AttachmentBlob
+                        {
+                            Data = Convert.ToBase64String(data.Data.Span),
+                            MimeType = data.MediaType,
+                            DisplayName = data.Name,
+                        });
+                    }
+
+                    // TODO: map UriContent and other content kinds to Copilot attachments when there is a clear equivalent.
+                }
             }
 
-            var prompt = lastUser.Text;
+            var prompt = promptBuilder.ToString();
             if (string.IsNullOrWhiteSpace(prompt) && attachments is null)
             {
                 throw new ArgumentException("The last user message has no text or data content.", nameof(messages));
@@ -525,6 +533,12 @@ internal sealed class CopilotChatClient : IChatClient
             return new ChatRequest(conversationId, prompt, attachments, systemText);
         }
 
+        private static readonly AIJsonSchemaTransformOptions StrictSchemaOptions = new()
+        {
+            DisallowAdditionalProperties = true,
+            RequireAllProperties = true,
+        };
+
         public MessageOptions ToMessageOptions(ChatOptions? options)
         {
             var message = new MessageOptions { Prompt = Prompt };
@@ -534,10 +548,11 @@ internal sealed class CopilotChatClient : IChatClient
             }
 
             // Structured output: MEAI's GetResponseAsync<T> sends a JSON schema and parses the reply text, which the
-            // runtime constrains to the schema (the same mechanism as the SDK's SendAndWaitAsync<T>).
+            // runtime constrains to the schema (the same mechanism as the SDK's SendAndWaitAsync<T>). Models enforce
+            // strict mode, which requires additionalProperties:false and every property listed as required.
             if (options?.ResponseFormat is ChatResponseFormatJson { Schema: { } schema })
             {
-                message.ResponseSchema = schema;
+                message.ResponseSchema = AIJsonUtilities.TransformSchema(schema, StrictSchemaOptions);
             }
 
             return message;
