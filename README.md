@@ -134,6 +134,7 @@ See also the SDK's
 | Local and remote MCP servers | [MCP servers](src/site/markdown/mcp.md) |
 | Bring-your-own-key model providers | [BYOK providers](src/site/markdown/byok.md) |
 | Listeners and customizers | [Events and customizers](src/site/markdown/events.md) |
+| Tool filtering, permission policies, and hooks | [Tool governance, permissions, and hooks](src/site/markdown/governance.md) |
 | Every `copilot.*` property | [Configuration reference](src/site/markdown/configuration.md) |
 | `Flux<CopilotAgentEvent>` streaming | [Reactive streaming](src/site/markdown/streaming.md) |
 | Micrometer observations and token counters | [Observability](src/site/markdown/observability.md) |

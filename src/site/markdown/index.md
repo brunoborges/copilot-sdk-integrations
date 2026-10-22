@@ -48,6 +48,7 @@ optional observations and streaming.
 | [MCP servers](mcp.html) | Stdio/HTTP definitions, per-agent selection, SDK beans, tool allowlists, and lifecycle. |
 | [BYOK providers](byok.html) | Your own OpenAI, Azure, Anthropic, or local model provider per agent, without a Copilot subscription. |
 | [Events and customizers](events.html) | Session-scoped observers, native event types, and SDK configuration hooks. |
+| [Tool governance, permissions, and hooks](governance.html) | Tool allow/deny lists, built-in tool control, permission policies, and hook beans. |
 | [Configuration](configuration.html) | Every integration-owned property, precedence, and deployment examples. |
 | [Reactive streaming](streaming.html) | Cold subscriptions, native events, bounded buffering, and overflow. |
 | [Observability](observability.html) | Micrometer observations, token counters, privacy, and activation. |

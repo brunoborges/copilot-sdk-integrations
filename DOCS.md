@@ -21,6 +21,7 @@ Website: [Copilot Spring Boot documentation](https://brunoborges.github.io/copil
 | [MCP servers](src/site/markdown/mcp.md) | Local/remote definitions, per-agent bindings, native SDK beans, and security. |
 | [BYOK providers](src/site/markdown/byok.md) | Bring-your-own-key model providers per agent, native SDK beans, and security. |
 | [Events and customizers](src/site/markdown/events.md) | Session-scoped listeners, native events, and SDK configuration hooks. |
+| [Tool governance, permissions, and hooks](src/site/markdown/governance.md) | Tool filtering, permission policies, and session hooks as Spring beans. |
 | [Configuration reference](src/site/markdown/configuration.md) | All supported keys, defaults, validation, precedence, and examples. |
 | [Reactive streaming](src/site/markdown/streaming.md) | Cold subscriptions, native events, buffering, overflow, and cancellation. |
 | [Observability](src/site/markdown/observability.md) | Micrometer observations, token counters, tags, activation, and privacy. |

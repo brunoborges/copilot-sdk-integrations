@@ -301,6 +301,7 @@ public final class CopilotAgentInvoker implements AutoCloseable {
             if (definition.provider() != null) {
                 config.setProvider(definition.provider());
             }
+            definition.governance().apply(context, config, owner);
             definition.customizers().forEach(customizer -> customizer.customize(context, config));
             if (streaming) {
                 config.setStreaming(true);
@@ -328,6 +329,7 @@ public final class CopilotAgentInvoker implements AutoCloseable {
         if (definition.provider() != null) {
             config.setProvider(definition.provider());
         }
+        definition.governance().apply(context, config, owner);
         definition.customizers().forEach(customizer -> customizer.customize(context, config));
         if (streaming) {
             config.setStreaming(true);
