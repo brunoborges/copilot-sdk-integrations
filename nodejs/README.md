@@ -50,4 +50,4 @@ Tests use the scripted test runtime; they need neither Copilot credentials nor a
 running Copilot runtime and make no paid requests. GitHub Actions runs the same build
 on Node.js 20, 22, and 24 for pushes and pull requests.
 
-Read the full design in [DESIGN.md](DESIGN.md).
+Read the full design in [DESIGN.md](DESIGN.md). A Fastify plugin is proposed in [DESIGN-FASTIFY.md](DESIGN-FASTIFY.md).

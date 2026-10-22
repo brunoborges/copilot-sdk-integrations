@@ -49,8 +49,9 @@ Versions surveyed: `@github/copilot-sdk` 1.0.26, `@nestjs/core` 12.2, `@nestjs/t
   server-side framework in Node.js, used for the same kind of applications as Spring
   Boot.
 
-NestJS isn't the only target. Express, Fastify, Hono, and Koa applications use the
-framework-agnostic core directly (§3).
+NestJS isn't the only target. Express, Hono, and Koa applications use the
+framework-agnostic core directly (§3), and a Fastify plugin is designed in
+[DESIGN-FASTIFY.md](DESIGN-FASTIFY.md).
 
 ---
 
