@@ -99,8 +99,8 @@ a.externalLink { background-image: none; padding-right: 0; }
 #navcolumn li strong { color: var(--cp-accent); background: var(--cp-accent-soft); font-weight: 650; }
 #bodyColumn { margin: 0 0 0 18rem; padding: 2rem 3rem 4rem; }
 #contentBox { max-width: 72rem; margin: 0; }
-#contentBox > :not(section, table),
-#contentBox section > :not(section, table) { max-width: 74ch; }
+#contentBox > :not(section, table, pre, .source),
+#contentBox section > :not(section, table, pre, .source) { max-width: 74ch; }
 h1, h2, h3, h4, h5, h6 {
   color: var(--cp-text);
   background: none;
