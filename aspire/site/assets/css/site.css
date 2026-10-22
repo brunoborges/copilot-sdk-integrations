@@ -225,3 +225,22 @@ table:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 4px; 
   table { overflow: visible; }
   .source, pre { white-space: pre-wrap; overflow: visible; }
 }
+
+/* Architecture diagram (inline SVG themed with the site variables). */
+#contentBox > figure.arch { max-width: 60rem; margin: 1.5rem 0 2rem; }
+.arch svg { display: block; width: 100%; height: auto; font-family: inherit; }
+.arch-frame { fill: var(--cp-surface-soft); stroke: var(--cp-border); }
+.arch-node { fill: var(--cp-bg-elevated); stroke: var(--cp-border); }
+.arch-runtime { fill: var(--cp-accent-soft); stroke: var(--cp-accent); stroke-width: 1.5; }
+.arch-caption { fill: var(--cp-text-muted); font-size: 13px; font-weight: 650; letter-spacing: 0.02em; }
+.arch-title { fill: var(--cp-text); font-size: 15px; font-weight: 650; }
+.arch-sub, .arch-note { fill: var(--cp-text-muted); font-size: 12.5px; }
+.arch-code, .arch-code-sm { fill: var(--cp-text); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; }
+.arch-code-sm { font-size: 11px; fill: var(--cp-text-muted); }
+.arch-link { fill: none; stroke: var(--cp-text-muted); stroke-width: 1.25; }
+.arch-head { fill: var(--cp-text-muted); }
+.arch-pill { fill: var(--cp-bg-elevated); stroke: var(--cp-border); }
+.arch-pill-text { fill: var(--cp-text); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; }
+.arch-tcp { fill: none; stroke: var(--cp-accent); stroke-width: 1.75; stroke-dasharray: 6 4; }
+.arch-head-accent { fill: var(--cp-accent); }
+.arch-tcp-text { fill: var(--cp-accent); font-size: 13px; font-weight: 600; }
