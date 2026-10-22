@@ -29,6 +29,11 @@ jobs:
             spring-boot/**/pom.xml
             quarkus/**/pom.xml
             java-core/pom.xml
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: nodejs/package-lock.json
       - uses: actions/configure-pages@v6
       - name: Build Spring Boot documentation site
         working-directory: spring-boot
@@ -40,11 +45,17 @@ jobs:
         run: |
           ./mvnw --batch-mode --no-transfer-progress -pl site-skin -am install
           ./mvnw --batch-mode --no-transfer-progress -N site
+      - name: Build Node.js documentation site
+        working-directory: nodejs
+        run: |
+          npm ci
+          npm run site
       - name: Assemble site
         run: |
           mkdir -p _site
           cp -R spring-boot/target/site _site/spring-boot
           cp -R quarkus/target/site _site/quarkus
+          cp -R nodejs/site/dist _site/nodejs
           cp .github/pages/index.html _site/index.html
       - uses: actions/upload-pages-artifact@v5
         with:

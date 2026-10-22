@@ -1,0 +1,68 @@
+{
+  "name": "@copilot-sdk-integrations/nestjs",
+  "version": "0.1.0",
+  "description": "NestJS module for the GitHub Copilot SDK",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "typesVersions": { "*": { "testing": ["./dist/testing/index.d.ts"], "cls": ["./dist/cls/index.d.ts"] } },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./cls": {
+      "types": "./dist/cls/index.d.ts",
+      "default": "./dist/cls/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "default": "./dist/testing/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@copilot-sdk-integrations/core": "0.1.0",
+    "zod": "^4.0.0"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.0.0 || ^12.0.0",
+    "@nestjs/core": "^11.0.0 || ^12.0.0",
+    "@nestjs/event-emitter": "^2.0.0 || ^3.0.0 || ^12.0.0",
+    "@nestjs/terminus": "^11.0.0 || ^12.0.0",
+    "nestjs-cls": "^5.0.0 || ^6.0.0 || ^7.0.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0"
+  },
+  "peerDependenciesMeta": {
+    "@nestjs/event-emitter": {
+      "optional": true
+    },
+    "@nestjs/terminus": {
+      "optional": true
+    },
+    "nestjs-cls": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@nestjs/common": "^12.2.0",
+    "@nestjs/core": "^12.2.0",
+    "@nestjs/event-emitter": "^12.0.1",
+    "@nestjs/platform-express": "^12.2.0",
+    "@nestjs/terminus": "^12.1.0",
+    "@nestjs/testing": "^12.2.0",
+    "@types/supertest": "^6.0.0",
+    "nestjs-cls": "^7.0.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "supertest": "^7.0.0"
+  }
+}

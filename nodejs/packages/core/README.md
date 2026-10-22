@@ -1,0 +1,116 @@
+# @copilot-sdk-integrations/core
+
+Framework-agnostic integration layer for the [GitHub Copilot SDK](https://github.com/github/copilot-sdk) for Node.js. It manages one runtime client per application (lazy start, admission limits, timeouts, graceful shutdown, restart after a crash), declarative agents with Zod-typed tools, permission policies, conversations, streaming events, and a scripted test runtime. [`@copilot-sdk-integrations/nestjs`](../nestjs) and [`@copilot-sdk-integrations/ai`](../ai) are built on it; see [`DESIGN.md`](../../DESIGN.md) for the full design.
+
+```sh
+npm install @copilot-sdk-integrations/core zod
+```
+
+The package is ESM-only. CommonJS apps load it with `require()` on Node `^20.19` or `>=22.12` (`require(esm)`).
+
+## Create the client
+
+Create one `Copilot` per application and share it. The runtime starts on the first turn.
+
+```ts
+import { createCopilot } from "@copilot-sdk-integrations/core";
+
+const copilot = createCopilot({
+  limits: { maxConcurrentTurns: 8, maxQueuedTurns: 32 },
+  responseTimeout: 120_000,
+  restart: { maxAttempts: 5, backoffMs: 1_000 }, // recovery when the runtime process dies
+});
+
+await copilot.start(); // optional: fail fast at boot (`startup: "eager"` alone does not start it in core)
+process.on("SIGTERM", () => copilot.stop({ gracePeriodMs: 30_000 }));
+```
+
+`copilot.health()` returns `{ state, version, capacity }` without starting a lazy runtime; `state` is `failed` after a failed start or a lost runtime connection.
+
+## Define an agent
+
+```ts
+import { z } from "zod";
+import { defineAgent, defineCopilotTool, permissions } from "@copilot-sdk-integrations/core";
+
+const lookupOrder = defineCopilotTool({
+  name: "lookupOrder",
+  description: "Look up an order by id",
+  input: z.object({ id: z.string() }),
+  execute: async ({ id }) => orders.find(id),
+});
+
+const support = defineAgent({
+  name: "support",
+  instructions: "You are a support agent for an online store.",
+  tools: [lookupOrder],
+  permissions: permissions.allowCustomTools(), // deny-by-default otherwise
+});
+
+const agent = copilot.agent(support);
+```
+
+Tools can also be SDK `defineTool()` tools or AI SDK `tool()` records. Built-in runtime tools are hidden unless the agent sets `builtInTools: true`; narrow further with `availableTools`/`excludedTools`.
+
+## Send, stream, structured output
+
+```ts
+// One-shot turn in an ephemeral session
+const text = await agent.send({ prompt: "Where is order 42?" });
+
+// Multi-turn: the runtime keeps the history for the conversation id
+await agent.send({ prompt: "Where is order 42?", conversationId: "c1" });
+const chat = agent.conversation("c1", { mode: "create-or-resume" });
+await chat.send("And when will it arrive?");
+
+// Structured output, validated with Zod
+const Order = z.object({ id: z.string(), status: z.enum(["shipped", "pending"]) });
+const order = await agent.send({ prompt: "Extract the order from: ...", schema: Order });
+
+// Streaming: breaking out of the loop aborts the turn; errors arrive as an `error` event
+for await (const event of agent.stream({ prompt: "Summarize order 42", conversationId: "c1" })) {
+  if (event.type === "text-delta") process.stdout.write(event.delta);
+}
+```
+
+Every call accepts `signal`, `timeout`, extra `tools`, and `context`. Wrap request handling in `runWithCopilotContext({ principal })` so conversations are scoped per user and tools, policies, and hooks can read `getCopilotContext()`.
+
+## Permissions
+
+Policies decide each runtime permission request (`approve`, `deny`, `ask-user`, or `abstain`):
+
+```ts
+import { PermissionKinds, permissions } from "@copilot-sdk-integrations/core";
+
+permissions.denyAll();                          // the default
+permissions.allowReadOnly();
+permissions.allowTools(["lookupOrder"]);
+permissions.allowMcpServers(["github"]);
+permissions.allowKinds([PermissionKinds.READ, PermissionKinds.URL]);
+permissions.anyOf(permissions.allowReadOnly(), permissions.askUser());
+permissions.allOf(permissions.allowCustomTools(), (request, { context }) => (context.principal ? "approve" : "deny"));
+```
+
+`ask-user` decisions surface as `permission-request` events when streaming, or go to `onPermissionRequest` in `send()`.
+
+## Testing
+
+`@copilot-sdk-integrations/core/testing` replaces the runtime with a scripted, in-process one: no CLI, no network.
+
+```ts
+import { createTestCopilot } from "@copilot-sdk-integrations/core/testing";
+
+await using test = createTestCopilot({
+  script: (rt) => rt.onPrompt(/order/).callTool("lookupOrder", { id: "42" }).thenReply("It shipped."),
+});
+const text = await test.copilot.agent(support).send({ prompt: "Where is order 42?" });
+
+expect(text).toBe("It shipped.");
+expect(test.runtime.toolCalls[0]).toMatchObject({ name: "lookupOrder", approved: true });
+```
+
+`runtime.failStart()` and `runtime.crash()` simulate start failures and a runtime that dies mid-flight.
+
+## Documentation
+
+See the [documentation site](../../site/markdown/core.md) for configuration, conversations, streaming, governance, operations, and testing.

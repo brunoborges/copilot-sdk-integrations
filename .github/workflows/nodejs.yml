@@ -1,0 +1,46 @@
+name: Node.js
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'nodejs/**'
+      - '.github/workflows/nodejs.yml'
+  pull_request:
+    paths:
+      - 'nodejs/**'
+      - '.github/workflows/nodejs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: nodejs
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['20', '22', '24']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: 'nodejs/package-lock.json'
+      - name: Install dependencies
+        run: npm ci
+      # Build first: the examples type-check against the packages' emitted dist/*.d.ts.
+      - name: Build
+        run: npm run build
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Test
+        run: npm test
+      - name: Test examples
+        run: npm test --workspaces --if-present

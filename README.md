@@ -17,7 +17,7 @@ injection, lifecycle management, security context, observability, and testing.
 | Java | [Quarkus](https://quarkus.io/) | [`quarkus/`](quarkus/) | Available (unreleased) |
 | .NET | ASP.NET Core / Generic Host, [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`, .NET Aspire | `dotnet/` | Under consideration |
 | Python | [FastAPI](https://fastapi.tiangolo.com/), [Django](https://www.djangoproject.com/) | `python/` | Under consideration |
-| Node.js | [NestJS](https://nestjs.com/), [Vercel AI SDK](https://ai-sdk.dev/) provider | `nodejs/` | Under consideration |
+| Node.js / TypeScript | [NestJS](https://nestjs.com/), framework-agnostic core, [AI SDK](https://ai-sdk.dev/) adapter | [`nodejs/`](nodejs/) | In development ([DESIGN.md](nodejs/DESIGN.md)) |
 
 ## Design goals
 
@@ -53,6 +53,7 @@ documentation landing page) live at the root.
 ├── java-core/     # Shared Java agent API and engine (copilot-agent-core)
 ├── spring-boot/   # Spring Boot starter (Java, Maven)
 ├── quarkus/       # Quarkus extension (Java, Maven)
+├── nodejs/        # Node.js core, NestJS module, and AI SDK adapter (TypeScript; in development)
 └── .github/       # CI workflows and documentation landing page
 ```
 
