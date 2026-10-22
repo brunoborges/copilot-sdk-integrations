@@ -125,6 +125,8 @@ export class CopilotTestRuntime {
   private _permissionRequests: TestPermissionRequest[] = [];
   private _clientOptions: CopilotClientOptions[] = [];
   private _abortCount = 0;
+  private _crashCount = 0;
+  private _epoch = 0;
   private _started = false;
   private _stopped = false;
 
@@ -151,6 +153,23 @@ export class CopilotTestRuntime {
     return this;
   }
 
+  /**
+   * Simulate the runtime process dying: in-flight turns stop without further events, session
+   * handles are disconnected, and clients report `isConnected() === false` until the next start.
+   * Sessions are kept, as the runtime keeps them on disk.
+   */
+  crash(): this {
+    for (const state of this.sessions.values()) {
+      state.current?.controller.abort();
+      for (const handle of state.handles) handle.markDisconnected();
+      state.handles.clear();
+    }
+    this._started = false;
+    this._epoch++;
+    this._crashCount++;
+    return this;
+  }
+
   /** Replace the models returned by `listModels()`. */
   setModels(models: TestModel[]): this {
     this.models = [...models];
@@ -173,6 +192,7 @@ export class CopilotTestRuntime {
     this._permissionRequests = [];
     this._clientOptions = [];
     this._abortCount = 0;
+    this._crashCount = 0;
     this._started = false;
     this._stopped = false;
   }
@@ -214,6 +234,10 @@ export class CopilotTestRuntime {
   get started(): boolean {
     return this._started;
   }
+  /** Number of `crash()` calls. */
+  get crashCount(): number {
+    return this._crashCount;
+  }
   get stopped(): boolean {
     return this._stopped;
   }
@@ -244,6 +268,12 @@ export class CopilotTestRuntime {
     }
     this._started = true;
     this._stopped = false;
+    this._epoch++;
+  }
+
+  /** @internal Incremented on every start and crash, so clients of a dead runtime know they are stale. */
+  get epoch(): number {
+    return this._epoch;
   }
 
   /** @internal */
@@ -853,12 +883,19 @@ function sleep(ms: number, signal: AbortSignal): Promise<void> {
 }
 
 class TestClient implements ClientLike {
+  private epoch?: number;
   constructor(private readonly runtime: CopilotTestRuntime) {}
-  start(): Promise<void> {
-    return this.runtime.start();
+  async start(): Promise<void> {
+    await this.runtime.start();
+    this.epoch = this.runtime.epoch;
   }
-  stop(): Promise<Error[]> {
+  async stop(): Promise<Error[]> {
+    // A client of a crashed runtime must not stop its replacement.
+    if (this.epoch !== undefined && this.epoch !== this.runtime.epoch) return [];
     return this.runtime.stop();
+  }
+  isConnected(): boolean {
+    return this.runtime.started && (this.epoch === undefined || this.epoch === this.runtime.epoch);
   }
   createSession(config: SessionConfig): Promise<SessionLike> {
     return this.runtime.createSession(config);

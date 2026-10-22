@@ -79,7 +79,9 @@ runtime
   .onPrompt(/.*/).reply("I can only help with orders.");
 ```
 
-`runtime.failStart(error, times?)` makes the runtime fail to start, `runtime.setModels(models)`
+`runtime.failStart(error, times?)` makes the runtime fail to start, `runtime.crash()` simulates the
+runtime process dying (in-flight turns end, the client disconnects; see
+[runtime restarts](operations.md#runtime-restarts)), `runtime.setModels(models)`
 changes the model list, and `runtime.reset()` clears rules and recordings between tests.
 
 ## Recordings
@@ -95,6 +97,7 @@ changes the model list, and `runtime.reset()` clears rules and recordings betwee
 | `clientOptions` | Options the client was created with (tokens, `cliUrl`, ...). |
 | `abortCount` | Number of `session.abort()` calls. |
 | `started` / `stopped` | Runtime lifecycle. |
+| `crashCount` | Number of `crash()` calls. |
 
 Assert on governance, not just text: for example, that a denied tool never ran
 (`toolCalls[0].approved === false`) or that the session config hid built-in tools.

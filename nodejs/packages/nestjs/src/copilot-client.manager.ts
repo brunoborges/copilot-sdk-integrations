@@ -35,6 +35,7 @@ const CORE_OPTION_KEYS = [
   "limits",
   "responseTimeout",
   "approvalWindow",
+  "restart",
   "store",
   "hooks",
   "clientFactory",

@@ -1,7 +1,7 @@
 # Copilot for Node.js: shared core and NestJS module
 
-Status: **approved; phases 1–3 implemented** (see §19). API and package names are working
-names.
+Status: **approved; phases 1–3 implemented, phase 4 (scale-out) and OpenTelemetry on the
+roadmap** (see §17 and §19). API and package names are working names.
 
 This document designs the Node.js integrations for the
 [Copilot SDK for Node.js/TypeScript](https://github.com/github/copilot-sdk/tree/main/nodejs)
@@ -78,9 +78,11 @@ flowchart TB
 | `@copilot-sdk-integrations/nestjs` | `CopilotModule`, decorators, discovery, CLS context, Terminus indicator, testing module | core, `@nestjs/common`, `@nestjs/core`; optional `ai`, `@nestjs/terminus`, `rxjs` |
 
 Packages live in an npm workspace under `nodejs/packages/*` and are released together
-with one version, like the Spring Boot reactor modules. Toolchain: TypeScript (ESM and
-CJS builds), Vitest, Node.js `^20.19 || >=22.12` (the SDK's floor), and a CI workflow
-scoped to `nodejs/**`.
+with one version, like the Spring Boot reactor modules. Toolchain: TypeScript, Vitest,
+Node.js `^20.19 || >=22.12` (the SDK's floor), and a CI workflow scoped to `nodejs/**`.
+Packages are **ESM-only**: `exports` map each entry point to `types` and `default`
+conditions (plus `typesVersions` for subpaths under older TypeScript resolution), and
+CommonJS apps load them through `require(esm)`, which that Node.js floor supports.
 
 ---
 
@@ -113,9 +115,9 @@ What the core owns (described once here and reused by framework modules):
 | **Governance** | Tool allow/deny validation, `permissions.*` policies (deny by default), composed hooks |
 | **Conversations** | Session id derived from agent name, principal, and conversation id; create/resume; resume-only bound handles; per-conversation serialization; bounded admission; real cancellation through `AbortSignal` |
 | **Context** | `AsyncLocalStorage` request context (`principal`, `conversationId`, `signal`, custom attributes) restored inside tools, permission handlers, hooks, and listeners |
-| **Session stores** | `SessionStore` interface for cross-replica leases and, optionally, shared session state through the SDK's `sessionFs`. Ships `memoryStore` and `redisStore` |
+| **Session stores** | `SessionStore` interface for cross-replica conversation leases. Ships `memoryStore`; `redisStore` and shared session state through the SDK's `sessionFs` are roadmap (phase 4) |
 | **Events** | Typed `CopilotAgentEvent` union (text delta, reasoning, tool start/end, permission, usage, error, done), as an `AsyncIterable` |
-| **Observability** | OpenTelemetry spans and usage metrics; no-ops when no OTel SDK is registered |
+| **Observability** | Global event listeners, hooks, and a pluggable logger today; OpenTelemetry spans and usage metrics are roadmap (§14) |
 | **Testing** | Scripted, in-memory runtime implementing the same client interface |
 
 ---
@@ -155,14 +157,20 @@ export class AppModule {}
 })
 export abstract class SupportAgent {
   @UserMessage()
-  abstract answer(@ConversationId() id: string, @Message() question: string): Promise<string>;
+  answer(@ConversationId() id: string, @Message() question: string): Promise<string> {
+    return implementedByCopilot();
+  }
 
   @UserMessage("Classify the sentiment of: {{text}}")
   @Returns(z.enum(["positive", "neutral", "negative"]))
-  abstract sentiment(@P("text") text: string): Promise<"positive" | "neutral" | "negative">;
+  sentiment(@P("text") text: string): Promise<"positive" | "neutral" | "negative"> {
+    return implementedByCopilot();
+  }
 
   @UserMessage()
-  abstract stream(@ConversationId() id: string, @Message() question: string): Observable<CopilotAgentEvent>;
+  stream(@ConversationId() id: string, @Message() question: string): Observable<CopilotAgentEvent> {
+    return implementedByCopilot();
+  }
 }
 ```
 
@@ -199,7 +207,10 @@ export class ChatController {
 ```
 
 No implementation class is written: the module provides an implementation of the
-abstract class, as Spring generates a proxy for an annotated interface.
+class, as Spring generates a proxy for an annotated interface. TypeScript rejects
+decorators on abstract methods, so decorated methods are concrete stubs that
+`return implementedByCopilot();` (the stub throws if it is ever called directly); the
+class itself may be abstract.
 
 ---
 
@@ -211,8 +222,18 @@ abstract class, as Spring generates a proxy for an annotated interface.
   providers in a feature module, the counterpart of Spring's component scanning.
 - Options mirror the `copilot.*` properties: `cliPath`, `cliUrl` (existing TCP
   server), `startup` (`lazy` | `eager`), `githubToken`, `useLoggedInUser`,
-  `baseDirectory`, `logLevel`, `limits`, `responseTimeout`, `providers` (named BYOK
-  providers), `mcpServers` (named), `agents` (per-agent overrides by name), `store`.
+  `baseDirectory`, `logLevel`, `limits`, `responseTimeout`, `approvalWindow`
+  (how long an `ask-user` permission waits), `restart` (crash recovery, §6),
+  `shutdownGracePeriod`, `store`, `providers` (named BYOK providers), `mcpServers`
+  (named), and `agents` (per-agent overrides by name).
+- Core pass-throughs: `hooks`, `onEvent`, `tokenResolver`, `configureClient`,
+  `clientFactory`, and `logger` (defaults to Nest's `Logger`).
+- NestJS-specific: `context` (what the interceptor captures: `principal`, `headers`,
+  `conversationId`, `attributes`, `abortOnDisconnect`; `false` disables it),
+  `exceptionFilter` (`false` skips the global `CopilotExceptionFilter`), `templatesDir`
+  (base for relative `@UserMessageFrom` paths), `eventEmitter` (`true | { prefix }`
+  re-emits events on `@nestjs/event-emitter`), and `copilotFactory` (advanced: build
+  the core `Copilot` yourself; the testing module uses it).
 - Per-agent overrides from configuration (`agents.support.model`) win over decorator
   values, so models and providers change per environment without code changes.
 - Options are validated with Zod at bootstrap; errors name the offending key.
@@ -226,7 +247,13 @@ abstract class, as Spring generates a proxy for an annotated interface.
 - `CopilotClientManager` is a singleton provider wrapping the core client manager.
   The raw `CopilotClient` is injectable through `@InjectCopilotClient()`.
 - **Lazy** (default): the runtime starts on the first turn. **Eager**: it starts in
-  `onApplicationBootstrap`, and bootstrap fails if the runtime can't start.
+  `onApplicationBootstrap`, and bootstrap fails if the runtime can't start. (The core
+  option alone does not start anything; a core app calls `copilot.start()`.)
+- **Crash restart**: if the runtime process dies or its connection drops, the client
+  goes to `failed` (health reports down), turns on the lost runtime end with
+  `CopilotRuntimeUnavailableError`, and the next turn starts a fresh runtime.
+  Repeated failures back off (`restart: { maxAttempts, backoffMs, maxBackoffMs,
+  checkIntervalMs }`); an explicit `start()` always retries.
 - **Shutdown**: `beforeApplicationShutdown` stops admitting turns and drains in-flight
   turns up to `shutdownGracePeriod`; `onApplicationShutdown` aborts the rest,
   disconnects sessions, and stops the runtime. Docs remind apps to call
@@ -283,7 +310,8 @@ await bound.answer("And the delivery date?");
 
 Methods of a bound instance omit the `@ConversationId()` argument. A missing session
 raises `CopilotConversationNotFoundError` unless created explicitly with
-`agents.create(SupportAgent, id)`.
+`agents.create(SupportAgent, id)`. `create`, `bind`, and `delete(SupportAgent, id)` live
+on the injectable `CopilotAgents` service.
 
 ### Functional alternative
 
@@ -340,12 +368,14 @@ Same model as Spring, expressed as Nest providers:
   agent's own tools or MCP servers, fails fast).
 - **Permissions denied unless configured.** `permissions.*` policies (`denyAll`,
   `allowReadOnly`, `allowCustomTools`, `allowTools`, `allowMcpServers`, `allowKinds`,
-  `anyOf`, `allowAll`), or a custom injectable implementing `CopilotPermissionPolicy`,
+  `askUser`, `anyOf`, `allOf`, `allowAll`), or a custom injectable implementing
+  `CopilotPermissionPolicy`,
   selected per agent (`permissions: MyPolicy`) or globally
   (`COPILOT_PERMISSION_POLICY`).
-- `permissions.askUser()` emits a `permission` event on streaming calls and waits for
-  `agents.respondToPermission(conversationId, requestId, decision)` within
-  `approvalWindow`; non-streaming calls treat "ask user" as denial.
+- `permissions.askUser()` emits a `permission-request` event on streaming calls and
+  waits for the consumer to call the event's `respond(decision)` within
+  `approvalWindow`; non-streaming calls use the `onPermissionRequest` send option, or
+  treat "ask user" as denial.
 - **Hooks** as providers: methods decorated with `@CopilotHook("preToolUse")`,
   `@CopilotHook("postToolUse")`, and so on, scoped globally or to agents with
   `agents: [SupportAgent]`.
@@ -363,9 +393,10 @@ All from the core:
 - Real cancellation from `@Signal()`, Observable unsubscription, client disconnect,
   and `responseTimeout`.
 - **Scaling out**: with one replica, session state stays on the runtime's local disk.
-  With several replicas, configure a store (`store: redisStore()`) for cross-replica
-  conversation leases, and either sticky routing by conversation id or shared session
-  state through the store's `sessionFs` adapter.
+  With several replicas, configure a `SessionStore` for cross-replica conversation
+  leases, plus sticky routing by conversation id or a shared runtime server (`cliUrl`).
+  A packaged `redisStore()` and shared session state through a `sessionFs` adapter are
+  phase 4 (roadmap).
 
 ---
 
@@ -400,12 +431,16 @@ Same as Spring, as configuration objects:
 ## 14. Health, observability, and events
 
 - **Terminus**: `CopilotHealthIndicator` reports client state, runtime version, and
-  admission capacity, and never force-starts a lazy client.
+  admission capacity through Terminus's `HealthIndicatorService`, so the health check
+  answers `503` when the client is `failed`, `stopping`, or `stopped`. It never
+  force-starts a lazy client.
 - **Info endpoint** (opt-in): `CopilotInfoController` lists agents, models, active
   sessions, and capacity, read-only, like the Spring Actuator endpoint. Disabled
   unless explicitly imported and guarded.
-- **OpenTelemetry**: spans per turn and per tool call from the core, and token usage
-  metrics, picked up by any registered OTel SDK (`@opentelemetry/sdk-node`).
+- **OpenTelemetry** (roadmap, not implemented): spans per turn and per tool call from
+  the core, and token usage metrics, picked up by any registered OTel SDK
+  (`@opentelemetry/sdk-node`). Until then, apps record metrics from global event
+  listeners and hooks.
 - **Events**: session events delivered to `@OnCopilotEvent("tool.execution_complete")`
   provider methods, and re-emitted through `@nestjs/event-emitter` when installed.
   Listener failures are logged and never break a turn.
@@ -476,6 +511,7 @@ expect(moduleRef.get(CopilotTestRuntime).prompts).toEqual(["Where is order 42?"]
 | **2. NestJS** | `CopilotModule`, decorators and generated agents, tool discovery, context interceptor, token resolver, hooks, exception filter, Terminus, testing module, example app | Example NestJS app with a typed agent, tools, SSE streaming, and tests |
 | **3. AI SDK** | `ai` package: provider, `Agent` adapter, UI message stream; NestJS + `useChat` example | A React `useChat` UI against a NestJS backend, including tool approvals |
 | **4. Scale-out** | `redisStore`, cross-replica leases, `sessionFs` state, `CopilotContainer` | Conversations survive moving between replicas |
+| **Future** | OpenTelemetry spans and usage metrics, CommonJS build if `require(esm)` proves insufficient | Traces and token metrics without custom listeners |
 
 ---
 
@@ -500,7 +536,15 @@ expect(moduleRef.get(CopilotTestRuntime).prompts).toEqual(["Where is order 42?"]
 Phases 1–3 are implemented in `packages/core`, `packages/nestjs`, and `packages/ai`.
 Where the code differs from the sections above:
 
-- **ESM only.** Packages ship ESM builds; a CJS build is not produced yet.
+- **ESM only.** Packages ship ESM builds (`default` export conditions plus
+  `typesVersions`); CommonJS apps use `require(esm)`. No separate CJS build is produced.
+- **Crash restart.** The SDK has no public connection-state API, so the core detects a
+  lost runtime by polling the client's connection (every `restart.checkIntervalMs`), and
+  also checks after a failed turn and in `health()`. The test runtime simulates a crash
+  with `runtime.crash()`.
+- **Request conversation id.** The NestJS interceptor's `context.conversationId` only
+  fills `CopilotContext.conversationId` for tools, policies, hooks, and listeners. Agent
+  calls without a `@ConversationId()` argument stay ephemeral (§11).
 - **Admission order.** A turn reserves a queue place, then takes the conversation
   lock, then waits for an execution slot (Spring's order), so a turn waiting on its
   conversation does not hold a slot. `timeout` covers queueing time too.
@@ -536,4 +580,8 @@ Where the code differs from the sections above:
 - **Template files.** `@UserMessageFrom` resolves relative paths against the
   `templatesDir` option, which defaults to `process.cwd()`. It also accepts absolute
   paths and `file:` URLs (`new URL("./x.md", import.meta.url)`).
-- **Not yet implemented:** the example apps listed in the roadmap.
+- **Examples.** `examples/express` (core only) and `examples/nestjs-chat` (NestJS with
+  a React `useChat` front end) cover the phase 1–3 exit criteria.
+- **Not yet implemented:** `redisStore`, `sessionFs` shared state, and
+  `CopilotContainer` (phase 4); OpenTelemetry instrumentation (§14); the WebSocket
+  gateway example (§12).

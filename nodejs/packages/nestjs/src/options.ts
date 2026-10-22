@@ -50,6 +50,14 @@ const optionsSchema = z
       .optional(),
     responseTimeout: ms.optional(),
     approvalWindow: ms.optional(),
+    restart: z
+      .strictObject({
+        maxAttempts: z.union([nonNegativeInt, z.literal(Number.POSITIVE_INFINITY)]).optional(),
+        backoffMs: ms.optional(),
+        maxBackoffMs: ms.optional(),
+        checkIntervalMs: ms.optional(),
+      })
+      .optional(),
     shutdownGracePeriod: z.number().nonnegative().optional(),
     store: store.optional(),
     hooks: z.record(z.string(), fn).optional(),

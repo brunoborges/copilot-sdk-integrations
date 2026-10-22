@@ -202,7 +202,7 @@ check() {
 }
 ```
 
-The health check never starts a lazy runtime. It reports the client state, runtime version, and admission capacity, and returns `down` when the runtime is stopping, stopped, or failed. `@nestjs/terminus` is an optional peer dependency; the indicator doesn't import it.
+The health check never starts a lazy runtime. It reports the client state, runtime version, and admission capacity, and is `down` (so `/health` answers `503`) when the runtime is stopping, stopped, or failed, including after a lost runtime connection; the next turn restarts the runtime (see the `restart` option). Results are built with Terminus's `HealthIndicatorService`; `@nestjs/terminus` (11 or 12) is an optional peer dependency, loaded only when the indicator runs.
 
 ### Info endpoint
 

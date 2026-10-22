@@ -65,7 +65,11 @@ export interface CopilotContextOptions {
   principal?: (request: any) => string | undefined;
   /** Request headers copied into `attributes.headers` (lower-case names). */
   headers?: string[];
-  /** Derive a default conversation id for the request. */
+  /**
+   * Derive the request's conversation id, stored in `CopilotContext.conversationId` for tools,
+   * policies, hooks, and listeners. Informational only: agent calls use the `@ConversationId()`
+   * argument (or a bound instance), and calls without one run in an ephemeral session.
+   */
   conversationId?: (request: any) => string | undefined;
   /** Extra attributes merged into `attributes`. */
   attributes?: (request: any) => Record<string, unknown>;

@@ -67,7 +67,7 @@ guards, so a Passport guard has already set `request.user`:
 | Context field | Source |
 | --- | --- |
 | `principal` | `context.principal(req)` if configured; otherwise `request.user` when it is a string, or its `id`, `sub`, `username`, `login`, or `email`. |
-| `conversationId` | `context.conversationId(req)`, if configured. |
+| `conversationId` | `context.conversationId(req)`, if configured. Informational: agent calls use their `@ConversationId()` argument, and calls without one stay ephemeral. |
 | `attributes.user` | `request.user`. |
 | `attributes.headers` | The headers listed in `context.headers`, keyed by lower-case name. |
 | other attributes | `context.attributes(req)`, merged last. |

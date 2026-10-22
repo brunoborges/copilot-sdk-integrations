@@ -27,6 +27,9 @@ export const DEFAULT_CONVERSATION_WAIT_MS = 30_000;
 export const DEFAULT_RESPONSE_TIMEOUT_MS = 300_000;
 export const DEFAULT_APPROVAL_WINDOW_MS = 120_000;
 export const DEFAULT_SHUTDOWN_GRACE_MS = 30_000;
+export const DEFAULT_RESTART_BACKOFF_MS = 1_000;
+export const DEFAULT_RESTART_MAX_BACKOFF_MS = 30_000;
+export const DEFAULT_CONNECTION_CHECK_INTERVAL_MS = 1_000;
 /** After aborting the remaining turns on stop, how long to wait for them to release. */
 const ABORT_SETTLE_MS = 5_000;
 
@@ -39,8 +42,13 @@ export interface CopilotRuntime {
   readonly conversationWaitMs: number;
   readonly responseTimeout: number;
   readonly approvalWindow: number;
-  /** The started client (lazy start, shared in-flight start). */
-  acquireClient(): Promise<ClientLike>;
+  /**
+   * The started client (lazy start, shared in-flight start, restart after a crash). Pass the turn's
+   * registered controller so the turn is aborted if that client's connection is lost.
+   */
+  acquireClient(turn?: AbortController): Promise<ClientLike>;
+  /** Marks the runtime failed if the client's connection was lost (called after a turn fails). */
+  checkConnection(client: ClientLike): void;
   /** Track an executing turn so `stop()` can abort it. Returns an unregister function. */
   registerTurn(controller: AbortController): () => void;
 }
@@ -88,6 +96,20 @@ export function buildClientOptions(options: CopilotOptions, env: NodeJS.ProcessE
   return result;
 }
 
+/**
+ * Whether the client's connection to the runtime is gone. Uses `isConnected()` when the client has
+ * it; the SDK's `CopilotClient` has no public state, but its `rpc` accessor throws once disconnected.
+ */
+export function isConnectionLost(client: ClientLike): boolean {
+  try {
+    if (typeof client.isConnected === "function") return !client.isConnected();
+    if ("rpc" in client) void (client as { rpc: unknown }).rpc;
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 function nonBlank(value: string | undefined): string | undefined {
   return value !== undefined && value.trim() !== "" ? value : undefined;
 }
@@ -122,6 +144,14 @@ export function createCopilot(options: CopilotOptions = {}): Copilot {
   );
   const responseTimeout = positiveMs("responseTimeout", options.responseTimeout, DEFAULT_RESPONSE_TIMEOUT_MS);
   const approvalWindow = positiveMs("approvalWindow", options.approvalWindow, DEFAULT_APPROVAL_WINDOW_MS);
+  const restart = options.restart ?? {};
+  const maxAttempts = restart.maxAttempts ?? Number.POSITIVE_INFINITY;
+  if (maxAttempts !== Number.POSITIVE_INFINITY && (!Number.isInteger(maxAttempts) || maxAttempts < 0)) {
+    throw new CopilotConfigurationError("restart.maxAttempts must be a non-negative integer or Infinity");
+  }
+  const backoffMs = positiveMs("restart.backoffMs", restart.backoffMs, DEFAULT_RESTART_BACKOFF_MS);
+  const maxBackoffMs = positiveMs("restart.maxBackoffMs", restart.maxBackoffMs, DEFAULT_RESTART_MAX_BACKOFF_MS);
+  const checkIntervalMs = positiveMs("restart.checkIntervalMs", restart.checkIntervalMs, DEFAULT_CONNECTION_CHECK_INTERVAL_MS);
   if (options.startup !== undefined && options.startup !== "lazy" && options.startup !== "eager") {
     throw new CopilotConfigurationError(`startup must be "lazy" or "eager"`);
   }
@@ -132,19 +162,92 @@ export function createCopilot(options: CopilotOptions = {}): Copilot {
 
   const admission = new AdmissionController(maxConcurrent, maxQueued);
   const locks = new ConversationLocks();
-  const turns = new Set<AbortController>();
+  /** Registered turns and the client each one uses. */
+  const turns = new Map<AbortController, ClientLike | undefined>();
 
   let state: CopilotClientState = "not-started";
   let client: ClientLike | undefined;
   let startPromise: Promise<ClientLike> | undefined;
   let stopPromise: Promise<void> | undefined;
+  /** Consecutive failed start attempts. */
+  let failedStarts = 0;
+  /** Consecutive failures (failed starts, plus one for a lost connection), for the backoff. */
+  let failures = 0;
+  let lastFailureAt = 0;
+  let monitor: NodeJS.Timeout | undefined;
+  let cancelBackoff: (() => void) | undefined;
 
-  const start = (): Promise<ClientLike> => {
+  const stopMonitor = () => {
+    if (monitor) clearInterval(monitor);
+    monitor = undefined;
+  };
+
+  const connectionLost = (lost: ClientLike) => {
+    if (client !== lost || state !== "running") return;
+    client = undefined;
+    state = "failed";
+    failures = 1;
+    failedStarts = 0;
+    lastFailureAt = Date.now();
+    stopMonitor();
+    logger.error("Copilot runtime connection lost; it restarts on the next turn", { turns: turns.size });
+    const error = new CopilotRuntimeUnavailableError("Copilot runtime connection lost");
+    for (const [turn, used] of [...turns]) if (used === lost) turn.abort(error);
+    void lost.stop().catch(() => undefined);
+  };
+
+  const checkConnection = (candidate: ClientLike) => {
+    if (client === candidate && state === "running" && isConnectionLost(candidate)) connectionLost(candidate);
+  };
+
+  const startMonitor = (current: ClientLike) => {
+    stopMonitor();
+    monitor = setInterval(() => checkConnection(current), checkIntervalMs);
+    monitor.unref?.();
+  };
+
+  const backoffDelay = (): number => {
+    if (failures <= 1) return 0;
+    const delay = Math.min(backoffMs * 2 ** (failures - 2), maxBackoffMs);
+    return Math.max(0, lastFailureAt + delay - Date.now());
+  };
+
+  const start = (explicit = false): Promise<ClientLike> => {
     if (state === "stopping" || state === "stopped") return Promise.reject(new CopilotShuttingDownError());
-    if (state === "running" && client) return Promise.resolve(client);
+    if (state === "running" && client) {
+      checkConnection(client);
+      if (state === "running" && client) return Promise.resolve(client);
+    }
     if (startPromise) return startPromise;
+    if (state === "failed") {
+      if (explicit) {
+        failedStarts = 0;
+        failures = 0;
+      } else if (failedStarts >= maxAttempts) {
+        return Promise.reject(
+          new CopilotRuntimeUnavailableError(
+            maxAttempts === 0
+              ? "Copilot runtime is unavailable and automatic restarts are disabled; call start() to restart it"
+              : `Copilot runtime is unavailable after ${failedStarts} failed start attempts; call start() to retry`,
+          ),
+        );
+      }
+    }
+    const delay = state === "failed" ? backoffDelay() : 0;
     state = "starting";
     const attempt = (async () => {
+      if (delay > 0) {
+        logger.info("Waiting before restarting the Copilot runtime", { delayMs: delay, attempt: failedStarts + 1 });
+        await new Promise<void>((resolve) => {
+          const timer = setTimeout(resolve, delay);
+          cancelBackoff = () => {
+            clearTimeout(timer);
+            resolve();
+          };
+        });
+        cancelBackoff = undefined;
+        if (state !== "starting") throw new CopilotShuttingDownError();
+      }
       let candidate: ClientLike | undefined;
       try {
         let sdkOptions = buildClientOptions(options);
@@ -153,6 +256,9 @@ export function createCopilot(options: CopilotOptions = {}): Copilot {
         await candidate.start();
       } catch (error) {
         if (state === "starting") state = "failed";
+        failedStarts++;
+        failures++;
+        lastFailureAt = Date.now();
         if (candidate) {
           await candidate.stop().catch(() => undefined);
         }
@@ -169,6 +275,9 @@ export function createCopilot(options: CopilotOptions = {}): Copilot {
       }
       client = candidate;
       state = "running";
+      failedStarts = 0;
+      failures = 0;
+      startMonitor(candidate);
       logger.info("Copilot runtime started");
       return candidate;
     })();
@@ -195,9 +304,14 @@ export function createCopilot(options: CopilotOptions = {}): Copilot {
     conversationWaitMs,
     responseTimeout,
     approvalWindow,
-    acquireClient: start,
+    async acquireClient(turn) {
+      const acquired = await start();
+      if (turn && turns.has(turn)) turns.set(turn, acquired);
+      return acquired;
+    },
+    checkConnection,
     registerTurn(controller) {
-      turns.add(controller);
+      turns.set(controller, undefined);
       return () => turns.delete(controller);
     },
   };
@@ -209,11 +323,13 @@ export function createCopilot(options: CopilotOptions = {}): Copilot {
     const grace = stopOptions.gracePeriodMs ?? DEFAULT_SHUTDOWN_GRACE_MS;
     stopPromise = (async () => {
       state = "stopping";
+      stopMonitor();
+      cancelBackoff?.();
       admission.close();
       const drained = await admission.whenIdle(grace);
       if (!drained) {
         logger.warn("Aborting in-flight Copilot turns after the shutdown grace period", { turns: turns.size });
-        for (const turn of [...turns]) turn.abort(new CopilotShuttingDownError());
+        for (const turn of [...turns.keys()]) turn.abort(new CopilotShuttingDownError());
         await admission.whenIdle(ABORT_SETTLE_MS);
       }
       if (startPromise) await startPromise.catch(() => undefined);
@@ -237,10 +353,10 @@ export function createCopilot(options: CopilotOptions = {}): Copilot {
       return state;
     },
     async start() {
-      await start();
+      await start(true);
     },
     stop,
-    client: start,
+    client: () => start(),
     agent(definition) {
       let handle = agents.get(definition);
       if (!handle) {
@@ -253,12 +369,14 @@ export function createCopilot(options: CopilotOptions = {}): Copilot {
     async health() {
       let version: string | undefined;
       const current = client;
+      if (current) checkConnection(current);
       if (state === "running" && current?.getStatus) {
         try {
           const status = await current.getStatus();
           version = typeof status?.version === "string" ? status.version : undefined;
         } catch (error) {
           logger.debug("Copilot status lookup failed", { error: messageOf(error) });
+          checkConnection(current);
         }
       }
       return { state, version, capacity: capacity() };

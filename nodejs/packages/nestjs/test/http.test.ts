@@ -229,6 +229,25 @@ describe("HTTP integration", () => {
     expect(down.body.error.copilot).toMatchObject({ status: "down", state: "stopped" });
   });
 
+  it("answers 503 from /health after the runtime connection is lost, and 200 once it restarts", async () => {
+    const { app, runtime } = await createApp((rt) => rt.onPrompt(/.*/).reply("ok"), {
+      restart: { backoffMs: 10, checkIntervalMs: 60_000 },
+    });
+    await request(app.getHttpServer()).get("/ask?q=hi").expect(200);
+    await request(app.getHttpServer()).get("/health").expect(200);
+
+    runtime.crash();
+    const down = await request(app.getHttpServer()).get("/health").expect(503);
+    expect(down.body.status).toBe("error");
+    expect(down.body.error.copilot).toMatchObject({ status: "down", state: "failed" });
+    expect(runtime.started).toBe(false);
+
+    await request(app.getHttpServer()).get("/ask?q=again").expect(200);
+    expect(runtime.started).toBe(true);
+    const up = await request(app.getHttpServer()).get("/health").expect(200);
+    expect(up.body.details.copilot).toMatchObject({ status: "up", state: "running" });
+  });
+
   it("can disable the exception filter and the context interceptor", async () => {
     const { app, runtime } = await createApp((rt) => rt.onPrompt(/.*/).callTool("whoAmI").thenReply("ok"), {
       exceptionFilter: false,

@@ -112,12 +112,19 @@ Errors arrive as a final `error` event instead of being thrown.
 | Member | Purpose |
 | --- | --- |
 | `copilot.state` | `not-started`, `starting`, `running`, `stopping`, `stopped`, or `failed`. |
-| `copilot.start()` | Starts the runtime. A start in flight is shared; a failed start can be retried. Failures throw `CopilotRuntimeUnavailableError`. |
+| `copilot.start()` | Starts the runtime. A start in flight is shared; on a `failed` client it retries immediately and resets the [restart](operations.md#runtime-restarts) backoff. Failures throw `CopilotRuntimeUnavailableError`. |
 | `copilot.stop({ gracePeriodMs })` | Rejects new turns with `CopilotShuttingDownError`, waits for in-flight turns (default 30 s), aborts the rest, then stops the runtime. |
 | `copilot.client()` | The started SDK client, for raw SDK access. |
 | `copilot.agent(definition)` | An `AgentHandle`. |
 | `copilot.capacity()` | Current admission counters (active and queued turns, limits). |
-| `copilot.health()` | `{ state, version, capacity }` without starting a lazy runtime. |
+| `copilot.health()` | `{ state, version, capacity }` without starting a lazy runtime. Detects a lost runtime connection (state `failed`). |
+
+`startup: "eager"` has no effect on its own in core: nothing starts until you call `start()` (or
+run a turn). The NestJS module calls `start()` at bootstrap for you.
+
+If the runtime process dies or disconnects, the client goes to `failed` and the next turn starts
+a fresh runtime, with backoff between repeated failures. See
+[Runtime restarts](operations.md#runtime-restarts).
 
 Call `start()` at boot to fail fast instead of on the first request, and `stop()` on `SIGTERM`:
 
@@ -160,10 +167,12 @@ tools, policies, and hooks. For an AI SDK `useChat` front end, see
 
 | Area | Exports |
 | --- | --- |
-| Client | `createCopilot`, `Copilot`, `CopilotOptions` |
+| Client | `createCopilot`, `Copilot`, `CopilotOptions`, `CopilotRestartOptions` |
 | Agents | `defineAgent`, `CopilotAgentDefinition`, `AgentHandle`, `BoundConversation`, `SendOptions` |
 | Tools | `defineCopilotTool`, `toSdkTools`, `toJsonSchema`, `CopilotToolDefinition`, `ToolInput` |
-| Governance | `permissions`, `evaluatePermission`, `composeHooks`, `PermissionPolicy`, `PermissionDecision` |
+| Governance | `permissions`, `evaluatePermission`, `composeHooks`, `PermissionKinds`, `PermissionPolicy`, `PermissionDecision` |
+| Tool filters | `validateToolFilters`, `buildToolFilterConfig`, `ALL_BUILT_IN_TOOLS` (see [Tool filters](tools.md#tool-filters)) |
+| MCP | `resolveMcpServers` (resolves context-derived `headers`/`env`), `CopilotMCPServerConfig` |
 | Conversations | `deriveSessionId`, `memoryStore`, `SessionStore` |
 | Context | `getCopilotContext`, `runWithCopilotContext`, `bindCopilotContext`, `CopilotContext` |
 | Events | `mapSessionEvent`, `CopilotAgentEvent` |

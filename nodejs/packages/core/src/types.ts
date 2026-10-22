@@ -46,6 +46,11 @@ export interface ClientLike {
   getSessionMetadata?(sessionId: string): Promise<unknown | undefined>;
   listModels?(): Promise<Array<{ id: string; name?: string }>>;
   getStatus?(): Promise<{ version?: string } & Record<string, unknown>>;
+  /**
+   * Whether the connection to the runtime is alive. Optional: for the SDK's `CopilotClient` (which
+   * has no public state accessor) core treats a throwing `rpc` accessor as a lost connection.
+   */
+  isConnected?(): boolean;
 }
 
 /** Creates the underlying client. Default: `new CopilotClient(options)` from the SDK. */
@@ -70,6 +75,11 @@ export interface StructuredSchema<T> {
 export interface CopilotContext {
   /** Authenticated caller. Part of the session-id derivation. `undefined` for anonymous/system calls. */
   principal?: string;
+  /**
+   * The turn's conversation id (set by core while a turn runs). Outside a turn, a value set by the
+   * application (for example by the NestJS context interceptor) is informational only: turns without
+   * an explicit `conversationId` use an ephemeral session.
+   */
   conversationId?: string;
   agentName?: string;
   /** SDK session id, set once the session is created or resumed. */
@@ -267,12 +277,36 @@ export interface CopilotLimits {
   conversationWaitMs?: number;
 }
 
+/**
+ * Runtime recovery. When a start fails, or a running runtime's process dies or its connection
+ * drops, the client becomes `failed`, in-flight turns fail with `CopilotRuntimeUnavailableError`,
+ * and the next turn (or `start()`) starts a new runtime. The first restart is immediate; after
+ * consecutive failed starts, the next one waits `backoffMs`, doubling up to `maxBackoffMs`.
+ */
+export interface CopilotRestartOptions {
+  /**
+   * Consecutive failed start attempts after which turns fail fast without trying again, until
+   * `start()` is called explicitly. `0` disables automatic restarts. Default: `Infinity`.
+   */
+  maxAttempts?: number;
+  /** Delay before the second consecutive start attempt, doubled for each later one. Default 1_000 ms. */
+  backoffMs?: number;
+  /** Upper bound of the delay between start attempts. Default 30_000 ms. */
+  maxBackoffMs?: number;
+  /** How often a running runtime's connection is checked. Default 1_000 ms. */
+  checkIntervalMs?: number;
+}
+
 export interface CopilotOptions {
   /** Path to the Copilot CLI/runtime. Falls back to `COPILOT_CLI_PATH`, then the SDK's bundled runtime. */
   cliPath?: string;
   /** Connect to an existing runtime server instead of spawning one. */
   cliUrl?: string;
-  /** "lazy" (default) starts on first turn; "eager" requires calling `start()`. */
+  /**
+   * "lazy" (default): the runtime starts on the first turn. "eager": core itself does nothing
+   * different; call `await copilot.start()` at application startup so a broken runtime fails fast.
+   * Framework modules act on it (NestJS calls `start()` at bootstrap and fails bootstrap on error).
+   */
   startup?: "lazy" | "eager";
   /** Service GitHub token (fallback when the context has none). */
   githubToken?: string;
@@ -286,6 +320,8 @@ export interface CopilotOptions {
   responseTimeout?: number;
   /** Max time to wait for an "ask-user" permission response. Default 120_000 ms. */
   approvalWindow?: number;
+  /** Recovery when the runtime fails to start or its process dies or disconnects. */
+  restart?: CopilotRestartOptions;
   store?: SessionStore;
   /** Global hooks applied before agent hooks. */
   hooks?: SessionHooks;
@@ -358,6 +394,10 @@ export interface CopilotCapacity {
 
 export interface Copilot {
   readonly state: CopilotClientState;
+  /**
+   * Starts the runtime now (otherwise the first turn starts it). On a `failed` client it retries
+   * immediately and resets the restart attempts and backoff.
+   */
   start(): Promise<void>;
   /** Stop admitting turns, wait up to `gracePeriodMs` for in-flight turns, abort the rest, stop the runtime. */
   stop(options?: { gracePeriodMs?: number }): Promise<void>;

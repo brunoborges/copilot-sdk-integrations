@@ -10,6 +10,7 @@ graceful shutdown, error handling, and observability.
 **In this chapter**
 
 - [Runtime lifecycle](#runtime-lifecycle)
+- [Runtime restarts](#runtime-restarts)
 - [Capacity and limits](#capacity-and-limits)
 - [Health](#health)
 - [Info endpoint](#info-endpoint)
@@ -28,8 +29,39 @@ graceful shutdown, error handling, and observability.
   surfaces on that turn as `CopilotRuntimeUnavailableError`.
 - With `startup: "eager"`, NestJS starts it at bootstrap and bootstrap fails if it can't start.
   In core, call `await copilot.start()` at startup.
-- A failed start leaves the client `failed`; the next turn or `start()` retries. The integration
-  does not restart a runtime process that dies while running.
+- A failed start leaves the client `failed`; the next turn or `start()` retries.
+- If the runtime process dies or its connection drops while running, the client goes to `failed`
+  and the next turn starts a fresh runtime. See [Runtime restarts](#runtime-restarts).
+
+## Runtime restarts
+
+While the runtime is `running`, the integration checks its connection every
+`restart.checkIntervalMs` (and whenever a turn fails or `health()` is called). When the connection
+is lost:
+
+1. `copilot.state` becomes `failed`, so [health](#health) reports `down` (HTTP `503`).
+2. Turns running on the lost runtime end with `CopilotRuntimeUnavailableError` (HTTP `503`).
+3. The next turn starts a new runtime process. Persistent conversations resume from the
+   runtime's stored session state.
+
+Repeated failures back off: the first restart is immediate, later ones wait `backoffMs`,
+doubling up to `maxBackoffMs`. Turns that arrive meanwhile wait for the restart (their
+`responseTimeout` still applies). After `maxAttempts` consecutive failed starts, turns fail fast
+with `CopilotRuntimeUnavailableError` and automatic restarts stop. An explicit `copilot.start()` always retries immediately and
+resets the counters.
+
+```ts
+createCopilot({
+  restart: { maxAttempts: 5, backoffMs: 1_000, maxBackoffMs: 30_000, checkIntervalMs: 1_000 },
+});
+```
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `restart.maxAttempts` | `Infinity` | Consecutive failed starts before automatic restarts stop. `0` disables automatic restarts (only `start()` recovers). |
+| `restart.backoffMs` | `1000` | Delay before the second consecutive attempt; doubles after each failure. |
+| `restart.maxBackoffMs` | `30000` | Upper bound for the delay. |
+| `restart.checkIntervalMs` | `1000` | How often a running runtime's connection is checked. |
 
 ## Capacity and limits
 
@@ -50,7 +82,7 @@ holds a runtime session. See [turn admission](conversations.md#turn-admission).
 `copilot.health()` returns `{ state, version?, capacity }` without starting a lazy runtime.
 
 In NestJS, `CopilotHealthIndicator` plugs into [`@nestjs/terminus`](https://docs.nestjs.com/recipes/terminus)
-(an optional peer dependency the indicator does not import):
+11 or 12 (an optional peer dependency, loaded only when the indicator runs):
 
 ```ts
 @Controller("health")
@@ -68,8 +100,9 @@ export class HealthController {
 `isHealthy(key = "copilot")` resolves to
 `{ copilot: { status: "up" | "down", state, version?, capacity } }`. It reports `down` when the
 runtime is `stopping`, `stopped`, or `failed`, and `up` for a lazy runtime that hasn't started
-yet. It returns the `down` result rather than throwing a Terminus `HealthCheckError`, so check
-the status if you need the endpoint to answer `503`.
+yet. The result is built with Terminus's `HealthIndicatorService` (`check(key).up()/down()`), so
+`HealthCheckService` answers `503 Service Unavailable` when Copilot is down and `200` otherwise.
+The indicator never starts a lazy runtime.
 
 ## Info endpoint
 

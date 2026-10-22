@@ -32,6 +32,7 @@ or `forRootAsync(...)`, which accept the same `CopilotOptions` plus NestJS-speci
 | `limits.conversationWaitMs` | `30000` | How long a turn waits for a busy conversation. |
 | `responseTimeout` | `300000` | Per-turn timeout in ms, including queueing. Overridden by the `timeout` send option. |
 | `approvalWindow` | `120000` | How long an `ask-user` permission waits for an answer before it is denied. |
+| `restart` | `{ maxAttempts: Infinity, backoffMs: 1000, maxBackoffMs: 30000, checkIntervalMs: 1000 }` | Recovery when the runtime dies or disconnects; see [runtime restarts](operations.md#runtime-restarts). |
 | `store` | none | [`SessionStore`](conversations.md#session-stores-and-multiple-replicas) for cross-replica conversation leases. |
 | `hooks` | none | Global [hooks](governance.md#hooks), run before each agent's hooks. |
 | `onEvent` | none | Global [event listener](streaming.md#global-event-listeners) `(event, context)`. |

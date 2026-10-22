@@ -249,7 +249,7 @@ async function runTurn(runtime: CopilotRuntime, def: CopilotAgentDefinition, req
       }
       const run = () => {
         turnContext = getCopilotContext()!;
-        return executeTurn(runtime, def, req, { sessionId, ephemeral, signal, deadline, emit });
+        return executeTurn(runtime, def, req, { sessionId, ephemeral, signal, controller, deadline, emit });
       };
       return githubToken === undefined ? run() : runWithCopilotContext({ githubToken }, run);
     });
@@ -278,6 +278,7 @@ interface TurnRuntime {
   sessionId: string;
   ephemeral: boolean;
   signal: AbortSignal;
+  controller: AbortController;
   deadline: number;
   emit(event: CopilotAgentEvent): void;
 }
@@ -290,7 +291,7 @@ async function executeTurn(
 ): Promise<TurnResult> {
   const { sessionId, signal, emit } = turn;
   const context = getCopilotContext()!;
-  const client = await raceAbort(runtime.acquireClient(), signal);
+  const client = await raceAbort(runtime.acquireClient(turn.controller), signal);
 
   const { tools, customToolNames, approvalRequired } = toSdkTools([...(def.tools ?? []), ...(req.tools ?? [])], {
     getContext: () => context,
@@ -444,6 +445,8 @@ async function executeTurn(
     emit({ type: "done", text, sessionId });
     return { text, value, sessionId };
   } catch (error) {
+    // A dead runtime marks the client failed and aborts this turn with CopilotRuntimeUnavailableError.
+    runtime.checkConnection(client);
     if (signal.aborted) {
       await session.abort().catch((e) => runtime.logger.warn("Failed to abort Copilot session", { sessionId, error: messageOf(e) }));
     }
