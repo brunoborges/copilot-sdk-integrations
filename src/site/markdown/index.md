@@ -55,6 +55,7 @@ optional observations and streaming.
 | [Observability](observability.html) | Micrometer observations, token counters, privacy, and activation. |
 | [Actuator](actuator.html) | `copilot` health indicator, info section, and read-only management endpoint. |
 | [Extension SPIs](extensions.html) | Custom telemetry and return-type adapters. |
+| [Testing](testing.html) | Scripted in-memory runtime, recorded interactions, and Testcontainers with `@ServiceConnection`. |
 | [Example application](examples.html) | Raw, routed, bound, and streaming executable modes. |
 | [Security and troubleshooting](operations.html) | Authorization boundaries, failure diagnosis, and source references. |
 

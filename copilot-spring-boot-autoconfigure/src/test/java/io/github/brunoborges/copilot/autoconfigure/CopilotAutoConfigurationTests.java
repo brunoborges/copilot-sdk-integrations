@@ -275,6 +275,33 @@ class CopilotAutoConfigurationTests {
         }
     }
 
+    @Test
+    void connectionDetailsTakePrecedenceOverServerAndLocalRuntimeProperties() {
+        CopilotConnectionDetails details = new CopilotConnectionDetails() {
+            @Override
+            public String cliUrl() {
+                return "localhost:5432";
+            }
+
+            @Override
+            public String tcpConnectionToken() {
+                return "container-token";
+            }
+        };
+        runner.withBean(CopilotConnectionDetails.class, () -> details)
+                .withPropertyValues("copilot.cli-path=/missing/copilot", "copilot.cli-args[0]=--flag",
+                        "copilot.working-directory=/work")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    var options = context.getBean(CopilotClientOptions.class);
+                    assertThat(options.getCliUrl()).isEqualTo("localhost:5432");
+                    assertThat(options.getTcpConnectionToken()).isEqualTo("container-token");
+                    assertThat(options.isUseStdio()).isFalse();
+                    assertThat(options.getCliPath()).isNull();
+                    assertThat(context.getBean(CopilotClient.class).getState()).isEqualTo(ConnectionState.DISCONNECTED);
+                });
+    }
+
     @Configuration(proxyBeanMethods = false)
     @EnableAutoConfiguration
     static class DiscoveryConfiguration {
