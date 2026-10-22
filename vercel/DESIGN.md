@@ -99,6 +99,23 @@ Measured input: `@github/copilot-sdk-linux-x64@1.0.26` unpacks to about **163 MB
 packages and unneeded plugins are excluded from the function trace (see
 [Build and deployment](#15-build-and-deployment)).
 
+### What runs where
+
+Vercel is not only a frontend host. This integration is almost entirely **server-side**:
+
+| Piece | Runs on |
+| --- | --- |
+| Copilot runtime, agents, tools, permission policies, hooks | Vercel Functions (Node.js runtime, Fluid compute) |
+| Code-executing agents (built-in shell/file tools, stdio MCP) | Vercel Sandbox microVMs |
+| Conversation state, locks, approval relay | Marketplace storage (Redis, Blob, Postgres) |
+| Long-running, crash-safe turns (later phase) | Workflow SDK and Vercel Queues |
+| Model routing for BYOK | AI Gateway |
+| Chat UI | Browser, using the AI SDK's existing `useChat`. No Copilot-specific client code, and no credentials reach the browser |
+
+The UI stream mapping (§12) is the only browser-facing contract. Apps without a UI
+(webhooks, cron jobs, APIs, background processing) use the same agents from any
+Function.
+
 ---
 
 ## 3. Developer experience at a glance
