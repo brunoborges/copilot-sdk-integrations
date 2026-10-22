@@ -1,0 +1,1 @@
+{% if user %}Greet {{ user.username }}.{% else %}Greet the guest.{% endif %}

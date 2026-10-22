@@ -17,7 +17,7 @@ injection, lifecycle management, security context, observability, and testing.
 | Java | [Quarkus](https://quarkus.io/) | [`java/quarkus/`](java/quarkus/) | Available (unreleased) |
 | .NET | Generic Host / ASP.NET Core ([Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`) | [`dotnet/`](dotnet/) | Preview, not yet on NuGet ([docs](https://brunoborges.github.io/copilot-sdk-integrations/dotnet/), [design](dotnet/docs/design.md)) |
 | Polyglot (C# AppHost; .NET, Java, Node.js, Python services) | [Aspire](https://aspire.dev/) (AppHost runtime resource + .NET client integration, builds on `dotnet`) | [`aspire/`](aspire/) | Preview, not yet on NuGet ([docs](https://brunoborges.github.io/copilot-sdk-integrations/aspire/), [design](aspire/docs/design.md)) |
-| Python | [Django](https://www.djangoproject.com/) | `python/` | Planned (next) |
+| Python | [Django](https://www.djangoproject.com/) | [`python/django/`](python/django/) | Preview, not yet on PyPI ([docs](https://brunoborges.github.io/copilot-sdk-integrations/django/), [design](python/django/DESIGN.md)) |
 | Python | [FastAPI](https://fastapi.tiangolo.com/) | `python/` | Under consideration |
 | Node.js / TypeScript | [NestJS](https://nestjs.com/), framework-agnostic core, [AI SDK](https://ai-sdk.dev/) adapter | [`nodejs/`](nodejs/) | In development ([DESIGN.md](nodejs/DESIGN.md)) |
 

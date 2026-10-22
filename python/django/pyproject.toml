@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "copilot-django"
+version = "0.1.0.dev0"
+description = "Django integration for the GitHub Copilot SDK: declarative agents, ORM-aware tools, and permission policies."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "copilot-agent-core==0.1.0.dev0",
+    "Django>=5.2",
+]
+classifiers = [
+    "Framework :: Django",
+    "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
+    "Programming Language :: Python :: 3",
+]
+
+[project.entry-points.pytest11]
+copilot_django = "copilot_django.pytest_plugin"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/copilot_django"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]
+DJANGO_SETTINGS_MODULE = "testproject.settings"
+asyncio_default_fixture_loop_scope = "function"

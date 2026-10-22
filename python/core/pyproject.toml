@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "copilot-agent-core"
+version = "0.1.0.dev0"
+description = "Framework-neutral agent layer for the GitHub Copilot SDK for Python: loop bridge, agent definitions, tools, permission policies, hooks, and a scripted test runtime."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [{ name = "Bruno Borges" }]
+dependencies = [
+    "github-copilot-sdk>=1.0.26,<2",
+    "pydantic>=2.11,<3",
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Repository = "https://github.com/brunoborges/copilot-sdk-integrations"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/copilot_agents"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
