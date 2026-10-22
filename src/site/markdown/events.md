@@ -95,12 +95,13 @@ For each invocation, ordering is:
    handler remains configured.
 
 Customizers can use SDK capabilities not exposed as declarative properties,
-such as hooks or MCP settings. They are responsible for the validity of their
+such as hooks or advanced MCP authentication settings. Basic server definition
+and selection are covered by [MCP servers](mcp.html). Customizers are responsible for the validity of their
 advanced SDK configuration; startup duplicate-tool validation covers declared
 tool references, not arbitrary lists constructed later by customizers.
 
 ---
 
-**Previous:** [Spring tool beans](tools.html)
+**Previous:** [MCP servers](mcp.html)
 
 **Next:** [Configuration reference](configuration.html)

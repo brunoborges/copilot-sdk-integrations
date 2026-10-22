@@ -98,7 +98,13 @@ class CopilotAgentWireTests {
             var requests = executor.submit(() -> serve(server));
             new ApplicationContextRunner().withUserConfiguration(WireApplication.class)
                     .withPropertyValues("copilot.cli-url=127.0.0.1:" + server.getLocalPort(),
-                            "test.instructions-mode=" + mode.name(), "copilot.agents.wire-agent.response-timeout=2s")
+                            "test.instructions-mode=" + mode.name(), "copilot.agents.wire-agent.response-timeout=2s",
+                            "copilot.mcp.servers.files.command=node", "copilot.mcp.servers.files.args[0]=server.js",
+                            "copilot.mcp.servers.files.tools[0]=read_file", "copilot.mcp.servers.files.timeout=2s",
+                            "copilot.mcp.servers.docs.type=http", "copilot.mcp.servers.docs.url=https://example.com/mcp",
+                            "copilot.mcp.servers.docs.tools[0]=search",
+                            "copilot.agents.wire-agent.mcp-servers[0]=files",
+                            "copilot.agents.wire-agent.mcp-servers[1]=docs")
                     .run(context -> {
                         assertThat(context).hasNotFailed().hasSingleBean(WireAgent.class);
                         var agent = context.getBean(WireAgent.class);
@@ -115,6 +121,14 @@ class CopilotAgentWireTests {
             assertThat(resumed.get("sessionId")).isEqualTo(created.get("sessionId"));
             assertThat(created.get("systemMessage").get("mode").asText()).isEqualTo(mode.getValue());
             assertThat(resumed.get("systemMessage")).isEqualTo(created.get("systemMessage"));
+            var mcp = created.get("mcpServers");
+            assertThat(mcp.get("files").get("type").asText()).isEqualTo("stdio");
+            assertThat(mcp.get("files").get("command").asText()).isEqualTo("node");
+            assertThat(mcp.get("files").get("tools").get(0).asText()).isEqualTo("read_file");
+            assertThat(mcp.get("files").get("timeout").asInt()).isEqualTo(2000);
+            assertThat(mcp.get("docs").get("type").asText()).isEqualTo("http");
+            assertThat(mcp.get("docs").get("url").asText()).isEqualTo("https://example.com/mcp");
+            assertThat(resumed.get("mcpServers")).isEqualTo(mcp);
         }
     }
 

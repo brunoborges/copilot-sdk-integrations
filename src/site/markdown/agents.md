@@ -35,6 +35,7 @@ conversation-bound instance. Both forms share the same declarative settings.
 | `reasoningEffort` | `String` | `""` | Optional model-specific reasoning effort. A per-agent property overrides this value. |
 | `permissionHandler` | `String` | `""` | Name of an SDK `PermissionHandler` bean. Empty selects the integration's rejection handler, not an arbitrary handler found by type. |
 | `tools` | `String[]` | `{}` | Explicit tool bean names: individual `ToolDefinition` objects or SDK-annotated Spring services. |
+| `mcpServers` | `String[]` | `{}` | Names from `copilot.mcp.servers` or native SDK `McpServerConfig` beans. Per-agent properties replace this selection. See [MCP servers](mcp.html). |
 | `listeners` | `String[]` | `{}` | Names of `CopilotAgentListener` beans, invoked in listed order for each attached session's events. |
 | `customizers` | `String[]` | `{}` | Names of `CopilotAgentCustomizer` beans, applied in listed order. |
 

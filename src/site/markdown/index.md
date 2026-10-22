@@ -29,6 +29,7 @@ optional observations and streaming.
 | A singleton service routing calls by conversation key | [Agent interfaces](agents.html) |
 | A distinct agent instance without an ID on every message | [Bound instances](instances.html) |
 | Tokens and native session events | [Reactive streaming](streaming.html) |
+| Tools from local or remote MCP servers | [MCP servers](mcp.html) |
 | Property names, defaults, and validation | [Configuration reference](configuration.html) |
 
 <a id="read-by-chapter"></a>
@@ -44,6 +45,7 @@ optional observations and streaming.
 | [Conversations and lifecycle](conversations.html) | Create/resume decisions, serialization, errors, cancellation, and threading. |
 | [System instructions](instructions.html) | Append, replace, customize, resources, sections, and transforms. |
 | [Spring tool beans](tools.html) | SDK annotations, generated metadata, Spring proxies, and permissions. |
+| [MCP servers](mcp.html) | Stdio/HTTP definitions, per-agent selection, SDK beans, tool allowlists, and lifecycle. |
 | [Events and customizers](events.html) | Session-scoped observers, native event types, and SDK configuration hooks. |
 | [Configuration](configuration.html) | Every integration-owned property, precedence, and deployment examples. |
 | [Reactive streaming](streaming.html) | Cold subscriptions, native events, bounded buffering, and overflow. |
@@ -82,6 +84,17 @@ Chapter sources live in `src/site/markdown/`, navigation in `src/site/site.xml`,
 the layout in `copilot-spring-boot-site-skin/`, and local styles/scripts in
 `src/site/resources/`. Edit those sources rather
 than generated files under `target/site/`. No npm/frontend build is required.
+
+Fenced code blocks use a locally bundled Highlight.js 11.12.0 browser build.
+Use language labels such as `java`, `xml`, `yaml`, `json`, or `sh`; unlabelled
+or explicitly plain-text blocks remain plain. Syntax colors follow the same
+light/dark theme as the documentation. The header's **Theme** selector offers
+**System**, **Light**, and **Dark**. Your choice is remembered across visits;
+System follows changes to your device preference. A valid `?clawpilotTheme=light`
+or `?clawpilotTheme=dark` link overrides the saved choice until you change it.
+The version, checksum, source URL, and
+BSD license are recorded under `src/site/resources/js/vendor/`. Keep the
+license and notice when updating the bundle; no runtime CDN request is made.
 
 No integration artifacts have been published. Real example runs require
 appropriate Copilot authentication and consume usage; documentation preview does

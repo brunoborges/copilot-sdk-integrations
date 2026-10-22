@@ -292,6 +292,9 @@ public final class CopilotAgentInvoker implements AutoCloseable {
                 config.setReasoningEffort(definition.reasoningEffort());
             }
             config.setSystemMessage(definition.systemMessage()).setTools(definition.tools());
+            if (!definition.mcpServers().isEmpty()) {
+                config.setMcpServers(definition.mcpServers());
+            }
             definition.customizers().forEach(customizer -> customizer.customize(context, config));
             if (streaming) {
                 config.setStreaming(true);
@@ -312,6 +315,9 @@ public final class CopilotAgentInvoker implements AutoCloseable {
             config.setReasoningEffort(definition.reasoningEffort());
         }
         config.setSystemMessage(definition.systemMessage()).setTools(definition.tools());
+        if (!definition.mcpServers().isEmpty()) {
+            config.setMcpServers(definition.mcpServers());
+        }
         definition.customizers().forEach(customizer -> customizer.customize(context, config));
         if (streaming) {
             config.setStreaming(true);

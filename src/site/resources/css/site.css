@@ -11,11 +11,30 @@ a:hover { color: var(--cp-accent-hover); }
 a:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 4px; border-radius: 0.25rem; }
 a.externalLink { background-image: none; padding-right: 0; }
 #banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
   padding: 1.5rem 2rem;
   background: var(--cp-bg-elevated);
   border-bottom: 1px solid var(--cp-border);
 }
 #bannerLeft, #bannerRight { float: none; }
+.theme-picker { font-size: 0.875rem; }
+.theme-picker:not([hidden]) { display: flex; align-items: center; gap: 0.625rem; }
+.theme-picker select {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.625rem;
+  background: var(--cp-surface);
+  color: var(--cp-text);
+  border: 1px solid var(--cp-text-muted);
+  border-radius: 0.625rem;
+  font: inherit;
+  cursor: pointer;
+}
+.theme-picker select:hover { border-color: var(--cp-accent); }
+.theme-picker select:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 4px; }
 #bannerLeft, #bannerLeft a {
   color: var(--cp-text);
   font-size: 1.5rem;
@@ -115,6 +134,15 @@ p code, li code, td code { background: var(--cp-surface-soft); padding: 0.125rem
 }
 .source pre { margin: 0; padding: 0; background: none; border: 0; font-size: inherit; }
 pre code { padding: 0; background: none; font-size: inherit; overflow-wrap: normal; }
+pre code.hljs { color: var(--cp-text); }
+.hljs-comment, .hljs-quote { color: var(--cp-syntax-comment); font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-tag, .hljs-name { color: var(--cp-syntax-keyword); }
+.hljs-string, .hljs-regexp, .hljs-doctag { color: var(--cp-syntax-string); }
+.hljs-number, .hljs-attr, .hljs-attribute, .hljs-symbol, .hljs-bullet { color: var(--cp-syntax-number); }
+.hljs-title, .hljs-type, .hljs-built_in, .hljs-meta { color: var(--cp-syntax-function); }
+.hljs-subst, .hljs-punctuation { color: var(--cp-text); }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 650; }
 table {
   display: block;
   width: 100%;
@@ -186,7 +214,7 @@ table:focus-visible { outline: 2px solid var(--cp-accent); outline-offset: 4px; 
   html { scroll-behavior: auto; }
 }
 @media print {
-  #leftColumn, .docs-nav-toggle, .skip-link, .project-links { display: none; }
+  #leftColumn, .docs-nav-toggle, .skip-link, .project-links, .theme-picker:not([hidden]) { display: none; }
   #bodyColumn { margin: 0; padding: 0; }
   #contentBox { max-width: none; }
   table { overflow: visible; }

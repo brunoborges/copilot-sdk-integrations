@@ -319,6 +319,7 @@ with a letter. Conflicts with other beans fail rather than overwriting them.
 | `model`, `reasoningEffort` | Optional SDK settings; omitted values retain runtime defaults. Reasoning support depends on the model. |
 | `permissionHandler` | Name of an explicit SDK `PermissionHandler` bean; defaults to denial. |
 | `tools` | Names of SDK `ToolDefinition` beans or Spring services with SDK `@CopilotTool` methods. Does not grant tool permissions or disable built-in tools. |
+| `mcpServers` | Explicit names from `copilot.mcp.servers` or SDK `McpServerConfig` beans. A per-agent `mcp-servers` property replaces the annotation selection. See the [MCP chapter](src/site/markdown/mcp.md). |
 | `listeners` | Names of `CopilotAgentListener` beans attached to each invocation's session. |
 | `customizers` | Names of `CopilotAgentCustomizer` beans for advanced SDK configuration. |
 
@@ -680,7 +681,8 @@ java -jar copilot-spring-boot-example/target/copilot-spring-boot-example-0.1.0-S
 
 The runner logs event types and the existing listener logs final assistant
 content. `--agent`, `--stream`, and `--instance` are mutually exclusive; `--help` opens no
-sessions. Structured responses, declarative MCP/hooks, and attachment adapters
+sessions. Declarative MCP servers are documented in the [MCP chapter](src/site/markdown/mcp.md).
+Structured responses, declarative hooks, and attachment adapters
 are not part of these three additions.
 
 For application-owned bound agents:

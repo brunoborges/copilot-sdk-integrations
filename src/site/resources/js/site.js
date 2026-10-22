@@ -36,24 +36,62 @@
     table.setAttribute("tabindex", "0");
   }
 
-  let screenTheme;
-  window.addEventListener("beforeprint", () => {
-    screenTheme = document.documentElement.getAttribute("data-theme");
-    document.documentElement.setAttribute("data-theme", "light");
-  });
-  window.addEventListener("afterprint", () => {
-    document.documentElement.setAttribute("data-theme", screenTheme || "light");
-  });
+  if (!window.hljs) {
+    console.error("Documentation syntax highlighting library failed to load.");
+  } else {
+    for (const code of main.querySelectorAll("pre code")) {
+      if (code.matches(".nohighlight, .no-highlight")) continue;
+      const languageClass = [...code.classList].find(name => name.startsWith("language-"));
+      if (!languageClass) continue;
+      const language = languageClass.slice("language-".length);
+      if (!window.hljs.getLanguage(language)) {
+        console.warn(`No syntax highlighter registered for documentation language: ${language}`);
+        continue;
+      }
+      window.hljs.highlightElement(code);
+    }
+  }
 
-  const theme = new URLSearchParams(window.location.search).get("clawpilotTheme");
-  if (theme === "light" || theme === "dark") {
+  const root = document.documentElement;
+  const themeSelect = document.getElementById("theme-mode");
+  const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
+  let themeMode = root.getAttribute("data-theme-mode");
+  const applyTheme = () => {
+    root.setAttribute("data-theme-mode", themeMode);
+    root.setAttribute("data-theme", themeMode === "system"
+      ? (systemTheme.matches ? "dark" : "light") : themeMode);
+    if (themeSelect) themeSelect.value = themeMode;
     for (const link of document.querySelectorAll("a[href]")) {
       if (link.getAttribute("href").startsWith("#")) continue;
       const target = new URL(link.href, window.location.href);
       if (target.origin === window.location.origin && target.pathname.endsWith(".html")) {
-        target.searchParams.set("clawpilotTheme", theme);
+        if (themeMode === "system") target.searchParams.delete("clawpilotTheme");
+        else target.searchParams.set("clawpilotTheme", themeMode);
         link.href = target.href;
       }
     }
+  };
+  applyTheme();
+  systemTheme.addEventListener("change", () => {
+    if (themeMode === "system") applyTheme();
+  });
+  if (themeSelect) {
+    themeSelect.parentElement.hidden = false;
+    themeSelect.addEventListener("change", () => {
+      themeMode = themeSelect.value;
+      try {
+        window.localStorage.setItem("copilot-docs-theme", themeMode);
+      } catch (error) {
+        console.warn("Documentation theme could not be saved; the choice is retained in page URLs.", error);
+      }
+      const url = new URL(window.location.href);
+      if (themeMode === "system") url.searchParams.delete("clawpilotTheme");
+      else url.searchParams.set("clawpilotTheme", themeMode);
+      window.history.replaceState(window.history.state, "", url);
+      applyTheme();
+    });
   }
+
+  window.addEventListener("beforeprint", () => root.setAttribute("data-theme", "light"));
+  window.addEventListener("afterprint", applyTheme);
 })();

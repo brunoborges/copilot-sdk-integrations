@@ -93,4 +93,4 @@ not a text-only runtime sandbox.
 
 **Previous:** [System instructions](instructions.html)
 
-**Next:** [Events and customizers](events.html)
+**Next:** [MCP servers](mcp.html)

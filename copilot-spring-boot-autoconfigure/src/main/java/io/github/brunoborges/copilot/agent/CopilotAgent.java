@@ -21,6 +21,8 @@ public @interface CopilotAgent {
     String reasoningEffort() default "";
     String permissionHandler() default "";
     String[] tools() default {};
+    /** Named copilot.mcp.servers entries or SDK McpServerConfig beans. */
+    String[] mcpServers() default {};
     String[] listeners() default {};
     String[] customizers() default {};
 }

@@ -18,6 +18,7 @@ Website: [Copilot Spring Boot documentation](https://brunoborges.github.io/copil
 | [Conversations and lifecycle](src/site/markdown/conversations.md) | Persistence, serialization, threading, errors, and cancellation. |
 | [System instructions](src/site/markdown/instructions.md) | Append, replace, customize, resources, sections, and transforms. |
 | [Spring tool beans](src/site/markdown/tools.md) | SDK annotations, generated metadata, proxies, and permissions. |
+| [MCP servers](src/site/markdown/mcp.md) | Local/remote definitions, per-agent bindings, native SDK beans, and security. |
 | [Events and customizers](src/site/markdown/events.md) | Session-scoped listeners, native events, and SDK configuration hooks. |
 | [Configuration reference](src/site/markdown/configuration.md) | All supported keys, defaults, validation, precedence, and examples. |
 | [Reactive streaming](src/site/markdown/streaming.md) | Cold subscriptions, native events, buffering, overflow, and cancellation. |
@@ -62,7 +63,7 @@ This heading preserves the existing `DOCS.md#bound-agent-instances` entry point.
 ## Configuration reference
 
 The [configuration chapter](src/site/markdown/configuration.md) is the complete
-reference for `copilot.*`, `copilot.agents.<name>.*`, `copilot.execution.*`,
+reference for `copilot.*`, `copilot.agents.<name>.*`, `copilot.mcp.servers.*`, `copilot.execution.*`,
 `copilot.observations.enabled`, and `copilot.reactor.buffer-capacity`.
 Settings not listed there are not automatically forwarded to SDK configuration.
 
@@ -80,3 +81,6 @@ Reinstall the skin after template changes. Re-run the root `site` goal after
 chapter, navigation, or resource changes. Chapter-to-chapter HTML links are
 intended for the rendered site; the table above provides direct Markdown source
 links for repository browsing.
+
+After changing the shared layout or site descriptor, use `./mvnw -N clean site`
+to regenerate otherwise unchanged chapters as well.

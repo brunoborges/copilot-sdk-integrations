@@ -14,8 +14,18 @@
 <script>
   (() => {
     const param = new URLSearchParams(window.location.search).get("clawpilotTheme");
-    const theme =
-      param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    const modes = ["system", "light", "dark"];
+    let saved;
+    try {
+      saved = window.localStorage.getItem("copilot-docs-theme");
+    } catch (error) {
+      console.warn("Saved documentation theme is unavailable; using the URL or system preference.", error);
+    }
+    const mode = modes.includes(param) ? param : modes.includes(saved) ? saved : "system";
+    const theme = mode === "system"
+      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : mode;
+    document.documentElement.setAttribute("data-theme-mode", mode);
     document.documentElement.setAttribute("data-theme", theme);
   })();
 </script>
@@ -45,6 +55,11 @@
   --cp-panel-strong: rgba(255, 255, 255, 0.96);
   --cp-sheen: rgba(255, 255, 255, 0.55);
   --cp-highlight: rgba(177, 31, 75, 0.12);
+  --cp-syntax-keyword: var(--cp-accent);
+  --cp-syntax-comment: var(--cp-text-soft);
+  --cp-syntax-string: #21673b;
+  --cp-syntax-number: #875000;
+  --cp-syntax-function: #155a8a;
 }
 html[data-theme="dark"] {
   color-scheme: dark;
@@ -71,8 +86,14 @@ html[data-theme="dark"] {
   --cp-panel-strong: rgba(41, 41, 41, 0.96);
   --cp-sheen: rgba(255, 255, 255, 0.04);
   --cp-highlight: rgba(253, 142, 161, 0.12);
+  --cp-syntax-keyword: var(--cp-accent);
+  --cp-syntax-comment: var(--cp-text-soft);
+  --cp-syntax-string: #91d6a7;
+  --cp-syntax-number: #e5bd83;
+  --cp-syntax-function: #8fc7eb;
 }
 </style>
+<script defer="defer" src="./js/vendor/highlight-11.12.0.min.js"></script>
 <script defer="defer" src="./js/site.js"></script>
 <!--
 THESIS: A technical reading surface, not a marketing landing page.
@@ -97,6 +118,7 @@ FORM: Maven-native chapter navigation; responsive reading measure and scrollable
             <item name="Conversations and lifecycle" href="conversations.html"/>
             <item name="System instructions" href="instructions.html"/>
             <item name="Spring tool beans" href="tools.html"/>
+            <item name="MCP servers" href="mcp.html"/>
             <item name="Events and customizers" href="events.html"/>
         </menu>
         <menu name="Reference">

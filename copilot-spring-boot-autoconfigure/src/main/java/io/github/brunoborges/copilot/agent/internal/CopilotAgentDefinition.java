@@ -6,9 +6,11 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import com.github.copilot.SystemMessageMode;
+import com.github.copilot.rpc.McpServerConfig;
 import com.github.copilot.rpc.PermissionHandler;
 import com.github.copilot.rpc.PermissionRequestResult;
 import com.github.copilot.rpc.SystemMessageConfig;
@@ -25,6 +27,7 @@ import org.springframework.util.Assert;
 public record CopilotAgentDefinition(
         String name, String typeName, String model, String reasoningEffort, Duration responseTimeout,
         SystemMessageConfig systemMessage, PermissionHandler permissions, List<ToolDefinition> tools,
+        Map<String, McpServerConfig> mcpServers,
         List<CopilotAgentListener> listeners, List<CopilotAgentCustomizer> customizers) {
 
     private static final Logger log = Logger.getLogger(CopilotAgentDefinition.class.getName());
@@ -90,6 +93,8 @@ public record CopilotAgentDefinition(
                 settings == null ? Duration.ofSeconds(60) : settings.responseTimeout(), systemMessage,
                 permissionBean.isEmpty() ? DENY : beans.getBean(permissionBean, PermissionHandler.class),
                 SpringToolBindings.bind(annotation.tools(), beans, environment),
+                McpServerBindings.bind(settings != null && settings.mcpServers() != null
+                        ? settings.mcpServers() : Arrays.asList(annotation.mcpServers()), beans, environment),
                 beans(annotation.listeners(), CopilotAgentListener.class, beans, environment),
                 beans(annotation.customizers(), CopilotAgentCustomizer.class, beans, environment));
     }

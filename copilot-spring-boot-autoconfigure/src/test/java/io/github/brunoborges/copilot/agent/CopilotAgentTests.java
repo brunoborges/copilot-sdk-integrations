@@ -16,6 +16,8 @@ import com.github.copilot.SystemMessageMode;
 import com.github.copilot.generated.AssistantMessageEvent;
 import com.github.copilot.generated.SessionEvent;
 import com.github.copilot.rpc.MessageOptions;
+import com.github.copilot.rpc.McpHttpServerConfig;
+import com.github.copilot.rpc.McpStdioServerConfig;
 import com.github.copilot.rpc.PermissionHandler;
 import com.github.copilot.rpc.PermissionRequest;
 import com.github.copilot.rpc.PermissionRequestResult;
@@ -32,6 +34,7 @@ import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentFactoryBean;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
 import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
+import io.github.brunoborges.copilot.autoconfigure.CopilotMcpProperties;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -61,6 +64,60 @@ class CopilotAgentTests {
     private final DefaultListableBeanFactory beans = new DefaultListableBeanFactory();
     private final StandardEnvironment environment = new StandardEnvironment();
     private final CopilotAgentsProperties properties = new CopilotAgentsProperties(Map.of());
+
+    @Test
+    void selectedMcpServersReachCreateAndResumeAndPropertiesOverrideAnnotationSelection() throws Exception {
+        var local = new CopilotMcpProperties.Server(CopilotMcpProperties.Transport.STDIO, "node",
+                List.of("server.js"), Map.of(), null, null, Map.of(), List.of("read_file"), Duration.ofSeconds(2));
+        beans.registerSingleton("mcpProperties", new CopilotMcpProperties(Map.of("files", local)));
+        var remote = new McpHttpServerConfig().setUrl("https://example.com/mcp").setTools(List.of("search"));
+        beans.registerSingleton("remote", remote);
+        var customizer = mock(CopilotAgentCustomizer.class);
+        beans.registerSingleton("mcpCustomizer", customizer);
+        doAnswer(invocation -> {
+            var config = invocation.<SessionConfig>getArgument(1);
+            assertThat(config.getMcpServers()).containsOnlyKeys("files", "remote");
+            config.setMcpServers(Map.of("customized", remote));
+            return null;
+        }).when(customizer).customize(any(), any(SessionConfig.class));
+        doAnswer(invocation -> {
+            var config = invocation.<ResumeSessionConfig>getArgument(1);
+            assertThat(config.getMcpServers()).containsOnlyKeys("files", "remote");
+            assertThat(((McpStdioServerConfig) config.getMcpServers().get("files")).getTimeout()).isEqualTo(2000);
+            config.setMcpServers(Map.of("customized", remote));
+            return null;
+        }).when(customizer).customize(any(), any(ResumeSessionConfig.class));
+        var definition = definition(McpAgent.class, properties);
+        assertThat(definition.mcpServers()).containsOnlyKeys("files", "remote");
+        assertThat(definition.mcpServers().get("files")).isInstanceOf(McpStdioServerConfig.class);
+        assertThat(definition.mcpServers().get("remote")).isSameAs(remote);
+
+        var session = session("reply");
+        when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null))
+                .thenReturn(CompletableFuture.completedFuture(new SessionMetadata()));
+        when(client.createSession(any())).thenAnswer(invocation -> {
+            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            return CompletableFuture.completedFuture(session);
+        });
+        when(client.resumeSession(anyString(), any())).thenReturn(CompletableFuture.completedFuture(session));
+        try (var invoker = new CopilotAgentInvoker(client)) {
+            var agent = agent(McpAgent.class, invoker, properties);
+            assertThat(agent.answer("id", "first").get(5, TimeUnit.SECONDS)).isEqualTo("reply");
+            assertThat(agent.answer("id", "second").get(5, TimeUnit.SECONDS)).isEqualTo("reply");
+            ArgumentCaptor<SessionConfig> created = ArgumentCaptor.captor();
+            ArgumentCaptor<ResumeSessionConfig> resumed = ArgumentCaptor.captor();
+            verify(client).createSession(created.capture());
+            verify(client).resumeSession(anyString(), resumed.capture());
+            assertThat(created.getValue().getMcpServers()).containsOnlyKeys("customized");
+            assertThat(resumed.getValue().getMcpServers()).containsOnlyKeys("customized");
+        }
+        var override = new CopilotAgentsProperties(Map.of("mcpAgent",
+                new CopilotAgentsProperties.Agent(null, null, Duration.ofSeconds(60), List.of("remote"))));
+        assertThat(definition(McpAgent.class, override).mcpServers()).containsOnlyKeys("remote");
+        var empty = new CopilotAgentsProperties(Map.of("mcpAgent",
+                new CopilotAgentsProperties.Agent(null, null, Duration.ofSeconds(60), List.of())));
+        assertThat(definition(McpAgent.class, empty).mcpServers()).isEmpty();
+    }
 
     @Test
     void createsThenResumesConversationAndClosesEachAttachment() throws Exception {
@@ -372,6 +429,10 @@ class CopilotAgentTests {
 
     @CopilotAgent(listeners = "listener")
     public interface ListenedAgent {
+        CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
+    }
+    @CopilotAgent(mcpServers = {"files", "remote"}, customizers = "mcpCustomizer")
+    public interface McpAgent {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }
     @CopilotAgent(systemMessage = "system", permissionHandler = "permissions", tools = "tool", customizers = "customizer")

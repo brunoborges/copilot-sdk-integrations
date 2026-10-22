@@ -10,6 +10,7 @@ title: Configuration reference
 
 - [Client properties](#client-properties)
 - [Per-agent properties](#per-agent-properties)
+- [MCP properties](#mcp-properties)
 - [Execution properties](#execution-properties)
 - [Observation properties](#observation-properties)
 - [Reactor properties](#reactor-properties)
@@ -70,11 +71,12 @@ The binding type is `CopilotAgentsProperties`, whose `agents()` map contains
 | `copilot.agents.<name>.model` | String | Annotation value, then runtime default | Non-blank override of `model`. |
 | `copilot.agents.<name>.reasoning-effort` | String | Annotation value, then runtime default | Non-blank override of `reasoningEffort`; support depends on the selected model. |
 | `copilot.agents.<name>.response-timeout` | Duration | `60s` | At least `1ms`, representable in signed 64-bit nanoseconds. Bounds SDK response waiting only. |
+| `copilot.agents.<name>.mcp-servers` | List of strings | Annotation selection | Replace the agent's selected property server / SDK bean names. Omitted retains annotation; empty list selects none. Blank, duplicate, missing, or ambiguous references fail initialization. |
 
 Response waiting excludes queueing, connection/session metadata lookup,
 creation/resumption, and cleanup. It is not a total request deadline.
-Instructions, tools, listeners, and bean references are annotation/bean
-configuration, not additional properties under this map.
+Instructions, in-process tools, listeners, permission handlers, and customizers
+remain annotation/bean configuration, not additional properties under this map.
 
 Explicit lower-case, kebab-case names make property configuration easiest.
 For keys containing punctuation that Spring Boot map binding would otherwise
@@ -86,6 +88,34 @@ copilot:
     "[customer.agent]":
       response-timeout: 30s
 ```
+
+<a id="mcp-properties"></a>
+
+## MCP properties
+
+The binding type is `CopilotMcpProperties` in the auto-configuration package.
+`copilot.mcp.servers` is an empty-by-default map of `Server` records. Names
+must match `[A-Za-z][A-Za-z0-9._-]*`. Definitions are validated even when not
+selected; only explicitly selected servers are supplied to an agent.
+
+Replace `<server>` with a server name:
+
+| Property | Type | Default | Meaning and validation |
+| --- | --- | --- | --- |
+| `copilot.mcp.servers.<server>.type` | `stdio` or `http` | `stdio` | Native SDK transport: local subprocess or remote HTTP/SSE. |
+| `copilot.mcp.servers.<server>.command` | String | Unset | Required non-blank executable for stdio. Not a shell command line. Forbidden for HTTP. |
+| `copilot.mcp.servers.<server>.args` | List of strings | Empty | Literal process arguments, including intentional empty arguments. HTTP requires an empty list. |
+| `copilot.mcp.servers.<server>.env` | Map of strings | Empty | Additional process environment values; keys must not be blank. Empty values are allowed. HTTP requires an empty map. |
+| `copilot.mcp.servers.<server>.working-directory` | String | Unset | Optional non-blank stdio process directory. Forbidden for HTTP. |
+| `copilot.mcp.servers.<server>.url` | String | Unset | Required for HTTP: absolute HTTP(S) URL with a host, no credentials/fragment, and optional port 1-65535. Forbidden for stdio. |
+| `copilot.mcp.servers.<server>.headers` | Map of strings | Empty | HTTP request headers; keys must not be blank. Stdio requires an empty map. |
+| `copilot.mcp.servers.<server>.tools` | List of strings | Empty (no tools) | Explicit server tool allowlist; entries must not be blank. `["*"]` enables all server tools. |
+| `copilot.mcp.servers.<server>.timeout` | Duration | SDK/runtime default | Server tool-call timeout; at least `1ms`, at most `2147483647ms`. Forwarded as integer milliseconds, truncating sub-millisecond precision. Independent of agent response timeout. |
+
+See [MCP servers](mcp.html) for YAML, annotation, native bean, and raw SDK
+examples, lifecycle, and security boundaries. Unknown transport values and
+mixed local/remote settings fail binding. Server definitions do not grant tool
+permissions or automatically disable runtime-provided servers.
 
 <a id="execution-properties"></a>
 
@@ -175,7 +205,7 @@ an application/environment secret, not a new SDK GitHub authentication property.
 Precedence is:
 
 1. Spring Boot resolves property sources using its standard rules.
-2. Per-agent `model`/`reasoning-effort` properties override annotation values.
+2. Per-agent `model`/`reasoning-effort` and `mcp-servers` properties override annotation values.
 3. Omitted model/reasoning settings leave those choices to SDK/runtime defaults.
 4. Customizers run after declarative session settings, subject to the managed
    ID/permission/streaming invariants described above.

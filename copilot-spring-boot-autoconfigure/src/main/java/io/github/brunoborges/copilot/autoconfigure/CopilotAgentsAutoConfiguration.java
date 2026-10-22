@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Import;
 @ConditionalOnClass(CopilotClient.class)
 @ConditionalOnBean(CopilotClient.class)
 @ConditionalOnProperty(prefix = "copilot", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties({CopilotAgentsProperties.class, CopilotAgentExecutionProperties.class})
+@EnableConfigurationProperties({CopilotAgentsProperties.class, CopilotAgentExecutionProperties.class, CopilotMcpProperties.class})
 @Import(CopilotAgentsRegistrar.class)
 public class CopilotAgentsAutoConfiguration {
 
