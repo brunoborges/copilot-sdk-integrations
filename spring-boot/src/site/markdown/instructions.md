@@ -37,7 +37,7 @@ SystemMessageConfig advisorInstructions() {
 }
 ```
 
-Reference it with `@CopilotAgent(systemMessage = "advisorInstructions")`.
+Reference it with `@CopilotAgent(systemMessageRef = "advisorInstructions")`.
 The SDK types in this example are `com.github.copilot.SystemMessageMode` and
 `com.github.copilot.rpc.SystemMessageConfig`, `SystemMessageSections`,
 `SectionOverride`, and `SectionOverrideAction`; `Map` is `java.util.Map`.

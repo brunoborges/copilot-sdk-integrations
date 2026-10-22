@@ -23,7 +23,6 @@ import org.springframework.boot.LazyInitializationBeanFactoryPostProcessor;
 import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -250,7 +249,7 @@ class CopilotAutoConfigurationTests {
 
     @Test
     void generatesConfigurationMetadata() throws Exception {
-        try (var input = new ClassPathResource("META-INF/spring-configuration-metadata.json").getInputStream()) {
+        try (var input = CopilotProperties.class.getResourceAsStream("/META-INF/spring-configuration-metadata.json")) {
             var properties = new ObjectMapper().readTree(input).get("properties");
             var names = new ArrayList<String>();
             properties.forEach(property -> names.add(property.get("name").asText()));

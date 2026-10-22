@@ -91,6 +91,13 @@ class McpConfigurationTests {
         });
     }
 
+    @Test
+    void unknownMcpServerNamesBothLookupLocations() {
+        runner.withPropertyValues("copilot.agents.test-agent.mcp-servers[0]=missing").run(context ->
+                assertThat(context).hasFailed().getFailure().hasStackTraceContaining(
+                        "define copilot.mcp.servers.missing or an SDK McpServerConfig bean named 'missing'"));
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {
             "copilot.mcp.servers.files.command=",

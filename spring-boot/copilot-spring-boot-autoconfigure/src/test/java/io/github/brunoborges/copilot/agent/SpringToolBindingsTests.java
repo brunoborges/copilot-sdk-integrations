@@ -61,6 +61,14 @@ class SpringToolBindingsTests {
     }
 
     @Test
+    void missingToolRefPointsToAvailableTools() {
+        assertThatThrownBy(() -> SpringToolBindings.bind(new String[]{"view"}, new DefaultListableBeanFactory(),
+                new StandardEnvironment()))
+                .hasMessageContaining("toolRefs references bean 'view'")
+                .hasMessageContaining("use availableTools");
+    }
+
+    @Test
     void rejectsBeansWithoutSdkTools() {
         var beans = new DefaultListableBeanFactory();
         beans.registerSingleton("notTools", "not a tool service");

@@ -16,8 +16,20 @@ import com.github.copilot.SystemMessageMode;
  * {@link UserMessage} parameters, {@link P} placeholders, or a method-level template) are ID-less
  * definitions; obtain them through {@link CopilotAgents#create(Class)} or {@link CopilotAgents#resume(Class, String)}.
  *
- * <p>All string attributes support Spring property placeholders. Bean references are resolved by name
- * during application context initialization; invalid contracts fail startup.
+ * <p>String attributes fall into three kinds, distinguishable by name:
+ * <ul>
+ * <li><b>Bean references</b> end in {@code Ref} or {@code Refs} (for example {@link #permissionHandlerRef()}),
+ * following Spring's {@code transactionManagerRef} convention. Each value is a Spring bean name, and the bean
+ * must be of the documented type.</li>
+ * <li><b>Named entries</b>, {@link #mcpServers()} and {@link #provider()}, name an MCP server or model provider.
+ * The name is looked up in {@code copilot.mcp.servers} or {@code copilot.providers} first, then as an SDK
+ * bean of the same name. Defining the same name in both places fails startup.</li>
+ * <li><b>Literal values</b> are every other attribute: names, instructions, model identifiers, tool patterns,
+ * and directories.</li>
+ * </ul>
+ *
+ * <p>All string attributes support Spring property placeholders. References are resolved during application
+ * context initialization; an unknown bean, a bean of the wrong type, or an unknown entry fails startup.
  */
 @Documented
 @Target(ElementType.TYPE)
@@ -39,12 +51,12 @@ public @interface CopilotAgent {
 
     /**
      * How instructions combine with the runtime's built-in system message. {@code REPLACE} requires content;
-     * {@code CUSTOMIZE} requires a {@link #systemMessage()} bean.
+     * {@code CUSTOMIZE} requires a {@link #systemMessageRef()} bean.
      */
     SystemMessageMode instructionsMode() default SystemMessageMode.APPEND;
 
-    /** Name of an SDK {@code SystemMessageConfig} bean, mutually exclusive with the instruction attributes. */
-    String systemMessage() default "";
+    /** Bean name of an SDK {@code SystemMessageConfig}, mutually exclusive with the instruction attributes. */
+    String systemMessageRef() default "";
 
     /** Model identifier; empty retains the runtime default. Overridden by {@code copilot.agents.<name>.model}. */
     String model() default "";
@@ -53,42 +65,45 @@ public @interface CopilotAgent {
     String reasoningEffort() default "";
 
     /**
-     * Name of an SDK {@code PermissionHandler} bean. When empty, the {@code copilot.agents.<name>.permissions.*}
+     * Bean name of an SDK {@code PermissionHandler}. When empty, the {@code copilot.agents.<name>.permissions.*}
      * policy is used if configured; otherwise a handler that logs and rejects every permission request is used.
      * An approving handler is never selected implicitly. See {@link CopilotPermissionPolicies}.
      */
-    String permissionHandler() default "";
+    String permissionHandlerRef() default "";
 
     /**
-     * Names of SDK {@code ToolDefinition} beans or Spring beans declaring SDK {@code @CopilotTool} methods.
+     * Bean names of SDK {@code ToolDefinition}s or of Spring beans declaring SDK {@code @CopilotTool} methods.
+     * These are bean names, not tool names; to filter runtime tools by name use {@link #availableTools()}.
      * Registering a tool does not grant it permission.
      */
-    String[] tools() default {};
+    String[] toolRefs() default {};
 
     /**
-     * Names of {@code copilot.mcp.servers} entries or SDK {@code McpServerConfig} beans.
-     * {@code copilot.agents.<name>.mcp-servers} replaces this selection when set.
+     * MCP server names. Each is looked up as a {@code copilot.mcp.servers.<server>} entry, then as an SDK
+     * {@code McpServerConfig} bean of that name. {@code copilot.agents.<name>.mcp-servers} replaces this selection
+     * when set.
      */
     String[] mcpServers() default {};
 
     /**
-     * Name of a {@code copilot.providers} entry or SDK {@code ProviderConfig} bean used as a BYOK
-     * (bring your own key) model provider instead of GitHub Copilot; requires a {@link #model()}.
+     * BYOK (bring your own key) model provider name, used instead of GitHub Copilot; requires a {@link #model()}.
+     * It is looked up as a {@code copilot.providers.<provider>} entry, then as an SDK {@code ProviderConfig} bean
+     * of that name.
      * {@code copilot.agents.<name>.provider} replaces this selection when set.
      */
     String provider() default "";
 
-    /** Names of {@link CopilotAgentListener} beans attached to each invocation's session. */
-    String[] listeners() default {};
+    /** Bean names of {@link CopilotAgentListener}s attached to each invocation's session. */
+    String[] listenerRefs() default {};
 
-    /** Names of {@link CopilotAgentCustomizer} beans applied after declarative session settings. */
-    String[] customizers() default {};
+    /** Bean names of {@link CopilotAgentCustomizer}s applied after declarative session settings. */
+    String[] customizerRefs() default {};
 
     /**
      * Runtime tool allow-list sent as the SDK {@code availableTools} session option. Entries are tool names
      * (such as {@code view}) or source-qualified patterns ({@code builtin:<name>}, {@code custom:<name>},
      * {@code mcp:<name>}, each accepting {@code *}). The runtime applies the allow-list to every tool source, so
-     * {@code custom:*} is appended when the agent registers {@link #tools()} and {@code mcp:*} when it selects
+     * {@code custom:*} is appended when the agent registers {@link #toolRefs()} and {@code mcp:*} when it selects
      * {@link #mcpServers()}, unless the list already contains a pattern for that source. Empty means no allow-list.
      * {@code copilot.agents.<name>.available-tools} replaces this selection when set.
      */
@@ -127,15 +142,15 @@ public @interface CopilotAgent {
     String[] additionalDirectories() default {};
 
     /**
-     * Names of {@link CopilotAgentHooks} beans applied, in order, after every {@link GlobalCopilotAgentHooks}
-     * bean. {@code copilot.agents.<name>.hooks} replaces this selection when set.
+     * Bean names of {@link CopilotAgentHooks} applied, in order, after {@link GlobalCopilotAgentHooks} beans and
+     * beans targeting this agent with {@link CopilotAgentHooksFor}.
      */
-    String[] hooks() default {};
+    String[] hookRefs() default {};
 
     /**
-     * Name of a {@link CopilotTokenResolver} bean that supplies the per-invocation GitHub token. When empty, a
+     * Bean name of a {@link CopilotTokenResolver} that supplies the per-invocation GitHub token. When empty, a
      * single {@code CopilotTokenResolver} bean (or the {@code @Primary} one) applies; without one, sessions use
      * the client's ambient authentication.
      */
-    String tokenResolver() default "";
+    String tokenResolverRef() default "";
 }

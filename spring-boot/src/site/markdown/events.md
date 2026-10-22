@@ -23,7 +23,7 @@ These contracts are in `io.github.brunoborges.copilot.agent`:
 | `CopilotAgentEvent` | Record accessors `context()` and native SDK `event()`. Used by return-type adapters such as Reactor. |
 | `CopilotAgentListener` | `void onEvent(CopilotAgentContext context, SessionEvent event)`. |
 
-Bind listener bean names with `@CopilotAgent(listeners = "agentMessages")`:
+Bind listener bean names with `@CopilotAgent(listenerRefs = "agentMessages")`:
 
 ```java
 import com.github.copilot.generated.AssistantMessageEvent;
@@ -65,7 +65,7 @@ void customize(CopilotAgentContext context, SessionConfig config);
 void customize(CopilotAgentContext context, ResumeSessionConfig config);
 ```
 
-Register a bean and select it with `@CopilotAgent(customizers = "workspace")`.
+Register a bean and select it with `@CopilotAgent(customizerRefs = "workspace")`.
 For example, inside a configuration class:
 
 ```java

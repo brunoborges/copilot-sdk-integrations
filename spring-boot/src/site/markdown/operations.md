@@ -63,7 +63,7 @@ title: Security and troubleshooting
 | Stream overflows | Consume/offload deliberately, reduce producer work or adjust buffer capacity; remember downstream operators add their own buffers. |
 | Cancelled request still consumes usage | Cancellation and response timeouts call `CopilotSession.abort()`, but usage already consumed is billed. Look for `WARNING` logs about failed aborts; capacity is held until abort and cleanup finish. |
 | Tool sees no authentication or MDC | Add `io.micrometer:context-propagation` (included with Actuator), make the call on the thread holding the context, and in WebFlux enable `spring.reactor.context-propagation=auto`. |
-| Session uses the wrong GitHub identity | Check which `CopilotTokenResolver` applies (`@CopilotAgent(tokenResolver)`, then the single/`@Primary` bean) and whether it returned `null` (ambient). A customizer that sets a token or provider wins. |
+| Session uses the wrong GitHub identity | Check which `CopilotTokenResolver` applies (`@CopilotAgent(tokenResolverRef)`, then the single/`@Primary` bean) and whether it returned `null` (ambient). A customizer that sets a token or provider wins. |
 | `copilot.security.oauth2` startup failure | Define an `OAuth2AuthorizedClientManager` or `OAuth2AuthorizedClientService` bean, and mark one resolver `@Primary` if you also declare your own. |
 
 <a id="scope-and-source-references"></a>

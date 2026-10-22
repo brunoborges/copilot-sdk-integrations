@@ -9,7 +9,7 @@ package io.github.brunoborges.copilot.agent;
  * or resumed, unless a {@link CopilotAgentCustomizer} already configured a token or token provider.
  *
  * <p>Select one resolver for every agent by declaring a single bean of this type, or select one per agent
- * with {@link CopilotAgent#tokenResolver()}. Implementations must never log the token. Exceptions fail the
+ * with {@link CopilotAgent#tokenResolverRef()}. Implementations must never log the token. Exceptions fail the
  * invocation before any SDK work starts.
  *
  * <p><strong>Session isolation.</strong> Agent sessions are keyed by agent and conversation ID. Because a

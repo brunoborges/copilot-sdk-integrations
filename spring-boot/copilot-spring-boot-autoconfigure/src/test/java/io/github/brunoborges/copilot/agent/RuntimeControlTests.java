@@ -595,22 +595,22 @@ class RuntimeControlTests {
         return event;
     }
 
-    @CopilotAgent(tokenResolver = "second")
+    @CopilotAgent(tokenResolverRef = "second")
     public interface SecondTokenAgent {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }
 
-    @CopilotAgent(customizers = "rotating")
+    @CopilotAgent(customizerRefs = "rotating")
     public interface RotatingTokenAgent {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }
 
-    @CopilotAgent(hooks = "auditHooks")
+    @CopilotAgent(hookRefs = "auditHooks")
     public interface HookedAgent {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }
 
-    @CopilotAgent(tools = "securityTools", permissionHandler = "permissions", listeners = "listener")
+    @CopilotAgent(toolRefs = "securityTools", permissionHandlerRef = "permissions", listenerRefs = "listener")
     public interface SecuredToolAgent {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }

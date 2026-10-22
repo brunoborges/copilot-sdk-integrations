@@ -25,9 +25,10 @@ public record CopilotAgentsProperties(Map<String, Agent> agents) {
      * @param reasoningEffort model-specific reasoning effort override
      * @param responseTimeout maximum response wait, excluding session lookup and cleanup; synchronous agent
      *                        methods wait at most this long in total
-     * @param mcpServers server names overriding the annotation; null retains annotation selection
-     * @param provider BYOK provider name overriding the annotation; null retains annotation selection,
-     *                 empty selects none
+     * @param mcpServers MCP server names, each a {@code copilot.mcp.servers} entry or an SDK bean of that name,
+     *                   overriding the annotation; null retains annotation selection
+     * @param provider BYOK provider name, a {@code copilot.providers} entry or an SDK bean of that name,
+     *                 overriding the annotation; null retains annotation selection, empty selects none
      * @param availableTools runtime tool allow-list overriding the annotation; null retains the annotation,
      *                       empty removes the allow-list
      * @param excludedTools runtime tool deny-list overriding the annotation; null retains the annotation
@@ -36,7 +37,6 @@ public record CopilotAgentsProperties(Map<String, Agent> agents) {
      * @param workingDirectory session working directory; null retains the annotation, empty selects the runtime default
      * @param additionalDirectories directories accessible beyond the working directory; null retains the annotation
      * @param permissions declarative permission policy used when the agent has no permission handler bean
-     * @param hooks names of {@code CopilotAgentHooks} beans replacing the annotation selection; null retains it
      */
     public record Agent(
             String model,
@@ -50,8 +50,7 @@ public record CopilotAgentsProperties(Map<String, Agent> agents) {
             Boolean builtInTools,
             String workingDirectory,
             List<String> additionalDirectories,
-            Permissions permissions,
-            List<String> hooks) {
+            Permissions permissions) {
 
         @ConstructorBinding
         public Agent {
@@ -73,13 +72,11 @@ public record CopilotAgentsProperties(Map<String, Agent> agents) {
             Assert.isTrue(workingDirectory == null || workingDirectory.isEmpty() || !workingDirectory.isBlank(),
                     "Agent working-directory must not be blank");
             additionalDirectories = names(additionalDirectories, "additional-directories");
-            hooks = names(hooks, "hooks");
         }
 
         public Agent(String model, String reasoningEffort, Duration responseTimeout, List<String> mcpServers,
                 String provider) {
-            this(model, reasoningEffort, responseTimeout, mcpServers, provider, null, null, null, null, null, null, null,
-                    null);
+            this(model, reasoningEffort, responseTimeout, mcpServers, provider, null, null, null, null, null, null, null);
         }
 
         public Agent(String model, String reasoningEffort, Duration responseTimeout) {

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.github.brunoborges</groupId>
+    <artifactId>copilot-quarkus-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Copilot Quarkus - Parent</name>
+    <description>Quarkus extension for the GitHub Copilot SDK for Java</description>
+    <url>https://github.com/brunoborges/copilot-sdk-integrations/tree/main/quarkus</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/license/mit</url>
+        </license>
+    </licenses>
+
+    <modules>
+        <module>runtime</module>
+        <module>deployment</module>
+        <module>test</module>
+        <module>example</module>
+        <module>site-skin</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <quarkus.version>3.40.1</quarkus.version>
+        <copilot-sdk.version>1.0.24</copilot-sdk.version>
+        <compiler-plugin.version>3.14.0</compiler-plugin.version>
+        <maven-site-plugin.version>3.22.0</maven-site-plugin.version>
+        <surefire-plugin.version>3.5.3</surefire-plugin.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-bom</artifactId>
+                <version>${quarkus.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.github</groupId>
+                <artifactId>copilot-sdk-java</artifactId>
+                <version>${copilot-sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.brunoborges</groupId>
+                <artifactId>copilot-quarkus</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.brunoborges</groupId>
+                <artifactId>copilot-quarkus-deployment</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.brunoborges</groupId>
+                <artifactId>copilot-quarkus-test</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${compiler-plugin.version}</version>
+                    <configuration>
+                        <parameters>true</parameters>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${surefire-plugin.version}</version>
+                    <configuration>
+                        <systemPropertyVariables>
+                            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                        </systemPropertyVariables>
+                        <argLine>-XX:+EnableDynamicAgentLoading -Xshare:off</argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>io.quarkus</groupId>
+                    <artifactId>quarkus-maven-plugin</artifactId>
+                    <version>${quarkus.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>io.quarkus</groupId>
+                    <artifactId>quarkus-extension-maven-plugin</artifactId>
+                    <version>${quarkus.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>${maven-site-plugin.version}</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <generateReports>false</generateReports>
+                    <relativizeSiteLinks>false</relativizeSiteLinks>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

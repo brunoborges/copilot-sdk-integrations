@@ -86,10 +86,10 @@ class GovernanceTests {
     @Test
     void allowListsThatHideTheAgentsOwnToolSourcesFailStartup() {
         registerToolAndMcp();
-        var noCustom = agentSettings("governedAgent", List.of("view", "mcp:*"), null, null, null, null, null, null);
+        var noCustom = agentSettings("governedAgent", List.of("view", "mcp:*"), null, null, null, null, null);
         assertThatThrownBy(() -> definition(GovernedAgent.class, noCustom))
                 .hasMessageContaining("hides every Spring tool").hasMessageContaining("custom:*");
-        var noMcp = agentSettings("governedAgent", List.of("view", "custom:echo"), null, null, null, null, null, null);
+        var noMcp = agentSettings("governedAgent", List.of("view", "custom:echo"), null, null, null, null, null);
         assertThatThrownBy(() -> definition(GovernedAgent.class, noMcp))
                 .hasMessageContaining("hides every MCP server tool").hasMessageContaining("mcp:*");
     }
@@ -97,7 +97,7 @@ class GovernanceTests {
     @Test
     void explicitSourcePatternsAreNotWidened() {
         registerToolAndMcp();
-        var settings = agentSettings("governedAgent", List.of("custom:echo", "mcp:docs-search"), null, null, null, null, null, null);
+        var settings = agentSettings("governedAgent", List.of("custom:echo", "mcp:docs-search"), null, null, null, null, null);
         assertThat(definition(GovernedAgent.class, settings).governance().availableTools())
                 .containsExactly("custom:echo", "mcp:docs-search");
         var noTools = definition(AllowListOnlyAgent.class, none);
@@ -108,7 +108,7 @@ class GovernanceTests {
     void propertiesOverrideAnnotationToolGovernance() {
         registerToolAndMcp();
         var settings = agentSettings("governedAgent", List.of(), List.of("bash"), List.of(), null, "/override",
-                List.of("/a", "/b"), null);
+                List.of("/a", "/b"));
         var governance = definition(GovernedAgent.class, settings).governance();
         assertThat(governance.availableTools()).isNull();
         assertThat(governance.excludedTools()).containsExactly("bash");
@@ -116,7 +116,7 @@ class GovernanceTests {
         assertThat(governance.workingDirectory()).isEqualTo("/override");
         assertThat(governance.additionalDirectories()).containsExactly("/a", "/b");
 
-        var cleared = agentSettings("governedAgent", null, null, null, null, "", null, null);
+        var cleared = agentSettings("governedAgent", null, null, null, null, "", null);
         assertThat(definition(GovernedAgent.class, cleared).governance().workingDirectory()).isNull();
     }
 
@@ -127,21 +127,21 @@ class GovernanceTests {
         assertThat(((SessionConfig) configs.get(0)).getExcludedTools()).containsExactly("bash", "builtin:*");
         assertThat(((ResumeSessionConfig) configs.get(1)).getExcludedTools()).containsExactly("bash", "builtin:*");
 
-        var enabled = agentSettings("noBuiltInsAgent", null, null, null, true, null, null, null);
+        var enabled = agentSettings("noBuiltInsAgent", null, null, null, true, null, null);
         assertThat(definition(NoBuiltInsAgent.class, enabled).governance().excludedTools()).containsExactly("bash");
-        var disabled = agentSettings("allowListOnlyAgent", null, null, null, false, null, null, null);
+        var disabled = agentSettings("allowListOnlyAgent", null, null, null, false, null, null);
         assertThatThrownBy(() -> definition(AllowListOnlyAgent.class, disabled))
                 .hasMessageContaining("built-in-tools=false cannot be combined with available-tools");
-        var both = agentSettings("allowListOnlyAgent", null, List.of("bash"), null, null, null, null, null);
+        var both = agentSettings("allowListOnlyAgent", null, List.of("bash"), null, null, null, null);
         assertThatThrownBy(() -> definition(AllowListOnlyAgent.class, both))
                 .hasMessageContaining("mutually exclusive");
     }
 
     @Test
     void blankGovernancePropertiesAreRejected() {
-        assertThatThrownBy(() -> agentSettings("a", List.of(" "), null, null, null, null, null, null))
+        assertThatThrownBy(() -> agentSettings("a", List.of(" "), null, null, null, null, null))
                 .hasMessageContaining("available-tools");
-        assertThatThrownBy(() -> agentSettings("a", null, null, null, null, " ", null, null))
+        assertThatThrownBy(() -> agentSettings("a", null, null, null, null, " ", null))
                 .hasMessageContaining("working-directory");
         assertThatThrownBy(() -> new CopilotAgentsProperties.Permissions(List.of(""), null, null, false, false))
                 .hasMessageContaining("permissions.allow");
@@ -239,7 +239,7 @@ class GovernanceTests {
 
         var permissions = new CopilotAgentsProperties.Permissions(List.of("url"), List.of("search"), List.of("docs"), true, true);
         var settings = new CopilotAgentsProperties(Map.of("governedAgent", new CopilotAgentsProperties.Agent(null, null,
-                Duration.ofSeconds(60), null, null, null, null, null, null, null, null, permissions, null)));
+                Duration.ofSeconds(60), null, null, null, null, null, null, null, null, permissions)));
         var policy = definition(GovernedAgent.class, settings).permissions();
         assertThat(approved(policy, request("url"))).isTrue();
         assertThat(approved(policy, request("read"))).isTrue();
@@ -251,14 +251,14 @@ class GovernanceTests {
 
         var empty = new CopilotAgentsProperties(Map.of("governedAgent", new CopilotAgentsProperties.Agent(null, null,
                 Duration.ofSeconds(60), null, null, null, null, null, null, null, null,
-                new CopilotAgentsProperties.Permissions(null, null, null, false, false), null)));
+                new CopilotAgentsProperties.Permissions(null, null, null, false, false))));
         assertThat(approved(definition(GovernedAgent.class, empty).permissions(), request("read"))).isFalse();
 
         beans.registerSingleton("permissions", PermissionHandler.APPROVE_ALL);
         var conflicting = new CopilotAgentsProperties(Map.of("handlerAgent", new CopilotAgentsProperties.Agent(null, null,
-                Duration.ofSeconds(60), null, null, null, null, null, null, null, null, permissions, null)));
+                Duration.ofSeconds(60), null, null, null, null, null, null, null, null, permissions)));
         assertThatThrownBy(() -> definition(HandlerAgent.class, conflicting))
-                .hasMessageContaining("cannot be combined with a permissionHandler bean");
+                .hasMessageContaining("cannot be combined with a permissionHandlerRef bean");
         assertThat(definition(HandlerAgent.class, none).permissions()).isSameAs(PermissionHandler.APPROVE_ALL);
     }
 
@@ -289,9 +289,13 @@ class GovernanceTests {
         resumed.getOnPreToolUse().handle(preToolUse("view"), null).join();
         assertThat(calls).containsExactly("early:view:hookedAgent", "late:view", "audit:view", "guard:view");
 
-        var overridden = agentSettings("hookedAgent", null, null, null, null, null, null, List.of("notGlobal", "early"));
-        assertThat(definition(HookedAgent.class, overridden).governance().hooks()).extracting(Object::getClass)
-                .extracting(Class::getSimpleName).containsExactly("EarlyGlobal", "LateGlobal", "Recording");
+        var missing = new DefaultListableBeanFactory();
+        missing.registerSingleton("audit", new Recording("audit", calls, null));
+        missing.registerSingleton("guard", "not a hook");
+        assertThatThrownBy(() -> CopilotAgentDefinition.create(HookedAgent.class, missing, environment,
+                new DefaultResourceLoader(), none))
+                .hasMessageContaining("hookRefs references bean 'guard' of type java.lang.String")
+                .hasMessageContaining("CopilotAgentHooks");
     }
 
     @Test
@@ -491,10 +495,10 @@ class GovernanceTests {
     }
 
     private static CopilotAgentsProperties agentSettings(String name, List<String> available, List<String> excluded,
-            List<String> agents, Boolean builtIns, String directory, List<String> directories, List<String> hooks) {
+            List<String> agents, Boolean builtIns, String directory, List<String> directories) {
         return new CopilotAgentsProperties(Map.of(name, new CopilotAgentsProperties.Agent(null, null,
                 Duration.ofSeconds(60), null, null, available, excluded, agents, builtIns, directory, directories,
-                null, hooks)));
+                null)));
     }
 
     private static boolean approved(PermissionHandler handler, PermissionRequest request) {
@@ -566,7 +570,7 @@ class GovernanceTests {
         }
     }
 
-    @CopilotAgent(tools = "echo", mcpServers = "docs", availableTools = {"view", "builtin:grep", "custom:*", "mcp:*"},
+    @CopilotAgent(toolRefs = "echo", mcpServers = "docs", availableTools = {"view", "builtin:grep", "custom:*", "mcp:*"},
             excludedBuiltInAgents = "explore", workingDirectory = "/srv/work", additionalDirectories = "/srv/shared")
     public interface GovernedAgent {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
@@ -582,12 +586,12 @@ class GovernanceTests {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }
 
-    @CopilotAgent(permissionHandler = "permissions")
+    @CopilotAgent(permissionHandlerRef = "permissions")
     public interface HandlerAgent {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }
 
-    @CopilotAgent(hooks = {"audit", "guard", "early"})
+    @CopilotAgent(hookRefs = {"audit", "guard", "early"})
     public interface HookedAgent {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }

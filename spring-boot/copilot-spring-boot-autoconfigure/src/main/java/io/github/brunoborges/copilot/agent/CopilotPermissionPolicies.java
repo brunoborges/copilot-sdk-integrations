@@ -19,7 +19,7 @@ import com.github.copilot.rpc.ToolDefinition;
 import org.springframework.util.Assert;
 
 /**
- * Ready-made SDK {@link PermissionHandler} policies for {@link CopilotAgent#permissionHandler()} beans.
+ * Ready-made SDK {@link PermissionHandler} policies for {@link CopilotAgent#permissionHandlerRef()} beans.
  *
  * <p>Policies built here approve a request once when one of their rules matches and otherwise reject it,
  * logging the denied request kind. Requests the runtime marks as requiring managed (human) approval are never
@@ -39,7 +39,7 @@ public final class CopilotPermissionPolicies {
     public static final String READ = "read";
     /** Calling an MCP server tool. */
     public static final String MCP = "mcp";
-    /** Calling a tool registered by the application, such as an agent's {@link CopilotAgent#tools()}. */
+    /** Calling a tool registered by the application, such as an agent's {@link CopilotAgent#toolRefs()}. */
     public static final String CUSTOM_TOOL = "custom-tool";
     /** Fetching a URL. */
     public static final String URL = "url";

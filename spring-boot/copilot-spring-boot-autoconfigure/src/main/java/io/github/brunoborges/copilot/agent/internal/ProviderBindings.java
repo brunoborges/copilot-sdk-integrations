@@ -23,7 +23,8 @@ final class ProviderBindings {
         boolean nativeBean = beans.containsBean(name) && beans.isTypeMatch(name, ProviderConfig.class);
         Assert.isTrue(configured == null || !nativeBean,
                 "Ambiguous provider definition in properties and SDK bean: " + name);
-        Assert.isTrue(configured != null || nativeBean, "Unknown provider reference: " + name);
+        Assert.isTrue(configured != null || nativeBean, () -> "Unknown provider '" + name
+                + "': define copilot.providers." + name + " or an SDK ProviderConfig bean named '" + name + "'");
         return configured == null ? beans.getBean(name, ProviderConfig.class) : configured.toProviderConfig();
     }
 }
