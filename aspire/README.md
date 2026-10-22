@@ -1,7 +1,9 @@
 # copilot-aspire
 
 [Aspire](https://aspire.dev/) integration for the
-[GitHub Copilot SDK for .NET](https://github.com/github/copilot-sdk/tree/main/dotnet).
+[GitHub Copilot SDKs](https://github.com/github/copilot-sdk).
+
+📖 **[Documentation](https://brunoborges.github.io/copilot-sdk-integrations/aspire/)**
 
 This is the **orchestration** layer: it runs, secures, and wires the Copilot
 runtime in an Aspire AppHost, and connects service projects to it. Application
@@ -12,6 +14,12 @@ way `Aspire.Npgsql` builds on `Npgsql`.
 The client package is optional. A service that uses only core can still read
 the AppHost's connection string. The client package adds Aspire's health-check
 and telemetry defaults.
+
+The AppHost side is **polyglot**. A service written in any language that Aspire
+can orchestrate can use the runtime, whether it uses the Spring Boot, Quarkus or
+Node.js integration, or a raw Copilot SDK for Java, Node.js or Python.
+`WithReference(chat)` injects language-neutral environment variables for this:
+`CHAT_HOST`, `CHAT_PORT`, `CHAT_ENDPOINT`, `CHAT_CONNECTIONTOKEN` and `CHAT_MODEL`.
 
 > **Status: Preview — implemented, not yet published to NuGet.** Build it from
 > source (below). Read the [design document](docs/design.md) and open an issue

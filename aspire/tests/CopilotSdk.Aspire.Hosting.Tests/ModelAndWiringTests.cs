@@ -57,6 +57,25 @@ public class ModelAndWiringTests
     }
 
     [Fact]
+    public async Task WithReference_ToModel_FlowsLanguageNeutralConnectionProperties()
+    {
+        var builder = CreateBuilder();
+        builder.Configuration["Parameters:copilot-connection-token"] = "s3cret";
+        var copilot = builder.AddCopilot("copilot");
+        var chat = copilot.AddModel("chat", "gpt-5.4");
+        var web = builder.AddExecutable("web", "node", ".").WithReference(chat);
+        Allocate(copilot.Resource, "tcp", port: 5000);
+
+        var env = await GetEnvironmentAsync(web.Resource);
+
+        Assert.Equal("localhost", env["CHAT_HOST"]);
+        Assert.Equal("5000", env["CHAT_PORT"]);
+        Assert.Equal("tcp://localhost:5000", env["CHAT_ENDPOINT"]);
+        Assert.Equal("s3cret", env["CHAT_CONNECTIONTOKEN"]);
+        Assert.Equal("gpt-5.4", env["CHAT_MODEL"]);
+    }
+
+    [Fact]
     public async Task WithMcpServer_FlowsServerSettingsToReferencingResources()
     {
         var builder = CreateBuilder();

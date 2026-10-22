@@ -5,6 +5,8 @@
 for business applications built on the Generic Host and ASP.NET Core: web APIs,
 worker services, and back-office apps.
 
+📖 **[Documentation](https://brunoborges.github.io/copilot-sdk-integrations/dotnet/)**
+
 > **Status: Preview — implemented, not yet published to NuGet.** Build it from
 > source (below). Read the [design document](docs/design.md) and open an issue
 > or PR with feedback.
