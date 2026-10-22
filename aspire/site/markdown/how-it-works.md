@@ -8,19 +8,49 @@ The integration has two halves. The AppHost half is C# and runs, secures, and de
 Copilot runtime. The service half is whatever each service uses to talk to the runtime. The two
 meet in the environment variables that Aspire injects through `WithReference`.
 
-```text
- AppHost (C#)                              Services (any language)
- ─────────────                             ───────────────────────
- AddCopilot("copilot")                     
-   ├─ runtime process or container         .NET     AddCopilotClient("chat")
-   │    --headless, TCP, connection token  Java     copilot.cli-url / quarkus.copilot.cli-url
-   ├─ WithMcpServer(docs)                  Node.js  createCopilot({ cliUrl, configureClient })
-   └─ AddModel("chat", "gpt-5.4")          Python   RuntimeConnection.for_uri(...)
-        ├─ WithReasoningEffort("high")
-        └─ WithProvider(openai)                     ▲
-                                                    │ environment variables
- WithReference(chat) ───────────────────────────────┘
-```
+<figure class="arch">
+<svg viewBox="0 0 860 362" role="img" aria-labelledby="hiw-title hiw-desc" xmlns="http://www.w3.org/2000/svg">
+<title id="hiw-title">AppHost resources and the services that connect to them</title>
+<desc id="hiw-desc">In the C# AppHost, AddCopilot adds the runtime process or container (headless, TCP, connection token), an MCP server and the chat model, which has a reasoning effort and a provider. WithReference(chat) injects CHAT environment variables into services written in any language: .NET uses AddCopilotClient, Java uses copilot.cli-url or quarkus.copilot.cli-url, Node.js uses createCopilot and Python uses RuntimeConnection.for_uri.</desc>
+<defs>
+<marker id="hiw-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arch-head" d="M0 0 10 5 0 10z"/></marker>
+</defs>
+<rect class="arch-frame" x="10" y="10" width="380" height="340" rx="14"/>
+<text class="arch-caption" x="30" y="36">AppHost · C#</text>
+<path class="arch-link" d="M50 92V236M50 131H70M50 186H70M50 236H70M90 254V318M90 280H110M90 318H110"/>
+<rect class="arch-node" x="30" y="56" width="200" height="36" rx="8"/>
+<text class="arch-code" x="130" y="79" text-anchor="middle">AddCopilot("copilot")</text>
+<rect class="arch-runtime" x="70" y="108" width="300" height="46" rx="8"/>
+<text class="arch-title" x="86" y="127" style="font-size:13px">runtime process or container</text>
+<text class="arch-sub" x="86" y="145">--headless · TCP · connection token</text>
+<rect class="arch-node" x="70" y="170" width="200" height="32" rx="8"/>
+<text class="arch-code" x="86" y="191">WithMcpServer(docs)</text>
+<rect class="arch-node" x="70" y="218" width="230" height="36" rx="8"/>
+<text class="arch-code" x="86" y="241">AddModel("chat", "gpt-5.4")</text>
+<rect class="arch-node" x="110" y="266" width="220" height="28" rx="7"/>
+<text class="arch-code-sm" x="124" y="284">WithReasoningEffort("high")</text>
+<rect class="arch-node" x="110" y="304" width="220" height="28" rx="7"/>
+<text class="arch-code-sm" x="124" y="322">WithProvider(openai)</text>
+<path class="arch-link" d="M300 236H320M470 236H488" marker-end="url(#hiw-arrow)"/>
+<rect class="arch-pill" x="320" y="214" width="150" height="44" rx="10"/>
+<text class="arch-pill-text" x="395" y="232" text-anchor="middle">WithReference(chat)</text>
+<text class="arch-sub" x="395" y="249" text-anchor="middle" style="font-size:11px">injects CHAT_* env vars</text>
+<rect class="arch-frame" x="490" y="10" width="360" height="340" rx="14"/>
+<text class="arch-caption" x="510" y="36">Services · any language</text>
+<rect class="arch-node" x="506" y="56" width="328" height="60" rx="10"/>
+<text class="arch-title" x="522" y="81" style="font-size:14px">.NET</text>
+<text class="arch-code-sm" x="522" y="101">AddCopilotClient("chat")</text>
+<rect class="arch-node" x="506" y="128" width="328" height="60" rx="10"/>
+<text class="arch-title" x="522" y="153" style="font-size:14px">Java</text>
+<text class="arch-code-sm" x="522" y="173">copilot.cli-url / quarkus.copilot.cli-url</text>
+<rect class="arch-node" x="506" y="200" width="328" height="60" rx="10"/>
+<text class="arch-title" x="522" y="225" style="font-size:14px">Node.js</text>
+<text class="arch-code-sm" x="522" y="245">createCopilot({ cliUrl, configureClient })</text>
+<rect class="arch-node" x="506" y="272" width="328" height="60" rx="10"/>
+<text class="arch-title" x="522" y="297" style="font-size:14px">Python</text>
+<text class="arch-code-sm" x="522" y="317">RuntimeConnection.for_uri(...)</text>
+</svg>
+</figure>
 
 ## The runtime resource
 
