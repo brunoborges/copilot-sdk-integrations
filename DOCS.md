@@ -24,6 +24,7 @@ Website: [Copilot Spring Boot documentation](https://brunoborges.github.io/copil
 | [Configuration reference](src/site/markdown/configuration.md) | All supported keys, defaults, validation, precedence, and examples. |
 | [Reactive streaming](src/site/markdown/streaming.md) | Cold subscriptions, native events, buffering, overflow, and cancellation. |
 | [Observability](src/site/markdown/observability.md) | Micrometer observations, token counters, tags, activation, and privacy. |
+| [Actuator](src/site/markdown/actuator.md) | Health indicator, info contribution, read-only `copilot` endpoint, and privacy. |
 | [Extension SPIs](src/site/markdown/extensions.md) | Telemetry replacement and custom return-type adapters. |
 | [Example application](src/site/markdown/examples.md) | Raw SDK, routed, bound-instance, and streaming modes. |
 | [Security and troubleshooting](src/site/markdown/operations.md) | Authorization boundaries, failure diagnosis, limitations, and source links. |

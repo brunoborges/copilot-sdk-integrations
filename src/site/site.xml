@@ -119,6 +119,7 @@ html[data-theme="dark"] {
             <item name="Configuration" href="configuration.html"/>
             <item name="Reactive streaming" href="streaming.html"/>
             <item name="Observability" href="observability.html"/>
+            <item name="Actuator" href="actuator.html"/>
             <item name="Extension SPIs" href="extensions.html"/>
         </menu>
         <menu name="Operate">

@@ -8,8 +8,9 @@ title: Observability
 
 Add `org.springframework.boot:spring-boot-starter-actuator` for conventional
 Boot Micrometer setup, or provide compatible registries/handlers yourself.
-No HTTP management server or network SDK health probe is added by this
-integration.
+The integration adds no HTTP management server of its own. With Actuator
+present it also contributes a `copilot` health indicator, info section, and an
+opt-in `copilot` endpoint; see [Actuator health, info, and endpoint](actuator.html).
 
 | Observation or meter | Role | Integration-provided tags |
 | --- | --- | --- |
@@ -43,4 +44,4 @@ assistant content; that is separate from built-in telemetry.
 
 **Previous:** [Reactive streaming](streaming.html)
 
-**Next:** [Extension SPIs](extensions.html)
+**Next:** [Actuator health, info, and endpoint](actuator.html)

@@ -48,6 +48,7 @@ class BoundedAgentExecutionTests {
                 assertThat(started.get("one").await(5, TimeUnit.SECONDS)).isTrue();
                 var second = invoker.invoke(definition, "second", "two");
                 assertThat(started.get("two").getCount()).isEqualTo(1);
+                assertThat(invoker.executionStats()).isEqualTo(new CopilotAgentInvoker.ExecutionStats(1, 1, 1, 2));
                 assertThatThrownBy(() -> invoker.invoke(definition, "third", "three").get())
                         .hasRootCauseInstanceOf(java.util.concurrent.RejectedExecutionException.class);
                 verify(client).getSessionMetadata(anyString());

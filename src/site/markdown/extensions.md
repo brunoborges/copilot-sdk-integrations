@@ -75,6 +75,6 @@ implement SDK structured-response schemas or new session capabilities.
 
 ---
 
-**Previous:** [Observability](observability.html)
+**Previous:** [Actuator health, info, and endpoint](actuator.html)
 
 **Next:** [Example application](examples.html)

@@ -22,6 +22,9 @@ targeting **Spring Boot 4.1.1**, **Java 21**, and Copilot SDK **1.0.24**.
 - BYOK (bring your own key) model providers per agent: OpenAI, Azure OpenAI /
   Microsoft Foundry, Anthropic, Ollama, and other OpenAI-compatible endpoints.
 - Session-scoped listeners and SDK configuration customizers.
+- Optional Actuator support: a `copilot` health indicator (never force-starts a lazy
+  client), a read-only `copilot` endpoint for agents, models, sessions, and execution
+  capacity, and an info section with starter/SDK versions.
 - Optional Micrometer observations and token counters, and an optional Reactor
   module for `Flux<CopilotAgentEvent>` streaming.
 
@@ -33,7 +36,7 @@ starter never approves tool use implicitly. No artifacts have been published yet
 | Module | Purpose |
 | --- | --- |
 | `copilot-spring-boot-starter` | Dependency-only starter: SDK, auto-configuration, and Spring Boot starter. |
-| `copilot-spring-boot-autoconfigure` | Client configuration, agent API, discovery, execution, tool binding, and optional observations. |
+| `copilot-spring-boot-autoconfigure` | Client configuration, agent API, discovery, execution, tool binding, optional observations, and Actuator support. |
 | `copilot-spring-boot-reactor` | Optional Reactor return-type adapter for streaming agent methods. |
 | `copilot-spring-boot-example` | Executable, non-web example of raw SDK sessions, typed agents, bound instances, and streaming. |
 | `copilot-spring-boot-site-skin` | Internal Maven Site layout for the documentation; not an application dependency. |
@@ -137,6 +140,7 @@ See also the SDK's
 | Every `copilot.*` property | [Configuration reference](src/site/markdown/configuration.md) |
 | `Flux<CopilotAgentEvent>` streaming | [Reactive streaming](src/site/markdown/streaming.md) |
 | Micrometer observations and token counters | [Observability](src/site/markdown/observability.md) |
+| Health indicator, info, and `copilot` endpoint | [Actuator](src/site/markdown/actuator.md) |
 | Custom telemetry and return types | [Extension SPIs](src/site/markdown/extensions.md) |
 | Running the example modes | [Example application](src/site/markdown/examples.md) |
 | Authorization boundaries and troubleshooting | [Security and troubleshooting](src/site/markdown/operations.md) |
