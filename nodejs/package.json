@@ -8,6 +8,7 @@
     "packages/nestjs",
     "packages/fastify",
     "examples/express",
+    "examples/fastify",
     "examples/nestjs-chat",
     "examples/nestjs-chat/web"
   ],

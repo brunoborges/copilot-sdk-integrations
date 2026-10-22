@@ -59,6 +59,9 @@ app.post("/chat", (req, res, next) =>
 - The `context` send option merges extra fields for one turn; the `principal` of a bound
   conversation wins over both.
 
+In Fastify, the [plugin's context hook](fastify.md#request-context) does this for every request,
+taking the principal from `request.user` by default.
+
 ## The NestJS context interceptor
 
 `CopilotModule` registers a global `CopilotContextInterceptor` for HTTP handlers. It runs after

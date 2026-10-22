@@ -14,6 +14,7 @@ power chat UIs, Server-Sent Events, interactive tool approvals, and the
 - [Streaming in core](#streaming-in-core)
 - [Server-Sent Events with NestJS](#server-sent-events-with-nestjs)
 - [Server-Sent Events with Express](#server-sent-events-with-express)
+- [Server-Sent Events with Fastify](#server-sent-events-with-fastify)
 - [Global event listeners](#global-event-listeners)
 - [useChat](#usechat)
 
@@ -108,6 +109,18 @@ app.get("/chat", async (req, res) => {
   }
   res.end();
 });
+```
+
+## Server-Sent Events with Fastify
+
+The [Fastify plugin](fastify.md#streaming) adds `reply.copilotEvents()`, which does the above
+plus heartbeats, `X-Accel-Buffering`, real HTTP statuses for turns that fail before the first
+event, and abort on disconnect:
+
+```ts
+app.get<{ Querystring: { q: string } }>("/chat", async (request, reply) =>
+  reply.copilotEvents(request.copilot.agent("support").stream({ prompt: request.query.q })),
+);
 ```
 
 ## Global event listeners

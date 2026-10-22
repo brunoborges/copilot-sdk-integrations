@@ -1,6 +1,7 @@
 # Copilot for Fastify
 
-Status: **proposed**. API and package names are working names.
+Status: **implemented** (phases F1–F3: plugin, streaming and AI SDK, example and docs). See
+[§18](#18-implementation-notes) for deviations from the original proposal.
 
 This document designs `@copilot-sdk-integrations/fastify`, a Fastify plugin for the
 [Copilot SDK for Node.js/TypeScript](https://github.com/github/copilot-sdk/tree/main/nodejs).

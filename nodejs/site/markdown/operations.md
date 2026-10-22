@@ -97,6 +97,9 @@ export class HealthController {
 }
 ```
 
+In Fastify, the plugin's `health` route and `copilotHealthCheck()` for `@fastify/under-pressure`
+do the same; see [Fastify plugin](fastify.md#health-info-and-under-pressure).
+
 `isHealthy(key = "copilot")` resolves to
 `{ copilot: { status: "up" | "down", state, version?, capacity } }`. It reports `down` when the
 runtime is `stopping`, `stopped`, or `failed`, and `up` for a lazy runtime that hasn't started
@@ -135,6 +138,9 @@ const app = await NestFactory.create(AppModule);
 app.enableShutdownHooks();
 ```
 
+The [Fastify plugin](fastify.md#lifecycle) calls it from `app.close()` (`preClose` and
+`onClose`) with the same `shutdownGracePeriod` default; call `app.close()` on `SIGTERM`.
+
 Turns suspended on a `useChat` approval live in the AI SDK `CopilotApprovalStore`; call
 `approvals.clear()` at shutdown to abort them.
 
@@ -158,7 +164,8 @@ core errors to responses with a `{ statusCode, error, message }` body:
 it. Non-HTTP contexts rethrow. `copilotErrorToHttp(error)` returns `{ status, headers }` for
 your own filters.
 
-Without NestJS, add an error middleware that applies the same table:
+The [Fastify plugin](fastify.md#errors) installs an error handler with the same table and
+Fastify's error body. In other frameworks, add an error middleware that applies it:
 
 ```ts
 import { CopilotAdmissionRejectedError, CopilotIntegrationError, CopilotTimeoutError } from "@copilot-sdk-integrations/core";

@@ -15,6 +15,7 @@ hooks, tool filters, and conversation handling run for real.
 - [Scripting replies](#scripting-replies)
 - [Recordings](#recordings)
 - [NestJS tests](#nestjs-tests)
+- [Fastify tests](#fastify-tests)
 - [Testing AI SDK routes](#testing-ai-sdk-routes)
 
 ## Core tests
@@ -134,6 +135,24 @@ await moduleRef.close();
 - Defaults: a silent logger and a 1 s shutdown grace period.
 - Test runners must emit decorator metadata (`emitDecoratorMetadata`) for constructor injection
   by type. With Vitest, use [`unplugin-swc`](https://github.com/unplugin/unplugin-swc).
+
+## Fastify tests
+
+`buildCopilotTestApp(build, script)` from `@copilot-sdk-integrations/fastify/testing` passes a
+scripted client to your app factory and stops it when the app closes. Call routes with
+`app.inject()` and split SSE bodies with `parseSse()`:
+
+```ts
+import { buildCopilotTestApp, parseSse } from "@copilot-sdk-integrations/fastify/testing";
+
+const { app, runtime } = await buildCopilotTestApp((options) => buildApp(options), (rt) =>
+  rt.onPrompt(/order 42/).callTool("lookupOrder", { id: "42" }).thenReply("Order 42 shipped."));
+const res = await app.inject({ method: "POST", url: "/ask", payload: { question: "Where is order 42?" } });
+expect(res.json()).toEqual({ answer: "Order 42 shipped." });
+await app.close();
+```
+
+See [Fastify plugin](fastify.md#testing).
 
 ## Testing AI SDK routes
 

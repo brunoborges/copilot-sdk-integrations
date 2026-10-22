@@ -188,5 +188,6 @@ There's no runtime process, no credentials, and no paid requests.
 ## Documentation
 
 - [`DESIGN-FASTIFY.md`](../../DESIGN-FASTIFY.md): the Fastify integration design.
+- [`examples/fastify`](../../examples/fastify): a runnable Fastify app using the plugin, with `app.inject()` tests.
 - [`@copilot-sdk-integrations/core`](../core): agents, tools, permissions, conversations, and the scripted runtime.
 - [`@copilot-sdk-integrations/ai`](../ai): AI SDK provider and `useChat` streaming.

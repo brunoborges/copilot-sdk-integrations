@@ -6,7 +6,7 @@ title: Documentation
 
 These packages connect the
 [GitHub Copilot SDK for Node.js/TypeScript](https://github.com/github/copilot-sdk/tree/main/nodejs)
-to NestJS, the Vercel AI SDK, and plain Node.js servers. They add a managed client lifecycle,
+to NestJS, Fastify, the Vercel AI SDK, and plain Node.js servers. They add a managed client lifecycle,
 typed agents, tools with deny-by-default permissions, server-side conversations, request
 context, streaming, and a scripted test runtime that needs no credentials.
 
@@ -31,24 +31,27 @@ export abstract class SupportAgent {
 | Copilot SDK (`@github/copilot-sdk`) | `^1.0.26` |
 | Zod | `^4` |
 | NestJS (`@nestjs/common`, `@nestjs/core`) | `^11` or `^12` |
+| Fastify | `^5` |
 | Vercel AI SDK (`ai`) | `^7` |
 
 ## Choose your integration
 
 | Package | Use it when | Depends on |
 | --- | --- | --- |
-| `@copilot-sdk-integrations/core` | You use Express, Fastify, Hono, a worker, or a CLI and want agents, tools, governance, conversations, and testing without a framework. | `@github/copilot-sdk`, `zod` |
+| `@copilot-sdk-integrations/core` | You use Express, Hono, a worker, or a CLI and want agents, tools, governance, conversations, and testing without a framework. | `@github/copilot-sdk`, `zod` |
 | `@copilot-sdk-integrations/nestjs` | You build a NestJS application and want `CopilotModule`, `@CopilotAgent` classes, `@CopilotTool` providers, request context, HTTP error mapping, SSE, health and info endpoints, and a testing module. | core, NestJS |
+| `@copilot-sdk-integrations/fastify` | You build a Fastify 5 app and want `fastify.copilot` and request-bound agents, request context, HTTP error mapping, SSE, `useChat` routes with approvals, health and info routes, and `app.inject()` testing. | core, Fastify (`ai` for `useChat`) |
 | `@copilot-sdk-integrations/ai` | Your front end uses the AI SDK (`useChat`), or you want `generateText`/`streamText` against Copilot agents. | core, `ai` |
 
-The NestJS and AI SDK packages are thin layers over core. Every concept on the core pages
-(agents, tools, permissions, conversations, events) applies unchanged to the other two.
+The NestJS, Fastify, and AI SDK packages are thin layers over core. Every concept on the core
+pages (agents, tools, permissions, conversations, events) applies unchanged to the others.
 
 ## Read by chapter
 
 | Chapter | Covers |
 | --- | --- |
 | [Getting started (NestJS)](getting-started.md) | Installation, `CopilotModule`, a first agent, tool, and controller. |
+| [Fastify plugin](fastify.md) | `copilotPlugin`, typed agents, request context, errors, SSE, `useChat` approvals, health, lifecycle, and `buildCopilotTestApp`. |
 | [Core without a framework](core.md) | `createCopilot`, `defineAgent`, `send`, `stream`, lifecycle, and Express usage. |
 | [Agents](agents.md) | Agent definitions, instructions, models, BYOK providers, MCP servers, NestJS decorators, and structured output. |
 | [Tools](tools.md) | Tool definitions, Zod and JSON Schema input, AI SDK tools, `@CopilotTool` providers, interceptors, and tool filters. |
@@ -60,7 +63,7 @@ The NestJS and AI SDK packages are thin layers over core. Every concept on the c
 | [Configuration](configuration.md) | Every `CopilotOptions` and `CopilotModule` option with defaults. |
 | [Testing](testing.md) | The scripted `CopilotTestRuntime`, `createTestCopilot`, and `CopilotTestingModule`. |
 | [Operations](operations.md) | Limits, health, the info endpoint, graceful shutdown, error mapping, observability, and security. |
-| [Example applications](examples.md) | The NestJS chat and Express examples. |
+| [Example applications](examples.md) | The NestJS chat, Fastify, and Express examples. |
 
 ## Design principles
 
