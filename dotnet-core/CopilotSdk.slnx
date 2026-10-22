@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CopilotSdk.Extensions.Hosting/CopilotSdk.Extensions.Hosting.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CopilotSdk.Extensions.Hosting.Tests/CopilotSdk.Extensions.Hosting.Tests.csproj" />
+  </Folder>
+</Solution>

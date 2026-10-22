@@ -1,0 +1,39 @@
+using GitHub.Copilot;
+using Microsoft.Extensions.Options;
+
+namespace CopilotSdk.Extensions.Hosting;
+
+/// <summary>
+/// Applies <see cref="CopilotOptions"/> values (model, instructions, reasoning effort, BYOK provider, MCP servers)
+/// to the session config.
+/// </summary>
+internal sealed class CopilotOptionsSessionConfigurator(IOptionsMonitor<CopilotOptions> options) : ICopilotSessionConfigurator
+{
+    public void Configure(string agentName, SessionConfigBase config, IServiceProvider services)
+    {
+        var o = options.Get(agentName);
+
+        if (o.Model is not null)
+        {
+            config.Model = o.Model;
+        }
+
+        if (o.ReasoningEffort is not null)
+        {
+            config.ReasoningEffort = o.ReasoningEffort;
+        }
+
+        if (!string.IsNullOrWhiteSpace(o.Instructions))
+        {
+            config.SystemMessage = new SystemMessageConfig { Mode = SystemMessageMode.Append, Content = o.Instructions };
+        }
+
+        if (o.Provider is not null)
+        {
+            config.Provider = o.Provider;
+        }
+
+        // TODO(config agent): map o.McpServers (CopilotMcpServerOptions) to SDK McpStdioServerConfig / McpHttpServerConfig
+        // in config.McpServers.
+    }
+}
