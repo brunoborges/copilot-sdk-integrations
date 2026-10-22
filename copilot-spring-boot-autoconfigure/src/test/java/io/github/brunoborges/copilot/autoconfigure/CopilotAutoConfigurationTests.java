@@ -264,7 +264,8 @@ class CopilotAutoConfigurationTests {
                     "copilot.health.require-authentication", "copilot.endpoint.timeout",
                     "copilot.endpoint.start-client", "copilot.endpoint.show-instructions",
                     "copilot.endpoint.include-all-sessions", "management.endpoint.copilot.access",
-                    "management.endpoint.copilot.cache.time-to-live");
+                    "management.endpoint.copilot.cache.time-to-live",
+                    "copilot.security.oauth2.registration-id", "copilot.security.oauth2.ambient-fallback");
             for (var property : properties) {
                 assertThat(property.get("description").asText()).isNotBlank();
                 if (property.get("name").asText().equals("copilot.startup-timeout")) {

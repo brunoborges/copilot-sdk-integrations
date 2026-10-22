@@ -25,6 +25,11 @@ targeting **Spring Boot 4.1.1**, **Java 21**, and Copilot SDK **1.0.24**.
 - Declarative local (stdio) and remote (HTTP) MCP servers selected per agent.
 - BYOK (bring your own key) model providers per agent: OpenAI, Azure OpenAI /
   Microsoft Foundry, Anthropic, Ollama, and other OpenAI-compatible endpoints.
+- Per-user GitHub authentication through a `CopilotTokenResolver` or the Spring
+  Security OAuth2 client, with the caller's security context, MDC, and observation
+  propagated into tools, permission handlers, and listeners.
+- Real cancellation: cancelling a future or `Flux`, or hitting the response
+  timeout, aborts the in-flight runtime turn.
 - Session-scoped listeners and SDK configuration customizers.
 - Optional Actuator support: a `copilot` health indicator (never force-starts a lazy
   client), a read-only `copilot` endpoint for agents, models, sessions, and execution
@@ -140,6 +145,7 @@ See also the SDK's
 | `@CopilotTool` services and proxies | [Spring tool beans](src/site/markdown/tools.md) |
 | Local and remote MCP servers | [MCP servers](src/site/markdown/mcp.md) |
 | Bring-your-own-key model providers | [BYOK providers](src/site/markdown/byok.md) |
+| Per-user tokens, OAuth2, and context propagation | [Per-user authentication](src/site/markdown/authentication.md) |
 | Listeners and customizers | [Events and customizers](src/site/markdown/events.md) |
 | Tool filtering, permission policies, and hooks | [Tool governance, permissions, and hooks](src/site/markdown/governance.md) |
 | Every `copilot.*` property | [Configuration reference](src/site/markdown/configuration.md) |

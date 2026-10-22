@@ -15,6 +15,7 @@ title: Configuration reference
 - [Execution properties](#execution-properties)
 - [Observation properties](#observation-properties)
 - [Actuator properties](#actuator-properties)
+- [Security properties](#security-properties)
 - [Reactor properties](#reactor-properties)
 - [Configuration examples and precedence](#configuration-examples-and-precedence)
 
@@ -217,6 +218,18 @@ Standard Actuator keys also apply: `management.health.copilot.enabled`,
 `management.info.copilot.enabled`, `management.endpoint.copilot.access`, and
 `management.endpoints.web.exposure.include` (the endpoint is not exposed by
 default).
+
+<a id="security-properties"></a>
+
+## Security properties
+
+Active only when `spring-security-oauth2-client` is on the classpath. See
+[Per-user authentication](authentication.html).
+
+| Property | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `copilot.security.oauth2.registration-id` | String | Unset | OAuth2 client registration whose user access token is sent as each session's GitHub token. Setting it creates an `OAuth2CopilotTokenResolver`. |
+| `copilot.security.oauth2.ambient-fallback` | Boolean | `false` | Fall back to ambient client authentication instead of failing when there is no authenticated user or authorized client. |
 
 <a id="reactor-properties"></a>
 

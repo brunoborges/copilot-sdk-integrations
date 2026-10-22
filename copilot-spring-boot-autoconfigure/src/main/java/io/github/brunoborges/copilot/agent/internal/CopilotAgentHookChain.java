@@ -34,7 +34,7 @@ final class CopilotAgentHookChain {
     }
 
     static SessionHooks sessionHooks(List<CopilotAgentHooks> hooks, CopilotAgentContext context,
-            CopilotAgentLifetime.Lease owner) {
+            Supplier<CopilotAgentLifetime.Scope> owner) {
         return new SessionHooks()
                 .setOnPreToolUse((input, invocation) -> done(() -> {
                     String decision = null;
@@ -43,7 +43,7 @@ final class CopilotAgentHookChain {
                     var additional = new Context();
                     for (var hook : hooks) {
                         PreToolUseHookOutput output;
-                        try (var scope = owner.enter()) {
+                        try (var scope = owner.get()) {
                             output = hook.onPreToolUse(context, input);
                         } catch (RuntimeException ex) {
                             log.log(Level.SEVERE, "Copilot agent '" + context.agentName() + "' pre-tool-use hook failed; "
@@ -109,7 +109,7 @@ final class CopilotAgentHookChain {
                     for (var hook : hooks) {
                         UserPromptSubmittedHookOutput output;
                         var submitted = current;
-                        try (var scope = owner.enter()) {
+                        try (var scope = owner.get()) {
                             output = hook.onUserPromptSubmitted(context, submitted);
                         } catch (RuntimeException ex) {
                             log.log(Level.SEVERE, "Copilot agent '" + context.agentName()
@@ -220,8 +220,8 @@ final class CopilotAgentHookChain {
     }
 
     private static <T> T observe(CopilotAgentContext context, String hook, Supplier<T> call,
-            CopilotAgentLifetime.Lease owner) {
-        try (var scope = owner.enter()) {
+            Supplier<CopilotAgentLifetime.Scope> owner) {
+        try (var scope = owner.get()) {
             return call.get();
         } catch (RuntimeException ex) {
             log.log(Level.WARNING, "Copilot agent '" + context.agentName() + "' " + hook + " hook failed; ignoring it", ex);

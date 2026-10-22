@@ -43,6 +43,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -130,9 +131,11 @@ class BoundAgentTests {
     }
 
     @Test
-    void closeWaitsForCancelledWorkAndPreservesInterruptStatus() {
+    void closeWaitsForCancelledWorkAbortAndPreservesInterruptStatus() {
         var runtime = new RuntimeStub();
         var response = new CompletableFuture<AssistantMessageEvent>();
+        var abort = new CompletableFuture<Void>();
+        runtime.abort = abort;
         var started = new CountDownLatch(1);
         runtime.replies = (session, prompt) -> {
             started.countDown();
@@ -154,18 +157,20 @@ class BoundAgentTests {
                 });
                 await().atMost(Duration.ofSeconds(5)).untilAsserted(() ->
                         assertThatThrownBy(instance::agent).hasMessage("Copilot agent instance is closed"));
+                verify(runtime.sessions.getFirst(), timeout(5000)).abort();
+                assertThat(response.isCancelled()).isTrue();
                 assertThat(closer.isAlive()).isTrue();
                 verify(runtime.sessions.getFirst(), never()).close();
-                assertThat(response.isCancelled()).isFalse();
                 assertThatThrownBy(() -> proxy.answer("new work").get())
                         .hasRootCauseMessage("Copilot agent instance is closed");
-                response.complete(reply("done"));
+                abort.complete(null);
                 closer.join(5000);
                 assertThat(closer.isAlive()).isFalse();
                 assertThat(interrupted.get()).isTrue();
                 verify(runtime.sessions.getFirst()).close();
                 verify(runtime.client, never()).close();
             } finally {
+                abort.complete(null);
                 response.complete(reply("done"));
                 if (closer != null) {
                     closer.join(5000);
@@ -281,6 +286,7 @@ class BoundAgentTests {
         private final Map<CopilotSession, Consumer<SessionEvent>> handlers = new ConcurrentHashMap<>();
         private volatile BiFunction<CopilotSession, String, CompletableFuture<AssistantMessageEvent>> replies =
                 (session, message) -> CompletableFuture.completedFuture(reply(message));
+        private volatile CompletableFuture<Void> abort = CompletableFuture.completedFuture(null);
 
         private RuntimeStub() {
             when(client.getSessionMetadata(anyString())).thenAnswer(invocation ->
@@ -306,6 +312,7 @@ class BoundAgentTests {
             });
             when(session.sendAndWait(any(), anyLong())).thenAnswer(invocation ->
                     replies.apply(session, invocation.<MessageOptions>getArgument(0).getPrompt()));
+            when(session.abort()).thenAnswer(invocation -> abort);
             return session;
         }
     }

@@ -12,6 +12,6 @@ public final class HookChainTestSupport {
     }
 
     public static SessionHooks sessionHooks(CopilotAgentContext context, CopilotAgentHooks... hooks) {
-        return CopilotAgentHookChain.sessionHooks(List.of(hooks), context, CopilotAgentLifetime.Lease.NONE);
+        return CopilotAgentHookChain.sessionHooks(List.of(hooks), context, CopilotAgentLifetime.Lease.NONE::enter);
     }
 }

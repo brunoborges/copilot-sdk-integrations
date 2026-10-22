@@ -6,6 +6,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import com.github.copilot.rpc.McpServerConfig;
 import com.github.copilot.rpc.PermissionHandler;
@@ -114,7 +115,7 @@ public record CopilotAgentGovernance(List<String> availableTools, List<String> e
         return CopilotPermissionPolicies.anyOf(handlers);
     }
 
-    void apply(CopilotAgentContext context, SessionConfig config, CopilotAgentLifetime.Lease owner) {
+    void apply(CopilotAgentContext context, SessionConfig config, Supplier<CopilotAgentLifetime.Scope> callbackScope) {
         if (availableTools != null) {
             config.setAvailableTools(new ArrayList<>(availableTools));
         }
@@ -131,11 +132,11 @@ public record CopilotAgentGovernance(List<String> availableTools, List<String> e
             config.setAdditionalDirectories(new ArrayList<>(additionalDirectories));
         }
         if (!hooks.isEmpty()) {
-            config.setHooks(CopilotAgentHookChain.sessionHooks(hooks, context, owner));
+            config.setHooks(CopilotAgentHookChain.sessionHooks(hooks, context, callbackScope));
         }
     }
 
-    void apply(CopilotAgentContext context, ResumeSessionConfig config, CopilotAgentLifetime.Lease owner) {
+    void apply(CopilotAgentContext context, ResumeSessionConfig config, Supplier<CopilotAgentLifetime.Scope> callbackScope) {
         if (availableTools != null) {
             config.setAvailableTools(new ArrayList<>(availableTools));
         }
@@ -152,7 +153,7 @@ public record CopilotAgentGovernance(List<String> availableTools, List<String> e
             config.setAdditionalDirectories(new ArrayList<>(additionalDirectories));
         }
         if (!hooks.isEmpty()) {
-            config.setHooks(CopilotAgentHookChain.sessionHooks(hooks, context, owner));
+            config.setHooks(CopilotAgentHookChain.sessionHooks(hooks, context, callbackScope));
         }
     }
 

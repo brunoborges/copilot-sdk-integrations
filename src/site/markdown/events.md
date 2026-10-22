@@ -104,6 +104,6 @@ tool references, not arbitrary lists constructed later by customizers.
 
 ---
 
-**Previous:** [BYOK providers](byok.html)
+**Previous:** [Per-user authentication](authentication.html)
 
 **Next:** [Tool governance, permissions, and hooks](governance.html)
