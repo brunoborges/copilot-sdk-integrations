@@ -1,0 +1,13 @@
+name: "GitHub Copilot"
+artifact: ${project.groupId}:${project.artifactId}:${project.version}
+metadata:
+  short-name: "copilot"
+  keywords:
+    - "copilot"
+    - "ai"
+    - "agent"
+    - "llm"
+  guide: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/quarkus"
+  categories:
+    - "ai"
+  status: "experimental"

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.1</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>io.github.brunoborges</groupId>
+    <artifactId>copilot-spring-boot-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Copilot Spring Boot</name>
+    <description>Spring Boot integration foundation for the Copilot SDK for Java.</description>
+    <url>https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/spring-boot</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/license/mit</url>
+        </license>
+    </licenses>
+
+    <modules>
+        <module>../core</module>
+        <module>copilot-spring-boot-site-skin</module>
+        <module>copilot-spring-boot-autoconfigure</module>
+        <module>copilot-spring-boot-starter</module>
+        <module>copilot-spring-boot-reactor</module>
+        <module>copilot-spring-boot-test</module>
+        <module>copilot-spring-boot-example</module>
+    </modules>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.release>21</maven.compiler.release>
+        <copilot-sdk.version>1.0.24</copilot-sdk.version>
+        <maven-site-plugin.version>3.22.0</maven-site-plugin.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.github</groupId>
+                <artifactId>copilot-sdk-java</artifactId>
+                <version>${copilot-sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.brunoborges</groupId>
+                <artifactId>copilot-agent-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>${maven-site-plugin.version}</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <generateReports>false</generateReports>
+                    <relativizeSiteLinks>false</relativizeSiteLinks>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

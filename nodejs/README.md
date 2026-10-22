@@ -8,7 +8,7 @@ Integrations for the
 - **core**: a framework-agnostic layer for client lifecycle, typed agents, tools,
   governance (deny-by-default permissions), conversations, and a scripted test runtime.
   Usable from Express, Hono, or plain Node.js.
-- **nestjs**: a `CopilotModule` modeled on the [Spring Boot starter](../spring-boot/),
+- **nestjs**: a `CopilotModule` modeled on the [Spring Boot starter](../java/spring-boot/),
   with `@CopilotAgent` classes, `@CopilotTool` provider methods, Terminus health, and a
   testing module.
 - **fastify**: a Fastify 5 plugin with `fastify.copilot` and request-bound agents, a
