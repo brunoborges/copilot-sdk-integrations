@@ -18,6 +18,7 @@
   "devDependencies": {
     "@swc/core": "^1.16.20",
     "@types/node": "^22.0.0",
+    "marked": "^18.1.1",
     "typescript": "^5.9.0",
     "unplugin-swc": "^2.0.0",
     "vitest": "^3.2.0"
