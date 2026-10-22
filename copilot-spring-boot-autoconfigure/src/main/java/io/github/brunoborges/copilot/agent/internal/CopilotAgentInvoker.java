@@ -43,6 +43,8 @@ public final class CopilotAgentInvoker implements AutoCloseable {
     private final CopilotAgentTelemetry telemetry;
     private final Semaphore concurrent;
     private final Semaphore outstanding;
+    private final int maxConcurrent;
+    private final int maxOutstanding;
     private volatile boolean closed;
 
     public CopilotAgentInvoker(CopilotClient client) {
@@ -53,8 +55,10 @@ public final class CopilotAgentInvoker implements AutoCloseable {
             CopilotAgentExecutionProperties execution) {
         this.client = client;
         this.telemetry = telemetry;
-        concurrent = new Semaphore(execution.maxConcurrentInvocations(), true);
-        outstanding = new Semaphore(execution.maxOutstandingInvocations());
+        maxConcurrent = execution.maxConcurrentInvocations();
+        maxOutstanding = execution.maxOutstandingInvocations();
+        concurrent = new Semaphore(maxConcurrent, true);
+        outstanding = new Semaphore(maxOutstanding);
     }
 
     public CompletableFuture<String> invoke(CopilotAgentDefinition definition, String conversationId, String message) {
@@ -410,6 +414,22 @@ public final class CopilotAgentInvoker implements AutoCloseable {
         } catch (NoSuchAlgorithmException ex) {
             throw new IllegalStateException("Required SHA-256 digest is unavailable", ex);
         }
+    }
+
+    /** Returns a point-in-time, read-only snapshot of invocation capacity for diagnostics. */
+    public ExecutionStats executionStats() {
+        int accepted = Math.max(0, maxOutstanding - outstanding.availablePermits());
+        int running = Math.min(accepted, Math.max(0, maxConcurrent - concurrent.availablePermits()));
+        return new ExecutionStats(running, accepted - running, maxConcurrent, maxOutstanding);
+    }
+
+    /**
+     * @param running invocations currently holding an execution permit
+     * @param queued accepted invocations waiting for an execution permit or a prior turn
+     * @param maxConcurrent configured {@code copilot.execution.max-concurrent-invocations}
+     * @param maxOutstanding configured {@code copilot.execution.max-outstanding-invocations}
+     */
+    public record ExecutionStats(int running, int queued, int maxConcurrent, int maxOutstanding) {
     }
 
     @Override

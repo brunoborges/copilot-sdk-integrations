@@ -93,6 +93,11 @@ public final class CopilotAgentFactoryBean implements FactoryBean<Object>, Initi
         return bound;
     }
 
+    /** Returns the resolved definition, or {@code null} before initialization. */
+    public CopilotAgentDefinition definition() {
+        return definition;
+    }
+
     public <T> CopilotAgentInstance<T> bind(Class<T> requestedType, String conversationId, boolean resume) {
         Assert.isTrue(requestedType == type && bound, "Cannot bind this Copilot agent definition");
         var lifetime = new CopilotAgentLifetime(resume);

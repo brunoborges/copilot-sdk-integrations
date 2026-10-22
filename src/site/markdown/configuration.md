@@ -14,6 +14,7 @@ title: Configuration reference
 - [BYOK properties](#byok-properties)
 - [Execution properties](#execution-properties)
 - [Observation properties](#observation-properties)
+- [Actuator properties](#actuator-properties)
 - [Reactor properties](#reactor-properties)
 - [Configuration examples and precedence](#configuration-examples-and-precedence)
 
@@ -179,6 +180,29 @@ are required for built-in instrumentation. A `MeterRegistry` bean is optional.
 Adding Spring Boot Actuator is the usual way to supply the registries/handlers.
 Without activation, ordinary agent use works with no-op telemetry.
 
+<a id="actuator-properties"></a>
+
+## Actuator properties
+
+These apply only when Spring Boot Actuator is present. The binding types are
+`CopilotHealthProperties` and `CopilotEndpointProperties` in the
+auto-configuration package. See [Actuator](actuator.html).
+
+| Property | Type | Default | Meaning and validation |
+| --- | --- | --- | --- |
+| `copilot.health.timeout` | Duration | `5s` | Positive budget for one health check, including an optional client start and the status/auth calls. Exceeding it reports `DOWN`. |
+| `copilot.health.start-client` | Boolean | `false` | Let health checks start a lazily configured client that is not connected. When `false`, such a client reports `UNKNOWN`. |
+| `copilot.health.require-authentication` | Boolean | `true` | Report `DOWN` when the connected runtime is not authenticated. Set `false` for BYOK-only applications. |
+| `copilot.endpoint.timeout` | Duration | `5s` | Positive budget for each runtime-backed `copilot` endpoint operation (`models`, `sessions`). |
+| `copilot.endpoint.start-client` | Boolean | `false` | Let the endpoint start a lazily configured client that is not connected. |
+| `copilot.endpoint.show-instructions` | Boolean | `false` | Include agent system instruction content in the `agents` view. |
+| `copilot.endpoint.include-all-sessions` | Boolean | `false` | List all runtime sessions instead of only starter-created (`agent-`) sessions. |
+
+Standard Actuator keys also apply: `management.health.copilot.enabled`,
+`management.info.copilot.enabled`, `management.endpoint.copilot.access`, and
+`management.endpoints.web.exposure.include` (the endpoint is not exposed by
+default).
+
 <a id="reactor-properties"></a>
 
 ## Reactor properties
@@ -217,6 +241,8 @@ copilot:
     max-outstanding-invocations: 64
   observations:
     enabled: true
+  health:
+    timeout: 5s
   reactor:
     buffer-capacity: 256
 ```

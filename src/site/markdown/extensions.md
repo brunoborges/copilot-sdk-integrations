@@ -77,6 +77,6 @@ invocations; structured results are only available through the built-in
 
 ---
 
-**Previous:** [Observability](observability.html)
+**Previous:** [Actuator health, info, and endpoint](actuator.html)
 
 **Next:** [Example application](examples.html)
