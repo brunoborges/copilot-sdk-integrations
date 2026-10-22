@@ -24,6 +24,9 @@ targeting **Spring Boot 4.1.1**, **Java 21**, and Copilot SDK **1.0.24**.
 - Session-scoped listeners and SDK configuration customizers.
 - Optional Micrometer observations and token counters, and an optional Reactor
   module for `Flux<CopilotAgentEvent>` streaming.
+- Test support module with a scripted, in-memory Copilot runtime (replies, streaming,
+  tool calls into `@CopilotTool` beans, failures, recorded prompts) and a
+  Testcontainers `CopilotContainer` wired through `@ServiceConnection`.
 
 Permissions are denied unless you supply an explicit `PermissionHandler` bean; the
 starter never approves tool use implicitly. No artifacts have been published yet.
@@ -35,6 +38,7 @@ starter never approves tool use implicitly. No artifacts have been published yet
 | `copilot-spring-boot-starter` | Dependency-only starter: SDK, auto-configuration, and Spring Boot starter. |
 | `copilot-spring-boot-autoconfigure` | Client configuration, agent API, discovery, execution, tool binding, and optional observations. |
 | `copilot-spring-boot-reactor` | Optional Reactor return-type adapter for streaming agent methods. |
+| `copilot-spring-boot-test` | Test support: scripted in-memory `CopilotClient`, `@AutoConfigureCopilotTestRuntime`, and Testcontainers `CopilotContainer` with `@ServiceConnection`. |
 | `copilot-spring-boot-example` | Executable, non-web example of raw SDK sessions, typed agents, bound instances, and streaming. |
 | `copilot-spring-boot-site-skin` | Internal Maven Site layout for the documentation; not an application dependency. |
 
@@ -138,6 +142,7 @@ See also the SDK's
 | `Flux<CopilotAgentEvent>` streaming | [Reactive streaming](src/site/markdown/streaming.md) |
 | Micrometer observations and token counters | [Observability](src/site/markdown/observability.md) |
 | Custom telemetry and return types | [Extension SPIs](src/site/markdown/extensions.md) |
+| Scripted test runtime and Testcontainers | [Testing](src/site/markdown/testing.md) |
 | Running the example modes | [Example application](src/site/markdown/examples.md) |
 | Authorization boundaries and troubleshooting | [Security and troubleshooting](src/site/markdown/operations.md) |
 

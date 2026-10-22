@@ -22,6 +22,7 @@ title: Getting started
 | `copilot-spring-boot-autoconfigure` | Client configuration, agent API, discovery, execution, tool binding, and optional observations. Its SDK dependency is optional. |
 | `copilot-spring-boot-starter` | Dependency-only starter supplying the SDK, auto-configuration, and Spring Boot starter. |
 | `copilot-spring-boot-reactor` | Optional Reactor return-type adapter; includes the basic starter and Reactor, not a web framework. |
+| `copilot-spring-boot-test` | Test-scoped support: scripted in-memory `CopilotClient`, `@AutoConfigureCopilotTestRuntime`, and Testcontainers `CopilotContainer`. |
 | `copilot-spring-boot-example` | Executable non-web example of raw sessions, typed agents, tools, observations, and streaming. |
 
 No integration artifacts have been published. Install the reactor locally before

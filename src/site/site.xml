@@ -120,6 +120,7 @@ html[data-theme="dark"] {
             <item name="Reactive streaming" href="streaming.html"/>
             <item name="Observability" href="observability.html"/>
             <item name="Extension SPIs" href="extensions.html"/>
+            <item name="Testing" href="testing.html"/>
         </menu>
         <menu name="Operate">
             <item name="Example application" href="examples.html"/>

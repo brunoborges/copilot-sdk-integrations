@@ -54,6 +54,11 @@ nor `https://` enables HTTP or TLS.** Use a trusted local connection or a
 separately secured tunnel, especially when sending a connection token. The
 external server owns its GitHub authentication and process lifecycle.
 
+A `CopilotConnectionDetails` bean takes precedence over `cli-url` and
+`tcp-connection-token`. Testcontainers `@ServiceConnection` registers one, for example.
+When that bean is present, `cli-path`, `cli-args`, and `working-directory` are
+ignored; see [Testing](testing.html#connection-details).
+
 There is no integration property for a GitHub credential. Local authentication
 follows SDK/CLI rules; external secrets should use supported environment or
 application secret mechanisms, never committed literals.

@@ -52,6 +52,7 @@ optional observations and streaming.
 | [Reactive streaming](streaming.html) | Cold subscriptions, native events, bounded buffering, and overflow. |
 | [Observability](observability.html) | Micrometer observations, token counters, privacy, and activation. |
 | [Extension SPIs](extensions.html) | Custom telemetry and return-type adapters. |
+| [Testing](testing.html) | Scripted in-memory runtime, recorded interactions, and Testcontainers with `@ServiceConnection`. |
 | [Example application](examples.html) | Raw, routed, bound, and streaming executable modes. |
 | [Security and troubleshooting](operations.html) | Authorization boundaries, failure diagnosis, and source references. |
 
