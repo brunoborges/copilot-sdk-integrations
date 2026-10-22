@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'dotnet-core/**'
-      - 'dotnet-aspire/**'
+      - 'dotnet/**'
+      - 'aspire/**'
       - '.github/workflows/dotnet.yml'
   pull_request:
     paths:
-      - 'dotnet-core/**'
-      - 'dotnet-aspire/**'
+      - 'dotnet/**'
+      - 'aspire/**'
       - '.github/workflows/dotnet.yml'
   workflow_dispatch:
 
@@ -33,11 +33,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: dotnet-core
-            dir: dotnet-core
+          - name: dotnet
+            dir: dotnet
             solution: CopilotSdk.slnx
-          - name: dotnet-aspire   # references dotnet-core by project
-            dir: dotnet-aspire
+          - name: aspire   # references dotnet by project
+            dir: aspire
             solution: CopilotSdk.Aspire.slnx
     defaults:
       run:

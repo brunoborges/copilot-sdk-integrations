@@ -9,7 +9,7 @@ for business applications on the .NET Generic Host: ASP.NET Core APIs, worker
 services, and Blazor apps. It matches the code in
 [`src/CopilotSdk.Extensions.Hosting`](../src/CopilotSdk.Extensions.Hosting/).
 
-It is independent of Aspire. The [Aspire integration](../../dotnet-aspire/docs/design.md)
+It is independent of Aspire. The [Aspire integration](../../aspire/docs/design.md)
 runs the Copilot runtime in an AppHost and builds on this package, the same way
 `Aspire.Npgsql` builds on `Npgsql`.
 
@@ -436,7 +436,7 @@ One package: **`CopilotSdk.Extensions.Hosting`** (working name). It depends on
 health-check abstractions.
 
 ```
-dotnet-core/
+dotnet/
 ├── README.md
 ├── docs/design.md
 ├── src/CopilotSdk.Extensions.Hosting/

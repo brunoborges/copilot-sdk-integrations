@@ -4,7 +4,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
-  <!-- Keep shared versions in sync with ../dotnet-core/Directory.Packages.props. -->
+  <!-- Keep shared versions in sync with ../dotnet/Directory.Packages.props. -->
   <ItemGroup Label="Product">
     <PackageVersion Include="Aspire.Hosting" Version="13.6.3" />
     <PackageVersion Include="GitHub.Copilot.SDK" Version="1.0.26" />

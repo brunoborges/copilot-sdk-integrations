@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../../dotnet-core/src/CopilotSdk.Extensions.Hosting/CopilotSdk.Extensions.Hosting.csproj" />
+    <ProjectReference Include="../../../dotnet/src/CopilotSdk.Extensions.Hosting/CopilotSdk.Extensions.Hosting.csproj" />
   </ItemGroup>
 
   <ItemGroup>

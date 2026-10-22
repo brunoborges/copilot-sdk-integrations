@@ -8,7 +8,7 @@ This document describes the Aspire integration for the
 [GitHub Copilot SDK for .NET](https://github.com/github/copilot-sdk/tree/main/dotnet).
 It is deliberately **thin and orchestration-focused**. Everything an application
 does with Copilot (agents, `IChatClient`, tools, identity, permissions, testing)
-lives in the [core .NET integration](../../dotnet-core/docs/design.md). This
+lives in the [core .NET integration](../../dotnet/docs/design.md). This
 package set only:
 
 - **runs, secures, and wires** the Copilot runtime as an AppHost resource, and
@@ -49,7 +49,7 @@ This mirrors how Aspire layers on libraries elsewhere: `Aspire.Npgsql` on
 
 ## 2. What lives where
 
-| Concern | Core (`dotnet-core`) | Aspire (`dotnet-aspire`) |
+| Concern | Core (`dotnet`) | Aspire (`aspire`) |
 | --- | --- | --- |
 | Runtime process | SDK-managed runtime for single apps, or connect to `Endpoint` | Runs the runtime as a resource (executable / container / existing) |
 | Connection settings | `Copilot:Endpoint`, `Copilot:ConnectionToken`, or a connection string | Produces the connection string |
@@ -189,7 +189,7 @@ var copilot = builder.AddCopilot("copilot")
   passed to the runtime as `COPILOT_CONNECTION_TOKEN` and to clients through the
   connection string. `WithConnectionToken(parameter)` replaces it.
 - Per-user tokens are a *session* concern handled by core
-  ([runtime and identity](../../dotnet-core/docs/design.md#8-runtime-and-identity)),
+  ([runtime and identity](../../dotnet/docs/design.md#8-runtime-and-identity)),
   not a runtime setting.
 
 ### 4.5 Storage and runtime settings
@@ -240,7 +240,7 @@ var copilot = builder.AddCopilot("copilot")
 **runtime's** network, because the runtime, not the app, makes the MCP calls),
 and `__Tools__{i}` to every resource referencing this runtime or its models.
 Core exposes only listed tools
-([core §7](../../dotnet-core/docs/design.md#7-permissions)); with no `tools`,
+([core §7](../../dotnet/docs/design.md#7-permissions)); with no `tools`,
 the app must list them in `Copilot:McpServers:{server}:Tools` itself. Stdio MCP
 servers stay configuration-only.
 
@@ -318,7 +318,7 @@ They call core's `AddCopilot()` / `AddCopilot(connectionName)` with
 
 | Step | Behavior |
 | --- | --- |
-| Connection string | Core reads `ConnectionStrings:{connectionName}` (`Endpoint`, `ConnectionToken`, `Model`, `Provider`, `ProviderEndpoint`, `ProviderKey`, `WireApi`) ([core §3.3](../../dotnet-core/docs/design.md#33-configuration)). MCP servers and reasoning effort arrive as `Copilot__*` environment variables. |
+| Connection string | Core reads `ConnectionStrings:{connectionName}` (`Endpoint`, `ConnectionToken`, `Model`, `Provider`, `ProviderEndpoint`, `ProviderKey`, `WireApi`) ([core §3.3](../../dotnet/docs/design.md#33-configuration)). MCP servers and reasoning effort arrive as `Copilot__*` environment variables. |
 | Settings | Binds `Aspire:Copilot:Client` and `Aspire:Copilot:Client:{connectionName}` into `CopilotClientSettings` (`DisableHealthChecks`, `DisableTracing`, `DisableMetrics`, `HealthCheckTimeout`), then `configureSettings`. |
 | Health | Registers core's health check as `copilot_{connectionName}` (tag `ready`) unless disabled. |
 | Telemetry | Adds the `Experimental.Microsoft.Extensions.AI` source and meter to OpenTelemetry unless disabled, so `AddServiceDefaults()` exports them. |
@@ -347,7 +347,7 @@ with a warning so AppHost and service package versions can drift.
 ## 6. Testing
 
 Application behavior is tested by faking `IChatClient`
-([core §11](../../dotnet-core/docs/design.md#11-testing-and-other-frameworks)).
+([core §11](../../dotnet/docs/design.md#11-testing-and-other-frameworks)).
 Distributed-app tests use `Aspire.Hosting.Testing` as usual, against the real
 runtime resource.
 
@@ -372,10 +372,10 @@ services; scale-out needs sticky session routing or shared session storage.
 ## 8. Repository layout
 
 ```
-dotnet-aspire/
+aspire/
 ├── README.md
 ├── docs/design.md                         # this document
-├── CopilotSdk.Aspire.slnx                 # references ../dotnet-core/src projects
+├── CopilotSdk.Aspire.slnx                 # references ../dotnet/src projects
 ├── src/
 │   ├── CopilotSdk.Aspire.Hosting/         # resources, Dockerfile, health check
 │   └── CopilotSdk.Aspire/                 # client integration over core

@@ -27,7 +27,7 @@ The samples use the runtime's default model. To pick one, set `Copilot:Model` (f
 
 ## Run
 
-From `dotnet-core/`:
+From `dotnet/`:
 
 ```bash
 dotnet run --project samples/SupportApi            # http://localhost:5180

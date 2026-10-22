@@ -6,7 +6,7 @@
 This is the **orchestration** layer: it runs, secures, and wires the Copilot
 runtime in an Aspire AppHost, and connects service projects to it. Application
 features (`IChatClient`, conversations, tools, permissions) come from the
-[core .NET integration](../dotnet-core/), which this package builds on, the same
+[core .NET integration](../dotnet/), which this package builds on, the same
 way `Aspire.Npgsql` builds on `Npgsql`.
 
 The client package is optional. A service that uses only core can still read
@@ -64,7 +64,7 @@ generated `{name}-github-token` secret parameter. The hosting package targets
 `net8.0` and finds the runtime via `COPILOT_CLI_PATH`, then the SDK-bundled
 runtime, then `copilot` on `PATH` (override with `WithCliPath`).
 
-From `dotnet-aspire/`:
+From `aspire/`:
 
 ```bash
 dotnet build CopilotSdk.Aspire.slnx
@@ -72,7 +72,7 @@ dotnet test --solution CopilotSdk.Aspire.slnx
 ```
 
 A sample AppHost is still to come; see the
-[core samples](../dotnet-core/samples/) for service code.
+[core samples](../dotnet/samples/) for service code.
 
 ## License
 

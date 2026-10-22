@@ -55,7 +55,7 @@ nothing to configure. Elsewhere, supply a service token either as
 or point `Copilot:Endpoint` at a shared runtime. The SDK downloads its bundled runtime on
 first build.
 
-From `dotnet-core/`:
+From `dotnet/`:
 
 ```bash
 dotnet build CopilotSdk.slnx
@@ -71,7 +71,7 @@ SDK, and an invoice-processing worker. The integration version of the support
 API is 36 lines of C#; the raw-SDK version is 218
 ([comparison](samples/README.md#supportapi-vs-supportapirawsdk)).
 
-Running in [Aspire](https://aspire.dev/)? The [Aspire integration](../dotnet-aspire/)
+Running in [Aspire](https://aspire.dev/)? The [Aspire integration](../aspire/)
 orchestrates the Copilot runtime and builds on this package.
 
 ## License

@@ -1,6 +1,6 @@
 <Solution>
   <Folder Name="/core/">
-    <Project Path="../dotnet-core/src/CopilotSdk.Extensions.Hosting/CopilotSdk.Extensions.Hosting.csproj" />
+    <Project Path="../dotnet/src/CopilotSdk.Extensions.Hosting/CopilotSdk.Extensions.Hosting.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/CopilotSdk.Aspire.Hosting/CopilotSdk.Aspire.Hosting.csproj" />
