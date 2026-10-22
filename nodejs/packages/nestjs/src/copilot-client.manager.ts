@@ -1,6 +1,9 @@
 import {
+  CopilotConfigurationError,
   createCopilot,
   type Copilot,
+  type CopilotAgentEvent,
+  type CopilotContext,
   type CopilotLogger,
   type CopilotOptions,
 } from "@copilot-sdk-integrations/core";
@@ -11,6 +14,7 @@ import {
   type BeforeApplicationShutdown,
   type OnApplicationBootstrap,
   type OnApplicationShutdown,
+  type OnModuleInit,
 } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
 import { COPILOT_CLIENT_CUSTOMIZER } from "./constants.js";
@@ -54,11 +58,13 @@ export function nestCopilotLogger(logger = new Logger("Copilot")): CopilotLogger
  * shutdown (`app.enableShutdownHooks()` makes Nest run it on SIGTERM).
  */
 @Injectable()
-export class CopilotClientManager implements OnApplicationBootstrap, BeforeApplicationShutdown, OnApplicationShutdown {
+export class CopilotClientManager implements OnModuleInit, OnApplicationBootstrap, BeforeApplicationShutdown, OnApplicationShutdown {
   readonly options: CopilotModuleOptions;
   readonly copilot: Copilot;
   private readonly stopCopilot: (options?: { gracePeriodMs?: number }) => Promise<void>;
   private stopping?: Promise<void>;
+  private emitter?: { emit(event: string, ...values: unknown[]): unknown };
+  private readonly logger = new Logger("Copilot");
 
   constructor(
     @Inject(COPILOT_MODULE_OPTIONS) options: CopilotModuleOptions,
@@ -75,6 +81,25 @@ export class CopilotClientManager implements OnApplicationBootstrap, BeforeAppli
       this.copilot = createCopilot(coreOptions);
       this.stopCopilot = (o) => this.copilot.stop(o);
     }
+  }
+
+  /** Resolves the application's `EventEmitter2` when `eventEmitter` re-emission is enabled. */
+  async onModuleInit(): Promise<void> {
+    if (!this.options.eventEmitter) return;
+    let EventEmitter2: unknown;
+    try {
+      ({ EventEmitter2 } = await import("@nestjs/event-emitter"));
+    } catch (error) {
+      throw new CopilotConfigurationError(
+        `CopilotModule option eventEmitter requires @nestjs/event-emitter to be installed (${(error as Error).message})`,
+        { cause: error },
+      );
+    }
+    const emitter = resolveOptional<{ emit(event: string, ...values: unknown[]): unknown }>(this.moduleRef, EventEmitter2);
+    if (!emitter) {
+      throw new CopilotConfigurationError("CopilotModule option eventEmitter requires EventEmitterModule.forRoot() to be imported");
+    }
+    this.emitter = emitter;
   }
 
   /** Starts the runtime (no-op when already running). */
@@ -104,6 +129,18 @@ export class CopilotClientManager implements OnApplicationBootstrap, BeforeAppli
     return this.stopping;
   }
 
+  private reemit(event: CopilotAgentEvent, context: CopilotContext): void {
+    if (!this.emitter) return;
+    const setting = this.options.eventEmitter;
+    const prefix = (typeof setting === "object" ? setting.prefix : undefined) ?? "copilot";
+    const name = `${prefix}.${event.type}`;
+    try {
+      this.explorer.restoreContext(context, () => this.emitter!.emit(name, event, context));
+    } catch (error) {
+      this.logger.warn(`Copilot event listener for ${name} failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
   private coreOptions(): CopilotOptions {
     const options = this.options;
     const core: CopilotOptions = {};
@@ -115,7 +152,11 @@ export class CopilotClientManager implements OnApplicationBootstrap, BeforeAppli
       try {
         options.onEvent?.(event, context);
       } finally {
-        this.explorer.dispatchEvent(event, context);
+        try {
+          this.explorer.dispatchEvent(event, context);
+        } finally {
+          this.reemit(event, context);
+        }
       }
     };
     core.tokenResolver = (context) => {

@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { isAbsolute, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   CopilotConfigurationError,
   composeHooks,
@@ -238,7 +239,7 @@ export class CopilotAgents implements OnModuleInit {
       agentClass,
       options,
       featureTools: [...featureTools],
-      plans: planMethods(agentClass),
+      plans: planMethods(agentClass, this.manager.options.templatesDir),
     };
     this.addEntry(entry);
     return entry;
@@ -285,7 +286,10 @@ export class CopilotAgents implements OnModuleInit {
       };
     }
     finalDefinition = defineAgent(definition);
-    entry.built = { definition: finalDefinition, handle: this.manager.copilot.agent(finalDefinition) };
+    entry.built = {
+      definition: finalDefinition,
+      handle: withAmbientContext(this.manager.copilot.agent(finalDefinition), () => this.explorer.captureContext()),
+    };
     return entry.built;
   }
 
@@ -317,12 +321,12 @@ export class CopilotAgents implements OnModuleInit {
       if (!instance) {
         throw new CopilotConfigurationError(`${where}: permission policy ${(policy as Type).name} is not registered as a provider`);
       }
-      return (request, context) => instance.evaluate(request, context);
+      return (request, context) => this.explorer.restoreContext(context.context, () => instance.evaluate(request, context));
     }
     if (typeof policy === "function") return policy as PermissionPolicy;
     if (typeof (policy as CopilotPermissionPolicy).evaluate === "function") {
       const instance = policy as CopilotPermissionPolicy;
-      return (request, context) => instance.evaluate(request, context);
+      return (request, context) => this.explorer.restoreContext(context.context, () => instance.evaluate(request, context));
     }
     throw new CopilotConfigurationError(`${where}: permissions must be a policy function or a CopilotPermissionPolicy`);
   }
@@ -342,7 +346,12 @@ export class CopilotAgents implements OnModuleInit {
     }
     const conversationId =
       overrides.conversationId ?? (plan.conversationIdIndex !== undefined ? (args[plan.conversationIdIndex] as string | undefined) : undefined);
-    const captured = getCopilotContext();
+    // Capture bridged context (e.g. CLS) now: streams start lazily, possibly outside the caller's scope.
+    const ambient = getCopilotContext();
+    const bridged = this.explorer.captureContext();
+    const captured: CopilotContext | undefined = bridged
+      ? { ...ambient, ...bridged, attributes: { ...(ambient?.attributes ?? {}), ...(bridged.attributes ?? {}) } }
+      : ambient;
     const signals = [plan.signalIndex !== undefined ? args[plan.signalIndex] : undefined, captured?.signal].filter(
       (s): s is AbortSignal => s instanceof AbortSignal,
     );
@@ -422,7 +431,7 @@ function prefixed(where: string, error: unknown): unknown {
 }
 
 /** Reads and validates `@UserMessage` metadata of every method (templates, parameters, schemas). */
-function planMethods(agentClass: CopilotAgentClass): Map<string, MethodPlan> {
+function planMethods(agentClass: CopilotAgentClass, templatesDir: string | undefined): Map<string, MethodPlan> {
   const plans = new Map<string, MethodPlan>();
   const seen = new Set<string>();
   for (let proto = agentClass.prototype as object | null; proto && proto !== Object.prototype; proto = Object.getPrototypeOf(proto)) {
@@ -431,13 +440,19 @@ function planMethods(agentClass: CopilotAgentClass): Map<string, MethodPlan> {
       seen.add(name);
       const metadata: UserMessageMetadata | undefined = Reflect.getMetadata(USER_MESSAGE_METADATA, proto, name);
       if (!metadata) continue;
-      plans.set(name, planMethod(agentClass, proto, name, metadata));
+      plans.set(name, planMethod(agentClass, proto, name, metadata, templatesDir));
     }
   }
   return plans;
 }
 
-function planMethod(agentClass: CopilotAgentClass, proto: object, name: string, metadata: UserMessageMetadata): MethodPlan {
+function planMethod(
+  agentClass: CopilotAgentClass,
+  proto: object,
+  name: string,
+  metadata: UserMessageMetadata,
+  templatesDir: string | undefined,
+): MethodPlan {
   const where = `${agentClass.name}.${name}()`;
   const fail = (message: string) => new CopilotConfigurationError(`${where}: ${message}`);
   const plan: MethodPlan = { name, vars: [], result: "promise", tools: Reflect.getMetadata(AGENT_TOOLS_METADATA, proto, name) ?? [] };
@@ -462,10 +477,11 @@ function planMethod(agentClass: CopilotAgentClass, proto: object, name: string, 
 
   let template = metadata.template;
   if (metadata.templateFile !== undefined) {
+    const file = resolveTemplatePath(metadata.templateFile, templatesDir);
     try {
-      template = readFileSync(resolve(process.cwd(), metadata.templateFile), "utf8");
+      template = readFileSync(file, "utf8");
     } catch (error) {
-      throw fail(`cannot read template file "${metadata.templateFile}": ${(error as Error).message}`);
+      throw fail(`cannot read template file "${file}": ${(error as Error).message}`);
     }
   }
   if (template !== undefined) {
@@ -496,6 +512,47 @@ function planMethod(agentClass: CopilotAgentClass, proto: object, name: string, 
   plan.result = metadata.stream ?? (returnType?.name === "Observable" ? "observable" : "promise");
   if (plan.result !== "promise" && plan.schema !== undefined) throw fail("@Returns() cannot be combined with a streaming result");
   return plan;
+}
+
+/** `file:` URLs and absolute paths as is; relative paths against `templatesDir` (default: the working directory). */
+export function resolveTemplatePath(file: string | URL, templatesDir?: string): string {
+  if (file instanceof URL || file.startsWith("file:")) return fileURLToPath(file);
+  if (isAbsolute(file)) return file;
+  return resolve(templatesDir ?? process.cwd(), file);
+}
+
+/**
+ * Wraps a core handle so every call carries the context captured from `COPILOT_CONTEXT_BRIDGE`
+ * providers at call time (explicit `context` send options still win).
+ */
+function withAmbientContext(handle: AgentHandle, capture: () => Partial<CopilotContext> | undefined): AgentHandle {
+  const merge = <O extends { context?: Partial<CopilotContext> }>(options: O | undefined): O | undefined => {
+    const captured = capture();
+    if (!captured) return options;
+    const explicit = options?.context;
+    const context = { ...captured, ...explicit, attributes: { ...(captured.attributes ?? {}), ...(explicit?.attributes ?? {}) } };
+    return { ...(options ?? ({} as O)), context };
+  };
+  const inCaptured = <R>(fn: () => R): R => {
+    const captured = capture();
+    return captured ? runWithCopilotContext(captured, fn) : fn();
+  };
+  return {
+    get definition() {
+      return handle.definition;
+    },
+    send: ((options: Parameters<AgentHandle["send"]>[0]) => handle.send(merge(options)!)) as AgentHandle["send"],
+    stream: (options) => handle.stream(merge(options)!),
+    conversation(conversationId, options) {
+      const bound = handle.conversation(conversationId, options);
+      return {
+        conversationId: bound.conversationId,
+        send: ((prompt: string, sendOptions?: Parameters<typeof bound.send>[1]) => bound.send(prompt, merge(sendOptions) as never)) as typeof bound.send,
+        stream: (prompt, streamOptions) => bound.stream(prompt, merge(streamOptions)),
+      };
+    },
+    deleteConversation: (conversationId, options) => inCaptured(() => handle.deleteConversation(conversationId, options)),
+  };
 }
 
 function render(entry: AgentEntry, plan: MethodPlan, args: unknown[]): string {

@@ -75,6 +75,8 @@ Return types:
 - **`Observable<CopilotAgentEvent>`**: a cold stream. Unsubscribing aborts the turn. The return type is inferred from decorator metadata, so import `Observable` as a value, or set `@UserMessage({ stream: "observable" })`.
 - **`AsyncIterable`**: set `@UserMessage({ stream: "async-iterable" })`.
 
+`@UserMessageFrom(path)` loads the template from a file at bootstrap. Relative paths resolve against the `templatesDir` module option, which defaults to `process.cwd()`. Absolute paths and `file:` URLs are used as is, so a template that sits next to its source file can be written as `@UserMessageFrom(new URL("./prompts/triage.md", import.meta.url))`. In a compiled app, copy the template files into the build output, or point `templatesDir` at the source folder.
+
 Template rules are checked at bootstrap:
 
 - Each `{{placeholder}}` must be bound by `@P(name)`, or by `{{message}}` for `@Message()`.
@@ -114,6 +116,18 @@ export class OrdersTools {
   - an app-wide default provided as `COPILOT_PERMISSION_POLICY`
 - **Hooks**: `@CopilotHook("preToolUse", { agents: [SupportAgent] })` methods are composed with each agent's `hooks`. Global hooks run first.
 - **Events**: `@OnCopilotEvent("done" | "tool-end" | "*")` methods receive `(event, context)`. Listener failures are logged and never break a turn.
+- **`@nestjs/event-emitter`**: set `eventEmitter: true` (or `{ prefix: "ai" }`) in `forRoot` and import `EventEmitterModule.forRoot()`. Every agent event is then re-emitted on `EventEmitter2` as `copilot.<type>` (for example `copilot.done`, `copilot.tool-end`, `copilot.permission-request`) with `(event, context)`, so `@OnEvent("copilot.done")` works. Bootstrap fails if the option is set but `EventEmitterModule` isn't imported. Emitter failures are logged and never break a turn. The package is an optional peer dependency, loaded only when the option is set.
+- **MCP servers with per-user credentials**: an MCP server's `headers` (HTTP) or `env` (stdio) values may be functions of the `CopilotContext`, or the whole map may be one function. They're resolved for every session create and resume, after the token resolver runs, so `ctx.githubToken` is available. Entries that resolve to `undefined` are dropped.
+
+  ```ts
+  mcpServers: {
+    github: {
+      type: "http",
+      url: "https://api.githubcopilot.com/mcp/",
+      headers: { Authorization: (ctx) => ctx.githubToken && `Bearer ${ctx.githubToken}` },
+    },
+  }
+  ```
 - **Customizers**: provide `COPILOT_CLIENT_CUSTOMIZER` and `COPILOT_SESSION_CUSTOMIZER` (a function or an array) to adjust the raw SDK options.
 
 ## Request context and per-user tokens
@@ -131,6 +145,30 @@ To use per-user GitHub tokens, provide a `CopilotTokenResolver`:
 ```ts
 providers: [{ provide: CopilotTokenResolver, useClass: PassportGitHubTokenResolver }] // reads request.user.accessToken
 ```
+
+### `nestjs-cls`
+
+When the app uses [`nestjs-cls`](https://papooch.github.io/nestjs-cls/), import `CopilotClsModule` from the `/cls` subpath. The main entry point never imports `nestjs-cls`.
+
+```ts
+import { CopilotClsModule } from "@copilot-sdk-integrations/nestjs/cls";
+
+@Module({
+  imports: [
+    ClsModule.forRoot({ global: true, middleware: { mount: true } }),
+    CopilotModule.forRoot({ /* ... */ }),
+    CopilotClsModule.forRoot({
+      // Optional. The default reads the CLS keys "principal" (or "user") and "conversationId".
+      context: (cls) => ({ principal: cls.get("userId"), attributes: { tenant: cls.get("tenant") } }),
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+- **Any entry point**: the context is read from CLS whenever a declarative agent method, `CopilotAgents.handle()`, or `@InjectAgent()` handle is called. This covers HTTP, microservice handlers, queues, and cron jobs alike. CLS values win over the interceptor's; explicit `context` passed to `send()`/`stream()` wins over both.
+- **Propagation**: the CLS store active at call time is restored around `@CopilotTool` methods, hooks, `@OnCopilotEvent` listeners, injectable permission policies, and `eventEmitter` re-emission. These run on SDK callbacks outside the caller's async context, so `ClsService.get()` still works inside them. Set `propagate: false` to turn this off.
+- **Custom sources**: `CopilotClsModule` is a provider of the generic `COPILOT_CONTEXT_BRIDGE` token (`{ capture(), restore?(ctx, fn) }`). Provide your own bridge to feed the context from another store.
 
 ## HTTP errors, streaming, health
 
@@ -162,6 +200,16 @@ check() {
 ```
 
 The health check never starts a lazy runtime. It reports the client state, runtime version, and admission capacity, and returns `down` when the runtime is stopping, stopped, or failed. `@nestjs/terminus` is an optional peer dependency; the indicator doesn't import it.
+
+### Info endpoint
+
+`CopilotInfoModule` is opt-in and not registered by `CopilotModule`. It exposes a read-only `GET /copilot/info` endpoint, the counterpart of the Spring Actuator info endpoint:
+
+```ts
+imports: [CopilotInfoModule.register({ path: "admin/copilot", guards: [AdminGuard] })]
+```
+
+The response contains the runtime `state`, `version` (when running), `capacity` (including `activeTurns`), and the registered agents: name, description, model, reasoning effort, provider name, custom tool names, MCP server names, and tool filters. Provider keys, MCP headers and env, and instructions are never included. Set `includeInstructions: true` to include instructions. Reading the endpoint never starts a lazy runtime. Inject `CopilotInfoService` to build the same document yourself.
 
 ## Testing
 

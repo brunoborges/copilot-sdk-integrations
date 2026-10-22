@@ -7,7 +7,9 @@
 import type {
   CopilotClientOptions,
   CustomAgentConfig,
+  MCPHTTPServerConfig,
   MCPServerConfig,
+  MCPStdioServerConfig,
   PermissionRequest,
   PermissionRequestResult,
   ProviderConfig,
@@ -167,6 +169,22 @@ export type { PermissionRequest, PermissionRequestResult };
 // Agents
 // ---------------------------------------------------------------------------
 
+/**
+ * String map (MCP `headers` or `env`) whose entries can be derived from the turn's `CopilotContext`,
+ * resolved each time a session is created or resumed. Either a function returning the whole map,
+ * or a map whose values are strings or functions of the context. `undefined` values are dropped.
+ */
+export type ContextualStringMap =
+  | Record<string, string | undefined | ((context: CopilotContext) => string | undefined | Promise<string | undefined>)>
+  | ((context: CopilotContext) => Record<string, string | undefined> | Promise<Record<string, string | undefined>>);
+
+/** A local (stdio) MCP server whose `env` may depend on the request context. */
+export type CopilotMCPStdioServerConfig = Omit<MCPStdioServerConfig, "env"> & { env?: ContextualStringMap };
+/** A remote (HTTP/SSE) MCP server whose `headers` may depend on the request context (e.g. a per-user token). */
+export type CopilotMCPHTTPServerConfig = Omit<MCPHTTPServerConfig, "headers"> & { headers?: ContextualStringMap };
+/** An SDK `MCPServerConfig`, or one with context-derived `headers`/`env`. */
+export type CopilotMCPServerConfig = MCPServerConfig | CopilotMCPStdioServerConfig | CopilotMCPHTTPServerConfig;
+
 export type Instructions =
   | string
   | { mode: "append" | "replace"; content: string }
@@ -182,7 +200,8 @@ export interface CopilotAgentDefinition {
   /** BYOK provider. */
   provider?: ProviderConfig;
   tools?: ToolInput[];
-  mcpServers?: Record<string, MCPServerConfig>;
+  /** MCP servers keyed by name. `headers` (remote) and `env` (local) may be functions of the `CopilotContext`. */
+  mcpServers?: Record<string, CopilotMCPServerConfig>;
   /** Allow-list in SDK ToolSet syntax (`builtin:*`, `custom:*`, `mcp:server`, exact names). Mutually exclusive with `excludedTools`. */
   availableTools?: string[];
   excludedTools?: string[];

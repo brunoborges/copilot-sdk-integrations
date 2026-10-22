@@ -8,6 +8,7 @@ import { CopilotContextInterceptor } from "./copilot-context.interceptor.js";
 import { CopilotExceptionFilter, DisabledCopilotExceptionFilter } from "./copilot-exception.filter.js";
 import { CopilotExplorer } from "./copilot.explorer.js";
 import { CopilotHealthIndicator } from "./copilot.health.js";
+import { CopilotInfoService } from "./copilot.info.js";
 import { COPILOT_MODULE_OPTIONS, CopilotConfigurableModule } from "./copilot.module-definition.js";
 import type { CopilotClientAccessor, CopilotModuleOptions, CopilotToolSource } from "./interfaces.js";
 
@@ -31,6 +32,7 @@ export class CopilotFeatureModule {}
     CopilotClientManager,
     CopilotAgents,
     CopilotHealthIndicator,
+    CopilotInfoService,
     CopilotContextInterceptor,
     {
       provide: COPILOT,
@@ -57,6 +59,7 @@ export class CopilotFeatureModule {}
     CopilotClientManager,
     CopilotAgents,
     CopilotHealthIndicator,
+    CopilotInfoService,
     CopilotExplorer,
   ],
 })

@@ -73,6 +73,26 @@ export interface CopilotContextOptions {
   abortOnDisconnect?: boolean;
 }
 
+/**
+ * Contributes ambient context to agent calls from another context store (e.g. `nestjs-cls`), for
+ * HTTP and non-HTTP entry points alike. Register it as `COPILOT_CONTEXT_BRIDGE` (a bridge or an array).
+ */
+export interface CopilotContextBridge {
+  /**
+   * Called synchronously when an agent method or handle is invoked. The result is merged over the
+   * ambient context (e.g. the one set by `CopilotContextInterceptor`); explicit `context` send options still win.
+   */
+  capture(): Partial<CopilotContext> | undefined;
+  /** Runs a tool, hook, event listener, or permission policy provider with the captured state restored. */
+  restore?<R>(context: CopilotContext | undefined, fn: () => R): R;
+}
+
+/** Re-emission of Copilot events on `@nestjs/event-emitter`'s `EventEmitter2`. */
+export interface CopilotEventEmitterOptions {
+  /** Event name prefix: events are emitted as `<prefix>.<event.type>`. Default `"copilot"`. */
+  prefix?: string;
+}
+
 /** What a custom `copilotFactory` returns. */
 export interface CopilotInstance {
   copilot: Copilot;
@@ -91,6 +111,17 @@ export interface CopilotModuleOptions extends CopilotOptions {
   shutdownGracePeriod?: number;
   /** Request context capture. `false` disables the global `CopilotContextInterceptor`. */
   context?: CopilotContextOptions | false;
+  /**
+   * Base directory for relative `@UserMessageFrom()` template paths. Default: `process.cwd()`.
+   * Absolute paths and `file:` URLs (`new URL("./prompt.md", import.meta.url)`) are used as is.
+   */
+  templatesDir?: string;
+  /**
+   * Re-emit every Copilot event on the application's `EventEmitter2` (`@nestjs/event-emitter`, which
+   * must be installed and `EventEmitterModule.forRoot()` imported) as `copilot.<event.type>`, with
+   * `(event, context)` as arguments. Default: false.
+   */
+  eventEmitter?: boolean | CopilotEventEmitterOptions;
   /** Register `CopilotExceptionFilter` globally. Default: true. */
   exceptionFilter?: boolean;
   /** Advanced: create the core `Copilot` yourself (the testing module uses this). */

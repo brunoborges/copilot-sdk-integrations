@@ -75,6 +75,8 @@ const optionsSchema = z
       ])
       .optional(),
     exceptionFilter: z.boolean().optional(),
+    templatesDir: nonBlank.optional(),
+    eventEmitter: z.union([z.boolean(), z.strictObject({ prefix: nonBlank.optional() })]).optional(),
   })
   .superRefine((value, ctx) => {
     if (value.cliPath !== undefined && value.cliUrl !== undefined) {

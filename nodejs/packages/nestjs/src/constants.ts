@@ -9,6 +9,14 @@ export const COPILOT_SESSION_CUSTOMIZER = Symbol.for("@copilot-sdk-integrations/
 /** Optional provider: the default permission policy for agents that don't declare one. */
 export const COPILOT_PERMISSION_POLICY = Symbol.for("@copilot-sdk-integrations/nestjs:PermissionPolicy");
 
+/**
+ * Optional provider: a `CopilotContextBridge` (or an array of them) contributing ambient context
+ * (e.g. from `nestjs-cls`) to agent calls. `CopilotClsModule` from `@copilot-sdk-integrations/nestjs/cls` registers one.
+ */
+export const COPILOT_CONTEXT_BRIDGE = Symbol.for("@copilot-sdk-integrations/nestjs:ContextBridge");
+/** Optional provider: `CopilotInfoOptions` for `CopilotInfoController`. */
+export const COPILOT_INFO_OPTIONS = Symbol.for("@copilot-sdk-integrations/nestjs:InfoOptions");
+
 /** Injection token of a functional agent registered with `CopilotModule.forFeature([defineAgent(...)])`. */
 export function getAgentToken(name: string): string {
   return `CopilotAgent:${name}`;

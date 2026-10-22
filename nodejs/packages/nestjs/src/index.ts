@@ -8,11 +8,15 @@ export {
   COPILOT_CLIENT_CUSTOMIZER,
   COPILOT_SESSION_CUSTOMIZER,
   COPILOT_PERMISSION_POLICY,
+  COPILOT_CONTEXT_BRIDGE,
+  COPILOT_INFO_OPTIONS,
   getAgentToken,
 } from "./constants.js";
 export type {
   CopilotModuleOptions,
   CopilotContextOptions,
+  CopilotContextBridge,
+  CopilotEventEmitterOptions,
   CopilotAgentOverrides,
   CopilotClientAccessor,
   CopilotClientCustomizer,
@@ -58,7 +62,13 @@ export {
   type CopilotHookOptions,
   type CopilotEventType,
 } from "./decorators/tool.decorators.js";
-export { CopilotAgents, type CopilotBoundAgent, type BindOptions, type CopilotAgentClass } from "./copilot-agents.service.js";
+export {
+  CopilotAgents,
+  resolveTemplatePath,
+  type CopilotBoundAgent,
+  type BindOptions,
+  type CopilotAgentClass,
+} from "./copilot-agents.service.js";
 export { CopilotClientManager, nestCopilotLogger } from "./copilot-client.manager.js";
 export { CopilotExplorer } from "./copilot.explorer.js";
 export { CopilotContextInterceptor, copilotContextFromRequest, defaultPrincipal } from "./copilot-context.interceptor.js";
@@ -69,6 +79,15 @@ export {
   type CopilotHttpError,
 } from "./copilot-exception.filter.js";
 export { CopilotHealthIndicator, type CopilotHealthResult } from "./copilot.health.js";
+export {
+  CopilotInfoService,
+  CopilotInfoController,
+  CopilotInfoModule,
+  type CopilotInfo,
+  type CopilotAgentInfo,
+  type CopilotInfoOptions,
+  type CopilotInfoModuleOptions,
+} from "./copilot.info.js";
 export { CopilotTokenResolver, PassportGitHubTokenResolver } from "./token-resolver.js";
 export { observeAgentStream, fromAsyncIterable, serializeAgentEvent, toMessageEvent, toSseEvents } from "./streaming.js";
 export { validateModuleOptions } from "./options.js";

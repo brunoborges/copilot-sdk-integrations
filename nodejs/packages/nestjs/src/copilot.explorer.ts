@@ -1,7 +1,7 @@
-import { CopilotConfigurationError, composeHooks, type CopilotAgentEvent, type CopilotContext, type ToolCallInfo, type ToolInput, type CopilotToolDefinition } from "@copilot-sdk-integrations/core";
+import { CopilotConfigurationError, composeHooks, getCopilotContext, type CopilotAgentEvent, type CopilotContext, type ToolCallInfo, type ToolInput, type CopilotToolDefinition } from "@copilot-sdk-integrations/core";
 import { Inject, Injectable, Logger, Scope, type Type } from "@nestjs/common";
 import { ContextIdFactory, DiscoveryService, MetadataScanner, ModuleRef } from "@nestjs/core";
-import { EVENT_LISTENER_METADATA, HOOK_METADATA, TOOL_INTERCEPTORS_METADATA, TOOL_METADATA } from "./constants.js";
+import { COPILOT_CONTEXT_BRIDGE, EVENT_LISTENER_METADATA, HOOK_METADATA, TOOL_INTERCEPTORS_METADATA, TOOL_METADATA } from "./constants.js";
 import type {
   CopilotEventType,
   CopilotHookMetadata,
@@ -10,7 +10,7 @@ import type {
   CopilotToolInterceptorRef,
   CopilotToolOptions,
 } from "./decorators/tool.decorators.js";
-import type { CopilotToolSource, SessionHooks } from "./interfaces.js";
+import type { CopilotContextBridge, CopilotToolSource, SessionHooks } from "./interfaces.js";
 
 interface DiscoveredHook extends CopilotHookMetadata {
   handler: (...args: unknown[]) => unknown;
@@ -38,6 +38,7 @@ export class CopilotExplorer {
   private readonly toolCache = new Map<Type<unknown>, CopilotToolDefinition[]>();
   private hooks?: DiscoveredHook[];
   private listeners?: DiscoveredListener[];
+  private bridges?: CopilotContextBridge[];
   /** One DI context per turn for request-scoped/transient tool providers. */
   private readonly turnContexts = new WeakMap<AbortSignal, ReturnType<typeof ContextIdFactory.create>>();
 
@@ -46,6 +47,29 @@ export class CopilotExplorer {
     @Inject(MetadataScanner) private readonly scanner: MetadataScanner,
     @Inject(ModuleRef) private readonly moduleRef: ModuleRef,
   ) {}
+
+  /** Ambient context contributed by `COPILOT_CONTEXT_BRIDGE` providers (merged in order), or `undefined`. */
+  captureContext(): Partial<CopilotContext> | undefined {
+    let result: Partial<CopilotContext> | undefined;
+    for (const bridge of this.contextBridges()) {
+      const captured = bridge.capture();
+      if (!captured) continue;
+      const defined = Object.fromEntries(Object.entries(captured).filter(([, v]) => v !== undefined)) as Partial<CopilotContext>;
+      result = { ...result, ...defined, attributes: { ...(result?.attributes ?? {}), ...(captured.attributes ?? {}) } };
+    }
+    return result;
+  }
+
+  /** Runs `fn` with the state captured by `COPILOT_CONTEXT_BRIDGE` providers restored (e.g. the CLS store). */
+  restoreContext<R>(context: CopilotContext | undefined, fn: () => R): R {
+    const bridges = this.contextBridges().filter((b) => typeof b.restore === "function");
+    return bridges.reduceRight<() => R>((next, bridge) => () => bridge.restore!(context, next), fn)();
+  }
+
+  private contextBridges(): CopilotContextBridge[] {
+    this.bridges ??= [resolveOptional<CopilotContextBridge | CopilotContextBridge[]>(this.moduleRef, COPILOT_CONTEXT_BRIDGE) ?? []].flat();
+    return this.bridges;
+  }
 
   /** Converts tool sources (provider classes or core tool inputs) to core tool inputs. Classes are deduplicated. */
   toTools(sources: readonly CopilotToolSource[]): ToolInput[] {
@@ -95,7 +119,7 @@ export class CopilotExplorer {
       const definition: CopilotToolDefinition = {
         name,
         description: options.description,
-        execute: async (input: unknown, invocation: ToolCallInfo) => {
+        execute: (input: unknown, invocation: ToolCallInfo) => this.restoreContext(invocation.context, async () => {
           const instance = staticInstance ?? (await this.resolveScoped(providerClass, invocation));
           const call = () => Promise.resolve((instance as Record<string, (...a: unknown[]) => unknown>)[methodName](input, invocation));
           if (interceptors.length === 0) return call();
@@ -103,7 +127,7 @@ export class CopilotExplorer {
           const run = (index: number): Promise<unknown> =>
             index >= interceptors.length ? call() : Promise.resolve(interceptors[index].intercept(context, () => run(index + 1)));
           return run(0);
-        },
+        }),
       };
       if (options.input !== undefined) definition.input = options.input;
       if (options.skipPermission !== undefined) definition.skipPermission = options.skipPermission;
@@ -147,7 +171,7 @@ export class CopilotExplorer {
     for (const listener of this.discoverListeners()) {
       if (!listener.types.includes("*") && !listener.types.includes(event.type)) continue;
       try {
-        const result = listener.handler(event, context);
+        const result = this.restoreContext(context, () => listener.handler(event, context));
         if (result && typeof (result as Promise<unknown>).then === "function") {
           (result as Promise<unknown>).catch((error) => this.listenerFailed(listener.name, error));
         }
@@ -167,7 +191,11 @@ export class CopilotExplorer {
       this.scanProviders((instance, prototype, method) => {
         const metadata: CopilotHookMetadata[] | undefined = Reflect.getMetadata(HOOK_METADATA, prototype, method);
         for (const hook of metadata ?? []) {
-          hooks.push({ ...hook, handler: (...args) => (instance as Record<string, (...a: unknown[]) => unknown>)[method](...args) });
+          hooks.push({
+            ...hook,
+            handler: (...args) =>
+              this.restoreContext(getCopilotContext(), () => (instance as Record<string, (...a: unknown[]) => unknown>)[method](...args)),
+          });
         }
       });
       this.hooks = hooks;

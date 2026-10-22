@@ -96,6 +96,51 @@ describe("send()", () => {
     expect(config.onPermissionRequest).toBeTypeOf("function");
   });
 
+  it("resolves MCP headers and env from the request context on every session", async () => {
+    const { fake, copilot } = setup({ tokenResolver: (ctx) => `token-${ctx.principal}` });
+    const agent = copilot.agent({
+      name: "mcp",
+      mcpServers: {
+        remote: {
+          type: "http",
+          url: "http://mcp",
+          headers: {
+            Authorization: (ctx) => (ctx.githubToken ? `Bearer ${ctx.githubToken}` : undefined),
+            "X-Static": "1",
+            "X-Missing": (ctx) => ctx.attributes.missing as string | undefined,
+          },
+        },
+        local: { command: "mcp-local", env: async (ctx) => ({ TENANT: String(ctx.attributes.tenant), DROP: undefined }) },
+        plain: { type: "http", url: "http://plain", headers: { A: "b" } },
+      },
+    });
+    await agent.send({ prompt: "x", context: { principal: "alice", attributes: { tenant: "t1" } } });
+    await runWithCopilotContext({ principal: "bob", attributes: { tenant: "t2" } }, () => agent.send({ prompt: "y" }));
+    const [first, second] = fake.created.map((c) => c.mcpServers as Record<string, Record<string, unknown>>);
+    expect(first!.remote).toEqual({ type: "http", url: "http://mcp", headers: { Authorization: "Bearer token-alice", "X-Static": "1" } });
+    expect(first!.local).toEqual({ command: "mcp-local", env: { TENANT: "t1" } });
+    expect(first!.plain).toEqual({ type: "http", url: "http://plain", headers: { A: "b" } });
+    expect(second!.remote!.headers).toEqual({ Authorization: "Bearer token-bob", "X-Static": "1" });
+    expect(second!.local!.env).toEqual({ TENANT: "t2" });
+  });
+
+  it("fails the turn when an MCP header function throws", async () => {
+    const { copilot } = setup();
+    const agent = copilot.agent({
+      name: "mcpfail",
+      mcpServers: {
+        remote: {
+          type: "http",
+          url: "http://mcp",
+          headers: () => {
+            throw new Error("no token");
+          },
+        },
+      },
+    });
+    await expect(agent.send({ prompt: "x" })).rejects.toThrow(/MCP server "remote": resolving headers failed: no token/);
+  });
+
   it("keeps explicit availableTools and enables built-ins when asked", async () => {
     const { fake, copilot } = setup();
     await copilot.agent({ name: "a1", availableTools: ["custom:*", "builtin:view"], builtInTools: true }).send({ prompt: "x" });

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { ResumeSessionConfig, SessionConfig, SessionEvent, SessionHooks, SystemMessageConfig } from "@github/copilot-sdk";
+import type { MCPServerConfig, ResumeSessionConfig, SessionConfig, SessionEvent, SessionHooks, SystemMessageConfig } from "@github/copilot-sdk";
 import type { CopilotRuntime } from "./client.js";
 import { bindCopilotContext, getCopilotContext, runWithCopilotContext } from "./context.js";
 import { abortReason, deriveSessionId } from "./conversation.js";
@@ -22,8 +22,10 @@ import type {
   AgentHandle,
   BoundConversation,
   ClientLike,
+  ContextualStringMap,
   ConversationMode,
   CopilotAgentDefinition,
+  CopilotMCPServerConfig,
   CopilotAgentEvent,
   CopilotContext,
   Instructions,
@@ -358,7 +360,7 @@ async function executeTurn(
   if (def.provider !== undefined) config.provider = def.provider;
   const systemMessage = toSystemMessage(def.instructions);
   if (systemMessage !== undefined) config.systemMessage = systemMessage;
-  if (def.mcpServers !== undefined) config.mcpServers = def.mcpServers;
+  if (def.mcpServers !== undefined) config.mcpServers = await raceAbort(resolveMcpServers(def.mcpServers, context), signal);
   if (def.customAgents !== undefined) config.customAgents = def.customAgents;
   if (def.infiniteSessions !== undefined) config.infiniteSessions = { enabled: def.infiniteSessions };
   const hooks = bindHooks(composeHooks(runtime.options.hooks, def.hooks));
@@ -518,6 +520,38 @@ export function responseJsonSchema(schema: StructuredSchema<unknown>): { jsonSch
     jsonSchema: { type: "object", properties: { value: json }, required: ["value"], additionalProperties: false },
     wrapped: true,
   };
+}
+
+/** Resolves context-derived MCP `headers`/`env` for the session being created or resumed. */
+export async function resolveMcpServers(
+  servers: Record<string, CopilotMCPServerConfig>,
+  context: CopilotContext,
+): Promise<Record<string, MCPServerConfig>> {
+  const result: Record<string, MCPServerConfig> = {};
+  for (const [name, server] of Object.entries(servers)) {
+    const resolved: Record<string, unknown> = { ...server };
+    for (const key of ["headers", "env"] as const) {
+      const value = (server as Record<string, unknown>)[key] as ContextualStringMap | undefined;
+      if (value === undefined) continue;
+      try {
+        resolved[key] = await resolveStringMap(value, context);
+      } catch (error) {
+        throw new CopilotConfigurationError(`MCP server "${name}": resolving ${key} failed: ${messageOf(error)}`, { cause: error });
+      }
+    }
+    result[name] = resolved as unknown as MCPServerConfig;
+  }
+  return result;
+}
+
+async function resolveStringMap(value: ContextualStringMap, context: CopilotContext): Promise<Record<string, string>> {
+  const entries = typeof value === "function" ? Object.entries((await value(context)) ?? {}) : Object.entries(value);
+  const result: Record<string, string> = {};
+  for (const [key, entry] of entries) {
+    const resolved = typeof entry === "function" ? await entry(context) : entry;
+    if (resolved !== undefined && resolved !== null) result[key] = String(resolved);
+  }
+  return result;
 }
 
 async function openSession(

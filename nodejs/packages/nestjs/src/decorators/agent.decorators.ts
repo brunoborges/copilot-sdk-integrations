@@ -46,7 +46,7 @@ export interface ParamMetadata {
 }
 export interface UserMessageMetadata extends Omit<UserMessageOptions, "template"> {
   template?: string;
-  templateFile?: string;
+  templateFile?: string | URL;
 }
 
 /** Declares an agent class whose `@UserMessage` methods are implemented by `CopilotModule`. */
@@ -68,8 +68,13 @@ export function UserMessage(
   };
 }
 
-/** Like `@UserMessage(template)`, with the template loaded from a file (relative to the working directory) at bootstrap. */
-export function UserMessageFrom(path: string, options: Omit<UserMessageOptions, "template"> = {}): MethodDecorator {
+/**
+ * Like `@UserMessage(template)`, with the template loaded from a file at bootstrap. Relative paths
+ * resolve against the `templatesDir` module option (default: `process.cwd()`); absolute paths and
+ * `file:` URLs are used as is, so `@UserMessageFrom(new URL("./prompt.md", import.meta.url))` loads
+ * a template next to the agent's source file.
+ */
+export function UserMessageFrom(path: string | URL, options: Omit<UserMessageOptions, "template"> = {}): MethodDecorator {
   const resolved: UserMessageMetadata = { ...options, templateFile: path };
   return (target, key) => {
     Reflect.defineMetadata(USER_MESSAGE_METADATA, resolved, target, key);

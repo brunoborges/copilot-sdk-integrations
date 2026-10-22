@@ -518,5 +518,22 @@ Where the code differs from the sections above:
   phase 4.
 - **AI SDK provider.** Tools passed to `generateText`/`streamText` are rejected;
   declare them on the agent definition.
-- **Not yet implemented:** `nestjs-cls` integration, the info controller,
-  `@nestjs/event-emitter` re-emission, and the example apps listed in the roadmap.
+- **`nestjs-cls`.** Opt-in through `CopilotClsModule.forRoot()` from the
+  `@copilot-sdk-integrations/nestjs/cls` subpath, so the main entry never loads
+  `nestjs-cls`. The context is read from CLS when an agent is called, not by the
+  interceptor, so non-HTTP entry points work too. The CLS store is restored around DI
+  tools, hooks, listeners, and injectable policies. It is not restored around plain
+  core tool objects, or for calls through the raw `@InjectCopilot()` facade.
+  `CopilotClsModule` is built on a generic `COPILOT_CONTEXT_BRIDGE` provider.
+- **Info endpoint.** It is a separately imported `CopilotInfoModule.register({ path,
+  guards })` rather than a `forRoot` flag. It reports in-flight turns from
+  `capacity.activeTurns` rather than a list of sessions.
+- **Event re-emission.** Opt-in with `eventEmitter: true | { prefix }`; events are
+  named `copilot.<core event type>` (for example `copilot.tool-end`), not raw SDK
+  event names. `@nestjs/event-emitter` is loaded with a dynamic import.
+- **MCP credentials.** Contextual `headers` and `env` (§13) are resolved in the core
+  on every session create and resume.
+- **Template files.** `@UserMessageFrom` resolves relative paths against the
+  `templatesDir` option, which defaults to `process.cwd()`. It also accepts absolute
+  paths and `file:` URLs (`new URL("./x.md", import.meta.url)`).
+- **Not yet implemented:** the example apps listed in the roadmap.
