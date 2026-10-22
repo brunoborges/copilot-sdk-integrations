@@ -15,10 +15,11 @@ injection, lifecycle management, security context, observability, and testing.
 | --- | --- | --- | --- |
 | Java | [Spring Boot](https://spring.io/projects/spring-boot) | [`spring-boot/`](spring-boot/) | Available (unreleased) |
 | Java | [Quarkus](https://quarkus.io/) | [`quarkus/`](quarkus/) | Available (unreleased) |
-| .NET | ASP.NET Core / Generic Host, [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`, .NET Aspire | `dotnet/` | Under consideration |
-| Python | [Django](https://www.djangoproject.com/) | [`python/django/`](python/django/) | Preview (M1–M2 of [DESIGN.md](python/django/DESIGN.md)) |
+| .NET | Generic Host / ASP.NET Core ([Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`) | [`dotnet/`](dotnet/) | Preview, not yet on NuGet ([docs](https://brunoborges.github.io/copilot-sdk-integrations/dotnet/), [design](dotnet/docs/design.md)) |
+| Polyglot (C# AppHost; .NET, Java, Node.js, Python services) | [Aspire](https://aspire.dev/) (AppHost runtime resource + .NET client integration, builds on `dotnet`) | [`aspire/`](aspire/) | Preview, not yet on NuGet ([docs](https://brunoborges.github.io/copilot-sdk-integrations/aspire/), [design](aspire/docs/design.md)) |
+| Python | [Django](https://www.djangoproject.com/) | [`python/django/`](python/django/) | Preview, not yet on PyPI ([docs](https://brunoborges.github.io/copilot-sdk-integrations/django/), [design](python/django/DESIGN.md)) |
 | Python | [FastAPI](https://fastapi.tiangolo.com/) | `python/` | Under consideration |
-| Node.js | [NestJS](https://nestjs.com/), [Vercel AI SDK](https://ai-sdk.dev/) provider | `nodejs/` | Under consideration |
+| Node.js / TypeScript | [NestJS](https://nestjs.com/), framework-agnostic core, [AI SDK](https://ai-sdk.dev/) adapter | [`nodejs/`](nodejs/) | In development ([DESIGN.md](nodejs/DESIGN.md)) |
 
 ## Design goals
 
@@ -54,6 +55,9 @@ documentation landing page) live at the root.
 ├── java-core/     # Shared Java agent API and engine (copilot-agent-core)
 ├── spring-boot/   # Spring Boot starter (Java, Maven)
 ├── quarkus/       # Quarkus extension (Java, Maven)
+├── dotnet/        # .NET integration for business apps (preview)
+├── aspire/        # Aspire integration (.NET) (preview)
+├── nodejs/        # Node.js core, NestJS module, and AI SDK adapter (TypeScript; in development)
 └── .github/       # CI workflows and documentation landing page
 ```
 

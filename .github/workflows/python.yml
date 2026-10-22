@@ -44,3 +44,20 @@ jobs:
       - name: Test Django example
         working-directory: python/django/example
         run: ../../.venv/bin/python manage.py test
+
+  site:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python/django/site
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: python/django/site/package-lock.json
+      - name: Build documentation site
+        run: |
+          npm ci
+          npm run build

@@ -1,0 +1,21 @@
+<Project>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>Bruno Borges</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/brunoborges/copilot-sdk-integrations</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/brunoborges/copilot-sdk-integrations</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>github;copilot;sdk;ai;agents;hosting;dependency-injection;microsoft-extensions-ai</PackageTags>
+  </PropertyGroup>
+
+</Project>

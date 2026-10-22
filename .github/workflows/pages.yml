@@ -29,6 +29,15 @@ jobs:
             spring-boot/**/pom.xml
             quarkus/**/pom.xml
             java-core/pom.xml
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            nodejs/package-lock.json
+            dotnet/site/package-lock.json
+            aspire/site/package-lock.json
+            python/django/site/package-lock.json
       - uses: actions/configure-pages@v6
       - name: Build Spring Boot documentation site
         working-directory: spring-boot
@@ -40,12 +49,36 @@ jobs:
         run: |
           ./mvnw --batch-mode --no-transfer-progress -pl site-skin -am install
           ./mvnw --batch-mode --no-transfer-progress -N site
+      - name: Build Node.js documentation site
+        working-directory: nodejs
+        run: |
+          npm ci
+          npm run site
+      - name: Build .NET documentation site
+        working-directory: dotnet/site
+        run: |
+          npm ci
+          npm run build
+      - name: Build Aspire documentation site
+        working-directory: aspire/site
+        run: |
+          npm ci
+          npm run build
+      - name: Build Django documentation site
+        working-directory: python/django/site
+        run: |
+          npm ci
+          npm run build
       - name: Assemble site
         run: |
           mkdir -p _site
           cp -R spring-boot/target/site _site/spring-boot
           cp -R quarkus/target/site _site/quarkus
-          cp .github/pages/index.html _site/index.html
+          cp -R nodejs/site/dist _site/nodejs
+          cp -R dotnet/site/dist _site/dotnet
+          cp -R aspire/site/dist _site/aspire
+          cp -R python/django/site/dist _site/django
+          cp .github/pages/index.html .github/pages/dotnet-bot.png _site/
       - uses: actions/upload-pages-artifact@v5
         with:
           path: _site

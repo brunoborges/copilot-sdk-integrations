@@ -48,7 +48,7 @@ class Decision(BaseModel):
     reason: str
 
 class SupportAgent(CopilotAgent):
-    instructions = "You are the support agent for {{ settings.SITE_NAME }}."
+    instructions = "You are a support agent. Be concise."
     tools = [lookup_order, refund_order]
     built_in_tools = False
     permissions = policies.allow_registered_tools()
@@ -73,7 +73,7 @@ async def chat(request, pk):
 
 ## Features
 
-- **Agents** — `CopilotAgent` subclasses with `instructions` (a Django template), `model`,
+- **Agents** — `CopilotAgent` subclasses with `instructions` (or `instructions_template`), `model`,
   `tools`, `mcp_servers`, `available_tools` / `excluded_tools`, `built_in_tools`,
   `permissions`, `hooks`, `working_directory`, `provider`, `token_resolver`. Any attribute can
   be overridden per environment in `COPILOT["AGENTS"]["<name>"]`.

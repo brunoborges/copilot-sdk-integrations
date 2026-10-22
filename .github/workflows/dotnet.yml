@@ -1,0 +1,55 @@
+name: .NET
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dotnet/**'
+      - 'aspire/**'
+      - '.github/workflows/dotnet.yml'
+  pull_request:
+    paths:
+      - 'dotnet/**'
+      - 'aspire/**'
+      - '.github/workflows/dotnet.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: dotnet
+            dir: dotnet
+            solution: CopilotSdk.slnx
+          - name: aspire   # references dotnet by project
+            dir: aspire
+            solution: CopilotSdk.Aspire.slnx
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}   # global.json opts into Microsoft.Testing.Platform
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: ${{ matrix.dir }}/global.json
+          cache: true
+          cache-dependency-path: ${{ matrix.dir }}/**/*.csproj
+      - name: Build
+        run: dotnet build ${{ matrix.solution }} -c Release
+      - name: Test
+        run: dotnet test --solution ${{ matrix.solution }} -c Release --no-build
