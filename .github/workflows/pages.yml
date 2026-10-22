@@ -26,9 +26,9 @@ jobs:
           java-version: '21'
           cache: maven
           cache-dependency-path: |
-            spring-boot/**/pom.xml
-            quarkus/**/pom.xml
-            java-core/pom.xml
+            java/spring-boot/**/pom.xml
+            java/quarkus/**/pom.xml
+            java/java-core/pom.xml
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
@@ -39,12 +39,12 @@ jobs:
             aspire/site/package-lock.json
       - uses: actions/configure-pages@v6
       - name: Build Spring Boot documentation site
-        working-directory: spring-boot
+        working-directory: java/spring-boot
         run: |
           ./mvnw --batch-mode --no-transfer-progress -pl copilot-spring-boot-site-skin -am install
           ./mvnw --batch-mode --no-transfer-progress -N site
       - name: Build Quarkus documentation site
-        working-directory: quarkus
+        working-directory: java/quarkus
         run: |
           ./mvnw --batch-mode --no-transfer-progress -pl site-skin -am install
           ./mvnw --batch-mode --no-transfer-progress -N site
@@ -66,8 +66,8 @@ jobs:
       - name: Assemble site
         run: |
           mkdir -p _site
-          cp -R spring-boot/target/site _site/spring-boot
-          cp -R quarkus/target/site _site/quarkus
+          cp -R java/spring-boot/target/site _site/spring-boot
+          cp -R java/quarkus/target/site _site/quarkus
           cp -R nodejs/site/dist _site/nodejs
           cp -R dotnet/site/dist _site/dotnet
           cp -R aspire/site/dist _site/aspire

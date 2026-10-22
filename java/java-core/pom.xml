@@ -9,7 +9,7 @@
     <name>Copilot Agent Core</name>
     <description>Framework-neutral declarative agent API and engine for the GitHub Copilot SDK for Java, shared by the
         Spring Boot and Quarkus integrations</description>
-    <url>https://github.com/brunoborges/copilot-sdk-integrations/tree/main/core</url>
+    <url>https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/java-core</url>
 
     <licenses>
         <license>

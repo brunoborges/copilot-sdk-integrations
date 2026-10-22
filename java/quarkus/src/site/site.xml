@@ -97,7 +97,7 @@ html[data-theme="dark"] {
 <script defer="defer" src="./js/site.js"></script>
         ]]></head>
         <links>
-            <item name="GitHub" href="https://github.com/brunoborges/copilot-sdk-integrations/tree/main/quarkus"/>
+            <item name="GitHub" href="https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/quarkus"/>
             <item name="Copilot Java SDK" href="https://github.com/github/copilot-sdk/tree/main/java"/>
         </links>
         <menu name="Start here">

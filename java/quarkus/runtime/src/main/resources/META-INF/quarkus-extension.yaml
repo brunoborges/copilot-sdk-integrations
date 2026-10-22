@@ -7,7 +7,7 @@ metadata:
     - "ai"
     - "agent"
     - "llm"
-  guide: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/quarkus"
+  guide: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/quarkus"
   categories:
     - "ai"
   status: "experimental"

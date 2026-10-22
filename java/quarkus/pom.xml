@@ -9,7 +9,7 @@
     <packaging>pom</packaging>
     <name>Copilot Quarkus - Parent</name>
     <description>Quarkus extension for the GitHub Copilot SDK for Java</description>
-    <url>https://github.com/brunoborges/copilot-sdk-integrations/tree/main/quarkus</url>
+    <url>https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/quarkus</url>
 
     <licenses>
         <license>

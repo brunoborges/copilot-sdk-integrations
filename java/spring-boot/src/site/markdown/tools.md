@@ -64,7 +64,7 @@ integration does not substitute another schema engine.
 Annotation-based tooling is experimental in SDK 1.0.24. If also using the SDK's
 experimental-API checker, follow its opt-in requirements. The complete build
 configuration is demonstrated in
-[the example POM](https://github.com/brunoborges/copilot-sdk-integrations/blob/main/spring-boot/copilot-spring-boot-example/pom.xml).
+[the example POM](https://github.com/brunoborges/copilot-sdk-integrations/blob/main/java/spring-boot/copilot-spring-boot-example/pom.xml).
 
 <a id="proxies-and-permissions"></a>
 

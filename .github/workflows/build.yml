@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'java-core/**'
-      - 'spring-boot/**'
+      - 'java/java-core/**'
+      - 'java/spring-boot/**'
       - '.github/workflows/build.yml'
   pull_request:
     paths:
-      - 'java-core/**'
-      - 'spring-boot/**'
+      - 'java/java-core/**'
+      - 'java/spring-boot/**'
       - '.github/workflows/build.yml'
   workflow_dispatch:
 
@@ -19,7 +19,7 @@ permissions:
 
 defaults:
   run:
-    working-directory: spring-boot
+    working-directory: java/spring-boot
 
 jobs:
   build:
@@ -32,8 +32,8 @@ jobs:
           java-version: '21'
           cache: maven
           cache-dependency-path: |
-            spring-boot/**/pom.xml
-            java-core/pom.xml
+            java/spring-boot/**/pom.xml
+            java/java-core/pom.xml
       - name: Build
         run: ./mvnw --batch-mode --no-transfer-progress verify
       - name: Install documentation skin
