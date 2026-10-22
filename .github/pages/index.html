@@ -239,7 +239,7 @@
     .code {
       margin-top: 3.5rem;
       display: grid;
-      grid-template-columns: 1fr 1.4fr;
+      grid-template-columns: 1fr 1.6fr;
       gap: 2rem;
       align-items: center;
     }
@@ -267,7 +267,9 @@
     .window pre {
       margin: 0;
       padding: 1rem 1.1rem;
-      overflow-x: auto;
+      overflow: hidden;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
       color: var(--code-fg);
       font: 0.8125rem/1.6 ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
     }
@@ -445,12 +447,12 @@
           <span class="file">SpringAdvisor.java</span>
         </div>
 <pre><code><span class="tok-a">@CopilotAgent</span>(
-        name = <span class="tok-s">"spring-advisor"</span>,
-        instructions = <span class="tok-s">"Explain Spring Boot concepts concisely."</span>)
+    name = <span class="tok-s">"spring-advisor"</span>,
+    instructions = <span class="tok-s">"Explain Spring Boot concepts concisely."</span>)
 <span class="tok-k">public interface</span> <span class="tok-t">SpringAdvisor</span> {
     <span class="tok-t">CompletableFuture</span>&lt;<span class="tok-t">String</span>&gt; answer(
-            <span class="tok-a">@ConversationId</span> <span class="tok-t">String</span> conversationId,
-            <span class="tok-a">@UserMessage</span> <span class="tok-t">String</span> question);
+        <span class="tok-a">@ConversationId</span> <span class="tok-t">String</span> conversationId,
+        <span class="tok-a">@UserMessage</span> <span class="tok-t">String</span> question);
 }</code></pre>
       </div>
     </section>
