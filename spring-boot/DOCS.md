@@ -4,7 +4,7 @@ The API and configuration reference is organized into focused Maven Site
 chapters. The chapter sources below are canonical; this file is the
 repository-friendly entry point.
 
-Website: [Copilot Spring Boot documentation](https://brunoborges.github.io/copilot-spring-boot/).
+Website: [Copilot Spring Boot documentation](https://brunoborges.github.io/copilot-sdk-integrations/spring-boot/).
 
 ## Table of contents
 

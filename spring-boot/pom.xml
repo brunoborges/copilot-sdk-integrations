@@ -17,7 +17,7 @@
     <packaging>pom</packaging>
     <name>Copilot Spring Boot</name>
     <description>Spring Boot integration foundation for the Copilot SDK for Java.</description>
-    <url>https://github.com/brunoborges/copilot-spring-boot</url>
+    <url>https://github.com/brunoborges/copilot-sdk-integrations/tree/main/spring-boot</url>
 
     <licenses>
         <license>

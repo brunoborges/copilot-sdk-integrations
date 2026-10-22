@@ -80,11 +80,11 @@ experimental in-process runtime setup support.
 
 Source entry points:
 
-- [Agent API package](https://github.com/brunoborges/copilot-spring-boot/tree/main/copilot-spring-boot-autoconfigure/src/main/java/io/github/brunoborges/copilot/agent)
-- [Client and agent property classes](https://github.com/brunoborges/copilot-spring-boot/tree/main/copilot-spring-boot-autoconfigure/src/main/java/io/github/brunoborges/copilot/autoconfigure)
-- [Reactor API and configuration](https://github.com/brunoborges/copilot-spring-boot/tree/main/copilot-spring-boot-reactor/src/main/java/io/github/brunoborges/copilot/reactor)
-- [Runnable examples](https://github.com/brunoborges/copilot-spring-boot/tree/main/copilot-spring-boot-example/src/main/java/io/github/brunoborges/copilot/example)
-- [Additional configuration metadata](https://github.com/brunoborges/copilot-spring-boot/blob/main/copilot-spring-boot-autoconfigure/src/main/resources/META-INF/additional-spring-configuration-metadata.json)
+- [Agent API package](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/spring-boot/copilot-spring-boot-autoconfigure/src/main/java/io/github/brunoborges/copilot/agent)
+- [Client and agent property classes](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/spring-boot/copilot-spring-boot-autoconfigure/src/main/java/io/github/brunoborges/copilot/autoconfigure)
+- [Reactor API and configuration](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/spring-boot/copilot-spring-boot-reactor/src/main/java/io/github/brunoborges/copilot/reactor)
+- [Runnable examples](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/spring-boot/copilot-spring-boot-example/src/main/java/io/github/brunoborges/copilot/example)
+- [Additional configuration metadata](https://github.com/brunoborges/copilot-sdk-integrations/blob/main/spring-boot/copilot-spring-boot-autoconfigure/src/main/resources/META-INF/additional-spring-configuration-metadata.json)
 
 ---
 
