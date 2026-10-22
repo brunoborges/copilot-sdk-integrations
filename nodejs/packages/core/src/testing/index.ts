@@ -22,3 +22,4 @@ export {
   type CreateTestCopilotOptions,
   type TestCopilot,
 } from "./copilot.js";
+export { parseSse, type SseFrame } from "./sse.js";

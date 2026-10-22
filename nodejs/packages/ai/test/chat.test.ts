@@ -8,7 +8,7 @@ import {
   type UIMessage,
   type UIMessageChunk,
 } from "ai";
-import { defineAgent, permissions } from "@copilot-sdk-integrations/core";
+import { defineAgent, permissions, runWithCopilotContext } from "@copilot-sdk-integrations/core";
 import { createApprovalStore, createCopilotChatResponse, fromUIMessages, streamCopilotChat } from "../src/index.js";
 import { collect, setup, types } from "./helpers.js";
 
@@ -144,6 +144,61 @@ describe("streamCopilotChat", () => {
       { type: "tool-output-error", toolCallId: "t1", errorText: expect.stringMatching(/expired/) },
       { type: "finish", finishReason: "stop" },
     ]);
+  });
+
+  describe("approval ownership", () => {
+    const expired = (chunks: UIMessageChunk[]) => {
+      expect(types(chunks)).toEqual(["start", "tool-output-error", "finish"]);
+      expect(chunks[1]).toMatchObject({ errorText: expect.stringMatching(/expired/) });
+    };
+
+    async function suspendFor(owner: { conversationId?: string; principal?: string }) {
+      const { copilot, runtime } = setup({ script: (rt) => rt.onPrompt(/order/).callTool("lookupOrder", { id: "7" }).thenReply("Order 7 shipped.") });
+      const agent = copilot.agent(support);
+      const approvals = createApprovalStore();
+      const first = user("u1", "Where is order 7?");
+      const conv = owner.conversationId === undefined ? {} : { conversationId: owner.conversationId };
+      const ctx = owner.principal === undefined ? {} : { context: { principal: owner.principal } };
+      const pending = await toMessage(streamCopilotChat({ agent, messages: [first], approvals, ...conv, ...ctx }));
+      const messages = [first, answer(pending, true)];
+      return { agent, runtime, approvals, messages, pending };
+    }
+
+    it("another principal cannot answer an approval", async () => {
+      const { agent, runtime, approvals, messages } = await suspendFor({ conversationId: "c1", principal: "alice" });
+      expired(await collect(streamCopilotChat({ agent, messages, conversationId: "c1", approvals, context: { principal: "mallory" } })));
+      expired(await collect(streamCopilotChat({ agent, messages, conversationId: "c1", approvals })));
+      expect(approvals.suspendedTurns).toBe(1);
+      expect(runtime.toolCalls.filter((call) => call.approved)).toHaveLength(0);
+
+      const chunks = await collect(streamCopilotChat({ agent, messages, conversationId: "c1", approvals, context: { principal: "alice" } }));
+      expect(types(chunks)).toContain("tool-output-available");
+      expect(runtime.toolCalls).toMatchObject([{ name: "lookupOrder", approved: true }]);
+      expect(approvals.suspendedTurns).toBe(0);
+    });
+
+    it("another conversation cannot answer an approval", async () => {
+      const { agent, runtime, approvals, messages } = await suspendFor({ conversationId: "c1", principal: "alice" });
+      expired(await collect(streamCopilotChat({ agent, messages, conversationId: "c2", approvals, context: { principal: "alice" } })));
+      expired(await collect(streamCopilotChat({ agent, messages, approvals, context: { principal: "alice" } })));
+      expect(approvals.suspendedTurns).toBe(1);
+      expect(runtime.toolCalls.filter((call) => call.approved)).toHaveLength(0);
+    });
+
+    it("matches ephemeral approvals by principal, including the ambient context", async () => {
+      const { agent, runtime, approvals, messages } = await suspendFor({ principal: "alice" });
+      expired(await runWithCopilotContext({ principal: "bob" }, () => collect(streamCopilotChat({ agent, messages, approvals }))));
+      expect(approvals.suspendedTurns).toBe(1);
+      const chunks = await runWithCopilotContext({ principal: "alice" }, () => collect(streamCopilotChat({ agent, messages, approvals })));
+      expect(types(chunks)).toContain("tool-output-available");
+      expect(runtime.toolCalls).toMatchObject([{ approved: true }]);
+    });
+
+    it("a new message from another principal does not supersede the owner's turn", async () => {
+      const { agent, approvals } = await suspendFor({ conversationId: "c1", principal: "alice" });
+      await collect(streamCopilotChat({ agent, messages: [user("u9", "hello")], conversationId: "c1", approvals, context: { principal: "mallory" } }));
+      expect(approvals.suspendedTurns).toBe(1);
+    });
   });
 
   it("a new user message supersedes a suspended turn", async () => {

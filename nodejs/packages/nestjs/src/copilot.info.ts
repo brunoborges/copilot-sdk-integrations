@@ -1,4 +1,4 @@
-import { toSdkTools, type Copilot, type CopilotCapacity, type CopilotClientState } from "@copilot-sdk-integrations/core";
+import { describeAgent, type Copilot, type CopilotAgentInfo, type CopilotInfo } from "@copilot-sdk-integrations/core";
 import {
   Controller,
   Get,
@@ -20,30 +20,7 @@ export interface CopilotInfoOptions {
   includeInstructions?: boolean;
 }
 
-/** Read-only description of a registered agent. Never includes provider keys or MCP headers/env. */
-export interface CopilotAgentInfo {
-  name: string;
-  description?: string;
-  model?: string;
-  reasoningEffort?: string;
-  /** Named provider (`providers.<name>`), else the inline provider's `type` (or `"custom"`). */
-  provider?: string;
-  builtInTools: boolean;
-  tools: string[];
-  mcpServers: string[];
-  availableTools?: string[];
-  excludedTools?: string[];
-  instructions?: unknown;
-}
-
-export interface CopilotInfo {
-  state: CopilotClientState;
-  /** Runtime version, when the runtime is running. */
-  version?: string;
-  /** Admission capacity; `activeTurns` counts in-flight turns (active sessions). */
-  capacity: CopilotCapacity;
-  agents: CopilotAgentInfo[];
-}
+export type { CopilotAgentInfo, CopilotInfo } from "@copilot-sdk-integrations/core";
 
 /** Builds the info document (state, version, capacity, agents) without starting a lazy runtime. */
 @Injectable()
@@ -67,27 +44,10 @@ export class CopilotInfoService {
   }
 
   describeAgents(options: CopilotInfoOptions = {}): CopilotAgentInfo[] {
-    const providers = Object.entries(this.manager.options.providers ?? {});
-    return this.agents.names().map((name) => {
-      const def = this.agents.definition(name);
-      const info: CopilotAgentInfo = {
-        name: def.name,
-        builtInTools: def.builtInTools === true,
-        tools: [...toSdkTools(def.tools ?? []).customToolNames].sort(),
-        mcpServers: Object.keys(def.mcpServers ?? {}),
-      };
-      if (def.description !== undefined) info.description = def.description;
-      if (def.model !== undefined) info.model = def.model;
-      if (def.reasoningEffort !== undefined) info.reasoningEffort = def.reasoningEffort;
-      if (def.provider !== undefined) {
-        const named = providers.find(([, config]) => config === def.provider)?.[0];
-        info.provider = named ?? (def.provider as { type?: string }).type ?? "custom";
-      }
-      if (def.availableTools !== undefined) info.availableTools = [...def.availableTools];
-      if (def.excludedTools !== undefined) info.excludedTools = [...def.excludedTools];
-      if (options.includeInstructions && def.instructions !== undefined) info.instructions = def.instructions;
-      return info;
-    });
+    const providers = this.manager.options.providers ?? {};
+    return this.agents
+      .names()
+      .map((name) => describeAgent(this.agents.definition(name), { providers, includeInstructions: options.includeInstructions === true }));
   }
 }
 

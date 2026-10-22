@@ -17,3 +17,6 @@ export {
   buildToolFilterConfig,
   ALL_BUILT_IN_TOOLS,
 } from "./governance/index.js";
+export { copilotErrorToHttp, copilotErrorCode, CLIENT_CLOSED_REQUEST, type CopilotHttpError } from "./http.js";
+export { describeAgent, type CopilotAgentInfo, type CopilotInfo, type DescribeAgentOptions } from "./info.js";
+export { toSseStream, formatSseEvent, serializeAgentEvent, DEFAULT_SSE_HEARTBEAT_MS, type ToSseStreamOptions } from "./sse.js";

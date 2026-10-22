@@ -1,47 +1,9 @@
-import {
-  CopilotAbortedError,
-  CopilotAdmissionRejectedError,
-  CopilotConversationBusyError,
-  CopilotConversationExistsError,
-  CopilotConversationNotFoundError,
-  CopilotIntegrationError,
-  CopilotOutputValidationError,
-  CopilotRuntimeUnavailableError,
-  CopilotSessionError,
-  CopilotShuttingDownError,
-  CopilotTimeoutError,
-} from "@copilot-sdk-integrations/core";
+import { CopilotIntegrationError, copilotErrorToHttp } from "@copilot-sdk-integrations/core";
 import { Catch, HttpStatus, Inject, Logger, Optional, type ArgumentsHost, type ExceptionFilter } from "@nestjs/common";
 import { HttpAdapterHost } from "@nestjs/core";
 import { throwError, type Observable } from "rxjs";
 
-/** Status code used for turns cancelled by the client ("Client Closed Request"). */
-export const CLIENT_CLOSED_REQUEST = 499;
-
-export interface CopilotHttpError {
-  status: number;
-  headers: Record<string, string>;
-}
-
-/** Maps a core error to an HTTP status (and headers such as `Retry-After`). */
-export function copilotErrorToHttp(error: CopilotIntegrationError): CopilotHttpError {
-  if (error instanceof CopilotAdmissionRejectedError) {
-    return { status: HttpStatus.TOO_MANY_REQUESTS, headers: { "Retry-After": String(Math.max(0, Math.ceil(error.retryAfterSeconds))) } };
-  }
-  if (error instanceof CopilotConversationBusyError || error instanceof CopilotConversationExistsError) {
-    return { status: HttpStatus.CONFLICT, headers: {} };
-  }
-  if (error instanceof CopilotConversationNotFoundError) return { status: HttpStatus.NOT_FOUND, headers: {} };
-  if (error instanceof CopilotTimeoutError) return { status: HttpStatus.GATEWAY_TIMEOUT, headers: {} };
-  if (error instanceof CopilotAbortedError) return { status: CLIENT_CLOSED_REQUEST, headers: {} };
-  if (error instanceof CopilotRuntimeUnavailableError || error instanceof CopilotShuttingDownError) {
-    return { status: HttpStatus.SERVICE_UNAVAILABLE, headers: {} };
-  }
-  if (error instanceof CopilotSessionError || error instanceof CopilotOutputValidationError) {
-    return { status: HttpStatus.BAD_GATEWAY, headers: {} };
-  }
-  return { status: HttpStatus.INTERNAL_SERVER_ERROR, headers: {} };
-}
+export { copilotErrorToHttp, CLIENT_CLOSED_REQUEST, type CopilotHttpError } from "@copilot-sdk-integrations/core";
 
 /**
  * Maps `CopilotIntegrationError`s to HTTP responses (registered globally by `CopilotModule` unless
