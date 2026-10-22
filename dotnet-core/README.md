@@ -55,8 +55,7 @@ Highlights of the design:
   helpers.
 
 Running in [Aspire](https://aspire.dev/)? The [Aspire integration](../dotnet-aspire/)
-orchestrates the Copilot runtime and builds on this package. See
-[the Spring Boot starter](../spring-boot/) for the equivalent Java integration.
+orchestrates the Copilot runtime and builds on this package.
 
 ## License
 

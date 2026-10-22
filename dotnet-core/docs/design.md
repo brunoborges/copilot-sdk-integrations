@@ -6,8 +6,7 @@ Status: **Draft** · Targets: .NET 10 (`net8.0` where practical),
 This document proposes the **application-level** integration of the
 [GitHub Copilot SDK for .NET](https://github.com/github/copilot-sdk/tree/main/dotnet)
 for business applications built on the .NET Generic Host: ASP.NET Core APIs,
-worker services, background jobs, and Blazor apps. It is the .NET counterpart of
-the [Spring Boot starter](../../spring-boot/).
+worker services, background jobs, and Blazor apps.
 
 It is independent of Aspire. The [Aspire integration](../../dotnet-aspire/docs/design.md)
 orchestrates the Copilot runtime (AppHost) and adds a thin client layer *on top
@@ -80,27 +79,25 @@ The design is driven by these scenarios; each maps to a sample.
 
 ---
 
-## 3. Spring Boot → .NET mapping
+## 3. Capabilities at a glance
 
-| Spring Boot starter | .NET (this design) |
+| Capability | .NET design |
 | --- | --- |
-| Auto-configuration + `copilot.*` properties | `services.AddCopilot()` + `Copilot` configuration section, `IOptions<T>` with startup validation |
-| `CopilotClient` bean, lazy/eager | Singleton `CopilotClient` owned by a hosted lifecycle service, lazy by default |
-| `@CopilotAgent` interfaces | Named **agent profiles** consumed as keyed `IChatClient` / `AIAgent` / `ICopilotSessionFactory`; source-generated **typed agents** |
-| `@UserMessage("... {{doc}}")` templates | Interpolated prompt templates on typed agent methods, validated at compile time |
-| `CompletableFuture<T>` structured results | `Task<T>` (typed agents), `GetResponseAsync<T>()` (MEAI), `SendAndWaitAsync<T>()` (SDK) |
-| `Flux<CopilotAgentEvent>` | `IAsyncEnumerable<ChatResponseUpdate>` / `IAsyncEnumerable<CopilotAgentEvent>`; no extra module |
-| `@ConversationId` | `[ConversationId]` parameter (typed agents), `ChatOptions.ConversationId`, MAF `AgentThread` |
-| `CopilotAgents` bound instances | `ICopilotConversation` from `ICopilotSessionFactory` |
-| `@CopilotTool` Spring beans | DI services with `[Description]` methods, one `IServiceScope` per tool call |
-| MCP and BYOK properties | `Copilot:McpServers` and `Copilot:Providers`, selected per agent |
-| `CopilotTokenResolver`, Spring Security OAuth2 | `ICopilotTokenProvider`; ASP.NET Core implementation from the authenticated user |
-| Permission policies, hooks, listeners | `CopilotPermissionPolicy`, `ICopilotPermissionHandler`, `ICopilotSessionHooks`, `ICopilotEventListener` |
-| `CopilotAgentCustomizer` | `IConfigureNamedOptions<CopilotAgentOptions>` / `PostConfigure` |
-| Actuator health, info, `copilot` endpoint | `IHealthCheck` + optional `MapCopilotDiagnostics()` endpoint |
-| Micrometer observations | `ActivitySource` / `Meter` + MEAI `UseOpenTelemetry()` |
-| `copilot-spring-boot-test` | `CopilotSdk.Testing` scripted runtime, `WebApplicationFactory` helpers |
-| Testcontainers `CopilotContainer` | Aspire `AddCopilot()` or Testcontainers for .NET (docs only) |
+| Configuration | `services.AddCopilot()` + `Copilot` configuration section, `IOptions<T>` with startup validation |
+| Managed client | Singleton `CopilotClient` owned by a hosted lifecycle service, lazy by default |
+| Agents | Named **agent profiles** consumed as keyed `IChatClient` / `AIAgent` / `ICopilotSessionFactory`; source-generated **typed agents** |
+| Prompt templates | Interpolated prompt templates on typed agent methods, validated at compile time |
+| Structured results | `Task<T>` (typed agents), `GetResponseAsync<T>()` (MEAI), `SendAndWaitAsync<T>()` (SDK) |
+| Streaming | `IAsyncEnumerable<ChatResponseUpdate>` / `IAsyncEnumerable<CopilotAgentEvent>` |
+| Conversations | `[ConversationId]` parameter (typed agents), `ChatOptions.ConversationId`, MAF `AgentThread`, `ICopilotConversation` |
+| Tools | DI services with `[Description]` methods, one `IServiceScope` per tool call |
+| MCP and BYOK | `Copilot:McpServers` and `Copilot:Providers`, selected per agent |
+| Per-user identity | `ICopilotTokenProvider`; ASP.NET Core implementation from the authenticated user |
+| Governance | `CopilotPermissionPolicy`, `ICopilotPermissionHandler`, `ICopilotSessionHooks`, `ICopilotEventListener` |
+| Customization | `IConfigureNamedOptions<CopilotAgentOptions>` / `PostConfigure` |
+| Health and diagnostics | `IHealthCheck` + optional `MapCopilotDiagnostics()` endpoint |
+| Observability | `ActivitySource` / `Meter` + MEAI `UseOpenTelemetry()` |
+| Testing | `CopilotSdk.Testing` scripted runtime, `WebApplicationFactory` helpers; Aspire or Testcontainers for .NET for a real runtime |
 
 ---
 
@@ -223,7 +220,7 @@ Health checks are opt-in through `AddHealthCheck` (Aspire turns them on).
 }
 ```
 
-The shape intentionally matches the Spring starter's `copilot.*` properties.
+The shape is stable and versioned additively.
 Options use `ValidateOnStart()` with source-generated `[OptionsValidator]`
 validators (AOT-friendly) and fail fast: unknown MCP server or provider names,
 non-loopback endpoints without a token, invalid durations, and so on.
@@ -286,7 +283,8 @@ services.AddCopilot()
 
 ### 6.2 Typed agents (source-generated)
 
-The .NET answer to `@CopilotAgent` interfaces, without dynamic proxies:
+Declare an agent as an interface and let a source generator implement it, with
+no dynamic proxies:
 
 ```csharp
 [CopilotAgent("triage", Instructions = "You triage support tickets for Contoso.")]
@@ -308,7 +306,7 @@ services.AddCopilot().AddTypedAgent<ITicketTriage>();
 - A Roslyn incremental generator emits the implementation and a
   `JsonSerializerContext` for result types, so it is trimming- and AOT-safe.
 - Prompt placeholders are checked against parameters **at compile time**
-  (diagnostics instead of Spring's startup validation).
+  (diagnostics instead of startup validation).
 - Supported returns: `Task<string>`, `Task<T>` (structured output),
   `IAsyncEnumerable<string>` (streaming text), `IAsyncEnumerable<CopilotAgentEvent>`,
   and `Task` (fire and forget the reply).
@@ -387,8 +385,7 @@ public sealed class OrderTools(OrdersDbContext db, ICopilotInvocationContext ctx
   caller's `ExecutionContext` is lost. At turn start the integration captures
   `ICopilotInvocationContext` (user `ClaimsPrincipal`, tenant, agent, session id,
   `Activity`, culture, logging scope, custom items) and restores it inside the
-  tool scope. This is the analogue of Spring's security/MDC/observation
-  propagation.
+  tool scope.
 - **Errors**: exceptions become failed tool results with a safe message (details
   only in logs/telemetry); `CopilotToolException` lets tools return a
   model-visible message deliberately.
@@ -502,7 +499,7 @@ app.MapCopilotDiagnostics("/_copilot").RequireAuthorization("Admin");
 
 - Streaming uses .NET 10's built-in `TypedResults.ServerSentEvents`; no custom
   result types needed. Client disconnects cancel the runtime turn.
-- `MapCopilotDiagnostics` is the Actuator `copilot` endpoint equivalent:
+- `MapCopilotDiagnostics` exposes a diagnostics endpoint listing
   agents (without instructions by default), models, active sessions, execution
   capacity. Never force-starts a lazy client. Requires explicit authorization.
 - Blazor Server and SignalR samples show streaming to the UI and approval

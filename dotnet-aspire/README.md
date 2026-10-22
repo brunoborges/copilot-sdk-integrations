@@ -54,8 +54,6 @@ Highlights of the design:
   and returns the core builder, so service code is identical with or without
   Aspire.
 
-See [the Spring Boot starter](../spring-boot/) for the equivalent Java integration.
-
 ## License
 
 [MIT](../LICENSE).
