@@ -41,6 +41,7 @@ is local to this application context, not a distributed lock. Coordinate
 ownership across replicas and scope keys to authorized users/tenants yourself.
 Resumption requires a runtime supporting the pinned SDK's metadata lookup,
 custom IDs, and persistence in the same backing store.
+
 <a id="threading-errors-and-cancellation"></a>
 
 ## Threading, errors, and cancellation

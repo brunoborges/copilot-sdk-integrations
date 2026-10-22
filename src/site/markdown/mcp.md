@@ -164,4 +164,4 @@ definition/bean values as immutable rather than modifying them in place.
 
 **Previous:** [Spring tool beans](tools.html)
 
-**Next:** [Events and customizers](events.html)
+**Next:** [BYOK providers](byok.html)

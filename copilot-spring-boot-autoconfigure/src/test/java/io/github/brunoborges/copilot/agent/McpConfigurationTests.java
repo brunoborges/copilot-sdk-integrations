@@ -121,6 +121,21 @@ class McpConfigurationTests {
                 "copilot.mcp.servers.remote.url=" + url).run(context -> assertThat(context).hasFailed());
     }
 
+    @Test
+    void malformedHttpUrlFailureDoesNotEchoSecrets() {
+        runner.withPropertyValues("copilot.mcp.servers.remote.type=http",
+                "copilot.mcp.servers.remote.url=https://example.com/mcp?token=secret-value with space")
+                .run(context -> assertThat(context).hasFailed().getFailure()
+                        .hasStackTraceContaining("MCP url must be an absolute HTTP(S) address")
+                        .satisfies(failure -> assertThat(stackTrace(failure)).doesNotContain("secret-value")));
+    }
+
+    private static String stackTrace(Throwable failure) {
+        var writer = new java.io.StringWriter();
+        failure.printStackTrace(new java.io.PrintWriter(writer));
+        return writer.toString();
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"command=node", "args[0]=arg", "env[MODE]=test", "working-directory=/tmp"})
     void rejectsLocalFieldsOnHttpServers(String localField) {

@@ -5,7 +5,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -66,8 +68,8 @@ public final class CopilotAgentFactoryBean implements FactoryBean<Object>, Initi
     }
 
     public static boolean requiresBinding(Class<?> type) {
-        return java.util.Arrays.stream(type.getMethods()).filter(method -> Modifier.isAbstract(method.getModifiers()))
-                .anyMatch(method -> java.util.Arrays.stream(method.getParameters())
+        return Arrays.stream(type.getMethods()).filter(method -> Modifier.isAbstract(method.getModifiers()))
+                .anyMatch(method -> Arrays.stream(method.getParameters())
                         .noneMatch(parameter -> parameter.isAnnotationPresent(ConversationId.class)));
     }
 
@@ -110,7 +112,7 @@ public final class CopilotAgentFactoryBean implements FactoryBean<Object>, Initi
         });
     }
 
-    private static Binding binding(Method method, java.util.List<CopilotAgentReturnTypeAdapter> adapters) {
+    private static Binding binding(Method method, List<CopilotAgentReturnTypeAdapter> adapters) {
         String message = "Copilot agent method must return CompletableFuture<String> or a registered adapter type and declare "
                 + "one @UserMessage String, optionally preceded or followed by one @ConversationId String: " + method.toGenericString();
         boolean text = method.getGenericReturnType() instanceof ParameterizedType result

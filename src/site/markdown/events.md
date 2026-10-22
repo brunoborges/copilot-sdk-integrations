@@ -53,6 +53,7 @@ and an otherwise successful invocation fails after cleanup if an observer
 failed. Delivery is not guaranteed for events emitted before attachment or for
 callbacks already in flight during closing. Listeners must not block waiting
 for another invocation on the same serialized conversation.
+
 <a id="session-customizers"></a>
 
 ## Session customizers
@@ -102,6 +103,6 @@ tool references, not arbitrary lists constructed later by customizers.
 
 ---
 
-**Previous:** [MCP servers](mcp.html)
+**Previous:** [BYOK providers](byok.html)
 
 **Next:** [Configuration reference](configuration.html)

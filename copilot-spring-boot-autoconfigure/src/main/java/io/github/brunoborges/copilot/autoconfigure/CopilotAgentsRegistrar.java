@@ -1,6 +1,7 @@
 package io.github.brunoborges.copilot.autoconfigure;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import io.github.brunoborges.copilot.agent.CopilotAgent;
@@ -9,6 +10,7 @@ import io.github.brunoborges.copilot.agent.internal.CopilotAgentFactoryBean;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -40,7 +42,7 @@ public final class CopilotAgentsRegistrar implements ImportBeanDefinitionRegistr
         Set<String> packages = new LinkedHashSet<>();
         var enable = metadata.getAnnotationAttributes("io.github.brunoborges.copilot.agent.EnableCopilotAgents");
         if (enable != null) {
-            packages.addAll(java.util.List.of((String[]) enable.get("basePackages")));
+            packages.addAll(List.of((String[]) enable.get("basePackages")));
             for (var type : (Class<?>[]) enable.get("basePackageClasses")) {
                 packages.add(ClassUtils.getPackageName(type));
             }
@@ -52,7 +54,7 @@ public final class CopilotAgentsRegistrar implements ImportBeanDefinitionRegistr
         }
         var scanner = new ClassPathScanningCandidateComponentProvider(false, environment) {
             @Override
-            protected boolean isCandidateComponent(org.springframework.beans.factory.annotation.AnnotatedBeanDefinition definition) {
+            protected boolean isCandidateComponent(AnnotatedBeanDefinition definition) {
                 return definition.getMetadata().isIndependent();
             }
         };

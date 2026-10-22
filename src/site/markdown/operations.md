@@ -30,6 +30,7 @@ title: Security and troubleshooting
   threads. Resolve trusted identity explicitly in permission/tool policies.
 - Decide whether application event listeners may log assistant text or tool
   data. Built-in metric tags deliberately omit those payloads.
+
 <a id="troubleshooting"></a>
 
 ## Troubleshooting
@@ -52,6 +53,7 @@ title: Security and troubleshooting
 | Missing usage counters | Supply a meter registry and inspect whether the runtime emits usage fields; missing counts are not synthesized. |
 | Stream overflows | Consume/offload deliberately, reduce producer work or adjust buffer capacity; remember downstream operators add their own buffers. |
 | Cancelled request still consumes usage | Cancellation is not a guaranteed runtime abort; running work remains owned until completion/cleanup. |
+
 <a id="scope-and-source-references"></a>
 
 ## Scope and source references

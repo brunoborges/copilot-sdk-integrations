@@ -65,8 +65,8 @@
       if (link.getAttribute("href").startsWith("#")) continue;
       const target = new URL(link.href, window.location.href);
       if (target.origin === window.location.origin && target.pathname.endsWith(".html")) {
-        if (themeMode === "system") target.searchParams.delete("clawpilotTheme");
-        else target.searchParams.set("clawpilotTheme", themeMode);
+        if (themeMode === "system") target.searchParams.delete("theme");
+        else target.searchParams.set("theme", themeMode);
         link.href = target.href;
       }
     }
@@ -85,8 +85,8 @@
         console.warn("Documentation theme could not be saved; the choice is retained in page URLs.", error);
       }
       const url = new URL(window.location.href);
-      if (themeMode === "system") url.searchParams.delete("clawpilotTheme");
-      else url.searchParams.set("clawpilotTheme", themeMode);
+      if (themeMode === "system") url.searchParams.delete("theme");
+      else url.searchParams.set("theme", themeMode);
       window.history.replaceState(window.history.state, "", url);
       applyTheme();
     });

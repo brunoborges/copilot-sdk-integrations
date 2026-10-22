@@ -21,6 +21,7 @@ import com.github.copilot.rpc.McpStdioServerConfig;
 import com.github.copilot.rpc.PermissionHandler;
 import com.github.copilot.rpc.PermissionRequest;
 import com.github.copilot.rpc.PermissionRequestResult;
+import com.github.copilot.rpc.ProviderConfig;
 import com.github.copilot.rpc.ResumeSessionConfig;
 import com.github.copilot.rpc.SectionOverride;
 import com.github.copilot.rpc.SectionOverrideAction;
@@ -35,6 +36,7 @@ import io.github.brunoborges.copilot.agent.internal.CopilotAgentFactoryBean;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
 import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
 import io.github.brunoborges.copilot.autoconfigure.CopilotMcpProperties;
+import io.github.brunoborges.copilot.autoconfigure.CopilotProviderProperties;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -117,6 +119,48 @@ class CopilotAgentTests {
         var empty = new CopilotAgentsProperties(Map.of("mcpAgent",
                 new CopilotAgentsProperties.Agent(null, null, Duration.ofSeconds(60), List.of())));
         assertThat(definition(McpAgent.class, empty).mcpServers()).isEmpty();
+    }
+
+    @Test
+    void selectedProviderReachesCreateAndResumeAndPropertiesOverrideAnnotationSelection() throws Exception {
+        var foundry = new CopilotProviderProperties.Provider(CopilotProviderProperties.Type.OPENAI,
+                "https://example.openai.azure.com/openai/v1/", "key", null, null,
+                CopilotProviderProperties.WireApi.RESPONSES, null, Map.of(), null, null);
+        beans.registerSingleton("providerProperties", new CopilotProviderProperties(Map.of("foundry", foundry)));
+        var local = new ProviderConfig().setType("openai").setBaseUrl("http://localhost:11434/v1");
+        beans.registerSingleton("local", local);
+        var definition = definition(ProviderAgent.class, properties);
+        assertThat(definition.provider().getBaseUrl()).isEqualTo("https://example.openai.azure.com/openai/v1/");
+        assertThat(definition.provider().getWireApi()).isEqualTo("responses");
+
+        var session = session("reply");
+        when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null))
+                .thenReturn(CompletableFuture.completedFuture(new SessionMetadata()));
+        when(client.createSession(any())).thenAnswer(invocation -> {
+            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            return CompletableFuture.completedFuture(session);
+        });
+        when(client.resumeSession(anyString(), any())).thenReturn(CompletableFuture.completedFuture(session));
+        try (var invoker = new CopilotAgentInvoker(client)) {
+            var agent = agent(ProviderAgent.class, invoker, properties);
+            assertThat(agent.answer("id", "first").get(5, TimeUnit.SECONDS)).isEqualTo("reply");
+            assertThat(agent.answer("id", "second").get(5, TimeUnit.SECONDS)).isEqualTo("reply");
+            ArgumentCaptor<SessionConfig> created = ArgumentCaptor.captor();
+            ArgumentCaptor<ResumeSessionConfig> resumed = ArgumentCaptor.captor();
+            verify(client).createSession(created.capture());
+            verify(client).resumeSession(anyString(), resumed.capture());
+            assertThat(created.getValue().getModel()).isEqualTo("gpt-5.2-codex");
+            assertThat(created.getValue().getProvider().getApiKey()).isEqualTo("key");
+            assertThat(resumed.getValue().getModel()).isEqualTo("gpt-5.2-codex");
+            assertThat(resumed.getValue().getProvider().getApiKey()).isEqualTo("key");
+        }
+        var override = new CopilotAgentsProperties(Map.of("providerAgent",
+                new CopilotAgentsProperties.Agent(null, null, Duration.ofSeconds(60), null, "local")));
+        assertThat(definition(ProviderAgent.class, override).provider()).isSameAs(local);
+        var none = new CopilotAgentsProperties(Map.of("providerAgent",
+                new CopilotAgentsProperties.Agent(null, null, Duration.ofSeconds(60), null, "")));
+        assertThat(definition(ProviderAgent.class, none).provider()).isNull();
+        assertThat(definition(TestAgent.class, properties).provider()).isNull();
     }
 
     @Test
@@ -429,6 +473,10 @@ class CopilotAgentTests {
 
     @CopilotAgent(listeners = "listener")
     public interface ListenedAgent {
+        CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
+    }
+    @CopilotAgent(model = "gpt-5.2-codex", provider = "foundry")
+    public interface ProviderAgent {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }
     @CopilotAgent(mcpServers = {"files", "remote"}, customizers = "mcpCustomizer")

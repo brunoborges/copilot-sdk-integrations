@@ -50,6 +50,7 @@ for their complete contracts.
 
 Close sessions and subscriptions created directly by application code. Do not
 close the shared injected client after each request.
+
 <a id="auto-configuration-and-bean-overrides"></a>
 
 ## Auto-configuration and bean overrides

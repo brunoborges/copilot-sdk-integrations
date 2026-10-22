@@ -62,8 +62,14 @@ For example:
 ```
 
 Choose the classifier for the deployment platform. Authenticate the CLI using
-SDK/CLI-supported authentication before making model requests. An external
+SDK/CLI-supported authentication before making model requests, for example by
+signing in to the local CLI or supplying an SDK-supported environment variable
+such as `COPILOT_GITHUB_TOKEN`. Copilot access requires an appropriate account
+entitlement; never commit credentials to source control. Agents can instead use
+your own model provider without a Copilot subscription; see
+[BYOK providers](byok.html). An external
 server is another option; see [Client properties](configuration.html#client-properties).
+
 <a id="quick-start"></a>
 
 ## Quick start
