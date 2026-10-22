@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="627" viewBox="0 0 1200 627" role="img" aria-labelledby="title description">
+  <title id="title">Bring the Copilot SDK to Spring Boot</title>
+  <desc id="description">An invitation for Java and Spring developers to try an open integration experiment.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#10152a"/>
+      <stop offset="1" stop-color="#171432"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#9d8cff"/>
+      <stop offset="1" stop-color="#71e4d3"/>
+    </linearGradient>
+    <radialGradient id="glow">
+      <stop offset="0" stop-color="#7060df" stop-opacity=".25"/>
+      <stop offset="1" stop-color="#7060df" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="627" fill="url(#background)"/>
+  <circle cx="1040" cy="118" r="300" fill="url(#glow)"/>
+  <path d="M0 554C231 518 389 615 636 572s379-96 564-69v124H0Z" fill="#0a0e1e" opacity=".52"/>
+  <g fill="none" stroke="#a8a0ff" stroke-opacity=".12">
+    <circle cx="1007" cy="296" r="196"/>
+    <circle cx="1007" cy="296" r="153"/>
+    <circle cx="1007" cy="296" r="111"/>
+  </g>
+  <circle cx="1163" cy="199" r="5" fill="#71e4d3"/>
+  <circle cx="900" cy="438" r="4" fill="#a99aff"/>
+
+  <g font-family="Lato, Arial, sans-serif">
+    <rect x="72" y="55" width="270" height="34" rx="17" fill="#252443" stroke="#605a91"/>
+    <circle cx="91" cy="72" r="4" fill="#71e4d3"/>
+    <text x="105" y="77" fill="#d3ceff" font-size="12" font-weight="700" letter-spacing="1.4">AN OPEN INTEGRATION EXPERIMENT</text>
+
+    <text x="72" y="174" fill="#f5f4ff" font-size="53" font-weight="700" letter-spacing="-1.8">Java + Spring,</text>
+    <text x="72" y="237" fill="url(#accent)" font-size="53" font-weight="700" letter-spacing="-1.8">meet Copilot SDK.</text>
+    <text x="75" y="281" fill="#d1d0e3" font-size="19">Help explore what a great Spring integration can be.</text>
+
+    <g font-size="13" font-weight="700">
+      <rect x="72" y="319" width="119" height="31" rx="15.5" fill="#24233f"/>
+      <text x="91" y="339" fill="#d8d2ff">Typed agents</text>
+      <rect x="201" y="319" width="176" height="31" rx="15.5" fill="#24233f"/>
+      <text x="219" y="339" fill="#d8d2ff">Spring-managed client</text>
+      <rect x="387" y="319" width="154" height="31" rx="15.5" fill="#24233f"/>
+      <text x="405" y="339" fill="#d8d2ff">Conversation-aware</text>
+    </g>
+
+    <text x="72" y="412" fill="#ffffff" font-size="19" font-weight="700">Try it. Share your ideas.</text>
+    <text x="72" y="442" fill="#a9a7c3" font-size="15">github.com/brunoborges/copilot-spring-boot</text>
+  </g>
+
+  <g>
+    <rect x="669" y="133" width="460" height="325" rx="18" fill="#0d1021" stroke="#504b78" stroke-width="1.5"/>
+    <path d="M687 133h424a18 18 0 0 1 18 18v35H669v-35a18 18 0 0 1 18-18Z" fill="#201f38"/>
+    <circle cx="696" cy="160" r="5" fill="#ff817b"/>
+    <circle cx="714" cy="160" r="5" fill="#f7c86b"/>
+    <circle cx="732" cy="160" r="5" fill="#71d9a4"/>
+    <text x="766" y="165" fill="#aaa7c7" font-family="Lato, Arial, sans-serif" font-size="12">SpringAdvisor.java</text>
+
+    <g font-family="DejaVu Sans Mono, monospace" font-size="15">
+      <text x="702" y="223" fill="#a99aff">@CopilotAgent</text>
+      <text x="702" y="253" fill="#b8c6ff">(name = "spring-advisor")</text>
+      <text x="702" y="303" fill="#d8d7e8">public interface</text>
+      <text x="862" y="303" fill="#71e4d3">SpringAdvisor</text>
+      <text x="702" y="333" fill="#d8d7e8">{</text>
+      <text x="726" y="363" fill="#c4a9ff">CompletableFuture</text>
+      <text x="890" y="363" fill="#f1d28c">&lt;String&gt; answer(</text>
+      <text x="726" y="393" fill="#d8d7e8">@ConversationId String id,</text>
+      <text x="726" y="423" fill="#d8d7e8">@UserMessage String question);</text>
+    </g>
+
+    <path d="M1060 252l8 15 16 2-12 11 3 16-15-8-14 8 3-16-12-11 16-2z" fill="none" stroke="url(#accent)" stroke-width="2"/>
+    <circle cx="1090" cy="361" r="4" fill="#71e4d3"/>
+    <circle cx="1050" cy="411" r="3" fill="#a99aff"/>
+  </g>
+
+  <path d="M72 500h1056" stroke="#ffffff" stroke-opacity=".12"/>
+  <text x="72" y="541" fill="#88869f" font-family="Lato, Arial, sans-serif" font-size="13" letter-spacing=".4">EXPERIMENTAL • BUILT FOR JAVA 21 + SPRING BOOT 4</text>
+  <text x="1128" y="541" fill="#9a96b4" font-family="Lato, Arial, sans-serif" font-size="12" text-anchor="end">OPEN SOURCE</text>
+</svg>
