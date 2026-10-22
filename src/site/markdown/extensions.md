@@ -64,17 +64,19 @@ the shared client.
 Register adapters as Spring beans. Matching is based on the declared method
 return type and must be unique; multiple matches fail initialization rather
 than selecting one by `@Order`. Without a matching adapter,
-`CompletableFuture<String>` uses the built-in scalar path.
+`CompletableFuture<T>` and synchronous `T` use the built-in text and
+structured-result paths (see [Agent interfaces](agents.html#return-types)).
 
 The Reactor module registers `ReactorCopilotAgentAdapter`, matching exactly
 `Flux<CopilotAgentEvent>`. To replace that representation with another adapter,
 replace the default adapter bean or exclude
 `io.github.brunoborges.copilot.reactor.CopilotReactorAutoConfiguration` before
-registering a competing implementation. Merely adding an adapter does not
-implement SDK structured-response schemas or new session capabilities.
+registering a competing implementation. Adapters receive text-only
+invocations; structured results are only available through the built-in
+`CompletableFuture<T>` and synchronous return types.
 
 ---
 
-**Previous:** [Observability](observability.html)
+**Previous:** [Actuator health, info, and endpoint](actuator.html)
 
 **Next:** [Example application](examples.html)

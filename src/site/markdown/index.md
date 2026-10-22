@@ -47,11 +47,15 @@ optional observations and streaming.
 | [Spring tool beans](tools.html) | SDK annotations, generated metadata, Spring proxies, and permissions. |
 | [MCP servers](mcp.html) | Stdio/HTTP definitions, per-agent selection, SDK beans, tool allowlists, and lifecycle. |
 | [BYOK providers](byok.html) | Your own OpenAI, Azure, Anthropic, or local model provider per agent, without a Copilot subscription. |
+| [Per-user authentication](authentication.html) | Per-user GitHub tokens, the Spring Security OAuth2 adapter, and caller context in tools. |
 | [Events and customizers](events.html) | Session-scoped observers, native event types, and SDK configuration hooks. |
+| [Tool governance, permissions, and hooks](governance.html) | Tool allow/deny lists, built-in tool control, permission policies, and hook beans. |
 | [Configuration](configuration.html) | Every integration-owned property, precedence, and deployment examples. |
 | [Reactive streaming](streaming.html) | Cold subscriptions, native events, bounded buffering, and overflow. |
 | [Observability](observability.html) | Micrometer observations, token counters, privacy, and activation. |
+| [Actuator](actuator.html) | `copilot` health indicator, info section, and read-only management endpoint. |
 | [Extension SPIs](extensions.html) | Custom telemetry and return-type adapters. |
+| [Testing](testing.html) | Scripted in-memory runtime, recorded interactions, and Testcontainers with `@ServiceConnection`. |
 | [Example application](examples.html) | Raw, routed, bound, and streaming executable modes. |
 | [Security and troubleshooting](operations.html) | Authorization boundaries, failure diagnosis, and source references. |
 

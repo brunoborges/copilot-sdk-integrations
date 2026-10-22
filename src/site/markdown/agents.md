@@ -10,6 +10,8 @@ title: Agent interfaces
 
 - [CopilotAgent](#copilotagent)
 - [ConversationId and UserMessage](#conversationid-and-usermessage)
+- [Prompt templates](#prompt-templates)
+- [Return types](#return-types)
 - [EnableCopilotAgents](#enablecopilotagents)
 
 The application-facing annotations are in
@@ -33,12 +35,19 @@ conversation-bound instance. Both forms share the same declarative settings.
 | `systemMessage` | `String` | `""` | Name of a `SystemMessageConfig` bean. The bean owns the mode; do not combine it with instruction content/resource attributes or a non-default `instructionsMode`. |
 | `model` | `String` | `""` | Optional SDK model. Empty leaves selection to the runtime. A per-agent property overrides this value. |
 | `reasoningEffort` | `String` | `""` | Optional model-specific reasoning effort. A per-agent property overrides this value. |
-| `permissionHandler` | `String` | `""` | Name of an SDK `PermissionHandler` bean. Empty selects the integration's rejection handler, not an arbitrary handler found by type. |
+| `permissionHandler` | `String` | `""` | Name of an SDK `PermissionHandler` bean. Empty selects the integration's rejection handler (or a policy from `copilot.agents.<name>.permissions.*`), not an arbitrary handler found by type. See [`CopilotPermissionPolicies`](governance.html#ready-made-permission-policies). |
 | `tools` | `String[]` | `{}` | Explicit tool bean names: individual `ToolDefinition` objects or SDK-annotated Spring services. |
 | `mcpServers` | `String[]` | `{}` | Names from `copilot.mcp.servers` or native SDK `McpServerConfig` beans. Per-agent properties replace this selection. See [MCP servers](mcp.html). |
 | `provider` | `String` | `""` | Name from `copilot.providers` or a native SDK `ProviderConfig` bean, used as a BYOK model provider. Requires a model. Per-agent properties replace this selection. See [BYOK providers](byok.html). |
 | `listeners` | `String[]` | `{}` | Names of `CopilotAgentListener` beans, invoked in listed order for each attached session's events. |
 | `customizers` | `String[]` | `{}` | Names of `CopilotAgentCustomizer` beans, applied in listed order. |
+| `availableTools` | `String[]` | `{}` | SDK tool allow-list across built-in, custom, and MCP tools; must include `custom:`/`mcp:` entries when the agent declares tools/MCP servers. See [Tool governance](governance.html). |
+| `excludedTools` | `String[]` | `{}` | SDK tool deny-list. Mutually exclusive with `availableTools`. |
+| `excludedBuiltInAgents` | `String[]` | `{}` | Runtime built-in sub-agents to hide. |
+| `builtInTools` | `boolean` | `true` | `false` hides every built-in tool (`builtin:*`). Cannot be combined with `availableTools`. |
+| `workingDirectory` | `String` | `""` | Session working directory for runtime tool operations. Empty uses the runtime default. |
+| `additionalDirectories` | `String[]` | `{}` | Extra directories the session may access. |
+| `hooks` | `String[]` | `{}` | Names of `CopilotAgentHooks` beans, run after global hooks in listed order. See [hooks](governance.html#session-hooks-as-spring-beans). |
 
 Annotation string values support Spring property placeholders. Whitespace-only
 values are invalid; empty strings on optional attributes mean unset. Instruction
@@ -53,29 +62,123 @@ every invocation. Treat configuration beans as immutable after initialization.
 
 ## ConversationId and UserMessage
 
-Both are runtime parameter annotations with no attributes:
-
 | Annotation | Meaning |
 | --- | --- |
-| `@ConversationId` | Application-defined conversation key. Not the SDK session ID and not an authorization credential. |
-| `@UserMessage` | Message text passed verbatim to the SDK. No prompt-template expansion is performed. |
+| `@ConversationId` | Application-defined conversation key on a `String` parameter. Not the SDK session ID and not an authorization credential. |
+| `@UserMessage` (parameter) | The `String` argument is the prompt, passed verbatim to the SDK. |
+| `@UserMessage("...")` / `@UserMessage(resource = "...")` (method) | Prompt template rendered from `@P` parameters. See [Prompt templates](#prompt-templates). |
+| `@P("name")` | Binds a parameter to the `{{name}}` placeholder of the method's template. |
 
-Choose one method form for an entire interface:
+Choose one conversation form for an entire interface:
 
 | Form | Parameters | Consumption |
 | --- | --- | --- |
-| Routed | Two `String` parameters, one `@ConversationId` and one `@UserMessage`, in either order. | Inject the singleton routing bean. |
-| Bound | One `String` parameter annotated `@UserMessage`. | Obtain a handle through `CopilotAgents.create` or `resume`. |
+| Routed | One `@ConversationId String` plus the prompt parameters, in any order. | Inject the singleton routing bean. |
+| Bound | Prompt parameters only, no `@ConversationId`. | Obtain a handle through `CopilotAgents.create` or `resume`. |
 
-Do not mix the two forms in one interface. Null/blank message values, or invalid
-explicit conversation keys, fail without SDK work. Omitting `@ConversationId`
-does not opt into a hidden global conversation.
+Each method declares its prompt in exactly one way: one `@UserMessage String`
+parameter, or a method-level `@UserMessage` template with zero or more `@P`
+parameters. Every parameter carries exactly one of `@ConversationId`,
+`@UserMessage`, or `@P`.
+
+Do not mix the two conversation forms in one interface. Null/blank prompts,
+null template arguments, or invalid explicit conversation keys fail with
+`IllegalArgumentException` without SDK work. Omitting `@ConversationId` does
+not opt into a hidden global conversation.
+
+<a id="prompt-templates"></a>
+
+## Prompt templates
+
+```java
+@CopilotAgent(name = "summarizer")
+public interface Summarizer {
+
+    @UserMessage("Summarize {{doc}} for {{audience}} in ${summaries.max-words:100} words.")
+    CompletableFuture<String> summarize(@ConversationId String id,
+            @P("doc") String document, @P("audience") String audience);
+
+    @UserMessage(resource = "classpath:prompts/release-notes.txt")
+    CompletableFuture<String> releaseNotes(@ConversationId String id, @P("changes") List<String> changes);
+}
+```
+
+- `value` and `resource` are mutually exclusive. Resources are UTF-8 Spring
+  resource locations read once at initialization; blank or missing templates
+  fail startup.
+- Spring property placeholders (`${...}`) are resolved at initialization in the
+  inline template and in the resource location, like other annotation values.
+  Resource contents are used verbatim.
+- `{{name}}` (surrounding whitespace allowed) is replaced by the `@P("name")`
+  argument rendered with `String.valueOf`. Names match
+  `[A-Za-z_][A-Za-z0-9_]*`; any other `{{...}}` text is kept literally.
+  Rendering is a single pass with no escaping, expressions, or conditionals, so
+  argument text containing `{{...}}` is not expanded again.
+- `@P` without a value uses the Java parameter name, which requires compiling
+  with `-parameters` (the Spring Boot parent enables it).
+- Initialization fails when a placeholder has no matching `@P` parameter, a
+  `@P` parameter is not referenced, `@P` names repeat, `@P` is used without a
+  method-level template, or a template is combined with a `@UserMessage`
+  parameter.
+- Null `@P` arguments fail the call with `IllegalArgumentException` (a failed
+  future for asynchronous methods, thrown directly for synchronous methods).
+
+<a id="return-types"></a>
+
+## Return types
 
 | Return type | Requirement | Result |
 | --- | --- | --- |
 | `CompletableFuture<String>` | Basic starter | Final assistant text; no assistant text is an error. |
+| `CompletableFuture<T>` | Basic starter | Structured result deserialized into `T` (see below). |
+| `String` or `T` (synchronous) | Basic starter | Blocks the caller for at most the agent's `response-timeout`. |
 | `Flux<CopilotAgentEvent>` | Reactor module | Native events, followed by completion or error after the SDK operation and cleanup. |
 | Another type | A matching application return-type adapter | Defined by that adapter; unsupported types fail initialization. |
+
+**Structured results.** For any `T` other than `String`, the starter derives a
+strict JSON Schema from `T` at initialization and sends it as the SDK's
+provider-native response schema (`MessageOptions.setResponseSchema`), then
+reads the final assistant JSON with Jackson. Supported types:
+
+- records and concrete JavaBeans (properties discovered by Jackson, honoring
+  annotations such as `@JsonProperty`); every property is required and objects
+  are closed (`additionalProperties: false`);
+- enums (constants as Jackson serializes them), `String`, `boolean`, integral
+  and floating-point primitives and wrappers, `BigInteger`, `BigDecimal`,
+  `UUID`, and common `java.time` types;
+- arrays, `List`, `Set`, and `Collection` of supported types.
+
+Non-object results such as `List<Verdict>`, enums, or `Boolean` are wrapped in a
+`{"value": ...}` object because strict schemas require an object root; the
+wrapper is removed transparently. Maps, `Optional`, `Object`, wildcards,
+abstract types, and recursive types fail initialization. Replies that are not
+valid JSON for `T`, or are JSON `null`, fail the call with
+`IllegalStateException`. Schema enforcement is provider-dependent; Jackson
+deserialization is not full schema validation. Structured output is an
+experimental SDK capability.
+
+```java
+public record Verdict(Sentiment sentiment, double confidence, List<String> reasons) {}
+
+@CopilotAgent(name = "classifier")
+public interface Classifier {
+    CompletableFuture<Verdict> classify(@ConversationId String id, @UserMessage String review);
+
+    @UserMessage("Is this message spam? {{text}}")
+    boolean spam(@ConversationId String id, @P("text") String text);
+}
+```
+
+**Synchronous methods.** A non-future return type blocks the calling thread
+until the result is available or the agent's `response-timeout` elapses
+(measured from the call, including admission and queueing); on timeout the
+invocation is cancelled. Unchecked failures are rethrown as-is. Checked
+failures such as `TimeoutException` are thrown directly when the method
+declares them and are otherwise wrapped in `CompletionException`. Never call a
+synchronous agent method from SDK callback threads (listeners, tool handlers,
+permission handlers, or event consumers): the SDK cannot deliver the reply
+while its callback is blocked. Prefer the `CompletableFuture` forms on
+event-loop or request threads that must not block.
 
 Raw, wildcard, or unresolved generic variants are not automatically supported
 by the built-in adapters. Default interface methods execute locally. Ordinary

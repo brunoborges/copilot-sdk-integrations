@@ -20,6 +20,7 @@ import com.github.copilot.rpc.ToolDefinition;
 import io.github.brunoborges.copilot.agent.CopilotAgent;
 import io.github.brunoborges.copilot.agent.CopilotAgentCustomizer;
 import io.github.brunoborges.copilot.agent.CopilotAgentListener;
+import io.github.brunoborges.copilot.agent.CopilotTokenResolver;
 import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.core.env.Environment;
@@ -30,7 +31,8 @@ public record CopilotAgentDefinition(
         String name, String typeName, String model, String reasoningEffort, Duration responseTimeout,
         SystemMessageConfig systemMessage, PermissionHandler permissions, List<ToolDefinition> tools,
         Map<String, McpServerConfig> mcpServers, ProviderConfig provider,
-        List<CopilotAgentListener> listeners, List<CopilotAgentCustomizer> customizers) {
+        List<CopilotAgentListener> listeners, List<CopilotAgentCustomizer> customizers,
+        CopilotAgentGovernance governance, CopilotTokenResolver tokenResolver) {
 
     private static final Logger log = Logger.getLogger(CopilotAgentDefinition.class.getName());
     private static final PermissionHandler DENY = (request, invocation) -> {
@@ -95,15 +97,26 @@ public record CopilotAgentDefinition(
                 ? settings.provider() : resolve(annotation.provider(), environment);
         Assert.isTrue(providerName.isEmpty() || !model.isEmpty(),
                 "Copilot agent " + name + ": a BYOK provider requires a model");
+        var tools = SpringToolBindings.bind(annotation.tools(), beans, environment);
+        var mcpServers = McpServerBindings.bind(settings != null && settings.mcpServers() != null
+                ? settings.mcpServers() : Arrays.asList(annotation.mcpServers()), beans, environment);
+        var policy = CopilotAgentGovernance.permissions(name, settings, !permissionBean.isEmpty(), tools);
         return new CopilotAgentDefinition(name, type.getName(), model, reasoning,
                 settings == null ? CopilotAgentsProperties.DEFAULT_RESPONSE_TIMEOUT : settings.responseTimeout(), systemMessage,
-                permissionBean.isEmpty() ? DENY : beans.getBean(permissionBean, PermissionHandler.class),
-                SpringToolBindings.bind(annotation.tools(), beans, environment),
-                McpServerBindings.bind(settings != null && settings.mcpServers() != null
-                        ? settings.mcpServers() : Arrays.asList(annotation.mcpServers()), beans, environment),
+                permissionBean.isEmpty() ? (policy == null ? DENY : policy) : beans.getBean(permissionBean, PermissionHandler.class),
+                tools, mcpServers,
                 ProviderBindings.bind(providerName, beans),
                 beans(annotation.listeners(), CopilotAgentListener.class, beans, environment),
-                beans(annotation.customizers(), CopilotAgentCustomizer.class, beans, environment));
+                beans(annotation.customizers(), CopilotAgentCustomizer.class, beans, environment),
+                CopilotAgentGovernance.create(name, annotation, settings, tools, mcpServers, beans, environment),
+                tokenResolver(annotation, beans, environment));
+    }
+
+    private static CopilotTokenResolver tokenResolver(CopilotAgent annotation, BeanFactory beans, Environment environment) {
+        String selected = resolve(annotation.tokenResolver(), environment);
+        // An ambiguous global selection fails startup instead of silently falling back to ambient credentials.
+        return selected.isEmpty() ? beans.getBeanProvider(CopilotTokenResolver.class).getIfAvailable()
+                : beans.getBean(selected, CopilotTokenResolver.class);
     }
 
     private static String resolve(String value, Environment environment) {

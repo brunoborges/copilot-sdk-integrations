@@ -55,6 +55,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -216,10 +217,12 @@ class CopilotAgentTests {
     }
 
     @Test
-    void sameConversationWaitsForCleanupEvenIfCallerCancels() throws Exception {
+    void cancellationAbortsTheRuntimeTurnAndSameConversationWaitsForCleanup() throws Exception {
         var started = new CountDownLatch(1);
-        var response = new CompletableFuture<AssistantMessageEvent>();
+        var firstResponse = new CompletableFuture<AssistantMessageEvent>();
+        var abort = new CompletableFuture<Void>();
         var session = session("reply");
+        when(session.abort()).thenReturn(abort);
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
             when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
@@ -227,22 +230,31 @@ class CopilotAgentTests {
         });
         when(session.sendAndWait(any(), anyLong())).thenAnswer(invocation -> {
             started.countDown();
-            return response;
-        });
+            return firstResponse;
+        }).thenReturn(CompletableFuture.completedFuture(reply("second reply")));
         try (var invoker = new CopilotAgentInvoker(client)) {
             try {
                 var agent = agent(TestAgent.class, invoker, properties);
                 var first = agent.answer("same", "first");
                 assertThat(started.await(5, TimeUnit.SECONDS)).isTrue();
-                first.cancel(true);
+                assertThat(first.cancel(true)).isTrue();
+                verify(session, timeout(5000)).abort();
+                assertThat(firstResponse.isCancelled()).isTrue();
                 var second = agent.answer("same", "second");
+                Thread.sleep(50);
                 verify(client).getSessionMetadata(anyString());
-                response.complete(reply("reply"));
-                second.get(5, TimeUnit.SECONDS);
+                verify(session, never()).close();
+                abort.complete(null);
+                assertThat(second.get(5, TimeUnit.SECONDS)).isEqualTo("second reply");
                 verify(client, times(2)).getSessionMetadata(anyString());
                 verify(session, times(2)).close();
+                verify(session, times(1)).abort();
+                var order = inOrder(session);
+                order.verify(session).abort();
+                order.verify(session).close();
             } finally {
-                response.complete(reply("reply"));
+                abort.complete(null);
+                firstResponse.complete(reply("reply"));
             }
         }
     }
@@ -357,8 +369,8 @@ class CopilotAgentTests {
             verify(client).resumeSession(anyString(), resumed.capture());
             assertThat(created.getValue().getSystemMessage()).isSameAs(system);
             assertThat(resumed.getValue().getSystemMessage()).isSameAs(system);
-            assertThat(created.getValue().getTools()).containsExactly(tool);
-            assertThat(resumed.getValue().getTools()).containsExactly(tool);
+            assertThat(created.getValue().getTools()).extracting(ToolDefinition::name).containsExactly("tool");
+            assertThat(resumed.getValue().getTools()).extracting(ToolDefinition::name).containsExactly("tool");
             assertThat(created.getValue().getModel()).isEqualTo("external-model");
             assertThat(resumed.getValue().getReasoningEffort()).isEqualTo("high");
             verify(customizer).customize(any(), eq(created.getValue()));
@@ -497,7 +509,7 @@ class CopilotAgentTests {
     }
     @CopilotAgent
     public interface WrongReturn {
-        String answer(@ConversationId String id, @UserMessage String message);
+        void answer(@ConversationId String id, @UserMessage String message);
     }
     @CopilotAgent
     public interface MissingId {

@@ -10,8 +10,12 @@ targeting **Spring Boot 4.1.1**, **Java 21**, and Copilot SDK **1.0.24**.
 
 - Auto-configured, Spring-managed `CopilotClient` for a managed local runtime or an
   existing TCP server, with lazy (default) or eager startup and clean shutdown.
-- Typed `@CopilotAgent` interfaces returning `CompletableFuture<String>`, routed by
+- Typed `@CopilotAgent` interfaces returning `CompletableFuture<String>`, structured
+  results (`CompletableFuture<T>` for records, enums, collections, and scalars via
+  provider-native JSON Schema), or synchronous `String`/`T`, routed by
   `@ConversationId` or bound to application-owned instances via `CopilotAgents`.
+- Prompt templates: `@UserMessage("Summarize {{doc}}")` inline or from resources,
+  with `@P`-bound parameters validated at startup.
 - Persistent conversations with create/resume, per-conversation serialization, and
   bounded, non-blocking admission across all agents.
 - Append, replace, or customize system instructions inline, from resources, or from
@@ -21,9 +25,22 @@ targeting **Spring Boot 4.1.1**, **Java 21**, and Copilot SDK **1.0.24**.
 - Declarative local (stdio) and remote (HTTP) MCP servers selected per agent.
 - BYOK (bring your own key) model providers per agent: OpenAI, Azure OpenAI /
   Microsoft Foundry, Anthropic, Ollama, and other OpenAI-compatible endpoints.
+- Per-user GitHub authentication through a `CopilotTokenResolver` or the Spring
+  Security OAuth2 client, with the caller's security context, MDC, and observation
+  propagated into tools, permission handlers, hooks, and listeners.
+- Per-agent tool governance: allow/deny lists for built-in, custom, and MCP tools,
+  declarative permission policies, and session hooks as Spring beans.
+- Real cancellation: cancelling a future or `Flux`, or hitting the response
+  timeout, aborts the in-flight runtime turn.
 - Session-scoped listeners and SDK configuration customizers.
+- Optional Actuator support: a `copilot` health indicator (never force-starts a lazy
+  client), a read-only `copilot` endpoint for agents, models, sessions, and execution
+  capacity, and an info section with starter/SDK versions.
 - Optional Micrometer observations and token counters, and an optional Reactor
   module for `Flux<CopilotAgentEvent>` streaming.
+- Test support module with a scripted, in-memory Copilot runtime (replies, streaming,
+  tool calls into `@CopilotTool` beans, failures, recorded prompts) and a
+  Testcontainers `CopilotContainer` wired through `@ServiceConnection`.
 
 Permissions are denied unless you supply an explicit `PermissionHandler` bean; the
 starter never approves tool use implicitly. No artifacts have been published yet.
@@ -33,8 +50,9 @@ starter never approves tool use implicitly. No artifacts have been published yet
 | Module | Purpose |
 | --- | --- |
 | `copilot-spring-boot-starter` | Dependency-only starter: SDK, auto-configuration, and Spring Boot starter. |
-| `copilot-spring-boot-autoconfigure` | Client configuration, agent API, discovery, execution, tool binding, and optional observations. |
+| `copilot-spring-boot-autoconfigure` | Client configuration, agent API, discovery, execution, tool binding, optional observations, and Actuator support. |
 | `copilot-spring-boot-reactor` | Optional Reactor return-type adapter for streaming agent methods. |
+| `copilot-spring-boot-test` | Test support: scripted in-memory `CopilotClient`, `@AutoConfigureCopilotTestRuntime`, and Testcontainers `CopilotContainer` with `@ServiceConnection`. |
 | `copilot-spring-boot-example` | Executable, non-web example of raw SDK sessions, typed agents, bound instances, and streaming. |
 | `copilot-spring-boot-site-skin` | Internal Maven Site layout for the documentation; not an application dependency. |
 
@@ -133,11 +151,15 @@ See also the SDK's
 | `@CopilotTool` services and proxies | [Spring tool beans](src/site/markdown/tools.md) |
 | Local and remote MCP servers | [MCP servers](src/site/markdown/mcp.md) |
 | Bring-your-own-key model providers | [BYOK providers](src/site/markdown/byok.md) |
+| Per-user tokens, OAuth2, and context propagation | [Per-user authentication](src/site/markdown/authentication.md) |
 | Listeners and customizers | [Events and customizers](src/site/markdown/events.md) |
+| Tool filtering, permission policies, and hooks | [Tool governance, permissions, and hooks](src/site/markdown/governance.md) |
 | Every `copilot.*` property | [Configuration reference](src/site/markdown/configuration.md) |
 | `Flux<CopilotAgentEvent>` streaming | [Reactive streaming](src/site/markdown/streaming.md) |
 | Micrometer observations and token counters | [Observability](src/site/markdown/observability.md) |
+| Health indicator, info, and `copilot` endpoint | [Actuator](src/site/markdown/actuator.md) |
 | Custom telemetry and return types | [Extension SPIs](src/site/markdown/extensions.md) |
+| Scripted test runtime and Testcontainers | [Testing](src/site/markdown/testing.md) |
 | Running the example modes | [Example application](src/site/markdown/examples.md) |
 | Authorization boundaries and troubleshooting | [Security and troubleshooting](src/site/markdown/operations.md) |
 

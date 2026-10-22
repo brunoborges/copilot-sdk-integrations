@@ -31,6 +31,7 @@
         <module>copilot-spring-boot-autoconfigure</module>
         <module>copilot-spring-boot-starter</module>
         <module>copilot-spring-boot-reactor</module>
+        <module>copilot-spring-boot-test</module>
         <module>copilot-spring-boot-example</module>
     </modules>
 

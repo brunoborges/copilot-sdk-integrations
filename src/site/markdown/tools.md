@@ -86,7 +86,9 @@ Names and namespace names must be non-blank. Duplicate tool names within a
 namespace fail initialization; different namespaces remain independent.
 Metadata and explicit SDK flags, including `skipPermission`, are preserved.
 Registering a tool does not itself approve its execution or disable built-in
-tools. An empty tool list means no custom tools supplied by this definition,
+tools; use `permissions.allow-agent-tools`, `CopilotPermissionPolicies`, and
+`builtInTools`/`availableTools` for that (see
+[Tool governance, permissions, and hooks](governance.html)). An empty tool list means no custom tools supplied by this definition,
 not a text-only runtime sandbox.
 
 ---

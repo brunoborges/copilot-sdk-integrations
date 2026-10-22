@@ -1,18 +1,30 @@
 package io.github.brunoborges.copilot.agent.internal;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import io.github.brunoborges.copilot.agent.ConversationId;
 import io.github.brunoborges.copilot.agent.CopilotAgent;
+import io.github.brunoborges.copilot.agent.P;
 import io.github.brunoborges.copilot.agent.UserMessage;
 import io.github.brunoborges.copilot.agent.CopilotAgentReturnTypeAdapter;
 import io.github.brunoborges.copilot.agent.CopilotAgentInstance;
@@ -81,6 +93,11 @@ public final class CopilotAgentFactoryBean implements FactoryBean<Object>, Initi
         return bound;
     }
 
+    /** Returns the resolved definition, or {@code null} before initialization. */
+    public CopilotAgentDefinition definition() {
+        return definition;
+    }
+
     public <T> CopilotAgentInstance<T> bind(Class<T> requestedType, String conversationId, boolean resume) {
         Assert.isTrue(requestedType == type && bound, "Cannot bind this Copilot agent definition");
         var lifetime = new CopilotAgentLifetime(resume);
@@ -102,44 +119,144 @@ public final class CopilotAgentFactoryBean implements FactoryBean<Object>, Initi
             }
             var binding = bindings.get(method);
             String conversationId = boundId == null ? (String) args[binding.conversation()] : boundId;
-            String message = (String) args[binding.message()];
-            if (lifetime != null) {
-                return binding.adapter() == null ? invoker.invokeBound(definition, conversationId, message, null, lifetime)
-                        : binding.adapter().adapt(events -> invoker.invokeBound(definition, conversationId, message, events, lifetime));
+            String message;
+            try {
+                message = binding.prompt().render(args);
+            } catch (IllegalArgumentException ex) {
+                if (binding.sync()) {
+                    throw ex;
+                }
+                return binding.adapter() == null ? CompletableFuture.failedFuture(ex)
+                        : binding.adapter().adapt(events -> CompletableFuture.failedFuture(ex));
             }
-            return binding.adapter() == null ? invoker.invoke(definition, conversationId, message)
-                    : binding.adapter().adapt(events -> invoker.invoke(definition, conversationId, message, events));
+            if (binding.adapter() != null) {
+                return lifetime != null
+                        ? binding.adapter().adapt(events -> invoker.invokeBound(definition, conversationId, message, events, lifetime))
+                        : binding.adapter().adapt(events -> invoker.invoke(definition, conversationId, message, events));
+            }
+            CompletableFuture<?> result;
+            if (binding.structured() != null) {
+                result = binding.structured().convert(invoker.invokeStructured(definition, conversationId, message,
+                        binding.structured().schema(), lifetime));
+            } else {
+                result = lifetime != null ? invoker.invokeBound(definition, conversationId, message, null, lifetime)
+                        : invoker.invoke(definition, conversationId, message);
+            }
+            return binding.sync() ? await(result, definition.responseTimeout(), method) : result;
         });
     }
 
-    private static Binding binding(Method method, List<CopilotAgentReturnTypeAdapter> adapters) {
-        String message = "Copilot agent method must return CompletableFuture<String> or a registered adapter type and declare "
-                + "one @UserMessage String, optionally preceded or followed by one @ConversationId String: " + method.toGenericString();
-        boolean text = method.getGenericReturnType() instanceof ParameterizedType result
-                        && result.getRawType() == CompletableFuture.class
-                        && result.getActualTypeArguments()[0] == String.class;
-        var matching = adapters.stream().filter(adapter -> adapter.supports(method.getGenericReturnType())).toList();
-        Assert.isTrue(matching.size() <= 1, "Multiple Copilot return-type adapters match " + method.toGenericString());
-        Assert.isTrue(text || matching.size() == 1, message);
-        Assert.isTrue(method.getParameterCount() == 1 || method.getParameterCount() == 2, message);
-        int conversation = -1;
-        int userMessage = -1;
-        for (int index = 0; index < method.getParameterCount(); index++) {
-            var parameter = method.getParameters()[index];
-            Assert.isTrue(parameter.getType() == String.class, message);
-            boolean id = parameter.isAnnotationPresent(ConversationId.class);
-            boolean prompt = parameter.isAnnotationPresent(UserMessage.class);
-            Assert.isTrue(id != prompt, message);
-            if (id) {
-                Assert.isTrue(conversation == -1, message);
-                conversation = index;
-            } else {
-                Assert.isTrue(userMessage == -1, message);
-                userMessage = index;
+    /**
+     * Blocks for a synchronous agent method. Unchecked failures propagate as-is; checked failures (including the
+     * {@link TimeoutException} raised once the response timeout elapses) are thrown when the method declares them
+     * and otherwise wrapped in a {@link CompletionException}.
+     */
+    private static Object await(CompletableFuture<?> result, Duration timeout, Method method) throws Throwable {
+        Throwable failure;
+        try {
+            return result.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
+        } catch (ExecutionException ex) {
+            failure = ex.getCause();
+        } catch (TimeoutException ex) {
+            result.cancel(true);
+            failure = new TimeoutException("Copilot agent did not respond within " + timeout);
+        } catch (InterruptedException ex) {
+            result.cancel(true);
+            Thread.currentThread().interrupt();
+            failure = ex;
+        }
+        if (failure instanceof RuntimeException || failure instanceof Error) {
+            throw failure;
+        }
+        for (var declared : method.getExceptionTypes()) {
+            if (declared.isInstance(failure)) {
+                throw failure;
             }
         }
-        Assert.isTrue(userMessage != -1 && (method.getParameterCount() == 1 || conversation != -1), message);
-        return new Binding(conversation, userMessage, matching.isEmpty() ? null : matching.getFirst());
+        throw new CompletionException(failure);
+    }
+
+    private Binding binding(Method method, List<CopilotAgentReturnTypeAdapter> adapters) {
+        String signature = method.toGenericString();
+        String message = "Copilot agent method must return CompletableFuture<T>, T, or a registered adapter type, and declare "
+                + "either one @UserMessage String parameter or a method-level @UserMessage template with @P parameters, "
+                + "optionally with one @ConversationId String: " + signature;
+        Type returned = method.getGenericReturnType();
+        var matching = adapters.stream().filter(adapter -> adapter.supports(returned)).toList();
+        Assert.isTrue(matching.size() <= 1, "Multiple Copilot return-type adapters match " + signature);
+        var adapter = matching.isEmpty() ? null : matching.getFirst();
+        StructuredResponse structured = null;
+        boolean sync = false;
+        if (adapter == null) {
+            Type value;
+            if (returned instanceof ParameterizedType future && future.getRawType() == CompletableFuture.class) {
+                value = future.getActualTypeArguments()[0];
+            } else {
+                Class<?> raw = method.getReturnType();
+                Assert.isTrue(raw != void.class && raw != Void.class && !Future.class.isAssignableFrom(raw)
+                        && !CompletionStage.class.isAssignableFrom(raw), message);
+                value = returned;
+                sync = true;
+            }
+            if (value != String.class) {
+                try {
+                    structured = StructuredResponse.of(value);
+                } catch (IllegalArgumentException ex) {
+                    throw new IllegalArgumentException(ex.getMessage() + ": " + signature, ex);
+                }
+            }
+        }
+        int conversation = -1;
+        int verbatim = -1;
+        var named = new LinkedHashMap<String, Integer>();
+        for (int index = 0; index < method.getParameterCount(); index++) {
+            var parameter = method.getParameters()[index];
+            boolean id = parameter.isAnnotationPresent(ConversationId.class);
+            var prompt = parameter.getAnnotation(UserMessage.class);
+            var variable = parameter.getAnnotation(P.class);
+            Assert.isTrue((id ? 1 : 0) + (prompt != null ? 1 : 0) + (variable != null ? 1 : 0) == 1, message);
+            if (id) {
+                Assert.isTrue(parameter.getType() == String.class && conversation == -1, message);
+                conversation = index;
+            } else if (prompt != null) {
+                Assert.isTrue(parameter.getType() == String.class && verbatim == -1, message);
+                Assert.isTrue(prompt.value().isEmpty() && prompt.resource().isEmpty(),
+                        "@UserMessage template attributes are only valid on methods: " + signature);
+                verbatim = index;
+            } else {
+                String name = variable.value().isEmpty() && parameter.isNamePresent() ? parameter.getName() : variable.value();
+                Assert.hasText(name, "@P requires a name unless compiled with -parameters: " + signature);
+                Assert.isTrue(named.put(name, index) == null, "Duplicate @P(\"" + name + "\") parameters: " + signature);
+            }
+        }
+        var template = method.getAnnotation(UserMessage.class);
+        PromptTemplate prompt;
+        if (template == null) {
+            Assert.isTrue(named.isEmpty(), "@P parameters require a method-level @UserMessage template: " + signature);
+            Assert.isTrue(verbatim != -1, message);
+            prompt = PromptTemplate.verbatim(verbatim);
+        } else {
+            Assert.isTrue(verbatim == -1,
+                    "A method-level @UserMessage template cannot be combined with a @UserMessage parameter: " + signature);
+            prompt = PromptTemplate.compile(template(template, signature), named, signature);
+        }
+        return new Binding(conversation, prompt, adapter, structured, sync);
+    }
+
+    private String template(UserMessage annotation, String signature) {
+        String inline = environment.resolveRequiredPlaceholders(annotation.value());
+        String location = environment.resolveRequiredPlaceholders(annotation.resource());
+        Assert.isTrue(inline.isEmpty() != location.isEmpty(),
+                "Method-level @UserMessage requires exactly one of value or resource: " + signature);
+        if (inline.isEmpty()) {
+            try (var input = resources.getResource(location).getInputStream()) {
+                inline = new String(input.readAllBytes(), StandardCharsets.UTF_8);
+            } catch (IOException ex) {
+                throw new IllegalArgumentException("Cannot read @UserMessage resource " + location + ": " + signature, ex);
+            }
+        }
+        Assert.hasText(inline, "@UserMessage template must not be blank: " + signature);
+        return inline;
     }
 
     @Override
@@ -152,6 +269,7 @@ public final class CopilotAgentFactoryBean implements FactoryBean<Object>, Initi
         return bound ? CopilotAgentDefinition.class : type;
     }
 
-    private record Binding(int conversation, int message, CopilotAgentReturnTypeAdapter adapter) {
+    private record Binding(int conversation, PromptTemplate prompt, CopilotAgentReturnTypeAdapter adapter,
+            StructuredResponse structured, boolean sync) {
     }
 }

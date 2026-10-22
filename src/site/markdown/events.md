@@ -96,13 +96,14 @@ For each invocation, ordering is:
    handler remains configured.
 
 Customizers can use SDK capabilities not exposed as declarative properties,
-such as hooks or advanced MCP authentication settings. Basic server definition
-and selection are covered by [MCP servers](mcp.html). Customizers are responsible for the validity of their
+such as advanced MCP authentication settings. Basic server definition
+and selection are covered by [MCP servers](mcp.html); tool filtering, permission
+policies, and hook beans by [Tool governance, permissions, and hooks](governance.html). Customizers are responsible for the validity of their
 advanced SDK configuration; startup duplicate-tool validation covers declared
 tool references, not arbitrary lists constructed later by customizers.
 
 ---
 
-**Previous:** [BYOK providers](byok.html)
+**Previous:** [Per-user authentication](authentication.html)
 
-**Next:** [Configuration reference](configuration.html)
+**Next:** [Tool governance, permissions, and hooks](governance.html)

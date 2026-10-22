@@ -77,6 +77,12 @@ public record CopilotProperties(
         return options;
     }
 
+    CopilotClientOptions toOptions(CopilotConnectionDetails details) {
+        Assert.notNull(details.cliUrl(), "CopilotConnectionDetails.cliUrl() is required");
+        return new CopilotProperties(enabled, eagerStart, startupTimeout, null, List.of(), null, logLevel,
+                details.cliUrl(), details.tcpConnectionToken()).toOptions();
+    }
+
     @Override
     public String toString() {
         return "CopilotProperties[enabled=" + enabled + ", eagerStart=" + eagerStart

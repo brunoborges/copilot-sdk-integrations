@@ -1,3 +1,7 @@
 io.github.brunoborges.copilot.autoconfigure.CopilotAutoConfiguration
 io.github.brunoborges.copilot.autoconfigure.CopilotAgentsAutoConfiguration
 io.github.brunoborges.copilot.autoconfigure.CopilotAgentObservationAutoConfiguration
+io.github.brunoborges.copilot.autoconfigure.CopilotHealthContributorAutoConfiguration
+io.github.brunoborges.copilot.autoconfigure.CopilotEndpointAutoConfiguration
+io.github.brunoborges.copilot.autoconfigure.CopilotInfoContributorAutoConfiguration
+io.github.brunoborges.copilot.autoconfigure.CopilotSecurityAutoConfiguration

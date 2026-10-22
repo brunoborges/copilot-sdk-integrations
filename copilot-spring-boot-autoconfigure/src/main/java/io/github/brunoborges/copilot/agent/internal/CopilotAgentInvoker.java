@@ -8,12 +8,14 @@ import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -26,8 +28,10 @@ import com.github.copilot.rpc.PermissionHandler;
 import com.github.copilot.rpc.ResumeSessionConfig;
 import com.github.copilot.rpc.SessionConfig;
 import com.github.copilot.rpc.ToolDefinition;
+import com.github.copilot.generated.AssistantMessageEvent;
 import com.github.copilot.generated.AssistantUsageEvent;
 import io.github.brunoborges.copilot.agent.CopilotAgentContext;
+import io.github.brunoborges.copilot.agent.CopilotTokenResolver;
 import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
 import io.github.brunoborges.copilot.agent.CopilotAgentEvent;
 import io.github.brunoborges.copilot.agent.CopilotConversationNotFoundException;
@@ -43,6 +47,9 @@ public final class CopilotAgentInvoker implements AutoCloseable {
     private final CopilotAgentTelemetry telemetry;
     private final Semaphore concurrent;
     private final Semaphore outstanding;
+    private final int maxConcurrent;
+    private final int maxOutstanding;
+    private final ContextPropagation propagation;
     private volatile boolean closed;
 
     public CopilotAgentInvoker(CopilotClient client) {
@@ -51,10 +58,18 @@ public final class CopilotAgentInvoker implements AutoCloseable {
 
     public CopilotAgentInvoker(CopilotClient client, CopilotAgentTelemetry telemetry,
             CopilotAgentExecutionProperties execution) {
+        this(client, telemetry, execution, ContextPropagation.detect(CopilotAgentInvoker.class.getClassLoader()));
+    }
+
+    public CopilotAgentInvoker(CopilotClient client, CopilotAgentTelemetry telemetry,
+            CopilotAgentExecutionProperties execution, ContextPropagation propagation) {
         this.client = client;
         this.telemetry = telemetry;
-        concurrent = new Semaphore(execution.maxConcurrentInvocations(), true);
-        outstanding = new Semaphore(execution.maxOutstandingInvocations());
+        this.propagation = propagation;
+        maxConcurrent = execution.maxConcurrentInvocations();
+        maxOutstanding = execution.maxOutstandingInvocations();
+        concurrent = new Semaphore(maxConcurrent, true);
+        outstanding = new Semaphore(maxOutstanding);
     }
 
     public CompletableFuture<String> invoke(CopilotAgentDefinition definition, String conversationId, String message) {
@@ -69,11 +84,28 @@ public final class CopilotAgentInvoker implements AutoCloseable {
 
     private CompletableFuture<String> invokeInternal(CopilotAgentDefinition definition, String conversationId, String message,
             Consumer<CopilotAgentEvent> events) {
-        return invokeOwned(definition, conversationId, message, events, CopilotAgentLifetime.Lease.NONE);
+        return invokeOwned(definition, conversationId, message, events, CopilotAgentLifetime.Lease.NONE, null);
+    }
+
+    /**
+     * Invokes with a provider-native response schema and completes with the raw structured (JSON) reply.
+     * {@code lifetime} is null for explicit-ID agents.
+     */
+    public CompletableFuture<String> invokeStructured(CopilotAgentDefinition definition, String conversationId,
+            String message, Map<String, Object> responseSchema, CopilotAgentLifetime lifetime) {
+        Assert.notNull(responseSchema, "Structured invocation requires a response schema");
+        return lifetime == null
+                ? invokeOwned(definition, conversationId, message, null, CopilotAgentLifetime.Lease.NONE, responseSchema)
+                : invokeBound(definition, conversationId, message, null, lifetime, responseSchema);
     }
 
     public CompletableFuture<String> invokeBound(CopilotAgentDefinition definition, String conversationId, String message,
             Consumer<CopilotAgentEvent> events, CopilotAgentLifetime lifetime) {
+        return invokeBound(definition, conversationId, message, events, lifetime, null);
+    }
+
+    private CompletableFuture<String> invokeBound(CopilotAgentDefinition definition, String conversationId, String message,
+            Consumer<CopilotAgentEvent> events, CopilotAgentLifetime lifetime, Map<String, Object> responseSchema) {
         CopilotAgentLifetime.Lease owner;
         try {
             owner = lifetime.acquire();
@@ -81,21 +113,36 @@ public final class CopilotAgentInvoker implements AutoCloseable {
             return CompletableFuture.failedFuture(ex);
         }
         try (var scope = owner.enter()) {
-            return invokeOwned(definition, conversationId, message, events, owner);
+            return invokeOwned(definition, conversationId, message, events, owner, responseSchema);
         }
     }
 
     private CompletableFuture<String> invokeOwned(CopilotAgentDefinition definition, String conversationId, String message,
-            Consumer<CopilotAgentEvent> events, CopilotAgentLifetime.Lease owner) {
+            Consumer<CopilotAgentEvent> events, CopilotAgentLifetime.Lease owner, Map<String, Object> responseSchema) {
         boolean transferred = false;
         try {
             if (conversationId == null || conversationId.isBlank() || message == null || message.isBlank()) {
                 return CompletableFuture.failedFuture(
                         new IllegalArgumentException("Conversation identity and @UserMessage must be non-blank strings"));
             }
-            String sessionId = sessionId(definition, conversationId);
-            var context = new CopilotAgentContext(definition.name(), conversationId, sessionId);
+            CopilotAgentContext context;
+            InvocationState state;
+            try {
+                var resolver = definition.tokenResolver();
+                String partition = resolver == null ? null : resolver.partitionKey(definition.name(), conversationId);
+                context = new CopilotAgentContext(definition.name(), conversationId,
+                        sessionId(definition, conversationId, partition));
+                state = capture(definition, context, partition);
+            } catch (RuntimeException ex) {
+                return CompletableFuture.failedFuture(ex);
+            }
+            String sessionId = context.sessionId();
             var result = new CompletableFuture<String>();
+            result.whenComplete((ignored, error) -> {
+                if (result.isCancelled()) {
+                    state.cancel();
+                }
+            });
             Consumer<CopilotAgentEvent> subscriber = events == null ? null : event -> {
                 if (!result.isCancelled()) {
                     events.accept(event);
@@ -128,7 +175,7 @@ public final class CopilotAgentInvoker implements AutoCloseable {
                         .whenComplete((ignored, error) -> {
                             try {
                                 executor.execute(() -> execute(definition, context, message, result, finished,
-                                        observation, subscriber, owner));
+                                        observation, subscriber, owner, responseSchema, state));
                             } catch (RejectedExecutionException ex) {
                                 var failure = finishObservation(observation, ex, result.isCancelled());
                                 outstanding.release();
@@ -146,9 +193,52 @@ public final class CopilotAgentInvoker implements AutoCloseable {
         }
     }
 
+    /** Resolves the caller's token and context on the caller thread so request-bound state is available. */
+    private InvocationState capture(CopilotAgentDefinition definition, CopilotAgentContext context, String partition) {
+        var resolver = definition.tokenResolver();
+        String token = resolver == null ? null : resolver.resolveToken(context);
+        if (token != null && partition == null) {
+            throw new IllegalStateException("Copilot agent '" + definition.name() + "': token resolver "
+                    + resolver.getClass().getName() + " returned a per-caller token without a partition key; "
+                    + "override CopilotTokenResolver.partitionKey to isolate sessions per caller, or return "
+                    + "CopilotTokenResolver.SHARED to share them");
+        }
+        return new InvocationState(token, propagation.capture());
+    }
+
+    /** Enters the bound instance's lifetime and restores the caller's context for SDK-thread callbacks. */
+    private static CopilotAgentLifetime.Scope callbackScope(CopilotAgentLifetime.Lease owner, InvocationState state) {
+        var instance = owner.enter();
+        ContextPropagation.Scope caller;
+        try {
+            caller = restore(state);
+        } catch (RuntimeException | Error ex) {
+            instance.close();
+            throw ex;
+        }
+        return () -> {
+            try {
+                caller.close();
+            } finally {
+                instance.close();
+            }
+        };
+    }
+
+    private static ContextPropagation.Scope restore(InvocationState state) {
+        try {
+            return state.context().restore();
+        } catch (RuntimeException ex) {
+            log.log(Level.WARNING, "Cannot restore caller context for a Copilot agent callback", ex);
+            return () -> { };
+        }
+    }
+
     private void execute(CopilotAgentDefinition definition, CopilotAgentContext context, String message,
             CompletableFuture<String> result, CompletableFuture<Void> finished, CopilotAgentTelemetry.Call observation,
-            Consumer<CopilotAgentEvent> events, CopilotAgentLifetime.Lease owner) {
+            Consumer<CopilotAgentEvent> events, CopilotAgentLifetime.Lease owner, Map<String, Object> responseSchema,
+            InvocationState state) {
+        var callerContext = restore(state);
         var instanceScope = owner.enter();
         String response = null;
         Throwable failure = null;
@@ -165,7 +255,7 @@ public final class CopilotAgentInvoker implements AutoCloseable {
                         throw new RejectedExecutionException("Copilot agent infrastructure is closing");
                     }
                     try (var scope = observation.openScope()) {
-                        response = exchange(definition, context, message, observation, events, owner);
+                        response = exchange(definition, context, message, observation, events, owner, responseSchema, state);
                     }
                 }
             }
@@ -177,16 +267,24 @@ public final class CopilotAgentInvoker implements AutoCloseable {
         } catch (Error ex) {
             failure = ex;
         } finally {
+            boolean cancelled = result.isCancelled();
+            if (cancelled && failure instanceof CancellationException) {
+                failure = null;
+            }
             try {
-                failure = finishObservation(observation, failure, result.isCancelled());
+                failure = finishObservation(observation, failure, cancelled);
                 if (acquired) {
                     concurrent.release();
                 }
                 outstanding.release();
                 finish(context.sessionId(), finished);
             } finally {
-                owner.close();
-                instanceScope.close();
+                try {
+                    owner.close();
+                    instanceScope.close();
+                } finally {
+                    callerContext.close();
+                }
             }
         }
         if (failure == null) {
@@ -231,12 +329,12 @@ public final class CopilotAgentInvoker implements AutoCloseable {
 
     private String exchange(CopilotAgentDefinition definition, CopilotAgentContext context, String message,
             CopilotAgentTelemetry.Call observation, Consumer<CopilotAgentEvent> events,
-            CopilotAgentLifetime.Lease owner) throws IOException {
+            CopilotAgentLifetime.Lease owner, Map<String, Object> responseSchema, InvocationState state) throws IOException {
         var observerFailure = new AtomicReference<RuntimeException>();
         String content;
-        try (var session = open(definition, context, observation, events != null, owner);
+        try (var session = open(definition, context, observation, events != null, owner, state);
                 var subscription = session.on(event -> {
-                    try (var callbackScope = owner.enter()) {
+                    try (var callerContext = restore(state); var callbackScope = owner.enter()) {
                         if (event instanceof AssistantUsageEvent usage) {
                             try {
                                 observation.usage(usage);
@@ -265,8 +363,13 @@ public final class CopilotAgentInvoker implements AutoCloseable {
                 })) {
             Assert.isTrue(context.sessionId().equals(session.getSessionId()),
                     "Copilot runtime did not preserve the requested agent session ID");
-            var reply = session.sendAndWait(new MessageOptions().setPrompt(message),
-                    definition.responseTimeout().toMillis()).join();
+            var options = new MessageOptions().setPrompt(message);
+            if (responseSchema != null) {
+                options.setResponseSchema(responseSchema);
+            }
+            state.checkCancelled();
+            var reply = await(session, definition, state, state.awaiting(session.sendAndWait(
+                    options, definition.responseTimeout().toMillis())));
             if (events == null) {
                 Assert.state(reply != null && reply.getData() != null && reply.getData().content() != null,
                         "Copilot agent completed without an assistant text response");
@@ -279,10 +382,29 @@ public final class CopilotAgentInvoker implements AutoCloseable {
         return content;
     }
 
+    /** Waits for the reply, aborting the runtime turn when the caller cancels or the response times out. */
+    private static AssistantMessageEvent await(CopilotSession session, CopilotAgentDefinition definition,
+            InvocationState state, CompletableFuture<AssistantMessageEvent> reply) {
+        try {
+            return reply.join();
+        } catch (CancellationException ex) {
+            if (state.cancelled()) {
+                InvocationState.abort(session, definition.name());
+            }
+            throw ex;
+        } catch (CompletionException ex) {
+            if (ex.getCause() instanceof TimeoutException) {
+                InvocationState.abort(session, definition.name());
+            }
+            throw ex;
+        }
+    }
+
     private CopilotSession open(CopilotAgentDefinition definition, CopilotAgentContext context,
-            CopilotAgentTelemetry.Call observation, boolean streaming, CopilotAgentLifetime.Lease owner) {
+            CopilotAgentTelemetry.Call observation, boolean streaming, CopilotAgentLifetime.Lease owner,
+            InvocationState state) {
         // Null is the SDK's documented not-found result; lookup errors must not create a new conversation.
-        if (client.getSessionMetadata(context.sessionId()).join() == null) {
+        if (state.join(client.getSessionMetadata(context.sessionId()), definition.responseTimeout(), null) == null) {
             if (owner.requiresHistory()) {
                 throw new CopilotConversationNotFoundException(definition.name());
             }
@@ -301,15 +423,19 @@ public final class CopilotAgentInvoker implements AutoCloseable {
             if (definition.provider() != null) {
                 config.setProvider(definition.provider());
             }
+            definition.governance().apply(context, config, () -> callbackScope(owner, state));
             definition.customizers().forEach(customizer -> customizer.customize(context, config));
             if (streaming) {
                 config.setStreaming(true);
             }
-            config.setTools(observedTools(config.getTools(), observation, owner));
+            if (state.gitHubToken() != null && config.getGitHubToken() == null && config.getGitHubTokenProvider() == null) {
+                config.setGitHubToken(state.gitHubToken());
+            }
+            config.setTools(propagatedTools(observedTools(config.getTools(), observation, owner), state));
             Assert.isTrue(context.sessionId().equals(config.getSessionId()), "Agent customizers must not change the session ID");
             Assert.notNull(config.getOnPermissionRequest(), "Agent customizers must not remove the permission handler");
-            config.setOnPermissionRequest(ownedPermissions(config.getOnPermissionRequest(), owner));
-            var session = client.createSession(config).join();
+            config.setOnPermissionRequest(propagatedPermissions(ownedPermissions(config.getOnPermissionRequest(), owner), state));
+            var session = state.join(client.createSession(config), definition.responseTimeout(), CopilotAgentInvoker::closeQuietly);
             owner.sessionOpened();
             return session;
         }
@@ -328,16 +454,29 @@ public final class CopilotAgentInvoker implements AutoCloseable {
         if (definition.provider() != null) {
             config.setProvider(definition.provider());
         }
+        definition.governance().apply(context, config, () -> callbackScope(owner, state));
         definition.customizers().forEach(customizer -> customizer.customize(context, config));
         if (streaming) {
             config.setStreaming(true);
         }
-        config.setTools(observedTools(config.getTools(), observation, owner));
+        // Session tokens are not persisted with the session, so resumption must resupply them.
+        if (state.gitHubToken() != null && config.getGitHubToken() == null && config.getGitHubTokenProvider() == null) {
+            config.setGitHubToken(state.gitHubToken());
+        }
+        config.setTools(propagatedTools(observedTools(config.getTools(), observation, owner), state));
         Assert.notNull(config.getOnPermissionRequest(), "Agent customizers must not remove the permission handler");
-        config.setOnPermissionRequest(ownedPermissions(config.getOnPermissionRequest(), owner));
-        var session = client.resumeSession(context.sessionId(), config).join();
+        config.setOnPermissionRequest(propagatedPermissions(ownedPermissions(config.getOnPermissionRequest(), owner), state));
+        var session = state.join(client.resumeSession(context.sessionId(), config), definition.responseTimeout(), CopilotAgentInvoker::closeQuietly);
         owner.sessionOpened();
         return session;
+    }
+
+    private static void closeQuietly(CopilotSession session) {
+        try {
+            session.close();
+        } catch (Exception ex) {
+            log.log(Level.WARNING, "Failed to close an abandoned Copilot session", ex);
+        }
     }
 
     private static PermissionHandler ownedPermissions(
@@ -350,6 +489,28 @@ public final class CopilotAgentInvoker implements AutoCloseable {
                 return permissions.handle(request, invocation);
             }
         };
+    }
+
+    private static PermissionHandler propagatedPermissions(PermissionHandler permissions, InvocationState state) {
+        if (state.context() == ContextPropagation.Snapshot.NONE) {
+            return permissions;
+        }
+        return (request, invocation) -> {
+            try (var scope = restore(state)) {
+                return permissions.handle(request, invocation);
+            }
+        };
+    }
+
+    private static List<ToolDefinition> propagatedTools(List<ToolDefinition> tools, InvocationState state) {
+        if (tools == null || state.context() == ContextPropagation.Snapshot.NONE) {
+            return tools;
+        }
+        return tools.stream().map(tool -> new ToolDefinition(tool.name(), tool.description(), tool.parameters(), invocation -> {
+            try (var scope = restore(state)) {
+                return tool.handler().invoke(invocation);
+            }
+        }, tool.overridesBuiltInTool(), tool.skipPermission(), tool.defer(), tool.metadata(), tool.isTerminal(), tool.namespace())).toList();
     }
 
     private List<ToolDefinition> observedTools(List<ToolDefinition> tools,
@@ -383,13 +544,37 @@ public final class CopilotAgentInvoker implements AutoCloseable {
     }
 
     public static String sessionId(CopilotAgentDefinition definition, String conversationId) {
+        return sessionId(definition, conversationId, null);
+    }
+
+    /** A null or {@link CopilotTokenResolver#SHARED} partition yields the unpartitioned ID. */
+    static String sessionId(CopilotAgentDefinition definition, String conversationId, String partition) {
         try {
-            byte[] identity = (definition.typeName() + "\0" + definition.name() + "\0" + conversationId)
-                    .getBytes(StandardCharsets.UTF_8);
+            String identity0 = definition.typeName() + "\0" + definition.name() + "\0" + conversationId;
+            if (partition != null && !partition.isEmpty()) {
+                identity0 += "\0" + partition;
+            }
+            byte[] identity = identity0.getBytes(StandardCharsets.UTF_8);
             return "agent-" + HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(identity));
         } catch (NoSuchAlgorithmException ex) {
             throw new IllegalStateException("Required SHA-256 digest is unavailable", ex);
         }
+    }
+
+    /** Returns a point-in-time, read-only snapshot of invocation capacity for diagnostics. */
+    public ExecutionStats executionStats() {
+        int accepted = Math.max(0, maxOutstanding - outstanding.availablePermits());
+        int running = Math.min(accepted, Math.max(0, maxConcurrent - concurrent.availablePermits()));
+        return new ExecutionStats(running, accepted - running, maxConcurrent, maxOutstanding);
+    }
+
+    /**
+     * @param running invocations currently holding an execution permit
+     * @param queued accepted invocations waiting for an execution permit or a prior turn
+     * @param maxConcurrent configured {@code copilot.execution.max-concurrent-invocations}
+     * @param maxOutstanding configured {@code copilot.execution.max-outstanding-invocations}
+     */
+    public record ExecutionStats(int running, int queued, int maxConcurrent, int maxOutstanding) {
     }
 
     @Override

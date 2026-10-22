@@ -1,5 +1,6 @@
 package io.github.brunoborges.copilot.autoconfigure;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -20,8 +21,10 @@ public class CopilotAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    CopilotClientOptions copilotClientOptions(CopilotProperties properties) {
-        return properties.toOptions();
+    CopilotClientOptions copilotClientOptions(CopilotProperties properties,
+            ObjectProvider<CopilotConnectionDetails> connectionDetails) {
+        var details = connectionDetails.getIfAvailable();
+        return details == null ? properties.toOptions() : properties.toOptions(details);
     }
 
     @Bean(destroyMethod = "close")

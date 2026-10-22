@@ -115,9 +115,9 @@ invocation. A handle owns identity and operation lifetime, not an idle live
 `CopilotSession` or the shared `CopilotClient`.
 
 Closing is idempotent and blocking. It preserves interrupt status and continues
-waiting for cleanup; there is no separate close timeout or implicit runtime
-abort. Cancellation of a returned future does not make unfinished SDK work
-disappear from this barrier. Closed cached proxies reject later invocations;
+waiting for cleanup; there is no separate close timeout, and closing does not
+abort running turns itself. Cancelling a returned future aborts its turn, but
+`close()` still waits for that abort and the session cleanup. Closed cached proxies reject later invocations;
 an already constructed cold `Flux` fails if subscribed after its handle closes.
 
 Await the entire intended workflow before leaving a try-with-resources block.
@@ -145,7 +145,7 @@ Flux<CopilotAgentEvent> events = Flux.usingWhen(
 Here `MyStreamingAdvisor` declares an ID-less
 `Flux<CopilotAgentEvent> stream(@UserMessage String question)` method; `Mono`,
 `Flux`, and `Schedulers` are Reactor types. Cancellation cleanup can still wait
-for already-running SDK work. Close is not a guarantee of billing cancellation.
+for the runtime abort and cleanup. Abort is not a guarantee of billing cancellation.
 
 No new configuration keys are needed for instances. They inherit their
 definition's model, instructions, tools, listeners, timeout, observations, and

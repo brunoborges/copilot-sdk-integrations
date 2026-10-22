@@ -56,9 +56,9 @@ is delivered after previously buffered events drain. The exception extends
 `IllegalStateException`; its message includes the configured capacity.
 
 Overflow and subscriber cancellation stop delivery to that subscriber and
-cancel the local invocation result future. They do not promise to abort
-work already running in Copilot. Configured listeners and usage instrumentation
-can still observe that work. Session ownership, serialization, and admission
+cancel the invocation result future, which asks the runtime to abort the turn
+through `CopilotSession.abort()`. Abort is best-effort; configured listeners
+and usage instrumentation can still observe events emitted before it lands. Session ownership, serialization, and admission
 capacity remain held until actual work/cleanup finish.
 
 Downstream demand is not runtime-generation backpressure. Avoid blocking SDK

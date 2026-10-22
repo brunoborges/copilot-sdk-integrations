@@ -20,11 +20,15 @@ Website: [Copilot Spring Boot documentation](https://brunoborges.github.io/copil
 | [Spring tool beans](src/site/markdown/tools.md) | SDK annotations, generated metadata, proxies, and permissions. |
 | [MCP servers](src/site/markdown/mcp.md) | Local/remote definitions, per-agent bindings, native SDK beans, and security. |
 | [BYOK providers](src/site/markdown/byok.md) | Bring-your-own-key model providers per agent, native SDK beans, and security. |
+| [Per-user authentication](src/site/markdown/authentication.md) | Per-user GitHub tokens, the Spring Security OAuth2 adapter, and caller context propagation. |
 | [Events and customizers](src/site/markdown/events.md) | Session-scoped listeners, native events, and SDK configuration hooks. |
+| [Tool governance, permissions, and hooks](src/site/markdown/governance.md) | Tool filtering, permission policies, and session hooks as Spring beans. |
 | [Configuration reference](src/site/markdown/configuration.md) | All supported keys, defaults, validation, precedence, and examples. |
 | [Reactive streaming](src/site/markdown/streaming.md) | Cold subscriptions, native events, buffering, overflow, and cancellation. |
 | [Observability](src/site/markdown/observability.md) | Micrometer observations, token counters, tags, activation, and privacy. |
+| [Actuator](src/site/markdown/actuator.md) | Health indicator, info contribution, read-only `copilot` endpoint, and privacy. |
 | [Extension SPIs](src/site/markdown/extensions.md) | Telemetry replacement and custom return-type adapters. |
+| [Testing](src/site/markdown/testing.md) | Scripted in-memory runtime, `@AutoConfigureCopilotTestRuntime`, Testcontainers, and connection details. |
 | [Example application](src/site/markdown/examples.md) | Raw SDK, routed, bound-instance, and streaming modes. |
 | [Security and troubleshooting](src/site/markdown/operations.md) | Authorization boundaries, failure diagnosis, limitations, and source links. |
 

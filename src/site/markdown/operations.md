@@ -19,15 +19,24 @@ title: Security and troubleshooting
 - Scope conversation keys to the application and authorized user/tenant.
   Session IDs and their hashes are not authorization checks.
 - Denying permission requests is not a runtime sandbox or proof that every
-  operation will request permission.
+  operation will request permission. Narrow the visible tools and approve
+  only what is needed with [tool governance, permission policies, and
+  hooks](governance.html); avoid `CopilotPermissionPolicies.allowAll()`.
 - Explicit SDK tool flags are preserved. Never assume registering tools
   implicitly approves them or that a default handler overrides every SDK flag.
 - Keep tokens out of annotation literals, committed configuration, and logs.
   Use environment/secret mechanisms appropriate to the application.
 - Raw external TCP connections need a trusted network or separately secured
   tunnel; an `https://` spelling does not add TLS.
-- Preserving Spring proxy advice does not propagate authentication into SDK
-  threads. Resolve trusted identity explicitly in permission/tool policies.
+- Tool, permission, and listener callbacks run on SDK threads. With Micrometer
+  Context Propagation on the classpath, the caller's `SecurityContext`, MDC,
+  and observation are restored there, so Spring proxy advice such as
+  `@PreAuthorize` sees the invoking user. Without it, nothing is propagated;
+  resolve trusted identity explicitly in permission/tool policies.
+- For multi-user applications, run turns with each user's GitHub token through
+  a `CopilotTokenResolver` or the Spring Security OAuth2 client adapter. See
+  [Per-user authentication](authentication.html). Resolvers run on the calling
+  thread, and tokens are never logged or rendered by `toString`.
 - Decide whether application event listeners may log assistant text or tool
   data. Built-in metric tags deliberately omit those payloads.
 
@@ -40,9 +49,9 @@ title: Security and troubleshooting
 | No routed agent bean | Put the directly annotated interface under Boot's base package or add `@EnableCopilotAgents`; verify integration is enabled. ID-less definitions are deliberately not singleton business beans. |
 | ID-less interface cannot be injected | Inject `CopilotAgents`, then obtain `CopilotAgentInstance<T>` through `create` or `resume`. |
 | Bean name collision | Set unique explicit agent names; do not rely on bean overriding. |
-| Unsupported method contract | Use supported return types and one consistent form: routed with two annotated strings, or bound with one `@UserMessage` string. Add the Reactor module for `Flux<CopilotAgentEvent>`. |
+| Unsupported method contract | Use supported return types and one consistent form per interface: routed (with a `@ConversationId` parameter) or bound (without). The prompt is either one `@UserMessage` string parameter or a method-level `@UserMessage` template whose `{{placeholders}}` exactly match its `@P` parameters. Structured results must be records, JavaBeans, enums, scalars, or collections of them. Add the Reactor module for `Flux<CopilotAgentEvent>`. |
 | Strict resume fails | Reuse the saved application key with the same interface/name/runtime store; merely allocating and closing a handle does not create history. |
-| Close blocks or callback self-closing fails | Await workflows before closing, keep blocking close off SDK/event-loop callbacks, and remember cancelled futures can still own SDK work. |
+| Close blocks or callback self-closing fails | Await workflows before closing, keep blocking close off SDK/event-loop callbacks, and remember cancelled futures own their session until the abort and cleanup finish. |
 | Missing generated tool metadata | Run `CopilotToolProcessor` in the module declaring the annotated methods, and retain generated classes in the artifact. |
 | JDK-proxied service cannot bind tools | Annotate its exposed interface and generate metadata for that interface; do not unwrap it to bypass advice. |
 | Local runtime missing | Set an explicit CLI path/environment override or include the matching SDK runtime classifier. |
@@ -52,7 +61,10 @@ title: Security and troubleshooting
 | Missing observations | Add required Micrometer classes/registry or Actuator, check the enable flag and custom telemetry replacement. |
 | Missing usage counters | Supply a meter registry and inspect whether the runtime emits usage fields; missing counts are not synthesized. |
 | Stream overflows | Consume/offload deliberately, reduce producer work or adjust buffer capacity; remember downstream operators add their own buffers. |
-| Cancelled request still consumes usage | Cancellation is not a guaranteed runtime abort; running work remains owned until completion/cleanup. |
+| Cancelled request still consumes usage | Cancellation and response timeouts call `CopilotSession.abort()`, but usage already consumed is billed. Look for `WARNING` logs about failed aborts; capacity is held until abort and cleanup finish. |
+| Tool sees no authentication or MDC | Add `io.micrometer:context-propagation` (included with Actuator), make the call on the thread holding the context, and in WebFlux enable `spring.reactor.context-propagation=auto`. |
+| Session uses the wrong GitHub identity | Check which `CopilotTokenResolver` applies (`@CopilotAgent(tokenResolver)`, then the single/`@Primary` bean) and whether it returned `null` (ambient). A customizer that sets a token or provider wins. |
+| `copilot.security.oauth2` startup failure | Define an `OAuth2AuthorizedClientManager` or `OAuth2AuthorizedClientService` bean, and mark one resolver `@Primary` if you also declare your own. |
 
 <a id="scope-and-source-references"></a>
 

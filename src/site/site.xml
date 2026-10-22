@@ -113,13 +113,17 @@ html[data-theme="dark"] {
             <item name="Spring tool beans" href="tools.html"/>
             <item name="MCP servers" href="mcp.html"/>
             <item name="BYOK providers" href="byok.html"/>
+            <item name="Per-user authentication" href="authentication.html"/>
             <item name="Events and customizers" href="events.html"/>
+            <item name="Tool governance and hooks" href="governance.html"/>
         </menu>
         <menu name="Reference">
             <item name="Configuration" href="configuration.html"/>
             <item name="Reactive streaming" href="streaming.html"/>
             <item name="Observability" href="observability.html"/>
+            <item name="Actuator" href="actuator.html"/>
             <item name="Extension SPIs" href="extensions.html"/>
+            <item name="Testing" href="testing.html"/>
         </menu>
         <menu name="Operate">
             <item name="Example application" href="examples.html"/>

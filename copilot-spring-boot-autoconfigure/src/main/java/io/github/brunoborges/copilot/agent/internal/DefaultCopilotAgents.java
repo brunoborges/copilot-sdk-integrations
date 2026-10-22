@@ -38,7 +38,7 @@ public final class DefaultCopilotAgents implements CopilotAgents {
         var factory = beans.getBean("&" + name, CopilotAgentFactoryBean.class);
         Assert.isTrue(factory.agentType() == type, "A different Copilot agent owns bean name " + name);
         Assert.isTrue(factory.boundDefinition(),
-                "Bound instances require an ID-less interface with one @UserMessage parameter; inject explicit-ID agents directly");
+                "Bound instances require an ID-less interface without @ConversationId parameters; inject explicit-ID agents directly");
         return factory;
     }
 }

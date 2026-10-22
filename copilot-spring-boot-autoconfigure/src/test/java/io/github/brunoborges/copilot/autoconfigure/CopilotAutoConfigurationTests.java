@@ -259,7 +259,13 @@ class CopilotAutoConfigurationTests {
                     "copilot.working-directory", "copilot.log-level", "copilot.cli-url",
                     "copilot.tcp-connection-token", "copilot.agents", "copilot.mcp.servers", "copilot.providers",
                     "copilot.observations.enabled",
-                    "copilot.execution.max-concurrent-invocations", "copilot.execution.max-outstanding-invocations");
+                    "copilot.execution.max-concurrent-invocations", "copilot.execution.max-outstanding-invocations",
+                    "copilot.health.timeout", "copilot.health.start-client",
+                    "copilot.health.require-authentication", "copilot.endpoint.timeout",
+                    "copilot.endpoint.start-client", "copilot.endpoint.show-instructions",
+                    "copilot.endpoint.include-all-sessions", "copilot.endpoint.show-session-summaries", "management.endpoint.copilot.access",
+                    "management.endpoint.copilot.cache.time-to-live",
+                    "copilot.security.oauth2.registration-id", "copilot.security.oauth2.ambient-fallback");
             for (var property : properties) {
                 assertThat(property.get("description").asText()).isNotBlank();
                 if (property.get("name").asText().equals("copilot.startup-timeout")) {
@@ -267,6 +273,33 @@ class CopilotAutoConfigurationTests {
                 }
             }
         }
+    }
+
+    @Test
+    void connectionDetailsTakePrecedenceOverServerAndLocalRuntimeProperties() {
+        CopilotConnectionDetails details = new CopilotConnectionDetails() {
+            @Override
+            public String cliUrl() {
+                return "localhost:5432";
+            }
+
+            @Override
+            public String tcpConnectionToken() {
+                return "container-token";
+            }
+        };
+        runner.withBean(CopilotConnectionDetails.class, () -> details)
+                .withPropertyValues("copilot.cli-path=/missing/copilot", "copilot.cli-args[0]=--flag",
+                        "copilot.working-directory=/work")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    var options = context.getBean(CopilotClientOptions.class);
+                    assertThat(options.getCliUrl()).isEqualTo("localhost:5432");
+                    assertThat(options.getTcpConnectionToken()).isEqualTo("container-token");
+                    assertThat(options.isUseStdio()).isFalse();
+                    assertThat(options.getCliPath()).isNull();
+                    assertThat(context.getBean(CopilotClient.class).getState()).isEqualTo(ConnectionState.DISCONNECTED);
+                });
     }
 
     @Configuration(proxyBeanMethods = false)
