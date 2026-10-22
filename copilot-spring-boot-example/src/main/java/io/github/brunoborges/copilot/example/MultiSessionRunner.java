@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
+import io.github.brunoborges.copilot.agent.CopilotAgents;
 
 @Component
 public class MultiSessionRunner implements ApplicationRunner {
@@ -19,18 +21,29 @@ public class MultiSessionRunner implements ApplicationRunner {
 
     private final ConversationService conversations;
     private final SpringAdvisor advisor;
+    private final StreamingAdvisor streamingAdvisor;
+    private final CopilotAgents agents;
 
-    public MultiSessionRunner(ConversationService conversations, SpringAdvisor advisor) {
+    public MultiSessionRunner(ConversationService conversations, SpringAdvisor advisor, StreamingAdvisor streamingAdvisor,
+            CopilotAgents agents) {
         this.conversations = conversations;
         this.advisor = advisor;
+        this.streamingAdvisor = streamingAdvisor;
+        this.agents = agents;
     }
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
         if (args.containsOption("help")) {
             log.info("Usage: java -jar copilot-spring-boot-example-0.1.0-SNAPSHOT.jar "
-                    + "[--copilot.cli-path=/path/to/copilot] [--agent] [\"first prompt\" \"second prompt\"]");
+                    + "[--copilot.cli-path=/path/to/copilot] [--agent|--stream|--instance] [\"first prompt\" \"second prompt\"]");
             return;
+        }
+        if (args.containsOption("agent") && args.containsOption("stream")) {
+            throw new IllegalArgumentException("Choose either --agent or --stream, not both.");
+        }
+        if (args.containsOption("instance") && (args.containsOption("agent") || args.containsOption("stream"))) {
+            throw new IllegalArgumentException("Choose --instance without --agent or --stream.");
         }
 
         var prompts = args.getNonOptionArgs();
@@ -45,6 +58,26 @@ public class MultiSessionRunner implements ApplicationRunner {
 
         String firstPrompt = prompts.getFirst();
         String secondPrompt = prompts.getLast();
+        if (args.containsOption("instance")) {
+            String savedKey;
+            try (var first = agents.create(BoundAdvisor.class); var second = agents.create(BoundAdvisor.class)) {
+                savedKey = first.conversationId();
+                CompletableFuture.allOf(first.agent().answer(firstPrompt), second.agent().answer(secondPrompt)).join();
+            }
+            try (var resumed = agents.resume(BoundAdvisor.class, savedKey)) {
+                resumed.agent().answer("In one sentence, summarize the explanation you just gave. Do not use tools.").join();
+            }
+            return;
+        }
+        if (args.containsOption("stream")) {
+            String runId = UUID.randomUUID().toString();
+            Flux.merge(streamingAdvisor.stream(runId + "/conversation-1", firstPrompt),
+                    streamingAdvisor.stream(runId + "/conversation-2", secondPrompt))
+                    .doOnNext(notification -> log.info("[{}] SDK event: {}",
+                            notification.context().conversationId(), notification.event().getType()))
+                    .blockLast();
+            return;
+        }
         if (args.containsOption("agent")) {
             String runId = UUID.randomUUID().toString();
             String firstConversation = runId + "/conversation-1";

@@ -22,7 +22,11 @@ import com.github.copilot.rpc.SectionOverrideAction;
 import com.github.copilot.rpc.SystemMessageConfig;
 import com.github.copilot.rpc.SystemMessageSections;
 import example.agentwire.WireAgent;
+import example.agentwire.BoundWireAgent;
 import io.github.brunoborges.copilot.agent.EnableCopilotAgents;
+import io.github.brunoborges.copilot.agent.CopilotAgents;
+import io.github.brunoborges.copilot.agent.CopilotConversationNotFoundException;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -32,8 +36,58 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CopilotAgentWireTests {
+
+    @Test
+    void boundInstanceResumesPersistedIdentityThroughTheRealSdk() throws Exception {
+        try (var server = new ServerSocket(0, 1, InetAddress.getByName("127.0.0.1"));
+                var executor = Executors.newSingleThreadExecutor()) {
+            server.setSoTimeout(5000);
+            var requests = executor.submit(() -> serve(server));
+            new ApplicationContextRunner().withUserConfiguration(WireApplication.class)
+                    .withPropertyValues("copilot.cli-url=127.0.0.1:" + server.getLocalPort(),
+                            "test.instructions-mode=APPEND").run(context -> {
+                        assertThat(context).hasNotFailed().doesNotHaveBean(BoundWireAgent.class);
+                        var agents = context.getBean(CopilotAgents.class);
+                        String savedKey;
+                        try (var instance = agents.create(BoundWireAgent.class)) {
+                            savedKey = instance.conversationId();
+                            assertThat(instance.agent().answer("first").get(10, TimeUnit.SECONDS)).isEqualTo("reply:first");
+                        }
+                        try (var resumed = agents.resume(BoundWireAgent.class, savedKey)) {
+                            assertThat(resumed.agent().answer("follow-up").get(10, TimeUnit.SECONDS))
+                                    .isEqualTo("reply:follow-up");
+                        }
+                    });
+            var received = requests.get(5, TimeUnit.SECONDS);
+            assertThat(received).extracting(request -> request.get("method").asText()).containsExactly(
+                    "connect", "session.getMetadata", "session.create", "session.send", "session.detach",
+                    "session.getMetadata", "session.resume", "session.send", "session.detach");
+            assertThat(received.get(2).get("params").get("sessionId"))
+                    .isEqualTo(received.get(6).get("params").get("sessionId"));
+        }
+    }
+
+    @Test
+    void strictResumeOfMissingHistoryNeverSendsCreateOverTheWire() throws Exception {
+        try (var server = new ServerSocket(0, 1, InetAddress.getByName("127.0.0.1"));
+                var executor = Executors.newSingleThreadExecutor()) {
+            server.setSoTimeout(5000);
+            var requests = executor.submit(() -> serve(server));
+            new ApplicationContextRunner().withUserConfiguration(WireApplication.class)
+                    .withPropertyValues("copilot.cli-url=127.0.0.1:" + server.getLocalPort(),
+                            "test.instructions-mode=APPEND").run(context -> {
+                        try (var missing = context.getBean(CopilotAgents.class).resume(BoundWireAgent.class, "missing")) {
+                            assertThatThrownBy(() -> missing.agent().answer("hello").get(10, TimeUnit.SECONDS))
+                                    .hasRootCauseInstanceOf(CopilotConversationNotFoundException.class);
+                        }
+                    });
+            assertThat(requests.get(5, TimeUnit.SECONDS)).extracting(request -> request.get("method").asText())
+                    .containsExactly("connect", "session.getMetadata");
+        }
+    }
 
     @ParameterizedTest
     @EnumSource(SystemMessageMode.class)

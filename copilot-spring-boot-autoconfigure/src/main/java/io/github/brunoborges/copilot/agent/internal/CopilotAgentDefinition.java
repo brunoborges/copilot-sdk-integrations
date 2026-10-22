@@ -89,7 +89,7 @@ public record CopilotAgentDefinition(
         return new CopilotAgentDefinition(name, type.getName(), model, reasoning,
                 settings == null ? Duration.ofSeconds(60) : settings.responseTimeout(), systemMessage,
                 permissionBean.isEmpty() ? DENY : beans.getBean(permissionBean, PermissionHandler.class),
-                beans(annotation.tools(), ToolDefinition.class, beans, environment),
+                SpringToolBindings.bind(annotation.tools(), beans, environment),
                 beans(annotation.listeners(), CopilotAgentListener.class, beans, environment),
                 beans(annotation.customizers(), CopilotAgentCustomizer.class, beans, environment));
     }

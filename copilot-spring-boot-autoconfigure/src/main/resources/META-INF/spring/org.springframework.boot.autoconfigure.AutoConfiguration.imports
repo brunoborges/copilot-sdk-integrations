@@ -1,2 +1,3 @@
 io.github.brunoborges.copilot.autoconfigure.CopilotAutoConfiguration
 io.github.brunoborges.copilot.autoconfigure.CopilotAgentsAutoConfiguration
+io.github.brunoborges.copilot.autoconfigure.CopilotAgentObservationAutoConfiguration

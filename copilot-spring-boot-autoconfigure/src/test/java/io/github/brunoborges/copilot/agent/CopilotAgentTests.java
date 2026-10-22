@@ -222,6 +222,7 @@ class CopilotAgentTests {
         var system = new SystemMessageConfig().setMode(SystemMessageMode.CUSTOMIZE)
                 .setSections(Map.of(SystemMessageSections.TONE, transform)).setContent("Extra.");
         var tool = mock(ToolDefinition.class);
+        when(tool.name()).thenReturn("tool");
         PermissionHandler permissions = (request, invocation) -> CompletableFuture.completedFuture(PermissionRequestResult.reject("deny"));
         var customizer = mock(CopilotAgentCustomizer.class);
         beans.registerSingleton("system", system);
@@ -309,7 +310,8 @@ class CopilotAgentTests {
     void invalidContractsAndConflictingInstructionsFailAtInitialization() {
         try (var invoker = new CopilotAgentInvoker(client)) {
             for (Class<?> invalid : List.of(WrongReturn.class, MissingId.class, BothAnnotations.class, ConflictingInstructions.class,
-                    MissingResource.class, EmptyReplacement.class, CustomizeWithoutBean.class, MissingPermissionBean.class)) {
+                    MissingResource.class, EmptyReplacement.class, CustomizeWithoutBean.class, MissingPermissionBean.class,
+                    MixedConversationForms.class)) {
                 assertThatThrownBy(() -> agent(invalid, invoker, properties)).as(invalid.getSimpleName())
                         .isInstanceOf(RuntimeException.class);
             }
@@ -415,5 +417,10 @@ class CopilotAgentTests {
     @CopilotAgent(permissionHandler = "absent")
     public interface MissingPermissionBean {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
+    }
+    @CopilotAgent
+    public interface MixedConversationForms {
+        CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
+        CompletableFuture<String> answer(@UserMessage String message);
     }
 }

@@ -3,6 +3,9 @@
 Spring Boot starter for the [Copilot SDK for Java](https://github.com/github/copilot-sdk/tree/main/java), targeting
 **Spring Boot 4.1.1** and **Java 21**.
 
+See [DOCS.md](DOCS.md) for the API and configuration reference, including a
+linked table of contents, defaults, validation rules, and extension contracts.
+
 ## Status
 
 The starter auto-configures the SDK's `CopilotClient` and `CopilotClientOptions`,
@@ -11,8 +14,10 @@ when the Spring context shuts down. Connections are lazy by default, with opt-in
 eager startup. It uses SDK **1.0.24**.
 
 Typed `@CopilotAgent` interfaces provide asynchronous text responses backed by
-conversation-specific SDK sessions, including create/resume, scoped listeners,
-and all three system-message modes. No artifacts have been published. Automatic
+conversation-specific SDK sessions, including routed or instance-bound identity, create/resume, scoped listeners,
+and all three system-message modes. Spring tool services, optional Micrometer
+observations, bounded execution, and an optional Reactor event-stream module
+extend that integration. No artifacts have been published. Automatic
 permission approval and experimental in-process hosting are not provided.
 
 ## Project structure
@@ -22,9 +27,10 @@ permission approval and experimental in-process hosting are not provided.
 | `copilot-spring-boot-parent` | Root Maven parent and reactor with shared dependency and plugin management. |
 | `copilot-spring-boot-autoconfigure` | Client/options beans, typed agent proxies, properties, metadata, and lifecycle management. The SDK is an optional dependency. |
 | `copilot-spring-boot-starter` | Dependency-only JAR combining the SDK, auto-configuration module, and Spring Boot starter. |
+| `copilot-spring-boot-reactor` | Optional Reactor integration providing bounded `Flux<CopilotAgentEvent>` agent methods; not included in the basic starter. |
 | `copilot-spring-boot-example` | Executable, non-web application demonstrating raw SDK sessions and typed agents with independent conversations. |
 
-The autoconfigure and starter modules are ordinary library JARs; only the
+The autoconfigure, starter, and Reactor modules are ordinary library JARs; only the
 example is an executable Spring Boot application.
 Maven coordinates use the group `io.github.brunoborges` and version
 `0.1.0-SNAPSHOT`.
@@ -195,7 +201,7 @@ SDK transitively.
 
 ## Typed agents
 
-Declare an interface in your Spring Boot application's base package (or a
+Declare a routed interface in your Spring Boot application's base package (or a
 subpackage) and inject it as a Spring bean:
 
 ```java
@@ -227,12 +233,56 @@ var followUp = first.thenCompose(answer ->
 CompletableFuture.allOf(followUp, second).join();
 ```
 
-Every abstract agent method must return exactly `CompletableFuture<String>` and
-have exactly two `String` parameters: one `@ConversationId` and one `@UserMessage`,
-in either order. Unsupported contracts fail at bean initialization; blank/null
+The basic starter supports abstract methods returning `CompletableFuture<String>`;
+the optional Reactor module also supports `Flux<CopilotAgentEvent>`. Each method
+can use two `String` parameters (`@ConversationId` and `@UserMessage`, in either
+order) for routing, or one `@UserMessage String` for bound instances. Do not mix
+forms in an interface. Unsupported contracts fail at bean initialization; blank/null
 invocation arguments produce a failed future without contacting the runtime.
 Messages are passed verbatim, without a template language or automatic retries.
 Default interface methods execute locally.
+
+### Conversation-bound instances
+
+Use a business interface without an ID argument when application code should
+own a distinct conversation instance:
+
+```java
+@CopilotAgent(name = "advisor", instructions = "Explain Spring Boot concisely.")
+public interface Advisor {
+    CompletableFuture<String> answer(@UserMessage String question);
+}
+```
+
+Inject `CopilotAgents`, not the ID-less `Advisor` interface:
+
+```java
+String savedKey;
+try (var instance = agents.create(Advisor.class)) {
+    instance.agent().answer("What is dependency injection?").join();
+    instance.agent().answer("Show an example of that.").join();
+    savedKey = instance.conversationId();
+}
+
+try (var resumed = agents.resume(Advisor.class, savedKey)) {
+    resumed.agent().answer("Continue our discussion.").join();
+}
+```
+
+Each `create(...)` generates an independent key; the caller need not manage it
+unless later resumption is needed. ID-less definitions do not become unsafe
+singleton conversations. Handles bind identity while each invocation still
+creates/resumes and detaches its SDK attachment.
+
+Binding is lazy: `resume(...)` checks history when invoked and fails with
+`CopilotConversationNotFoundException` rather than creating an empty history.
+An established new handle likewise refuses to reset history if it disappears.
+Closing rejects new calls and waits for actual admitted work/cleanup, even
+after a result future is cancelled. It neither closes the shared client nor
+deletes persisted history. Await complete workflows before leaving the resource
+scope, and do not block in close from SDK callbacks or event-loop threads.
+See [the instance API reference](DOCS.md#bound-agent-instances) for reactive
+cleanup and lifecycle details.
 
 Discovery uses Spring Boot's auto-configuration base packages. For interfaces
 outside those packages, add `@EnableCopilotAgents(basePackageClasses =
@@ -251,7 +301,7 @@ with a letter. Conflicts with other beans fail rather than overwriting them.
 | `systemMessage` | Name of a `SystemMessageConfig` bean. Owns its mode and sections; cannot be combined with the preceding instruction attributes. |
 | `model`, `reasoningEffort` | Optional SDK settings; omitted values retain runtime defaults. Reasoning support depends on the model. |
 | `permissionHandler` | Name of an explicit SDK `PermissionHandler` bean; defaults to denial. |
-| `tools` | Names of individual SDK `ToolDefinition` beans to register. Does not grant tool permissions or disable built-in tools. |
+| `tools` | Names of SDK `ToolDefinition` beans or Spring services with SDK `@CopilotTool` methods. Does not grant tool permissions or disable built-in tools. |
 | `listeners` | Names of `CopilotAgentListener` beans attached to each invocation's session. |
 | `customizers` | Names of `CopilotAgentCustomizer` beans for advanced SDK configuration. |
 
@@ -291,8 +341,64 @@ Customizers have separate `customize(context, SessionConfig)` and
 `customize(context, ResumeSessionConfig)` overloads. Override both when settings
 must apply to creation and resumption. They run after declarative settings;
 changing the managed session ID or removing the permission handler is rejected.
-The SDK remains available directly for streaming, structured responses, or other
-contracts beyond the supported text-in/text-out agent API.
+The SDK remains available directly for structured responses or other contracts
+beyond the supported agent return types.
+
+### Tools from Spring services
+
+Use the SDK's existing annotations, not a parallel Spring-specific tool language:
+
+```java
+@Service
+public class ReferenceTools {
+    @CopilotTool("Look up a short local definition")
+    public String describeTerm(@CopilotToolParam("Term to describe") String term) {
+        return switch (term) {
+            case "dependency injection" -> "Dependencies are supplied rather than constructed inside an object.";
+            default -> throw new IllegalArgumentException("Unknown reference term");
+        };
+    }
+}
+```
+
+Select this bean with `@CopilotAgent(tools = "referenceTools")`. Individual
+`ToolDefinition` beans and annotated service beans can be mixed. The SDK's
+generated metadata supplies schemas, argument conversion, and executable
+handlers. Duplicate tool names within the same namespace fail agent
+initialization; separate namespaces remain independent.
+
+**The SDK's `CopilotToolProcessor` must run in the module containing the tool
+methods.** Its generated `$$CopilotToolMeta` companion is required; the
+integration does not silently fall back to a different reflection/schema engine.
+For example, add this compiler configuration, retaining any other processors
+your application needs:
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <annotationProcessors>
+            <annotationProcessor>com.github.copilot.tool.CopilotToolProcessor</annotationProcessor>
+        </annotationProcessors>
+    </configuration>
+</plugin>
+```
+
+The SDK must be on the processor path/classpath; the example module demonstrates
+this configuration. Annotation-based tool binding is experimental in SDK 1.0.24.
+If you also run its experimental-API checker, follow the SDK's opt-in instructions.
+
+Generated handlers bind to the **Spring bean/proxy**, never an unwrapped target,
+so transactions and security advice still execute. Class-based proxies support
+class or interface tool declarations; tool methods must be overridable.
+JDK-proxied services must expose annotated methods on their interface, with
+metadata generated for that interface. Unsupported proxy contracts fail
+explicitly. Tool registration does not grant permission; SDK flags such as
+`skipPermission` are preserved rather than silently changed by the starter.
+Preserving advice does not automatically propagate a caller's Spring Security
+context into SDK callback threads. Resolve authorized identity explicitly in
+your permission/tool policy; do not treat a conversation key as authentication.
 
 ### Per-agent execution settings
 
@@ -329,12 +435,145 @@ ownership across application instances yourself; serialization is not a
 distributed lock. Scope conversation keys to your application and authorized
 user/tenant: identifiers and their hashes are not an authorization mechanism.
 
+### Bounded execution
+
+Limits apply across all typed agents in an application context:
+
+```yaml
+copilot:
+  execution:
+    max-concurrent-invocations: 8
+    max-outstanding-invocations: 64
+```
+
+These are the defaults. Concurrency must be positive; the outstanding limit must
+be at least the concurrency limit. Outstanding work includes running invocations,
+work waiting for a concurrency slot, and work serialized behind another call to
+the same conversation. Admission is non-blocking: once full, calls receive
+`RejectedExecutionException` without contacting the SDK.
+
+Invocations retain their admission reservation through cleanup. Queued
+cancellations are skipped when observed before SDK work begins, but reservations
+are released only when bookkeeping retires, preventing cancellation churn from
+creating an unbounded hidden queue. Cancelling running work does not imply a
+runtime abort. Shutdown rejects new work, waits for already executing SDK work
+and cleanup, and rejects queued work that has not begun its SDK operation. It does
+not introduce a hard shutdown deadline independent of SDK behavior.
+
+### Micrometer observations
+
+Add Spring Boot Actuator (or provide Micrometer registries yourself) to activate
+instrumentation; it is optional in the basic starter:
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+
+The Micrometer observation and core libraries must be present; a `MeterRegistry`
+bean is optional. With an `ObservationRegistry`, accepted calls produce
+`copilot.agent.invocation` observations, including queue wait, SDK work, and
+cleanup. Tool handlers produce child `copilot.agent.tool` observations around
+their returned futures. Standard Micrometer observation handlers supply timers
+and tracing. A caller's parent observation is captured before work moves onto a
+virtual thread, and tool observations explicitly retain the invocation parent.
+This does not install global Reactor context-propagation hooks.
+
+With a `MeterRegistry`, SDK `AssistantUsageEvent` input/output and cache token
+counts become `copilot.agent.tokens` counters, tagged by `agent`, `model`, and
+`kind` (`input`, `output`, `cache-read`, `cache-write`). Duplicate event IDs within
+an invocation are ignored; unknown counts are not invented. These are reported
+token-usage counters, not a billing ledger or measurements of context-window
+occupancy. Admission failures increment `copilot.agent.rejections`.
+
+Observation tags use bounded configuration identities (`agent`, requested
+`model`, qualified `tool`) and `outcome` (`success`, `error`, `timeout`, or
+`cancelled`). The integration does not explicitly record prompts, responses,
+conversation keys, session IDs, or tool arguments as tags. SDK exceptions remain
+errors on observations and may require application-specific redaction.
+
+Set `copilot.observations.enabled=false` to disable the built-in instrumentation,
+or supply a `CopilotAgentTelemetry` bean to replace it. No registry is required
+for ordinary agent use, and instrumentation does not start a lazy SDK client,
+add network health probes, or expose an HTTP management server.
+
+## Reactive event streaming
+
+Add the separate module instead of introducing Reactor into every starter user:
+
+```xml
+<dependency>
+    <groupId>io.github.brunoborges</groupId>
+    <artifactId>copilot-spring-boot-reactor</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+</dependency>
+```
+
+It brings the basic starter and Reactor, but no web framework. Agent interfaces
+can return native SDK events with their agent/conversation/session context:
+
+```java
+@CopilotAgent(name = "streaming-advisor", instructions = "Explain Spring Boot concisely.")
+public interface StreamingAdvisor {
+    Flux<CopilotAgentEvent> stream(
+            @ConversationId String conversationId,
+            @UserMessage String question);
+}
+```
+
+Streams are **cold**: constructing a `Flux` does not contact the SDK. Each
+subscription starts a separate invocation, subject to the same admission limits,
+conversation serialization, permissions, instructions, and cleanup rules.
+Multiple subscriptions are not automatically shared or replayed. The integration
+requests SDK streaming on both session creation and resumption.
+
+SDK events are forwarded in observed order; successful completion is emitted
+after SDK idle and session cleanup, even for a successful turn without a final
+assistant text message. Scalar text methods still require a text result.
+Errors become stream errors. Delivery starts when the
+session subscription attaches, not before session creation. A slow subscriber
+gets a bounded buffer, defaulting to:
+
+```yaml
+copilot:
+  reactor:
+    buffer-capacity: 256
+```
+
+Capacity must be positive and applies per subscription to the adapter's queue,
+not to additional buffers introduced by downstream Reactor operators. Overflow
+fails with `CopilotAgentStreamOverflowException` after already buffered events
+drain; events are not silently dropped. Overflow and subscriber cancellation stop
+delivery and cancel the invocation result future. **They do not promise to abort
+work already running in the Copilot runtime.** Resources and execution capacity
+remain owned until the actual SDK operation and cleanup complete.
+Configured agent listeners and usage instrumentation can continue observing
+that work after the reactive subscriber has cancelled.
+
+For text deltas, filter the native SDK event type rather than concatenating both
+deltas and final messages:
+
+```java
+advisor.stream(conversationId, question)
+        .map(CopilotAgentEvent::event)
+        .ofType(AssistantMessageDeltaEvent.class)
+        .map(delta -> delta.getData().deltaContent());
+```
+
+Use ordinary WebFlux/SSE adapters in an application if needed; this module does
+not add a controller, authorize users, or equate downstream demand with runtime
+generation backpressure. SDK callbacks and downstream subscribers should avoid
+blocking; offloading operators introduce their own scheduling/buffering policies.
+
 ## Multi-session example
 
 The [`copilot-spring-boot-example`](copilot-spring-boot-example) module uses the
 starter as a consumer. Its default mode keeps the raw SDK example, without a
 session factory or application-wide event broadcasting; `--agent` demonstrates
-the typed interface above.
+the routed typed interface above, `--stream` demonstrates its Reactor
+counterpart, and `--instance` demonstrates generated bound identities.
 
 `MultiSessionRunner` starts two conversations concurrently on Java 21 virtual
 threads. Each call to the injected `ConversationService` creates a fresh SDK
@@ -402,10 +641,42 @@ java -jar copilot-spring-boot-example/target/copilot-spring-boot-example-0.1.0-S
 
 This mode uses a `CUSTOMIZE` system-message bean, the explicit denial handler,
 and the same output service as a session-scoped listener. It starts two
-independent conversations, then resumes the first for a follow-up: **three model
-requests in total**. A fresh run identifier avoids accidentally resuming a
+independent conversations, then resumes the first for a follow-up: **three
+top-level prompt submissions**. The runtime can perform additional model/tool
+iterations. A fresh run identifier avoids accidentally resuming a
 previous example run. Per-agent settings can also be supplied through arguments
 such as `--copilot.agents.spring-advisor.response-timeout=30s`.
+
+Both advisor interfaces opt into the `ReferenceTools` Spring service. Its
+SDK-generated local lookup tool is registered without bypassing the explicit
+denial handler; default prompts still request answers without tool use. The
+example includes Actuator to activate observations, but remains a non-web
+application with no HTTP endpoints. Production metric export requires the
+appropriate Micrometer backend configuration.
+
+To stream two independent conversations (**two top-level prompt submissions**):
+
+```sh
+java -jar copilot-spring-boot-example/target/copilot-spring-boot-example-0.1.0-SNAPSHOT.jar \
+  --copilot.cli-path=/absolute/path/to/copilot --stream
+```
+
+The runner logs event types and the existing listener logs final assistant
+content. `--agent`, `--stream`, and `--instance` are mutually exclusive; `--help` opens no
+sessions. Structured responses, declarative MCP/hooks, and attachment adapters
+are not part of these three additions.
+
+For application-owned bound agents:
+
+```sh
+java -jar copilot-spring-boot-example/target/copilot-spring-boot-example-0.1.0-SNAPSHOT.jar \
+  --copilot.cli-path=/absolute/path/to/copilot --instance
+```
+
+This creates two independent `BoundAdvisor` handles without passing IDs into
+message methods. It closes both after their first responses, then strictly
+resumes the first generated key for a follow-up: three top-level prompt
+submissions, with underlying model/tool work controlled by the runtime.
 
 ## Building
 

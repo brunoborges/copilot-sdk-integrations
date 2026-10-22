@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 import com.github.copilot.SystemMessageMode;
 
-/** Declares a singleton agent proxy; conversation state is owned by the SDK, not the proxy. */
+/** Declares an agent definition: routed interfaces are injectable; ID-less interfaces require a bound instance. */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CopilotAgent {

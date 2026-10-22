@@ -21,10 +21,17 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Configuration;
+import org.junit.jupiter.api.Test;
+import org.springframework.util.ClassUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CopilotStarterTests {
+
+    @Test
+    void basicStarterDoesNotPullInReactor() {
+        assertThat(ClassUtils.isPresent("reactor.core.publisher.Flux", getClass().getClassLoader())).isFalse();
+    }
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})

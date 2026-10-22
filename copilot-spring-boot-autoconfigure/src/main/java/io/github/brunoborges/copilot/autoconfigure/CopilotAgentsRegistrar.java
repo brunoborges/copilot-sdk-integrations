@@ -66,14 +66,16 @@ public final class CopilotAgentsRegistrar implements ImportBeanDefinitionRegistr
                 String name = CopilotAgentDefinition.name(type, environment);
                 if (registry.containsBeanDefinition(name)) {
                     var existing = registry.getBeanDefinition(name);
-                    Assert.isTrue(type.equals(existing.getAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE)),
+                    Assert.isTrue(type.equals(existing.getAttribute("copilot.agentType")),
                             "Duplicate Copilot agent bean name: " + name);
                     continue;
                 }
                 var definition = new RootBeanDefinition(CopilotAgentFactoryBean.class);
                 definition.getConstructorArgumentValues().addIndexedArgumentValue(0, type);
                 definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
-                definition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, type);
+                definition.setAttribute("copilot.agentType", type);
+                definition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE,
+                        CopilotAgentFactoryBean.requiresBinding(type) ? CopilotAgentDefinition.class : type);
                 definition.setRole(BeanDefinition.ROLE_APPLICATION);
                 registry.registerBeanDefinition(name, definition);
             }

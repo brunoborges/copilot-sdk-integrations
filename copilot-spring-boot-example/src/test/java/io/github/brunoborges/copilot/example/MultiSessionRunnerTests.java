@@ -11,6 +11,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import reactor.core.publisher.Flux;
+import io.github.brunoborges.copilot.agent.CopilotAgents;
+import io.github.brunoborges.copilot.agent.CopilotAgentInstance;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -30,12 +33,14 @@ class MultiSessionRunnerTests {
 
     private final ConversationService conversations = mock(ConversationService.class);
     private final SpringAdvisor advisor = mock(SpringAdvisor.class);
-    private final MultiSessionRunner runner = new MultiSessionRunner(conversations, advisor);
+    private final StreamingAdvisor streaming = mock(StreamingAdvisor.class);
+    private final CopilotAgents agents = mock(CopilotAgents.class);
+    private final MultiSessionRunner runner = new MultiSessionRunner(conversations, advisor, streaming, agents);
 
     @Test
     void helpDoesNotCreateConversations() throws Exception {
         runner.run(new DefaultApplicationArguments("--help"));
-        verifyNoInteractions(conversations, advisor);
+        verifyNoInteractions(conversations, advisor, streaming, agents);
     }
 
     @Test
@@ -61,6 +66,52 @@ class MultiSessionRunnerTests {
         assertThat(ids.getAllValues().get(0)).isEqualTo(ids.getAllValues().get(2))
                 .isNotEqualTo(ids.getAllValues().get(1));
         verifyNoInteractions(conversations);
+    }
+
+    @Test
+    void streamingModeUsesTwoIndependentConversations() throws Exception {
+        when(streaming.stream(anyString(), anyString())).thenReturn(Flux.empty());
+        runner.run(new DefaultApplicationArguments("--stream"));
+        org.mockito.ArgumentCaptor<String> ids = org.mockito.ArgumentCaptor.captor();
+        verify(streaming, times(2)).stream(ids.capture(), anyString());
+        assertThat(ids.getAllValues()).doesNotHaveDuplicates();
+        verifyNoInteractions(conversations, advisor);
+    }
+
+    @Test
+    void rejectsConflictingModesBeforeOpeningConversations() {
+        assertThatIllegalArgumentException().isThrownBy(() ->
+                runner.run(new DefaultApplicationArguments("--agent", "--stream"))).withMessageContaining("not both");
+        verifyNoInteractions(conversations, advisor, streaming);
+    }
+
+    @Test
+    void instanceModeOwnsTwoHandlesAndStrictlyResumesTheFirstIdentity() throws Exception {
+        var first = org.mockito.Mockito.<CopilotAgentInstance<BoundAdvisor>>mock();
+        var second = org.mockito.Mockito.<CopilotAgentInstance<BoundAdvisor>>mock();
+        var resumed = org.mockito.Mockito.<CopilotAgentInstance<BoundAdvisor>>mock();
+        var bound = mock(BoundAdvisor.class);
+        when(first.conversationId()).thenReturn("saved-key");
+        when(first.agent()).thenReturn(bound);
+        when(second.agent()).thenReturn(bound);
+        when(resumed.agent()).thenReturn(bound);
+        when(bound.answer(anyString())).thenReturn(CompletableFuture.completedFuture("answer"));
+        when(agents.create(BoundAdvisor.class)).thenReturn(first).thenReturn(second);
+        when(agents.resume(BoundAdvisor.class, "saved-key")).thenReturn(resumed);
+        runner.run(new DefaultApplicationArguments("--instance", "first prompt", "second prompt"));
+        verify(first).close();
+        verify(second).close();
+        verify(resumed).close();
+        verify(bound, times(3)).answer(anyString());
+        verify(agents).resume(BoundAdvisor.class, "saved-key");
+        verifyNoInteractions(conversations, advisor, streaming);
+    }
+
+    @Test
+    void instanceModeCannotBeCombinedWithOtherModes() {
+        assertThatIllegalArgumentException().isThrownBy(() ->
+                runner.run(new DefaultApplicationArguments("--instance", "--agent"))).withMessageContaining("--instance");
+        verifyNoInteractions(agents, conversations, advisor, streaming);
     }
 
     @Test
@@ -115,6 +166,8 @@ class MultiSessionRunnerTests {
                             .hasSingleBean(ConversationOutput.class).hasSingleBean(DenyPermissions.class)
                             .hasSingleBean(MultiSessionRunner.class);
                     assertThat(context).hasSingleBean(SpringAdvisor.class);
+                    assertThat(context).hasSingleBean(StreamingAdvisor.class);
+                    assertThat(context).hasSingleBean(CopilotAgents.class).doesNotHaveBean(BoundAdvisor.class);
                     verifyNoInteractions(client);
                 });
         verify(client).close();

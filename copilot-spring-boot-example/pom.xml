@@ -16,7 +16,6 @@
     <description>Two dynamic SDK sessions with independent listeners backed by Spring services.</description>
 
     <properties>
-        <maven.compiler.proc>none</maven.compiler.proc>
         <maven.deploy.skip>true</maven.deploy.skip>
     </properties>
 
@@ -27,6 +26,15 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>io.github.brunoborges</groupId>
+            <artifactId>copilot-spring-boot-reactor</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
@@ -35,6 +43,15 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessors>
+                        <annotationProcessor>com.github.copilot.tool.CopilotToolProcessor</annotationProcessor>
+                    </annotationProcessors>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

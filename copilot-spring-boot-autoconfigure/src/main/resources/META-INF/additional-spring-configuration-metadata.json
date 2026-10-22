@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "copilot.observations.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable agent and tool observations when a Micrometer ObservationRegistry is available.",
+      "defaultValue": true
+    }
+  ]
+}
