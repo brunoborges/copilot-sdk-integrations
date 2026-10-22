@@ -15,7 +15,8 @@ injection, lifecycle management, security context, observability, and testing.
 | --- | --- | --- | --- |
 | Java | [Spring Boot](https://spring.io/projects/spring-boot) | [`spring-boot/`](spring-boot/) | Available (unreleased) |
 | Java | [Quarkus](https://quarkus.io/) | [`quarkus/`](quarkus/) | Available (unreleased) |
-| .NET | ASP.NET Core / Generic Host, [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`, .NET Aspire | `dotnet/` | Under consideration |
+| .NET | Generic Host / ASP.NET Core ([Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`) | [`dotnet-core/`](dotnet-core/) | Preview, not yet on NuGet ([design](dotnet-core/docs/design.md)) |
+| .NET | [Aspire](https://aspire.dev/) (AppHost runtime resource + client integration, builds on `dotnet-core`) | [`dotnet-aspire/`](dotnet-aspire/) | Preview, not yet on NuGet ([design](dotnet-aspire/docs/design.md)) |
 | Python | [FastAPI](https://fastapi.tiangolo.com/), [Django](https://www.djangoproject.com/) | `python/` | Under consideration |
 | Node.js / TypeScript | [NestJS](https://nestjs.com/), framework-agnostic core, [AI SDK](https://ai-sdk.dev/) adapter | [`nodejs/`](nodejs/) | In development ([DESIGN.md](nodejs/DESIGN.md)) |
 
@@ -53,6 +54,8 @@ documentation landing page) live at the root.
 ├── java-core/     # Shared Java agent API and engine (copilot-agent-core)
 ├── spring-boot/   # Spring Boot starter (Java, Maven)
 ├── quarkus/       # Quarkus extension (Java, Maven)
+├── dotnet-core/   # .NET integration for business apps (preview)
+├── dotnet-aspire/ # Aspire integration (.NET) (preview)
 ├── nodejs/        # Node.js core, NestJS module, and AI SDK adapter (TypeScript; in development)
 └── .github/       # CI workflows and documentation landing page
 ```

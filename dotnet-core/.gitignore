@@ -1,0 +1,11 @@
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+*.nupkg
+*.snupkg
+
+# per-agent build outputs
+.artifacts*/
+.scratch*/

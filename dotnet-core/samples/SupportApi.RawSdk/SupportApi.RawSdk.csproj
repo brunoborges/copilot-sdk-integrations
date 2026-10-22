@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <!-- GHCP001: the SDK's typed SendAndWaitAsync<T> (structured output) is experimental. -->
+    <NoWarn>$(NoWarn);GHCP001</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GitHub.Copilot.SDK" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Same domain and HTTP contracts as SupportApi; only the Copilot code differs. -->
+    <Compile Include="../SupportApi/Orders.cs" Link="Orders.cs" />
+  </ItemGroup>
+
+</Project>

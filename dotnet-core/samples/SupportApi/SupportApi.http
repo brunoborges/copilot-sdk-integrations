@@ -1,0 +1,41 @@
+@host = http://localhost:5180
+
+### Health (Healthy before the first call; then pings the runtime and checks sign-in)
+GET {{host}}/health
+
+### Start a conversation (no conversationId = new conversation)
+# @name first
+POST {{host}}/chat
+Content-Type: application/json
+
+{ "message": "Hi! What's the status of order 1002?" }
+
+### Continue it with the returned conversationId
+POST {{host}}/chat
+Content-Type: application/json
+
+{ "message": "Which product was that order for?", "conversationId": "{{first.response.body.$.conversationId}}" }
+
+### Refund under $100: approved by OnApproval
+POST {{host}}/chat
+Content-Type: application/json
+
+{ "message": "Please refund $50 on order 1001." }
+
+### Refund of $100 or more: denied by OnApproval
+POST {{host}}/chat
+Content-Type: application/json
+
+{ "message": "Please refund $400 on order 1002." }
+
+### Stream the reply as server-sent events
+POST {{host}}/chat/stream
+Content-Type: application/json
+
+{ "message": "In two sentences, what can you help me with?" }
+
+### Structured output: triage a ticket into a TicketTriage record
+POST {{host}}/triage
+Content-Type: application/json
+
+{ "subject": "Charged twice", "body": "I was billed two times for order 1003 this morning. Please fix it ASAP." }

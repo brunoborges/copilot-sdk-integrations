@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/core/">
+    <Project Path="../dotnet-core/src/CopilotSdk.Extensions.Hosting/CopilotSdk.Extensions.Hosting.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/CopilotSdk.Aspire.Hosting/CopilotSdk.Aspire.Hosting.csproj" />
+    <Project Path="src/CopilotSdk.Aspire/CopilotSdk.Aspire.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CopilotSdk.Aspire.Hosting.Tests/CopilotSdk.Aspire.Hosting.Tests.csproj" />
+    <Project Path="tests/CopilotSdk.Aspire.Tests/CopilotSdk.Aspire.Tests.csproj" />
+  </Folder>
+</Solution>
