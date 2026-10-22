@@ -1,6 +1,6 @@
 # Copilot for Node.js: shared core and NestJS module
 
-Status: **approved; implementation in progress**. API and package names are working
+Status: **approved; phases 1–3 implemented** (see §19). API and package names are working
 names.
 
 This document designs the Node.js integrations for the
@@ -492,3 +492,31 @@ expect(moduleRef.get(CopilotTestRuntime).prompts).toEqual(["Where is order 42?"]
 5. **NestJS version floor.** Support NestJS 11 as well as 12, or 12 only?
 6. **`sessionFs` completeness.** Does shared session state through `sessionFs` cover
    everything needed to resume on another replica, or is sticky routing required?
+
+---
+
+## 19. Implementation notes
+
+Phases 1–3 are implemented in `packages/core`, `packages/nestjs`, and `packages/ai`.
+Where the code differs from the sections above:
+
+- **ESM only.** Packages ship ESM builds; a CJS build is not produced yet.
+- **Admission order.** A turn reserves a queue place, then takes the conversation
+  lock, then waits for an execution slot (Spring's order), so a turn waiting on its
+  conversation does not hold a slot. `timeout` covers queueing time too.
+- **Built-in tools.** Hidden by adding `builtin:*` to `excludedTools`;
+  `availableTools` defaults to `custom:*` and `mcp:*` because the SDK requires it.
+- **Streams.** Errors arrive as a final `error` event rather than a thrown error.
+  Streams are cold, and breaking out of iteration aborts the turn.
+- **Agent methods.** TypeScript rejects decorators on abstract methods, so agent
+  methods are concrete stubs that `return implementedByCopilot();`.
+- **`@InjectCopilotClient()`** injects an accessor so injection does not start a lazy
+  runtime.
+- **Exception filter.** Aborted turns map to HTTP 499.
+- **AI SDK approvals.** Approval answers arrive on the next `useChat` request; turns
+  waiting for approval live in one process, so replicas need sticky routing until
+  phase 4.
+- **AI SDK provider.** Tools passed to `generateText`/`streamText` are rejected;
+  declare them on the agent definition.
+- **Not yet implemented:** `nestjs-cls` integration, the info controller,
+  `@nestjs/event-emitter` re-emission, and the example apps listed in the roadmap.
