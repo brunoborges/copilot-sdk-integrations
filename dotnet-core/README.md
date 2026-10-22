@@ -10,49 +10,34 @@ worker services, and back-office apps.
 
 ## What it will look like
 
-Register an agent and use it as a standard
-[Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai)
-`IChatClient`:
-
 ```csharp
-builder.Services.AddCopilot()                          // binds the "Copilot" config section
-    .AddAgent("support", agent => agent
-        .WithInstructions("You help customers with their orders.")
-        .WithTools<OrderTools>())                      // DI service methods become tools
-    .AddKeyedChatClient("support");
+builder.Services.AddCopilot(o => o.Instructions = "You help customers with their orders.")
+    .WithTools<OrderTools>();                          // DI service methods become tools
 
-app.MapPost("/support", async ([FromKeyedServices("support")] IChatClient chat, SupportRequest req) =>
-    (await chat.GetResponseAsync(req.Message, new() { ConversationId = req.ConversationId })).Text);
-```
-
-Or declare a typed agent and let a source generator implement it:
-
-```csharp
-[CopilotAgent("triage", Instructions = "You triage support tickets for Contoso.")]
-public partial interface ITicketTriage
+app.MapPost("/support", async (IChatClient chat, SupportRequest req, CancellationToken ct) =>
 {
-    [Prompt("Classify this ticket. Subject: {subject}. Body: {body}")]
-    Task<TriageResult> ClassifyAsync(string subject, string body, CancellationToken ct = default);
-}
-
-builder.Services.AddCopilot().AddTypedAgent<ITicketTriage>();
+    var response = await chat.GetResponseAsync(req.Message, new() { ConversationId = req.ConversationId }, ct);
+    return new { response.Text, response.ConversationId };
+});
 ```
 
-Highlights of the design:
+Typed results come from the same interface:
+`await chat.GetResponseAsync<TriageResult>(prompt)`.
 
-- **One registration** (`AddCopilot()`) with options bound from configuration,
-  validated at startup, and a managed client lifecycle.
-- **Four surfaces over the same agent profile**: `IChatClient`, source-generated
-  typed agents, full-fidelity conversations, and Agent Framework `AIAgent`.
-- **DI services as tools**, each call in its own scope, with access to the
-  calling user, tenant, and conversation.
-- **Per-user identity** and BYOK providers for multi-tenant apps.
-- **Governance**: deny-by-default permissions, tool allow-lists,
-  human-in-the-loop approvals, and audit hooks.
-- **Production behavior**: concurrency limits, cancellation, resilience, SSE
-  streaming endpoints, health checks, and OpenTelemetry traces and metrics.
-- **Offline testing** with a scripted runtime and `WebApplicationFactory`
-  helpers.
+The design rule: **every feature must delete code from the application**,
+compared with calling the SDK directly. The integration handles what every app
+would otherwise write by hand:
+
+- the `CopilotClient` lifecycle;
+- create-or-resume per conversation, without concurrent sends to one session;
+- a DI scope per tool call, with `HttpContext`, `Activity`, and logging scopes
+  intact;
+- a safe default permission handler (your tools run, everything else is denied);
+- configuration, logging, health checks, and OpenTelemetry.
+
+Everything else uses the SDK's own types, and `CopilotClient` is injectable for
+full SDK access. See the [design document](docs/design.md), including a
+side-by-side comparison with the raw SDK.
 
 Running in [Aspire](https://aspire.dev/)? The [Aspire integration](../dotnet-aspire/)
 orchestrates the Copilot runtime and builds on this package.

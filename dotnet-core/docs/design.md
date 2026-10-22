@@ -1,613 +1,438 @@
 # Copilot SDK for .NET applications: design
 
 Status: **Draft** · Targets: .NET 10 (`net8.0` where practical),
-`GitHub.Copilot.SDK` 1.0.x, `Microsoft.Extensions.*` 10.x, ASP.NET Core 10.
+`GitHub.Copilot.SDK` 1.0.x, `Microsoft.Extensions.AI` 10.x.
 
-This document proposes the **application-level** integration of the
+This document proposes an integration of the
 [GitHub Copilot SDK for .NET](https://github.com/github/copilot-sdk/tree/main/dotnet)
-for business applications built on the .NET Generic Host: ASP.NET Core APIs,
-worker services, background jobs, and Blazor apps.
+for business applications on the .NET Generic Host: ASP.NET Core APIs, worker
+services, and Blazor apps.
 
 It is independent of Aspire. The [Aspire integration](../../dotnet-aspire/docs/design.md)
-orchestrates the Copilot runtime (AppHost) and adds a thin client layer *on top
-of* these packages, the same way `Aspire.Npgsql` builds on `Npgsql` and
-`Aspire.OpenAI` builds on `OpenAI`.
-
-```mermaid
-flowchart TB
-    subgraph Aspire["dotnet-aspire (optional)"]
-        AH["CopilotSdk.Aspire.Hosting<br/>AppHost: runtime, models, MCP, BYOK, secrets"]
-        AC["CopilotSdk.Aspire<br/>connection string → options, service defaults"]
-    end
-    subgraph Core["dotnet-core (this design)"]
-        H["CopilotSdk.Extensions.Hosting<br/>DI, options, lifecycle, agents, IChatClient,<br/>tools, governance, health, telemetry"]
-        AN["CopilotSdk.AspNetCore<br/>per-user identity, streaming endpoints"]
-        AG["CopilotSdk.Agents<br/>Microsoft Agent Framework AIAgent"]
-        G["CopilotSdk.Generators<br/>typed agent interfaces"]
-        T["CopilotSdk.Testing<br/>scripted runtime"]
-    end
-    SDK["GitHub.Copilot.SDK"]
-    AC --> H
-    AN --> H
-    AG --> H
-    G --> H
-    T --> H
-    H --> SDK
-```
+runs the Copilot runtime in an AppHost and builds on this package, the same way
+`Aspire.Npgsql` builds on `Npgsql`.
 
 ---
 
-## 1. Goals and non-goals
+## 1. Design rule: simpler than the SDK, or it doesn't ship
 
-### Goals
+The SDK is already easy to call. This integration exists only to remove code
+that every business app would otherwise write. Each feature must pass one test:
+**does it delete code from the application?** If a feature adds concepts without
+deleting code, it belongs in a sample, in documentation, or in the SDK itself.
 
-1. **Copilot as an application service.** Register once in `Program.cs`, inject
-   anywhere: controllers, minimal APIs, `BackgroundService`s, Blazor components.
-2. **Business logic as tools.** Existing DI services (EF Core repositories,
-   domain services, HTTP clients) become Copilot tools with their normal scopes,
-   transactions, and authorization intact.
-3. **Typed results.** Classification, extraction, and decision tasks return C#
-   records, not strings to parse.
-4. **Speak `Microsoft.Extensions.AI`.** `IChatClient` and Agent Framework
-   `AIAgent` work over Copilot, so code is portable and composes with existing
-   middleware.
-5. **Enterprise-ready by default.** Per-user identity, deny-by-default
-   permissions, auditable hooks, bounded concurrency, health checks, and
-   OpenTelemetry.
-6. **Testable without a model.** A scripted runtime for fast, deterministic,
-   free tests.
+What the raw SDK leaves to every application, and what this integration does
+about it:
+
+| Every app would write… | The integration… |
+| --- | --- |
+| A singleton `CopilotClient` plus a hosted service to start it, stop it, and force-stop it on shutdown | Owns the client lifecycle |
+| Create-or-resume logic per request, plus locking so two requests don't send to the same session at once | Maps conversations to `ChatOptions.ConversationId` |
+| Tool delegates that open a DI scope by hand to reach a `DbContext` | Creates a DI scope per tool call |
+| Code to capture `HttpContext.User`, `Activity`, and logging scopes before a turn, because tool callbacks run on the SDK's RPC thread | Flows the caller's `ExecutionContext` into tool calls |
+| A permission handler. Without one, requests stay pending and the turn hangs | Ships a safe default handler |
+| Event handling to turn session events into a reply, a typed result, or a stream | Exposes `IChatClient` (`GetResponseAsync`, `GetResponseAsync<T>`, streaming) |
+| Configuration binding and wiring for the logger and OpenTelemetry | Binds the `Copilot` section and wires logging and telemetry |
+
+Everything else uses the SDK's own types, so SDK documentation keeps applying.
 
 ### Non-goals
 
-- Orchestrating the runtime process for distributed apps (that is Aspire's job).
-- Re-implementing the SDK. Every surface has an escape hatch to native SDK types.
-- Agent orchestration patterns (sequential, handoff, group chat): use Microsoft
-  Agent Framework through the `AIAgent` surface.
+- A second API over `SessionConfig`. Advanced settings are set on the SDK types
+  directly (§3.4).
+- Several ways to call an agent. There is one primary surface (`IChatClient`)
+  and one escape hatch (`CopilotClient`).
+- Orchestrating the runtime for distributed apps (Aspire's job), and agent
+  orchestration patterns (use Microsoft Agent Framework, §11).
 
 ---
 
-## 2. Business application scenarios
+## 2. Side by side
 
-The design is driven by these scenarios; each maps to a sample.
+The support-assistant endpoint: answer a customer, with one tool that reads
+their orders through EF Core, across multiple turns.
 
-| Scenario | Shape | Key features |
-| --- | --- | --- |
-| **Support assistant API** | ASP.NET Core minimal API; one conversation per signed-in customer | Conversations, per-user GitHub token, streaming (SSE), tools over EF Core |
-| **Document intake worker** | `BackgroundService` reading a queue; extracts invoices into records | Structured output, bounded concurrency, retries, no conversation state |
-| **Back-office copilot** | Blazor Server; staff ask questions and trigger actions | Write tools gated by human approval, audit hooks, MCP server for internal docs |
-| **Triage in an existing workflow** | Domain service calls a typed agent: `ITicketTriage.ClassifyAsync(ticket)` | Typed agent interface, prompt template, BYOK model |
-
----
-
-## 3. Capabilities at a glance
-
-| Capability | .NET design |
-| --- | --- |
-| Configuration | `services.AddCopilot()` + `Copilot` configuration section, `IOptions<T>` with startup validation |
-| Managed client | Singleton `CopilotClient` owned by a hosted lifecycle service, lazy by default |
-| Agents | Named **agent profiles** consumed as keyed `IChatClient` / `AIAgent` / `ICopilotSessionFactory`; source-generated **typed agents** |
-| Prompt templates | Interpolated prompt templates on typed agent methods, validated at compile time |
-| Structured results | `Task<T>` (typed agents), `GetResponseAsync<T>()` (MEAI), `SendAndWaitAsync<T>()` (SDK) |
-| Streaming | `IAsyncEnumerable<ChatResponseUpdate>` / `IAsyncEnumerable<CopilotAgentEvent>` |
-| Conversations | `[ConversationId]` parameter (typed agents), `ChatOptions.ConversationId`, MAF `AgentThread`, `ICopilotConversation` |
-| Tools | DI services with `[Description]` methods, one `IServiceScope` per tool call |
-| MCP and BYOK | `Copilot:McpServers` and `Copilot:Providers`, selected per agent |
-| Per-user identity | `ICopilotTokenProvider`; ASP.NET Core implementation from the authenticated user |
-| Governance | `CopilotPermissionPolicy`, `ICopilotPermissionHandler`, `ICopilotSessionHooks`, `ICopilotEventListener` |
-| Customization | `IConfigureNamedOptions<CopilotAgentOptions>` / `PostConfigure` |
-| Health and diagnostics | `IHealthCheck` + optional `MapCopilotDiagnostics()` endpoint |
-| Observability | `ActivitySource` / `Meter` + MEAI `UseOpenTelemetry()` |
-| Testing | `CopilotSdk.Testing` scripted runtime, `WebApplicationFactory` helpers; Aspire or Testcontainers for .NET for a real runtime |
-
----
-
-## 4. Packages
-
-| Package (working name) | Purpose | Depends on |
-| --- | --- | --- |
-| `CopilotSdk.Extensions.Hosting` | Core: DI, options, lifecycle, agent profiles, `IChatClient`, session factory, tools, governance, health checks, telemetry | `GitHub.Copilot.SDK`, `Microsoft.Extensions.AI`, `Microsoft.Extensions.Hosting.Abstractions`, `…Options`, `…Diagnostics.HealthChecks.Abstractions` |
-| `CopilotSdk.AspNetCore` | Per-user tokens and invocation context from `HttpContext`, SSE streaming helpers, diagnostics endpoint | Core, `Microsoft.AspNetCore.App` |
-| `CopilotSdk.Agents` | Register agent profiles as Microsoft Agent Framework `AIAgent`s | Core, `Microsoft.Agents.AI.GitHub.Copilot` |
-| `CopilotSdk.Generators` | Source generator for typed agent interfaces (no runtime reflection, AOT-safe) | Core (analyzer package) |
-| `CopilotSdk.Testing` | Scripted runtime, assertions, `WebApplicationFactory` helpers | Core |
-
-`Microsoft.Extensions.AI.Abstractions` is already an SDK dependency, so the
-`IChatClient` adapter lives in core rather than a separate package. Extension
-methods live in `Microsoft.Extensions.DependencyInjection` /
-`Microsoft.AspNetCore.Builder` namespaces; types in `CopilotSdk.*`. See the
-naming question in §15.
-
----
-
-## 5. Registration and configuration
-
-### 5.1 The happy path
+**Raw SDK** (abridged; lifecycle service and locking omitted):
 
 ```csharp
-var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddSingleton(sp => new CopilotClient(new CopilotClientOptions
+{
+    GitHubToken = builder.Configuration["Copilot:GitHubToken"],
+    Logger = sp.GetRequiredService<ILogger<CopilotClient>>(),
+}));
+builder.Services.AddHostedService<CopilotClientLifetime>();      // start / stop / force-stop: ~30 lines
 
-builder.Services.AddCopilot()                       // binds the "Copilot" section
-    .AddAgent("support", agent => agent
-        .WithInstructions("You help customers with their orders. Be concise.")
-        .WithTools<OrderTools>())
-    .AddChatClient("support");                      // keyed IChatClient "support"
+app.MapPost("/support", async (CopilotClient copilot, IServiceScopeFactory scopes,
+    HttpContext http, SupportRequest req, CancellationToken ct) =>
+{
+    var customerId = http.User.GetCustomerId();                  // capture: tools run on another thread
 
-builder.Services.AddScoped<OrderTools>();
+    var lookupOrder = CopilotTool.DefineTool(
+        async (int id) =>
+        {
+            await using var scope = scopes.CreateAsyncScope();   // DbContext needs a scope
+            var orders = scope.ServiceProvider.GetRequiredService<OrderTools>();
+            return await orders.LookupOrder(customerId, id);
+        },
+        new CopilotToolOptions { SkipPermission = true },         // or the permission request hangs
+        new AIFunctionFactoryOptions { Name = "lookup_order", Description = "Looks up an order." });
 
-var app = builder.Build();
+    void Configure(SessionConfigBase c)
+    {
+        c.Model = builder.Configuration["Copilot:Model"];
+        c.SystemMessage = /* append "You help customers with their orders." */;
+        c.Tools = [lookupOrder];
+        c.OnPermissionRequest = DenyEverythingElse;
+    }
 
-app.MapPost("/support", async (
-        [FromKeyedServices("support")] IChatClient chat,
-        SupportRequest req, CancellationToken ct) =>
-    (await chat.GetResponseAsync(req.Message,
-        new ChatOptions { ConversationId = req.ConversationId }, ct)).Text);
+    // TODO: serialize concurrent requests for the same conversation
+    await using var session = req.ConversationId is null
+        ? await copilot.CreateSessionAsync(Apply(new SessionConfig(), Configure), ct)
+        : await copilot.ResumeSessionAsync(req.ConversationId, Apply(new ResumeSessionConfig(), Configure), ct);
 
-app.Run();
+    var reply = await session.SendAndWaitAsync(req.Message, TimeSpan.FromMinutes(2), ct);
+    return new { Text = reply?.Data.Content, ConversationId = session.SessionId };
+});
 ```
 
-### 5.2 API
+**With the integration:**
 
 ```csharp
-ICopilotBuilder AddCopilot(this IServiceCollection services, Action<CopilotOptions>? configure = null,
-    string connectionName = "copilot");                                // optional connection-string fallback (§5.3)
-ICopilotBuilder AddCopilot(this IServiceCollection services, IConfiguration section);
-ICopilotBuilder AddKeyedCopilot(this IServiceCollection services, string name, ...); // multiple runtimes
+builder.Services.AddCopilot(o => o.Instructions = "You help customers with their orders.")
+    .WithTools<OrderTools>();
 
-interface ICopilotBuilder
+app.MapPost("/support", async (IChatClient chat, SupportRequest req, CancellationToken ct) =>
 {
-    IServiceCollection Services { get; }
-    string? Name { get; }
+    var response = await chat.GetResponseAsync(req.Message, new() { ConversationId = req.ConversationId }, ct);
+    return new { response.Text, response.ConversationId };
+});
 
-    ICopilotBuilder ConfigureClient(Action<IServiceProvider, CopilotClientOptions> configure); // native escape hatch
-    ICopilotBuilder AddAgent(string name, Action<CopilotAgentBuilder> configure);
-    ICopilotBuilder AddTypedAgent<TAgent>() where TAgent : class;      // source-generated (§6.2)
-    ChatClientBuilder AddChatClient(string? agentName = null);           // unkeyed IChatClient
-    ChatClientBuilder AddKeyedChatClient(string agentName);              // keyed by agent name
-    ICopilotBuilder AddPermissionHandler<T>() where T : class, ICopilotPermissionHandler;
-    ICopilotBuilder AddHooks<T>() where T : class, ICopilotSessionHooks;
-    ICopilotBuilder AddEventListener<T>() where T : class, ICopilotEventListener;
-    ICopilotBuilder AddHealthCheck(string name = "copilot", params string[] tags);
+public sealed class OrderTools(OrdersDbContext db, IHttpContextAccessor http)
+{
+    [Description("Looks up one of the current customer's orders.")]
+    public Task<OrderDto?> LookupOrder(int id, CancellationToken ct) =>
+        db.Orders.Where(o => o.Id == id && o.CustomerId == http.HttpContext!.User.GetCustomerId())
+                 .Select(o => o.ToDto()).FirstOrDefaultAsync(ct);
 }
 ```
 
-`AddCopilot` always registers: `CopilotClient` (singleton), the lifecycle hosted
-service, `ICopilotSessionFactory`, options validation, and telemetry sources.
-Health checks are opt-in through `AddHealthCheck` (Aspire turns them on).
+The model and token come from configuration (`Copilot:Model`,
+`Copilot:GitHubToken`). The tool is a plain class that can be unit-tested
+without Copilot.
 
-### 5.3 Configuration
+Every scenario sample in this repository ships both versions, so reviewers can
+check the rule.
+
+---
+
+## 3. Registration and configuration
+
+### 3.1 One call
+
+```csharp
+public static ICopilotBuilder AddCopilot(this IServiceCollection services,
+    Action<CopilotOptions>? configure = null);                        // IChatClient
+public static ICopilotBuilder AddCopilot(this IServiceCollection services, string name,
+    Action<CopilotOptions>? configure = null);                        // keyed IChatClient "name"
+
+public interface ICopilotBuilder
+{
+    IServiceCollection Services { get; }
+    ICopilotBuilder WithTools<T>() where T : class;                    // methods with [Description]
+    ICopilotBuilder WithTool(Delegate function, string? name = null, string? description = null);
+}
+```
+
+`AddCopilot` registers `IChatClient`, the shared `CopilotClient`, its lifecycle,
+and the default permission handler. Calling it again is safe; every agent shares
+one client.
+
+### 3.2 More than one agent
+
+A single-agent app never sees a name. When an app needs more than one agent,
+name them and inject keyed clients:
+
+```csharp
+builder.Services.AddCopilot(o => o.Instructions = "You help customers.")
+    .WithTools<OrderTools>();
+builder.Services.AddCopilot("triage", o => o.Instructions = "You triage support tickets.");
+
+public sealed class TicketService([FromKeyedServices("triage")] IChatClient triage) { ... }
+```
+
+Named agents start from the default settings and override what they set.
+
+### 3.3 Configuration
 
 ```jsonc
 {
   "Copilot": {
-    "Client": {
-      "Endpoint": null,                   // tcp://host:port of a headless runtime; null = managed stdio
-      "ConnectionToken": null,            // required for non-loopback endpoints
-      "CliPath": null,                    // override the SDK-bundled runtime
-      "CliArgs": [],
-      "WorkingDirectory": null,
-      "HomeDirectory": null,              // COPILOT_HOME
-      "LogLevel": null,
-      "Mode": "Empty",                    // Empty | CopilotCli (see §9)
-      "EagerStart": false,
-      "StartupTimeout": "00:00:30",
-      "GitHubToken": null                 // service identity; prefer secrets / user tokens
-    },
+    "Model": "gpt-5.4",
+    "Instructions": "You help customers with their orders.",
+    "ReasoningEffort": null,
+    "ResponseTimeout": "00:02:00",
+    "MaxConcurrentTurns": null,          // optional cap across the app
+
+    "GitHubToken": null,                 // service identity; use a secret store
+    "Endpoint": null,                    // tcp://host:port of a shared runtime; null = bundled runtime
+    "ConnectionToken": null,             // required when Endpoint is not loopback
+
+    "McpServers": { "docs": { "Type": "http", "Url": "https://docs.internal/mcp", "Tools": [ "search" ] } },
+    "Provider": null,                    // BYOK, the SDK's ProviderConfig shape
+
     "Agents": {
-      "support": {
-        "Model": "gpt-5.4",
-        "ReasoningEffort": "medium",
-        "Instructions": "You help customers with their orders.",
-        "InstructionsMode": "Append",       // Append | Replace
-        "McpServers": [ "docs" ],
-        "Provider": null,
-        "AvailableTools": [ "custom:*", "mcp:docs-search" ],
-        "ExcludedTools": [],
-        "BuiltInTools": false,
-        "ResponseTimeout": "00:01:00",
-        "Permissions": { "AllowTools": [ "lookup_order" ], "AllowReadOnly": false }
-      }
-    },
-    "McpServers": {
-      "docs":  { "Type": "http",  "Url": "https://docs.internal/mcp", "Tools": [ "search" ] },
-      "files": { "Type": "stdio", "Command": "npx", "Args": [ "-y", "@modelcontextprotocol/server-filesystem", "/data" ] }
-    },
-    "Providers": {
-      "foundry": { "Type": "azure", "BaseUrl": "https://my.openai.azure.com/openai/v1/", "ApiKey": "<from secret store>", "WireApi": "Responses" }
-    },
-    "Execution": { "MaxConcurrentTurns": 8, "MaxQueuedTurns": 64 },
-    "Telemetry": { "CaptureMessageContent": false }
+      "triage": { "Model": "gpt-5.4-mini", "Instructions": "You triage support tickets." }
+    }
   }
 }
 ```
 
-The shape is stable and versioned additively.
-Options use `ValidateOnStart()` with source-generated `[OptionsValidator]`
-validators (AOT-friendly) and fail fast: unknown MCP server or provider names,
-non-loopback endpoints without a token, invalid durations, and so on.
-Configuration overrides code for agent profiles, so operators can change a model
-or tighten tools without a rebuild.
+- Code sets defaults and configuration overrides them, so operators can change a
+  model without a rebuild.
+- `McpServers` and `Provider` use the SDK's shapes, not new ones.
+- Validation runs at startup: a non-loopback `Endpoint` without a
+  `ConnectionToken` fails fast.
+- `Endpoint` and `ConnectionToken` can also come from a connection string,
+  `ConnectionStrings:copilot` (`Endpoint=…;ConnectionToken=…;Model=…`), which is
+  what an Aspire AppHost provides (§3.5). Set `o.ConnectionName` to read a
+  different name. Explicit `Copilot:*` values win.
 
-**Connection strings.** Core also understands the connection-string format
-(`Endpoint=tcp://host:port;ConnectionToken=...;Model=...`). If
-`Copilot:Client:Endpoint` is not set and `ConnectionStrings:copilot` exists (or
-the name passed to `AddCopilot(connectionName: "...")`), core parses it into
-`Copilot:Client` and the default agent model. Explicit `Copilot:*` values win.
-This lets an app consume a runtime from an Aspire AppHost, or any host that
-emits connection strings, **without** referencing the Aspire client package.
-The parser lives in core, and `CopilotSdk.Aspire` reuses it.
+### 3.4 Escape hatches
 
-### 5.4 Using core with or without Aspire
+Anything not covered is set on the SDK types directly, so there is no
+translation layer to learn or keep in sync:
 
-Core has no dependency on Aspire. Aspire is an optional layer on top:
+```csharp
+builder.Services.AddCopilot(o =>
+{
+    o.ConfigureClient(client => client.BaseDirectory = "/var/copilot");          // CopilotClientOptions
+    o.ConfigureSession(session => session.ExcludedTools = ["web_fetch"]);         // SessionConfigBase (create and resume)
+});
 
-| Setup | Packages | Runtime | Registration |
-| --- | --- | --- | --- |
-| Single app, local or simple deploy | Core | Managed stdio (SDK-bundled runtime) | `services.AddCopilot()` |
-| App connecting to a shared runtime | Core | Your own headless runtime | `services.AddCopilot()` + `Copilot:Client:Endpoint` |
-| Aspire AppHost, plain core client | Core (+ `CopilotSdk.Aspire.Hosting` in AppHost) | AppHost resource | `services.AddCopilot()` (reads the connection string) |
-| Aspire end to end | Core + `CopilotSdk.Aspire` | AppHost resource | `builder.AddCopilotClient("chat")`, which also enables health checks and telemetry by Aspire convention |
+app.MapGet("/models", (CopilotClient copilot) => copilot.ListModelsAsync());      // the shared client
+```
 
-All four return the same `ICopilotBuilder`, so agent, tool, and governance code
-does not change between them.
+`CopilotClient` is injectable for full SDK access (events, attachments, session
+management). `chatClient.GetService<CopilotSession>()` returns the underlying
+session inside a call when needed.
 
----
+### 3.5 Using core with or without Aspire
 
-## 6. Agents
-
-### 6.1 Agent profiles
-
-An **agent profile** is a named `CopilotAgentOptions`: a validated template for
-`SessionConfig` (model, reasoning effort, instructions, tools, MCP servers,
-provider, allow/deny lists, permission policy, hooks, timeout). It is defined in
-code, configuration, or both, and is consumed through four surfaces:
-
-| Surface | Resolve as | Best for |
+| Setup | Runtime | Registration |
 | --- | --- | --- |
-| `IChatClient` | `[FromKeyedServices("support")] IChatClient` | Portable MEAI code, middleware, `GetResponseAsync<T>()` |
-| Typed agent | `ITicketTriage` (generated) | Domain services: business-shaped methods, typed results |
-| `ICopilotSessionFactory` | `factory.CreateConversationAsync("support", id)` | Full SDK: events, attachments, hooks, canvases |
-| `AIAgent` (`CopilotSdk.Agents`) | `[FromKeyedServices("support")] AIAgent` | Agent Framework workflows |
+| Single app | Bundled runtime, started by the SDK | `AddCopilot()` |
+| Shared runtime | Your own headless runtime | `AddCopilot()` + `Copilot:Endpoint` |
+| Aspire AppHost | AppHost resource | `AddCopilot()` reads `ConnectionStrings:copilot`, or `builder.AddCopilotClient("copilot")` from `CopilotSdk.Aspire` for Aspire's health and telemetry defaults |
 
-```csharp
-services.AddCopilot()
-    .AddAgent("support", agent => agent
-        .WithModel("gpt-5.4")
-        .WithInstructions("You help customers with their orders.")  // or .WithInstructionsFile("Prompts/support.md")
-        .WithTools<OrderTools>()
-        .WithTool("today", () => DateOnly.FromDateTime(DateTime.UtcNow))
-        .WithMcpServer("docs")
-        .WithProvider("foundry")
-        .AllowTools("lookup_order")
-        .WithResponseTimeout(TimeSpan.FromSeconds(45)));
-```
-
-### 6.2 Typed agents (source-generated)
-
-Declare an agent as an interface and let a source generator implement it, with
-no dynamic proxies:
-
-```csharp
-[CopilotAgent("triage", Instructions = "You triage support tickets for Contoso.")]
-public partial interface ITicketTriage
-{
-    [Prompt("Classify this ticket. Subject: {subject}. Body: {body}")]
-    Task<TriageResult> ClassifyAsync(string subject, string body, CancellationToken ct = default);
-
-    [Prompt("{question}")]
-    IAsyncEnumerable<string> AskAsync([ConversationId] string conversationId, string question,
-                                      CancellationToken ct = default);
-}
-
-public sealed record TriageResult(TicketCategory Category, Priority Priority, string Summary);
-
-services.AddCopilot().AddTypedAgent<ITicketTriage>();
-```
-
-- A Roslyn incremental generator emits the implementation and a
-  `JsonSerializerContext` for result types, so it is trimming- and AOT-safe.
-- Prompt placeholders are checked against parameters **at compile time**
-  (diagnostics instead of startup validation).
-- Supported returns: `Task<string>`, `Task<T>` (structured output),
-  `IAsyncEnumerable<string>` (streaming text), `IAsyncEnumerable<CopilotAgentEvent>`,
-  and `Task` (fire and forget the reply).
-- `[ConversationId]` routes to a persisted conversation; without it each call is
-  a fresh, disposable session.
-- Configuration under `Copilot:Agents:triage` still applies.
-
-### 6.3 Conversations
-
-```csharp
-await using var conversation = await sessions.GetOrCreateConversationAsync(
-    "support", CopilotConversationId.For(user, "orders"), ct);
-
-var reply = await conversation.SendAsync("Where is order 42?", ct);
-await foreach (var evt in conversation.StreamAsync("And order 43?", ct)) { ... }
-```
-
-- Create-or-resume by id; sends on the same conversation are serialized.
-- `CopilotConversationId.For(ClaimsPrincipal, key)` namespaces ids by tenant and
-  user so one user can never resume another's conversation.
-- `ICopilotConversationStore` (optional) records ownership and metadata (default:
-  in-memory; EF Core sample) for listing a user's conversations and cleanup.
-- Idle cleanup: `Copilot:Execution:IdleSessionTimeout` disconnects idle sessions;
-  history persists in the runtime's `COPILOT_HOME`.
-
-### 6.4 `IChatClient` semantics
-
-| MEAI | Copilot |
-| --- | --- |
-| `ChatOptions.ConversationId` set | Resume that session; send only new user content |
-| `ChatOptions.ConversationId` unset | New session; `ChatResponse.ConversationId` returns its id |
-| System messages | `SystemMessage` (append) |
-| `ModelId`, `Reasoning` | `Model`, `ReasoningEffort` |
-| `Tools` (`AIFunction`) | Session tools, merged with the profile's tools |
-| `ResponseFormat` (JSON schema) | SDK structured output, so `GetResponseAsync<T>()` works |
-| `GetStreamingResponseAsync` | Streaming deltas → `ChatResponseUpdate` |
-| `UsageDetails` | Session usage events |
-| `CancellationToken` | `session.AbortAsync()`: real cancellation of the runtime turn |
-| `DataContent` | Attachments |
-
-Multi-turn history without a `ConversationId` is rendered as a transcript in
-the first prompt by default (`HistoryMode = Transcript | Reject`).
-`UseFunctionInvocation()` is unnecessary because the runtime drives tool calls.
+Application code is the same in all three.
 
 ---
 
-## 7. Tools: business logic the model can call
+## 4. Conversations
+
+- **`ConversationId` set**: the integration resumes that Copilot session and
+  sends only the new user message. Concurrent sends to the same conversation are
+  queued, not interleaved.
+- **`ConversationId` not set**: a new session is created.
+  `ChatResponse.ConversationId` returns its id so the caller can continue it.
+- **History without a `ConversationId`** (several prior assistant messages) is
+  rejected with a clear error. The runtime owns history; replaying it as a
+  transcript would hide surprises.
+- **Ownership**: store the conversation id on your own entity (a ticket, a
+  customer) and authorize access to that entity as usual. Never accept a raw
+  conversation id from one user and resume it for another.
+- Sessions are disconnected after each call and resumed on the next; history
+  stays in the runtime. Warm-session caching is an internal optimization, not
+  an API.
+
+---
+
+## 5. Typed results and streaming
+
+These come from `Microsoft.Extensions.AI` and map to SDK features:
 
 ```csharp
-public sealed class OrderTools(OrdersDbContext db, ICopilotInvocationContext ctx)
-{
-    [Description("Looks up one of the current customer's orders by id.")]
-    public async Task<OrderDto?> LookupOrder([Description("Order id")] int id, CancellationToken ct)
-    {
-        var customerId = ctx.User.GetCustomerId();             // the caller, not the service
-        return await db.Orders
-            .Where(o => o.Id == id && o.CustomerId == customerId)
-            .Select(o => o.ToDto())
-            .FirstOrDefaultAsync(ct);
-    }
+var triage = await chat.GetResponseAsync<TriageResult>(              // SDK structured output
+    $"Classify this ticket. Subject: {t.Subject}. Body: {t.Body}", cancellationToken: ct);
 
-    [Description("Cancels an order that has not shipped.")]
-    [CopilotToolApproval(Required = true)]                       // human-in-the-loop (§9.3)
+app.MapPost("/support/stream", (IChatClient chat, SupportRequest req, CancellationToken ct) =>
+    TypedResults.ServerSentEvents(chat
+        .GetStreamingResponseAsync(req.Message, new() { ConversationId = req.ConversationId }, ct)
+        .Select(u => u.Text)));
+```
+
+Cancelling the token aborts the runtime turn (`session.AbortAsync()`), and so
+does `ResponseTimeout`. Client disconnects in ASP.NET Core cancel the turn.
+
+---
+
+## 6. Tools
+
+```csharp
+builder.Services.AddCopilot().WithTools<OrderTools>();
+```
+
+- **Discovery**: public methods with `[Description]` (the `Microsoft.Extensions.AI`
+  convention). Tool names are snake_case method names (`lookup_order`).
+- **Registration**: `WithTools<T>()` registers `T` as scoped if it isn't already
+  registered.
+- **Scope per call**: each tool call resolves `T` from a new DI scope, so
+  `DbContext` and other scoped services behave as in a request.
+- **Ambient context**: the caller's `ExecutionContext` is restored inside the
+  tool, so `IHttpContextAccessor`, `Activity.Current`, logging scopes, and
+  culture work as if the tool ran inline. No new context API is needed.
+- **Errors**: exceptions are logged and returned to the model as a generic
+  failure message, so details don't leak into the conversation.
+- `WithTool(delegate)` covers one-off lambdas. Delegate parameters that are
+  registered services are injected from the call's scope.
+
+---
+
+## 7. Permissions
+
+The defaults let the app's own tools run, and deny everything else:
+
+| Request | Default |
+| --- | --- |
+| Tools the app registered | Run without a prompt (`SkipPermission`). |
+| Tools marked `[RequiresApproval]` | Sent to `OnApproval`; denied if it isn't set. |
+| MCP server tools | Allowed for the tools listed on the server (`Tools`); others denied. |
+| Built-in shell, file write, and URL tools | Not offered: client `Mode = Empty` and only app and MCP tools are available. |
+
+```csharp
+public sealed class OrderTools(...)
+{
+    [Description("Cancels an order that has not shipped."), RequiresApproval]
     public Task<CancelResult> CancelOrder(int id, CancellationToken ct) => ...;
 }
+
+builder.Services.AddCopilot(o => o.OnApproval = async (request, services, ct) =>
+    services.GetRequiredService<IHttpContextAccessor>().HttpContext!.User.IsInRole("Supervisor"));
 ```
 
-- **Discovery**: public methods with `[Description]` (MEAI convention) on the
-  registered type; `WithTools<T>(filter)` narrows the set. Built with
-  `AIFunctionFactory`, the SDK's own tool type, so schemas match MEAI and MAF.
-- **Scope per call**: each tool invocation resolves `T` from a new
-  `IServiceScope`, so `DbContext`, unit of work, and other scoped services
-  behave as in a request. `[FromServices]` parameters are injected and excluded
-  from the schema.
-- **Invocation context**: tool callbacks arrive on the SDK's RPC thread, so the
-  caller's `ExecutionContext` is lost. At turn start the integration captures
-  `ICopilotInvocationContext` (user `ClaimsPrincipal`, tenant, agent, session id,
-  `Activity`, culture, logging scope, custom items) and restores it inside the
-  tool scope.
-- **Errors**: exceptions become failed tool results with a safe message (details
-  only in logs/telemetry); `CopilotToolException` lets tools return a
-  model-visible message deliberately.
-- **Transactions**: no implicit ambient transaction across a turn; each tool call
-  is its own unit of work, which is the safe default for retries and approvals.
+For anything else, set the SDK's `OnPermissionRequest` through
+`ConfigureSession`; it replaces the default handler. Approval UIs (queues,
+SignalR prompts) are shown in the back-office sample, not built into the
+library.
 
 ---
 
-## 8. Identity and multi-tenancy
+## 8. Identity
 
-| Mode | Use when | How |
-| --- | --- | --- |
-| **Service identity** | Internal tools, workers, batch jobs | `Copilot:Client:GitHubToken` from a secret store, or the runtime's ambient auth |
-| **Per-user identity** | Copilot usage should be billed to and scoped by the signed-in user | `ICopilotTokenProvider` → SDK `GitHubTokenProvider` per session |
-| **BYOK** | Your own model deployment; no Copilot subscription per user | Agent `Provider` (§5.3) |
-
-```csharp
-builder.Services.AddAuthentication().AddGitHub(...);         // any OAuth handler that saves tokens
-builder.Services.AddCopilot().AddAspNetCoreUserTokens();     // CopilotSdk.AspNetCore
-```
-
-- The ASP.NET Core provider reads the user's GitHub access token
-  (`HttpContext.GetTokenAsync`) at turn start; token refresh is delegated to an
-  optional `IGitHubTokenRefresher`.
-- No silent fallback: if a per-user token is required and missing, the call fails
-  with `CopilotAuthenticationRequiredException` (mapped to 401 by an optional
-  `IExceptionHandler`), unless `AllowAmbientFallback` is set.
-- Shared runtimes default to `Mode = Empty` (no ambient OS tools), following the
-  SDK multi-tenancy guidance.
-
----
-
-## 9. Governance, safety, and auditing
-
-### 9.1 Safe defaults
-
-| Default | Rationale |
+| Mode | How |
 | --- | --- |
-| No permission handler ⇒ **deny** | The integration never approves tool use implicitly. |
-| `Mode = Empty`, `BuiltInTools = false` for agents | Business apps expose only their own tools unless they opt in. |
-| MCP servers usable only by agents that list them | Declared ≠ granted. |
-| Connection token required for non-loopback endpoints | Startup fails otherwise. |
-| Message content excluded from telemetry and logs | Opt-in only (PII). |
-
-### 9.2 Permission policies
-
-Declarative per agent (`Permissions` in §5.3) or code:
+| **Service identity** (workers, internal tools) | `Copilot:GitHubToken` from a secret store, or the runtime's own sign-in. |
+| **Per-user identity** (usage billed to and scoped by the signed-in user) | `o.GitHubTokenProvider`, called at the start of each turn. |
+| **BYOK** (your own model deployment) | `Copilot:Provider`. |
 
 ```csharp
-agent.WithPermissions(p => p.AllowTools("lookup_order").AllowReadOnly());
-agent.WithPermissionHandler<RoleBasedPermissionHandler>();   // ICopilotPermissionHandler, DI-resolved
+builder.Services.AddCopilot(o => o.GitHubTokenProvider = (services, ct) =>
+    services.GetRequiredService<IHttpContextAccessor>().HttpContext!.GetTokenAsync("access_token"));
 ```
 
-Handlers receive the `ICopilotInvocationContext`, so decisions can use the
-caller's roles and tenant (`IAuthorizationService` works inside handlers).
-
-### 9.3 Human-in-the-loop approvals
-
-For write operations, `[CopilotToolApproval]` (or a handler that leaves the
-request pending) parks the turn and raises an approval request
-through `ICopilotApprovalQueue`. Implementations: in-memory (default), and a
-sample backed by EF Core + SignalR for the back-office scenario. The turn
-resumes when approved, or fails with a model-visible denial after a timeout.
-This uses the SDK's pending-permission and manual-resume support.
-
-### 9.4 Hooks, listeners, and audit
-
-- `ICopilotSessionHooks` (pre/post tool use, prompt submitted, session start/end)
-  as DI services, global or per agent, ordered.
-- `ICopilotEventListener` receives typed session events for metrics, logging, or
-  persistence.
-- `CopilotAuditHooks` (opt-in) writes structured audit records (who, agent,
-  tool, arguments hash, decision, outcome) through `ILogger` with a dedicated
-  category, ready for any log sink.
+If a token provider is set and returns `null`, the call fails instead of falling
+back to the service identity.
 
 ---
 
-## 10. Runtime behavior
+## 9. Runtime behavior
 
-- **Lifecycle**: a hosted lifecycle service owns `CopilotClient`. Lazy by
-  default (first use starts it, guarded against concurrent starts);
-  `EagerStart` connects during host startup within `StartupTimeout`. Shutdown
-  calls `StopAsync()` and falls back to `ForceStopAsync()` when the shutdown
-  token fires.
-- **Connection**: `Endpoint` set ⇒ `RuntimeConnection.ForUri`; otherwise the
-  SDK's managed stdio runtime (bundled with the NuGet package).
-- **Concurrency**: `System.Threading.RateLimiting.ConcurrencyLimiter`
-  (`MaxConcurrentTurns`, `MaxQueuedTurns`); rejection throws
-  `CopilotCapacityExceededException` (maps to 503 / `Retry-After`).
-- **Cancellation and timeouts**: every API takes a `CancellationToken`;
-  cancellation and `ResponseTimeout` abort the runtime turn.
-- **Resilience**: transient connection failures surface as
-  `CopilotUnavailableException`; callers can compose
-  `Microsoft.Extensions.Resilience` pipelines. The integration does not retry
-  turns implicitly (turns are not idempotent once tools run).
+- **Lifecycle**: the client starts on first use (or at host start with
+  `EagerStart`) and stops with the host, force-stopping if shutdown times out.
+- **Connection**: with no `Endpoint`, the SDK starts its bundled runtime; with an
+  `Endpoint`, the client connects to it.
+- **Concurrency**: when `MaxConcurrentTurns` is set, extra turns wait in a
+  bounded queue and fail when it is full.
+- **Retries**: none. A turn that ran tools is not safe to replay. Use
+  `Microsoft.Extensions.Resilience` around calls where retries make sense.
 
 ---
 
-## 11. Web, streaming, and diagnostics (`CopilotSdk.AspNetCore`)
+## 10. Health and observability
 
 ```csharp
-app.MapPost("/support/stream", (
-        [FromKeyedServices("support")] IChatClient chat, SupportRequest req, CancellationToken ct) =>
-    TypedResults.ServerSentEvents(
-        chat.GetStreamingResponseAsync(req.Message,
-            new ChatOptions { ConversationId = req.ConversationId }, ct)
-            .Select(u => u.Text)));
-
-app.MapCopilotDiagnostics("/_copilot").RequireAuthorization("Admin");
+builder.Services.AddHealthChecks().AddCopilot();          // ping + auth status; never starts a lazy client
 ```
 
-- Streaming uses .NET 10's built-in `TypedResults.ServerSentEvents`; no custom
-  result types needed. Client disconnects cancel the runtime turn.
-- `MapCopilotDiagnostics` exposes a diagnostics endpoint listing
-  agents (without instructions by default), models, active sessions, execution
-  capacity. Never force-starts a lazy client. Requires explicit authorization.
-- Blazor Server and SignalR samples show streaming to the UI and approval
-  prompts (§9.3).
+- **Logs**: the SDK logs through the host's `ILoggerFactory`.
+- **Traces and metrics**: `IChatClient` is wrapped with
+  `Microsoft.Extensions.AI` OpenTelemetry (GenAI conventions), so
+  `AddSource("Experimental.Microsoft.Extensions.AI")` or the standard MEAI
+  setup is enough. Tool calls run inside the caller's trace.
+- **Runtime telemetry**: when `OTEL_EXPORTER_OTLP_ENDPOINT` is configured, the
+  runtime exports its own spans (model calls) to it, correlated by
+  `traceparent`.
+- Message content is never recorded unless the app opts in.
 
 ---
 
-## 12. Observability
+## 11. Testing and other frameworks
 
-| Signal | Source |
-| --- | --- |
-| Integration spans: `copilot.turn`, `copilot.session.create`/`resume`, `copilot.tool.invoke`, `copilot.permission` | `ActivitySource("CopilotSdk")` |
-| GenAI spans and `gen_ai.client.*` metrics | MEAI `UseOpenTelemetry()`, on by default in `AddChatClient` |
-| Integration metrics: active sessions, queue depth, rejections, turn duration, tokens per agent/model | `Meter("CopilotSdk")` |
-| Runtime spans (model calls, built-in tools) | Copilot runtime OTLP export (`Copilot:Telemetry`), correlated through `traceparent` |
-| Logs | SDK `ILogger` wired to the host `ILoggerFactory` |
-| Health | `CopilotHealthCheck`: ping + auth status, never force-starts a lazy client |
-
-Apps opt in with standard OpenTelemetry:
-`.WithTracing(t => t.AddCopilotInstrumentation())` and
-`.WithMetrics(m => m.AddCopilotInstrumentation())`.
+- **Testing**: application code depends on `IChatClient`, so tests replace it
+  with any fake or mock (`services.AddSingleton<IChatClient>(fake)` in
+  `WebApplicationFactory`). Tool classes are plain classes and are tested
+  directly.
+- **Microsoft Agent Framework**: use `Microsoft.Agents.AI.GitHub.Copilot`
+  (`copilotClient.AsAIAgent(...)`) with the injected `CopilotClient`. No extra
+  package is needed.
 
 ---
 
-## 13. Testing (`CopilotSdk.Testing`)
+## 12. Package and layout
 
-A scripted fake runtime speaks the SDK's JSON-RPC protocol on a loopback port,
-so the real `CopilotClient`, sessions, tool invocation (into real DI tools),
-`IChatClient`, and typed agents are exercised, offline and free:
-
-```csharp
-public class SupportApiTests(WebApplicationFactory<Program> factory)
-{
-    [Fact]
-    public async Task Looks_up_order_through_tool()
-    {
-        await using var runtime = await CopilotTestRuntime.StartAsync(s => s
-            .OnPrompt(p => p.Contains("order 42"))
-                .CallTool("lookup_order", new { id = 42 })
-                .ThenReply("Order 42 ships tomorrow."));
-
-        var client = factory.WithCopilotTestRuntime(runtime).CreateClient();
-        var response = await client.PostAsJsonAsync("/support", new { message = "Where is order 42?" });
-
-        Assert.Equal("Order 42 ships tomorrow.", await response.Content.ReadAsStringAsync());
-        Assert.Single(runtime.ToolCalls, c => c.Name == "lookup_order");
-    }
-}
-```
-
-Scripts cover replies, streamed deltas, structured results, tool calls, permission
-requests, failures, delays, and cancellation; recorded prompts and tool calls are
-assertable. Typed agents and `IChatClient` can also be faked directly with
-standard mocking when the runtime is irrelevant.
-
----
-
-## 14. Repository layout
+One package: **`CopilotSdk.Extensions.Hosting`** (working name). It depends on
+`GitHub.Copilot.SDK`, `Microsoft.Extensions.AI`, and the hosting, options, and
+health-check abstractions.
 
 ```
 dotnet-core/
 ├── README.md
 ├── docs/design.md
-├── CopilotSdk.slnx
-├── Directory.Build.props / Directory.Packages.props / global.json
-├── src/
-│   ├── CopilotSdk.Extensions.Hosting/
-│   ├── CopilotSdk.AspNetCore/
-│   ├── CopilotSdk.Agents/
-│   ├── CopilotSdk.Generators/
-│   └── CopilotSdk.Testing/
-├── samples/
-│   ├── SupportApi/          # minimal API, conversations, SSE, EF Core tools, per-user tokens
-│   ├── InvoiceWorker/       # BackgroundService, structured extraction, bounded concurrency
-│   ├── BackOffice/          # Blazor Server, approvals, audit, MCP
-│   └── TicketTriage/        # typed agent, BYOK
+├── src/CopilotSdk.Extensions.Hosting/
+├── samples/                 # each with a raw-SDK version for comparison
+│   ├── SupportApi/          # minimal API, conversations, streaming, EF Core tools, per-user tokens
+│   ├── InvoiceWorker/       # BackgroundService, GetResponseAsync<T>, MaxConcurrentTurns
+│   └── BackOffice/          # Blazor Server, [RequiresApproval] with a SignalR approval UI, MCP
 └── tests/
 ```
 
-The Aspire packages in `dotnet-aspire/` reference these projects. CI: a job
-scoped to `dotnet-core/**` and `dotnet-aspire/**` (Aspire depends on core).
+---
+
+## 13. Deferred, and why
+
+Each item below adds concepts. It ships only if samples show apps repeatedly
+writing the same code without it.
+
+| Idea | Why not now |
+| --- | --- |
+| Source-generated typed agent interfaces | `GetResponseAsync<T>()` already returns typed results in one line. |
+| `AIAgent` registration package | `Microsoft.Agents.AI.GitHub.Copilot` already provides it. |
+| ASP.NET Core package (user tokens, endpoints) | `GitHubTokenProvider` is one line; .NET 10 has built-in server-sent events. |
+| Approval queue, conversation store, diagnostics endpoint | App-specific; shown in samples. |
+| Scripted fake runtime | Faking `IChatClient` covers application tests. Revisit for testing the integration itself. |
+| Custom exception types, `ActivitySource`, `Meter` | MEAI telemetry and standard exceptions cover v1. |
+| Hooks and event listeners as DI services | Available through `ConfigureSession` and `CopilotClient`. |
 
 ---
 
-## 15. Open questions
+## 14. Open questions
 
-1. **Package names.** `CopilotSdk.*` (the `GitHub.*` and `Microsoft.*` prefixes
-   are reserved). Alternatives: `Copilot.Extensions.*`, or proposing these
-   upstream to `github/copilot-sdk`.
-2. **Folder and solution layout.** Keep `dotnet-core/` and `dotnet-aspire/`
-   separate (mirrors the README's per-integration layout) or use one `dotnet/`
-   solution with both (simpler project references, one CI job).
-3. **Typed agents in v1?** They are the most "business-app" feature but need a
-   generator. Proposal: phase 3.
-4. **Stateless `IChatClient` history.** Transcript (portable) vs. reject (honest).
-5. **`Mode = Empty` default** also for the managed stdio runtime in single-user
-   apps?
-6. **Approvals.** How much of the approval queue belongs in the library vs. samples?
-7. **Fake runtime fidelity.** Protocol-level (high fidelity, tracks protocol
-   versions) vs. in-memory session fake.
+1. **Package name.** `CopilotSdk.Extensions.Hosting` (the `GitHub.*` and
+   `Microsoft.*` prefixes are reserved), or propose upstream to
+   `github/copilot-sdk`.
+2. **Folder layout.** Separate `dotnet-core/` and `dotnet-aspire/`, or one
+   `dotnet/` solution.
+3. **Session reuse.** Disconnect after each call (simple, stateless app) vs.
+   keep warm sessions with an idle timeout (faster multi-turn chats).
+4. **Built-in tools.** Should an app be able to enable the runtime's file and
+   shell tools with one option, or only through `ConfigureSession`?
 
 ---
 
-## 16. Phasing
+## 15. Phasing
 
 | Phase | Scope |
 | --- | --- |
-| **1. Client and chat** | `AddCopilot`, options and validation, lifecycle, `ICopilotSessionFactory`, `IChatClient` (create/resume, streaming, structured output, cancellation), health check, telemetry, `SupportApi` sample. |
-| **2. Agents and tools** | Agent profiles from code and configuration, DI tools with per-call scopes, invocation context, MCP and BYOK, permission policies, hooks, listeners, admission control, `InvoiceWorker` sample. |
-| **3. Business features** | Typed agents (generator), per-user identity (ASP.NET Core), approvals, audit hooks, diagnostics endpoint, `CopilotSdk.Agents`, `BackOffice` and `TicketTriage` samples. |
-| **4. Testing and docs** | Scripted runtime, `WebApplicationFactory` helpers, documentation site chapters. |
+| **1** | `AddCopilot`, configuration, lifecycle, `IChatClient` (conversations, typed results, streaming, cancellation), `WithTools<T>`, default permissions, health check, telemetry; `SupportApi` sample with raw-SDK comparison. |
+| **2** | Named agents, MCP and BYOK from configuration, per-user tokens, `[RequiresApproval]`, `MaxConcurrentTurns`; `InvoiceWorker` and `BackOffice` samples. |
+| **3** | Revisit §13 based on sample feedback; documentation site chapters. |

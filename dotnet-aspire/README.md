@@ -5,7 +5,7 @@
 
 This is the **orchestration** layer: it runs, secures, and wires the Copilot
 runtime in an Aspire AppHost, and connects service projects to it. Application
-features (agents, `IChatClient`, tools, permissions, testing) come from the
+features (`IChatClient`, conversations, tools, permissions) come from the
 [core .NET integration](../dotnet-core/), which this package builds on, the same
 way `Aspire.Npgsql` builds on `Npgsql`.
 
@@ -30,14 +30,10 @@ builder.AddProject<Projects.Api>("api").WithReference(chat).WaitFor(chat);
 Service:
 
 ```csharp
-builder.AddCopilotClient("chat")                     // Aspire: connection string, health, telemetry
-       .AddAgent("support", agent => agent
-           .WithInstructions("You help customers with orders.")
-           .WithTools<OrderTools>())
-       .AddKeyedChatClient("support");                 // core API: keyed IChatClient
+builder.AddCopilotClient("chat", o => o.Instructions = "You help customers with orders.")
+       .WithTools<OrderTools>();                       // core API from here on
 
-app.MapPost("/ask", async ([FromKeyedServices("support")] IChatClient chat, string q) =>
-    (await chat.GetResponseAsync(q)).Text);
+app.MapPost("/ask", async (IChatClient chat, string q) => (await chat.GetResponseAsync(q)).Text);
 ```
 
 Highlights of the design:
