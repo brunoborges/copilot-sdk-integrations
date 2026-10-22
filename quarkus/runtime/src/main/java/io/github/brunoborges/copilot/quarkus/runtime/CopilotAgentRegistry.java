@@ -74,9 +74,15 @@ public class CopilotAgentRegistry {
         var current = binding;
         if (current == null) {
             var mpConfig = ConfigProvider.getConfig();
+            var mcp = CopilotConfigs.mcp(config);
+            var providers = CopilotConfigs.providers(config);
             current = new BindingContext(ArcBeanLookup.current(), new ConfigPropertyResolver(mpConfig),
                     ResourceLookup.classpath(Thread.currentThread().getContextClassLoader()),
-                    CopilotConfigs.agents(config), CopilotConfigs.mcp(config), CopilotConfigs.providers(config));
+                    CopilotConfigs.agents(config),
+                    name -> mcp.servers().containsKey(name) ? mcp.servers().get(name).toServerConfig() : null,
+                    name -> providers.providers().containsKey(name)
+                            ? providers.providers().get(name).toProviderConfig() : null,
+                    "quarkus.copilot");
             binding = current;
         }
         return current;

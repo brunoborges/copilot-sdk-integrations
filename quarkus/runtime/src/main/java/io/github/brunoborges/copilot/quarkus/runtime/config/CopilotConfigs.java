@@ -9,6 +9,8 @@ import java.util.Optional;
 import com.github.copilot.rpc.CopilotClientOptions;
 
 import io.github.brunoborges.copilot.agent.internal.Assert;
+import io.github.brunoborges.copilot.agent.internal.CopilotAgentExecutionLimits;
+import io.github.brunoborges.copilot.agent.internal.CopilotAgentSettings;
 
 /** Converts {@link CopilotRuntimeConfig} into validated settings and SDK options. */
 public final class CopilotConfigs {
@@ -16,16 +18,16 @@ public final class CopilotConfigs {
     private CopilotConfigs() {
     }
 
-    public static CopilotAgentExecutionProperties execution(CopilotRuntimeConfig config) {
-        return new CopilotAgentExecutionProperties(config.execution().maxConcurrentInvocations(),
+    public static CopilotAgentExecutionLimits execution(CopilotRuntimeConfig config) {
+        return new CopilotAgentExecutionLimits(config.execution().maxConcurrentInvocations(),
                 config.execution().maxOutstandingInvocations());
     }
 
-    public static CopilotAgentsProperties agents(CopilotRuntimeConfig config) {
-        var agents = new LinkedHashMap<String, CopilotAgentsProperties.Agent>();
+    public static CopilotAgentSettings agents(CopilotRuntimeConfig config) {
+        var agents = new LinkedHashMap<String, CopilotAgentSettings.Agent>();
         config.agents().forEach((name, agent) -> {
             var permissions = agent.permissions();
-            agents.put(name, new CopilotAgentsProperties.Agent(
+            agents.put(name, new CopilotAgentSettings.Agent(
                     agent.model().orElse(null),
                     agent.reasoningEffort().orElse(null),
                     agent.responseTimeout(),
@@ -37,14 +39,14 @@ public final class CopilotConfigs {
                     agent.builtInTools().orElse(null),
                     agent.workingDirectory().orElse(null),
                     agent.additionalDirectories().map(CopilotConfigs::noneAsEmpty).orElse(null),
-                    new CopilotAgentsProperties.Permissions(
+                    new CopilotAgentSettings.Permissions(
                             permissions.allow().orElse(List.of()),
                             permissions.allowTools().orElse(List.of()),
                             permissions.allowMcpServers().orElse(List.of()),
                             permissions.allowAgentTools(),
                             permissions.allowReadOnly())));
         });
-        return new CopilotAgentsProperties(agents);
+        return new CopilotAgentSettings(agents);
     }
 
     public static CopilotMcpProperties mcp(CopilotRuntimeConfig config) {

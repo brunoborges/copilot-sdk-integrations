@@ -4,10 +4,12 @@ on:
   push:
     branches: [main]
     paths:
+      - 'core/**'
       - 'spring-boot/**'
       - '.github/workflows/build.yml'
   pull_request:
     paths:
+      - 'core/**'
       - 'spring-boot/**'
       - '.github/workflows/build.yml'
   workflow_dispatch:
@@ -29,7 +31,9 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-          cache-dependency-path: 'spring-boot/**/pom.xml'
+          cache-dependency-path: |
+            spring-boot/**/pom.xml
+            core/pom.xml
       - name: Build
         run: ./mvnw --batch-mode --no-transfer-progress verify
       - name: Install documentation skin

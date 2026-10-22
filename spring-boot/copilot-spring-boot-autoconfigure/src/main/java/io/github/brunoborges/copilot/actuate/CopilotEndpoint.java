@@ -15,7 +15,7 @@ import com.github.copilot.rpc.SessionMetadata;
 import com.github.copilot.rpc.ToolDefinition;
 import io.github.brunoborges.copilot.agent.CopilotAgent;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentFactoryBean;
+import io.github.brunoborges.copilot.autoconfigure.internal.CopilotAgentFactoryBean;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
 import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
 import io.github.brunoborges.copilot.autoconfigure.CopilotEndpointProperties;

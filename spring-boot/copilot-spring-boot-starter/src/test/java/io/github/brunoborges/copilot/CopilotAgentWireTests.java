@@ -23,7 +23,7 @@ import com.github.copilot.rpc.SystemMessageConfig;
 import com.github.copilot.rpc.SystemMessageSections;
 import example.agentwire.WireAgent;
 import example.agentwire.BoundWireAgent;
-import io.github.brunoborges.copilot.agent.EnableCopilotAgents;
+import io.github.brunoborges.copilot.autoconfigure.EnableCopilotAgents;
 import io.github.brunoborges.copilot.agent.CopilotAgents;
 import io.github.brunoborges.copilot.agent.CopilotConversationNotFoundException;
 import org.junit.jupiter.api.Test;

@@ -19,6 +19,7 @@
     </licenses>
 
     <modules>
+        <module>../core</module>
         <module>runtime</module>
         <module>deployment</module>
         <module>test</module>
@@ -49,6 +50,11 @@
                 <groupId>com.github</groupId>
                 <artifactId>copilot-sdk-java</artifactId>
                 <version>${copilot-sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.brunoborges</groupId>
+                <artifactId>copilot-agent-core</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.github.brunoborges</groupId>

@@ -28,6 +28,7 @@ jobs:
           cache-dependency-path: |
             spring-boot/**/pom.xml
             quarkus/**/pom.xml
+            core/pom.xml
       - uses: actions/configure-pages@v6
       - name: Build Spring Boot documentation site
         working-directory: spring-boot

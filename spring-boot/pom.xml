@@ -27,6 +27,7 @@
     </licenses>
 
     <modules>
+        <module>../core</module>
         <module>copilot-spring-boot-site-skin</module>
         <module>copilot-spring-boot-autoconfigure</module>
         <module>copilot-spring-boot-starter</module>
@@ -48,6 +49,11 @@
                 <groupId>com.github</groupId>
                 <artifactId>copilot-sdk-java</artifactId>
                 <version>${copilot-sdk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.brunoborges</groupId>
+                <artifactId>copilot-agent-core</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
