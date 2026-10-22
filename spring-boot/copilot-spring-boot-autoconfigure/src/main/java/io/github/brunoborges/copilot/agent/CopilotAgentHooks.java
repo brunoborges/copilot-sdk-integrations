@@ -20,11 +20,12 @@ import com.github.copilot.rpc.UserPromptSubmittedHookInput;
 import com.github.copilot.rpc.UserPromptSubmittedHookOutput;
 
 /**
- * Spring bean adapter for SDK session hooks. Reference beans from {@link CopilotAgent#hooks()} or annotate them
- * with {@link GlobalCopilotAgentHooks} to apply them to every agent.
+ * Spring bean adapter for SDK session hooks. Reference beans from {@link CopilotAgent#hookRefs()}, target agents
+ * from the bean with {@link CopilotAgentHooksFor}, or annotate them with {@link GlobalCopilotAgentHooks} to apply
+ * them to every agent.
  *
  * <p>Every method is optional and returns {@code null} for "no opinion". Hooks run synchronously on the SDK
- * callback thread, global hooks first (in {@code @Order}), then the agent's hooks in declaration order, and the
+ * callback thread, global hooks first, then targeted hooks (each in {@code @Order}), then the agent's hook references in declaration order, and the
  * results are combined:
  * <ul>
  *   <li>{@link #onPreToolUse}: the first {@code deny} wins and stops the chain; otherwise {@code ask} beats

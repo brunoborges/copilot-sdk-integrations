@@ -31,7 +31,10 @@ public final class SpringToolBindings {
         var identities = new HashSet<ToolIdentity>();
         for (String name : names) {
             String beanName = environment.resolveRequiredPlaceholders(name);
-            Assert.hasText(beanName, "Copilot tool bean references must not be blank");
+            Assert.hasText(beanName, "Copilot agent toolRefs entries must not be blank");
+            Assert.isTrue(beans.containsBean(beanName), () -> "Copilot agent toolRefs references bean '" + beanName
+                    + "', but no bean with that name exists; toolRefs lists bean names, use availableTools to filter "
+                    + "runtime tools by tool name");
             Object bean = beans.getBean(beanName);
             var definitions = bean instanceof ToolDefinition tool ? List.of(tool) : service(beanName, bean);
             Assert.notEmpty(definitions, "No SDK-annotated tools found on bean " + beanName);

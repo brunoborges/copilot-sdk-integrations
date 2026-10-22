@@ -27,6 +27,8 @@ final class McpServerBindings {
             boolean nativeBean = beans.containsBean(name) && beans.isTypeMatch(name, McpServerConfig.class);
             Assert.isTrue(configured == null || !nativeBean,
                     "Ambiguous MCP server definition in properties and SDK bean: " + name);
+            Assert.isTrue(configured != null || nativeBean, () -> "Unknown MCP server '" + name
+                    + "': define copilot.mcp.servers." + name + " or an SDK McpServerConfig bean named '" + name + "'");
             servers.put(name, configured == null ? beans.getBean(name, McpServerConfig.class) : configured.toServerConfig());
         }
         return Map.copyOf(servers);

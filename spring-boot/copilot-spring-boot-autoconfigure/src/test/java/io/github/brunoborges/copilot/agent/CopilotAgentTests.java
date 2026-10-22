@@ -483,7 +483,7 @@ class CopilotAgentTests {
         return event;
     }
 
-    @CopilotAgent(listeners = "listener")
+    @CopilotAgent(listenerRefs = "listener")
     public interface ListenedAgent {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }
@@ -491,11 +491,11 @@ class CopilotAgentTests {
     public interface ProviderAgent {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }
-    @CopilotAgent(mcpServers = {"files", "remote"}, customizers = "mcpCustomizer")
+    @CopilotAgent(mcpServers = {"files", "remote"}, customizerRefs = "mcpCustomizer")
     public interface McpAgent {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }
-    @CopilotAgent(systemMessage = "system", permissionHandler = "permissions", tools = "tool", customizers = "customizer")
+    @CopilotAgent(systemMessageRef = "system", permissionHandlerRef = "permissions", toolRefs = "tool", customizerRefs = "customizer")
     public interface CustomizedAgent {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }
@@ -535,7 +535,7 @@ class CopilotAgentTests {
     public interface CustomizeWithoutBean {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }
-    @CopilotAgent(permissionHandler = "absent")
+    @CopilotAgent(permissionHandlerRef = "absent")
     public interface MissingPermissionBean {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }

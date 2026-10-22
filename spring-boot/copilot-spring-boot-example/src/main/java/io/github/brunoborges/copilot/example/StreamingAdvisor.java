@@ -6,8 +6,8 @@ import io.github.brunoborges.copilot.agent.CopilotAgentEvent;
 import io.github.brunoborges.copilot.agent.UserMessage;
 import reactor.core.publisher.Flux;
 
-@CopilotAgent(name = "streaming-advisor", systemMessage = "advisorInstructions",
-        permissionHandler = "denyPermissions", tools = "referenceTools", listeners = "conversationOutput")
+@CopilotAgent(name = "streaming-advisor", systemMessageRef = "advisorInstructions",
+        permissionHandlerRef = "denyPermissions", toolRefs = "referenceTools", listenerRefs = "conversationOutput")
 public interface StreamingAdvisor {
     Flux<CopilotAgentEvent> stream(@ConversationId String conversationId, @UserMessage String question);
 }

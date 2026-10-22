@@ -42,7 +42,7 @@ All three are applied to both newly created and resumed sessions, before
 
 ```java
 @CopilotAgent(
-        tools = "orderTools",
+        toolRefs = "orderTools",
         mcpServers = "docs",
         availableTools = {"view", "grep", "custom:*", "mcp:*"},
         workingDirectory = "${app.workspace}")
@@ -50,7 +50,7 @@ public interface SupportAgent {
     String answer(@ConversationId String id, @UserMessage String question);
 }
 
-@CopilotAgent(tools = "orderTools", builtInTools = false)
+@CopilotAgent(toolRefs = "orderTools", builtInTools = false)
 public interface OrdersOnlyAgent {
     String answer(@ConversationId String id, @UserMessage String question);
 }
@@ -72,7 +72,7 @@ Semantics, as defined by the SDK and runtime:
   integration therefore rejects configurations that set both, rather than
   silently dropping the deny-list.
 - The integration never widens an allow-list. Because the list also filters the
-  agent's own tools, startup fails when an agent declares `tools` but the list
+  agent's own tools, startup fails when an agent declares `toolRefs` but the list
   has no `custom:` entry, or selects `mcpServers` but the list has no `mcp:`
   entry. Add `custom:*`/`mcp:*`, or name specific tools such as `custom:echo`
   and `mcp:docs-search`, to state exactly which of them the model may use.
@@ -92,7 +92,7 @@ which leaves the SDK/runtime defaults.
 ## Ready-made permission policies
 
 `CopilotPermissionPolicies` builds SDK `PermissionHandler`s you can expose as
-beans and select with `@CopilotAgent(permissionHandler = "...")`:
+beans and select with `@CopilotAgent(permissionHandlerRef = "...")`:
 
 | Factory | Approves |
 | --- | --- |
@@ -138,7 +138,7 @@ which helps when writing your own composite handlers.
 
 ## Property-driven permissions
 
-When an agent has no `permissionHandler` bean, `copilot.agents.<name>.permissions.*`
+When an agent has no `permissionHandlerRef` bean, `copilot.agents.<name>.permissions.*`
 builds a policy equivalent to `anyOf` of the configured rules:
 
 ```yaml
@@ -154,8 +154,8 @@ copilot:
 ```
 
 `allow-agent-tools` approves exactly the custom tools declared by the agent's
-`tools` attribute. Configuring these properties together with a
-`permissionHandler` bean fails initialization. When nothing is configured, the
+`toolRefs` attribute. Configuring these properties together with a
+`permissionHandlerRef` bean fails initialization. When nothing is configured, the
 agent keeps the default handler that rejects every request.
 
 <a id="session-hooks-as-spring-beans"></a>
@@ -188,16 +188,29 @@ class AuditHooks implements CopilotAgentHooks {
     }
 }
 
-@CopilotAgent(hooks = "auditHooks")
+@CopilotAgent(hookRefs = "auditHooks")
 public interface SupportAgent { /* ... */ }
 ```
 
-Select hooks per agent with the `hooks` attribute or the
-`copilot.agents.<name>.hooks` property (the property replaces the annotation
-list). Annotate a hooks bean class, or its `@Bean` method, with
-`@GlobalCopilotAgentHooks` to apply it to every agent. Global hooks run first,
-ordered by `@Order`/`Ordered`, followed by the agent's hooks in declaration
-order. A bean referenced both ways runs once.
+A hooks bean can be attached to agents in three ways:
+
+- `@GlobalCopilotAgentHooks` on the bean class or `@Bean` method applies it to
+  every agent.
+- `@CopilotAgentHooksFor(SupportAgent.class)` on the bean class or `@Bean`
+  method applies it to the listed agent interfaces, so the agent annotation
+  does not need to know the bean name.
+- `hookRefs` on `@CopilotAgent` lists bean names.
+
+```java
+@Bean
+@CopilotAgentHooksFor(SupportAgent.class)
+CopilotAgentHooks supportAudit() { /* ... */ }
+```
+
+Global hooks run first, then targeted hooks, each group ordered by
+`@Order`/`Ordered`, followed by `hookRefs` in declaration order. A bean selected
+more than one way runs once. Hook selection is not configurable through
+properties: bean names stay in code, where the compiler and IDE can check them.
 
 When several hooks handle the same event, results combine as follows:
 

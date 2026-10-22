@@ -66,15 +66,8 @@ class GovernanceAutoConfigurationTests {
     }
 
     @Test
-    void missingHooksBeanFailsStartup() {
-        runner.withPropertyValues("copilot.agents.test-agent.hooks=missing").run(context ->
-                assertThat(context).hasFailed());
-    }
-
-    @Test
-    void globalHookBeansAreOrderedByBeanMethodOrder() {
-        runner.withUserConfiguration(HooksConfiguration.class)
-                .withPropertyValues("copilot.agents.test-agent.hooks=local").run(context -> {
+    void globalThenTargetedHookBeansAreOrderedByBeanMethodOrder() {
+        runner.withUserConfiguration(HooksConfiguration.class).run(context -> {
                     assertThat(context).hasNotFailed();
                     var definition = io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition.create(
                             TestAgent.class, context.getBeanFactory(), context.getEnvironment(), context,
@@ -103,8 +96,15 @@ class GovernanceAutoConfigurationTests {
         }
 
         @Bean
+        @CopilotAgentHooksFor(TestAgent.class)
         CopilotAgentHooks local() {
             return new Named("local");
+        }
+
+        @Bean
+        @CopilotAgentHooksFor(Runnable.class)
+        CopilotAgentHooks elsewhere() {
+            return new Named("elsewhere");
         }
     }
 

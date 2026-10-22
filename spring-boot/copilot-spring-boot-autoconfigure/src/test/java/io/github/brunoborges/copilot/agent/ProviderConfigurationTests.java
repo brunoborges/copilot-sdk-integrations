@@ -88,6 +88,13 @@ class ProviderConfigurationTests {
                 });
     }
 
+    @Test
+    void unknownProviderNamesBothLookupLocations() {
+        runner.withPropertyValues("copilot.agents.test-agent.model=m", "copilot.agents.test-agent.provider=missing")
+                .run(context -> assertThat(context).hasFailed().getFailure().hasStackTraceContaining(
+                        "define copilot.providers.missing or an SDK ProviderConfig bean named 'missing'"));
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {
             "copilot.providers.local.type=unknown",

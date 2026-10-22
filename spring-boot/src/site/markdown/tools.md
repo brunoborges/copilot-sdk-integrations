@@ -11,7 +11,7 @@ title: Spring tool beans
 - [Annotation processing](#annotation-processing)
 - [Proxies and permissions](#proxies-and-permissions)
 
-Select tools explicitly through `@CopilotAgent(tools = {"referenceTools"})`.
+Select tools explicitly through `@CopilotAgent(toolRefs = {"referenceTools"})`.
 Unreferenced service methods are not exposed just because they are Spring beans.
 
 | Referenced bean | Binding |

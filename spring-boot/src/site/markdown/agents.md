@@ -26,28 +26,40 @@ produce singleton routing proxies. ID-less interfaces register validated agent
 definitions, not singleton business proxies; use `CopilotAgents` to obtain a
 conversation-bound instance. Both forms share the same declarative settings.
 
+Attribute values fall into three kinds, and the name tells you which:
+
+- **Bean references** end in `Ref` or `Refs` (for example `toolRefs` or
+  `permissionHandlerRef`). Each value must be the name of a Spring bean of the
+  documented type. Startup fails and names the attribute when no such bean
+  exists or the bean has the wrong type.
+- **Named entries** (`mcpServers`, `provider`) are looked up first under
+  `copilot.mcp.servers.<name>` or `copilot.providers.<name>`, then as a native
+  SDK bean with the same name. Defining a name in both places is an error.
+- **Literals** (`name`, `instructions`, `model`, `availableTools`, and so on)
+  are plain values passed to the SDK.
+
 | Attribute | Type | Default | Contract |
 | --- | --- | --- | --- |
 | `name` | `String` | `""` | Empty derives a JavaBeans-decapitalized interface simple name, such as `SpringAdvisor` to `springAdvisor`. Explicit names must match `[A-Za-z][A-Za-z0-9._-]*` and be unique. |
-| `instructions` | `String` | `""` | Inline system-message content. Mutually exclusive with `instructionsResource` and `systemMessage`. |
+| `instructions` | `String` | `""` | Inline system-message content. Mutually exclusive with `instructionsResource` and `systemMessageRef`. |
 | `instructionsResource` | `String` | `""` | UTF-8 Spring resource location. Missing or blank content fails initialization. |
-| `instructionsMode` | SDK `SystemMessageMode` | `APPEND` | Inline/resource instructions support `APPEND` or `REPLACE`. Use a `systemMessage` bean for `CUSTOMIZE`. |
-| `systemMessage` | `String` | `""` | Name of a `SystemMessageConfig` bean. The bean owns the mode; do not combine it with instruction content/resource attributes or a non-default `instructionsMode`. |
+| `instructionsMode` | SDK `SystemMessageMode` | `APPEND` | Inline/resource instructions support `APPEND` or `REPLACE`. Use a `systemMessageRef` bean for `CUSTOMIZE`. |
+| `systemMessageRef` | `String` | `""` | Bean name of a `SystemMessageConfig` bean. The bean owns the mode; do not combine it with instruction content/resource attributes or a non-default `instructionsMode`. |
 | `model` | `String` | `""` | Optional SDK model. Empty leaves selection to the runtime. A per-agent property overrides this value. |
 | `reasoningEffort` | `String` | `""` | Optional model-specific reasoning effort. A per-agent property overrides this value. |
-| `permissionHandler` | `String` | `""` | Name of an SDK `PermissionHandler` bean. Empty selects the integration's rejection handler (or a policy from `copilot.agents.<name>.permissions.*`), not an arbitrary handler found by type. See [`CopilotPermissionPolicies`](governance.html#ready-made-permission-policies). |
-| `tools` | `String[]` | `{}` | Explicit tool bean names: individual `ToolDefinition` objects or SDK-annotated Spring services. |
+| `permissionHandlerRef` | `String` | `""` | Bean name of an SDK `PermissionHandler` bean. Empty selects the integration's rejection handler (or a policy from `copilot.agents.<name>.permissions.*`), not an arbitrary handler found by type. See [`CopilotPermissionPolicies`](governance.html#ready-made-permission-policies). |
+| `toolRefs` | `String[]` | `{}` | Bean names of individual `ToolDefinition` objects or SDK-annotated Spring services. These are bean names, not tool names; filter tools by name with `availableTools`. |
 | `mcpServers` | `String[]` | `{}` | Names from `copilot.mcp.servers` or native SDK `McpServerConfig` beans. Per-agent properties replace this selection. See [MCP servers](mcp.html). |
 | `provider` | `String` | `""` | Name from `copilot.providers` or a native SDK `ProviderConfig` bean, used as a BYOK model provider. Requires a model. Per-agent properties replace this selection. See [BYOK providers](byok.html). |
-| `listeners` | `String[]` | `{}` | Names of `CopilotAgentListener` beans, invoked in listed order for each attached session's events. |
-| `customizers` | `String[]` | `{}` | Names of `CopilotAgentCustomizer` beans, applied in listed order. |
-| `availableTools` | `String[]` | `{}` | SDK tool allow-list across built-in, custom, and MCP tools; must include `custom:`/`mcp:` entries when the agent declares tools/MCP servers. See [Tool governance](governance.html). |
+| `listenerRefs` | `String[]` | `{}` | Bean names of `CopilotAgentListener` beans, invoked in listed order for each attached session's events. |
+| `customizerRefs` | `String[]` | `{}` | Bean names of `CopilotAgentCustomizer` beans, applied in listed order. |
+| `availableTools` | `String[]` | `{}` | SDK tool allow-list across built-in, custom, and MCP tools; must include `custom:`/`mcp:` entries when the agent declares `toolRefs`/`mcpServers`. See [Tool governance](governance.html). |
 | `excludedTools` | `String[]` | `{}` | SDK tool deny-list. Mutually exclusive with `availableTools`. |
 | `excludedBuiltInAgents` | `String[]` | `{}` | Runtime built-in sub-agents to hide. |
 | `builtInTools` | `boolean` | `true` | `false` hides every built-in tool (`builtin:*`). Cannot be combined with `availableTools`. |
 | `workingDirectory` | `String` | `""` | Session working directory for runtime tool operations. Empty uses the runtime default. |
 | `additionalDirectories` | `String[]` | `{}` | Extra directories the session may access. |
-| `hooks` | `String[]` | `{}` | Names of `CopilotAgentHooks` beans, run after global hooks in listed order. See [hooks](governance.html#session-hooks-as-spring-beans). |
+| `hookRefs` | `String[]` | `{}` | Bean names of `CopilotAgentHooks` beans, run after global and targeted hooks in listed order. See [hooks](governance.html#session-hooks-as-spring-beans). |
 
 Annotation string values support Spring property placeholders. Whitespace-only
 values are invalid; empty strings on optional attributes mean unset. Instruction

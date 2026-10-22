@@ -17,6 +17,7 @@ import io.github.brunoborges.copilot.agent.CopilotAgent;
 import io.github.brunoborges.copilot.agent.CopilotAgentContext;
 import io.github.brunoborges.copilot.agent.CopilotAgentHooks;
 import io.github.brunoborges.copilot.agent.CopilotPermissionPolicies;
+import io.github.brunoborges.copilot.agent.CopilotAgentHooksFor;
 import io.github.brunoborges.copilot.agent.GlobalCopilotAgentHooks;
 import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
 import org.springframework.beans.factory.BeanFactory;
@@ -46,7 +47,7 @@ public record CopilotAgentGovernance(List<String> availableTools, List<String> e
         hooks = List.copyOf(hooks);
     }
 
-    static CopilotAgentGovernance create(String agent, CopilotAgent annotation, CopilotAgentsProperties.Agent settings,
+    static CopilotAgentGovernance create(String agent, Class<?> type, CopilotAgent annotation, CopilotAgentsProperties.Agent settings,
             List<ToolDefinition> tools, Map<String, McpServerConfig> mcpServers, BeanFactory beans,
             Environment environment) {
         List<String> available = select(settings, CopilotAgentsProperties.Agent::availableTools,
@@ -82,9 +83,9 @@ public record CopilotAgentGovernance(List<String> availableTools, List<String> e
                 ? settings.workingDirectory() : resolve(annotation.workingDirectory(), environment);
         List<String> directories = select(settings, CopilotAgentsProperties.Agent::additionalDirectories,
                 annotation.additionalDirectories(), environment);
-        List<String> hookNames = select(settings, CopilotAgentsProperties.Agent::hooks, annotation.hooks(), environment);
+        List<String> hookNames = select(null, null, annotation.hookRefs(), environment);
         return new CopilotAgentGovernance(nullIfEmpty(available), nullIfEmpty(excluded), nullIfEmpty(agents),
-                directory.isEmpty() ? null : directory, nullIfEmpty(directories), hooks(hookNames, beans));
+                directory.isEmpty() ? null : directory, nullIfEmpty(directories), hooks(agent, type, hookNames, beans));
     }
 
     /** Builds the property-driven permission policy, or returns null when none is configured. */
@@ -95,7 +96,7 @@ public record CopilotAgentGovernance(List<String> availableTools, List<String> e
             return null;
         }
         Assert.isTrue(!handlerBean, "Copilot agent " + agent
-                + ": permissions properties cannot be combined with a permissionHandler bean");
+                + ": permissions properties cannot be combined with a permissionHandlerRef bean");
         var handlers = new ArrayList<PermissionHandler>();
         if (!policy.allow().isEmpty()) {
             handlers.add(CopilotPermissionPolicies.allowKinds(policy.allow()));
@@ -169,31 +170,38 @@ public record CopilotAgentGovernance(List<String> availableTools, List<String> e
         }).toList();
     }
 
-    private static List<CopilotAgentHooks> hooks(List<String> names, BeanFactory beans) {
+    private static List<CopilotAgentHooks> hooks(String agent, Class<?> type, List<String> names, BeanFactory beans) {
         var selected = new IdentityHashMap<CopilotAgentHooks, Boolean>();
         var ordered = new ArrayList<CopilotAgentHooks>();
         if (beans instanceof ListableBeanFactory listable) {
             var global = new IdentityHashMap<CopilotAgentHooks, Boolean>();
+            var targeted = new IdentityHashMap<CopilotAgentHooks, Boolean>();
             for (String name : listable.getBeanNamesForType(CopilotAgentHooks.class)) {
                 if (listable.findAnnotationOnBean(name, GlobalCopilotAgentHooks.class) != null) {
                     global.put(listable.getBean(name, CopilotAgentHooks.class), true);
                 }
+                var target = listable.findAnnotationOnBean(name, CopilotAgentHooksFor.class);
+                if (target != null && Arrays.asList(target.value()).contains(type)) {
+                    targeted.put(listable.getBean(name, CopilotAgentHooks.class), true);
+                }
             }
             // orderedStream honours @Order on @Bean methods in an application context; fall back to the
             // annotation-aware comparator for factories without a dependency comparator.
-            var sorted = new ArrayList<>(listable.getBeanProvider(CopilotAgentHooks.class).orderedStream()
-                    .filter(global::containsKey).toList());
-            if (!(listable instanceof DefaultListableBeanFactory factory) || factory.getDependencyComparator() == null) {
-                AnnotationAwareOrderComparator.sort(sorted);
-            }
-            sorted.forEach(hook -> {
-                if (selected.put(hook, true) == null) {
-                    ordered.add(hook);
+            for (var group : List.of(global, targeted)) {
+                var sorted = new ArrayList<>(listable.getBeanProvider(CopilotAgentHooks.class).orderedStream()
+                        .filter(group::containsKey).toList());
+                if (!(listable instanceof DefaultListableBeanFactory factory) || factory.getDependencyComparator() == null) {
+                    AnnotationAwareOrderComparator.sort(sorted);
                 }
-            });
+                sorted.forEach(hook -> {
+                    if (selected.put(hook, true) == null) {
+                        ordered.add(hook);
+                    }
+                });
+            }
         }
         for (String name : names) {
-            var hook = beans.getBean(name, CopilotAgentHooks.class);
+            var hook = BeanRefs.resolve(agent, "hookRefs", name, CopilotAgentHooks.class, beans);
             if (selected.put(hook, true) == null) {
                 ordered.add(hook);
             }

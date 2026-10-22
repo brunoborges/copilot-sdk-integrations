@@ -57,23 +57,23 @@ public record CopilotAgentDefinition(
         String name = name(type, environment);
         String instructions = resolve(annotation.instructions(), environment);
         String resource = resolve(annotation.instructionsResource(), environment);
-        String systemBean = resolve(annotation.systemMessage(), environment);
+        String systemBean = resolve(annotation.systemMessageRef(), environment);
         Assert.isTrue(instructions.isEmpty() || resource.isEmpty(),
                 "Copilot agent " + name + ": instructions and instructionsResource are mutually exclusive");
         Assert.isTrue(systemBean.isEmpty() || (instructions.isEmpty() && resource.isEmpty()
                         && annotation.instructionsMode() == SystemMessageMode.APPEND),
-                "Copilot agent " + name + ": systemMessage bean cannot be combined with inline/resource instructions or instructionsMode");
+                "Copilot agent " + name + ": systemMessageRef cannot be combined with inline/resource instructions or instructionsMode");
 
         SystemMessageConfig systemMessage;
         if (!systemBean.isEmpty()) {
-            systemMessage = beans.getBean(systemBean, SystemMessageConfig.class);
-            Assert.notNull(systemMessage.getMode(), "Copilot agent " + name + ": systemMessage bean must declare its mode");
+            systemMessage = BeanRefs.resolve(name, "systemMessageRef", systemBean, SystemMessageConfig.class, beans);
+            Assert.notNull(systemMessage.getMode(), "Copilot agent " + name + ": systemMessageRef bean must declare its mode");
             Assert.isTrue(systemMessage.getMode() != SystemMessageMode.REPLACE
                             || (systemMessage.getContent() != null && !systemMessage.getContent().isBlank()),
                     "Copilot agent " + name + ": REPLACE requires instructions");
         } else {
             Assert.isTrue(annotation.instructionsMode() != SystemMessageMode.CUSTOMIZE,
-                    "Copilot agent " + name + ": CUSTOMIZE requires a systemMessage bean with section configuration");
+                    "Copilot agent " + name + ": CUSTOMIZE requires a systemMessageRef bean with section configuration");
             if (!resource.isEmpty()) {
                 try (var input = resources.getResource(resource).getInputStream()) {
                     instructions = new String(input.readAllBytes(), StandardCharsets.UTF_8);
@@ -92,31 +92,32 @@ public record CopilotAgentDefinition(
                 ? settings.model() : resolve(annotation.model(), environment);
         String reasoning = settings != null && settings.reasoningEffort() != null
                 ? settings.reasoningEffort() : resolve(annotation.reasoningEffort(), environment);
-        String permissionBean = resolve(annotation.permissionHandler(), environment);
+        String permissionBean = resolve(annotation.permissionHandlerRef(), environment);
         String providerName = settings != null && settings.provider() != null
                 ? settings.provider() : resolve(annotation.provider(), environment);
         Assert.isTrue(providerName.isEmpty() || !model.isEmpty(),
                 "Copilot agent " + name + ": a BYOK provider requires a model");
-        var tools = SpringToolBindings.bind(annotation.tools(), beans, environment);
+        var tools = SpringToolBindings.bind(annotation.toolRefs(), beans, environment);
         var mcpServers = McpServerBindings.bind(settings != null && settings.mcpServers() != null
                 ? settings.mcpServers() : Arrays.asList(annotation.mcpServers()), beans, environment);
         var policy = CopilotAgentGovernance.permissions(name, settings, !permissionBean.isEmpty(), tools);
         return new CopilotAgentDefinition(name, type.getName(), model, reasoning,
                 settings == null ? CopilotAgentsProperties.DEFAULT_RESPONSE_TIMEOUT : settings.responseTimeout(), systemMessage,
-                permissionBean.isEmpty() ? (policy == null ? DENY : policy) : beans.getBean(permissionBean, PermissionHandler.class),
+                permissionBean.isEmpty() ? (policy == null ? DENY : policy) : BeanRefs.resolve(name, "permissionHandlerRef", permissionBean, PermissionHandler.class, beans),
                 tools, mcpServers,
                 ProviderBindings.bind(providerName, beans),
-                beans(annotation.listeners(), CopilotAgentListener.class, beans, environment),
-                beans(annotation.customizers(), CopilotAgentCustomizer.class, beans, environment),
-                CopilotAgentGovernance.create(name, annotation, settings, tools, mcpServers, beans, environment),
-                tokenResolver(annotation, beans, environment));
+                beans(name, "listenerRefs", annotation.listenerRefs(), CopilotAgentListener.class, beans, environment),
+                beans(name, "customizerRefs", annotation.customizerRefs(), CopilotAgentCustomizer.class, beans, environment),
+                CopilotAgentGovernance.create(name, type, annotation, settings, tools, mcpServers, beans, environment),
+                tokenResolver(name, annotation, beans, environment));
     }
 
-    private static CopilotTokenResolver tokenResolver(CopilotAgent annotation, BeanFactory beans, Environment environment) {
-        String selected = resolve(annotation.tokenResolver(), environment);
+    private static CopilotTokenResolver tokenResolver(String agent, CopilotAgent annotation, BeanFactory beans,
+            Environment environment) {
+        String selected = resolve(annotation.tokenResolverRef(), environment);
         // An ambiguous global selection fails startup instead of silently falling back to ambient credentials.
         return selected.isEmpty() ? beans.getBeanProvider(CopilotTokenResolver.class).getIfAvailable()
-                : beans.getBean(selected, CopilotTokenResolver.class);
+                : BeanRefs.resolve(agent, "tokenResolverRef", selected, CopilotTokenResolver.class, beans);
     }
 
     private static String resolve(String value, Environment environment) {
@@ -125,11 +126,10 @@ public record CopilotAgentDefinition(
         return resolved;
     }
 
-    private static <T> List<T> beans(String[] names, Class<T> type, BeanFactory beans, Environment environment) {
-        return Arrays.stream(names).map(name -> {
-            String resolved = resolve(name, environment);
-            Assert.hasText(resolved, "Copilot agent bean references must not be empty");
-            return beans.getBean(resolved, type);
-        }).toList();
+    private static <T> List<T> beans(String agent, String attribute, String[] names, Class<T> type, BeanFactory beans,
+            Environment environment) {
+        return Arrays.stream(names)
+                .map(name -> BeanRefs.resolve(agent, attribute, resolve(name, environment), type, beans))
+                .toList();
     }
 }

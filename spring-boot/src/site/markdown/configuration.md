@@ -87,7 +87,6 @@ The binding type is `CopilotAgentsProperties`, whose `agents()` map contains
 | `copilot.agents.<name>.excluded-built-in-agents` | List of strings | Annotation value | Runtime built-in sub-agents to hide. |
 | `copilot.agents.<name>.working-directory` | String | Annotation value, then runtime default | Session working directory for runtime tools. Empty restores the runtime default; whitespace-only fails. |
 | `copilot.agents.<name>.additional-directories` | List of strings | Annotation value | Extra directories the session may access. |
-| `copilot.agents.<name>.hooks` | List of strings | Annotation `hooks` | `CopilotAgentHooks` bean names, run after `@GlobalCopilotAgentHooks` beans. |
 | `copilot.agents.<name>.permissions.allow` | List of strings | Empty | Permission request kinds to approve (`shell`, `write`, `read`, `mcp`, `custom-tool`, `url`, `memory`, `hook`). |
 | `copilot.agents.<name>.permissions.allow-tools` | List of strings | Empty | Custom/MCP tool names to approve. |
 | `copilot.agents.<name>.permissions.allow-mcp-servers` | List of strings | Empty | MCP server names whose tool calls are approved. |
@@ -96,9 +95,9 @@ The binding type is `CopilotAgentsProperties`, whose `agents()` map contains
 
 Response waiting excludes queueing, connection/session metadata lookup,
 creation/resumption, and cleanup. It is not a total request deadline.
-Instructions, in-process tools, listeners, permission handler beans, and
-customizers remain annotation/bean configuration. `permissions.*` builds a
-policy only when no `permissionHandler` bean is selected (combining both fails
+Instructions and all bean references (`*Ref`/`*Refs` attributes, including hook
+beans) remain annotation/bean configuration. `permissions.*` builds a
+policy only when no `permissionHandlerRef` bean is selected (combining both fails
 initialization); with neither, every permission request is rejected. See
 [Tool governance, permissions, and hooks](governance.html).
 
@@ -295,7 +294,7 @@ an application/environment secret, not a new SDK GitHub authentication property.
 Precedence is:
 
 1. Spring Boot resolves property sources using its standard rules.
-2. Per-agent `model`/`reasoning-effort`, `mcp-servers`, `provider`, tool governance, and `hooks` properties override annotation values.
+2. Per-agent `model`/`reasoning-effort`, `mcp-servers`, `provider`, and tool governance properties override annotation values.
 3. Omitted model/reasoning settings leave those choices to SDK/runtime defaults.
 4. Customizers run after declarative session settings, subject to the managed
    ID/permission/streaming invariants described above.
