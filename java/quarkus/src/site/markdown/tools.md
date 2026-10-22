@@ -88,7 +88,7 @@ Declare tool beans as top-level classes. The SDK processor does not support
 Annotation-based tooling is experimental in SDK 1.0.24. If also using the SDK's
 experimental-API checker, follow its opt-in requirements. The complete build
 configuration is demonstrated in
-[the example POM](https://github.com/brunoborges/copilot-sdk-integrations/blob/main/quarkus/example/pom.xml).
+[the example POM](https://github.com/brunoborges/copilot-sdk-integrations/blob/main/java/quarkus/example/pom.xml).
 
 <a id="proxies-and-permissions"></a>
 

@@ -9,7 +9,7 @@ This document designs the Node.js integrations for the
 
 - a **framework-agnostic core** that holds everything not tied to a framework, and
 - a **NestJS module**, the first framework integration and the closest counterpart to
-  the [Spring Boot starter](../spring-boot/).
+  the [Spring Boot starter](../java/spring-boot/).
 
 Versions surveyed: `@github/copilot-sdk` 1.0.26, `@nestjs/core` 12.2, `@nestjs/terminus`
 12.1, `ai` 7.0, `rxjs` 7.8.

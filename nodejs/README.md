@@ -8,7 +8,7 @@ Integrations for the
 - **core**: a framework-agnostic layer for client lifecycle, typed agents, tools,
   governance (deny-by-default permissions), conversations, and a scripted test runtime.
   Usable from Express, Fastify, Hono, or plain Node.js.
-- **nestjs**: a `CopilotModule` modeled on the [Spring Boot starter](../spring-boot/),
+- **nestjs**: a `CopilotModule` modeled on the [Spring Boot starter](../java/spring-boot/),
   with `@CopilotAgent` classes, `@CopilotTool` provider methods, Terminus health, and a
   testing module.
 - **ai**: an [AI SDK](https://ai-sdk.dev) adapter, so `useChat` front ends work against

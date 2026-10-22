@@ -91,12 +91,12 @@ not claim experimental in-process runtime setup support.
 
 Source entry points:
 
-- [Agent API package](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/quarkus/runtime/src/main/java/io/github/brunoborges/copilot/agent)
-- [Runtime beans and integrations](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/quarkus/runtime/src/main/java/io/github/brunoborges/copilot/quarkus/runtime)
-- [Runtime configuration](https://github.com/brunoborges/copilot-sdk-integrations/blob/main/quarkus/runtime/src/main/java/io/github/brunoborges/copilot/quarkus/runtime/config/CopilotRuntimeConfig.java)
-- [Build steps and build-time configuration](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/quarkus/deployment/src/main/java/io/github/brunoborges/copilot/quarkus/deployment)
-- [Test support](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/quarkus/test/src/main/java/io/github/brunoborges/copilot/quarkus/test)
-- [Runnable example](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/quarkus/example/src/main/java/io/github/brunoborges/copilot/quarkus/example)
+- [Agent API package](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/quarkus/runtime/src/main/java/io/github/brunoborges/copilot/agent)
+- [Runtime beans and integrations](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/quarkus/runtime/src/main/java/io/github/brunoborges/copilot/quarkus/runtime)
+- [Runtime configuration](https://github.com/brunoborges/copilot-sdk-integrations/blob/main/java/quarkus/runtime/src/main/java/io/github/brunoborges/copilot/quarkus/runtime/config/CopilotRuntimeConfig.java)
+- [Build steps and build-time configuration](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/quarkus/deployment/src/main/java/io/github/brunoborges/copilot/quarkus/deployment)
+- [Test support](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/quarkus/test/src/main/java/io/github/brunoborges/copilot/quarkus/test)
+- [Runnable example](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/quarkus/example/src/main/java/io/github/brunoborges/copilot/quarkus/example)
 
 ---
 
