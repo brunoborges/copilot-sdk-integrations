@@ -14,6 +14,7 @@ import com.github.copilot.SystemMessageMode;
 import com.github.copilot.rpc.McpServerConfig;
 import com.github.copilot.rpc.PermissionHandler;
 import com.github.copilot.rpc.PermissionRequestResult;
+import com.github.copilot.rpc.ProviderConfig;
 import com.github.copilot.rpc.SystemMessageConfig;
 import com.github.copilot.rpc.ToolDefinition;
 import io.github.brunoborges.copilot.agent.CopilotAgent;
@@ -28,7 +29,7 @@ import org.springframework.util.Assert;
 public record CopilotAgentDefinition(
         String name, String typeName, String model, String reasoningEffort, Duration responseTimeout,
         SystemMessageConfig systemMessage, PermissionHandler permissions, List<ToolDefinition> tools,
-        Map<String, McpServerConfig> mcpServers,
+        Map<String, McpServerConfig> mcpServers, ProviderConfig provider,
         List<CopilotAgentListener> listeners, List<CopilotAgentCustomizer> customizers) {
 
     private static final Logger log = Logger.getLogger(CopilotAgentDefinition.class.getName());
@@ -90,12 +91,17 @@ public record CopilotAgentDefinition(
         String reasoning = settings != null && settings.reasoningEffort() != null
                 ? settings.reasoningEffort() : resolve(annotation.reasoningEffort(), environment);
         String permissionBean = resolve(annotation.permissionHandler(), environment);
+        String providerName = settings != null && settings.provider() != null
+                ? settings.provider() : resolve(annotation.provider(), environment);
+        Assert.isTrue(providerName.isEmpty() || !model.isEmpty(),
+                "Copilot agent " + name + ": a BYOK provider requires a model");
         return new CopilotAgentDefinition(name, type.getName(), model, reasoning,
                 settings == null ? CopilotAgentsProperties.DEFAULT_RESPONSE_TIMEOUT : settings.responseTimeout(), systemMessage,
                 permissionBean.isEmpty() ? DENY : beans.getBean(permissionBean, PermissionHandler.class),
                 SpringToolBindings.bind(annotation.tools(), beans, environment),
                 McpServerBindings.bind(settings != null && settings.mcpServers() != null
                         ? settings.mcpServers() : Arrays.asList(annotation.mcpServers()), beans, environment),
+                ProviderBindings.bind(providerName, beans),
                 beans(annotation.listeners(), CopilotAgentListener.class, beans, environment),
                 beans(annotation.customizers(), CopilotAgentCustomizer.class, beans, environment));
     }

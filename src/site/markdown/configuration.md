@@ -11,6 +11,7 @@ title: Configuration reference
 - [Client properties](#client-properties)
 - [Per-agent properties](#per-agent-properties)
 - [MCP properties](#mcp-properties)
+- [BYOK properties](#byok-properties)
 - [Execution properties](#execution-properties)
 - [Observation properties](#observation-properties)
 - [Reactor properties](#reactor-properties)
@@ -72,6 +73,7 @@ The binding type is `CopilotAgentsProperties`, whose `agents()` map contains
 | `copilot.agents.<name>.reasoning-effort` | String | Annotation value, then runtime default | Non-blank override of `reasoningEffort`; support depends on the selected model. |
 | `copilot.agents.<name>.response-timeout` | Duration | `60s` | At least `1ms`, representable in signed 64-bit nanoseconds. Bounds SDK response waiting only. |
 | `copilot.agents.<name>.mcp-servers` | List of strings | Annotation selection | Replace the agent's selected property server / SDK bean names. Omitted retains annotation; empty list selects none. Blank, duplicate, missing, or ambiguous references fail initialization. |
+| `copilot.agents.<name>.provider` | String | Annotation selection | Replace the agent's BYOK provider (property or SDK `ProviderConfig` bean name). Omitted retains annotation; empty selects none. Whitespace-only, missing, or ambiguous references, or a provider without a model, fail initialization. |
 
 Response waiting excludes queueing, connection/session metadata lookup,
 creation/resumption, and cleanup. It is not a total request deadline.
@@ -116,6 +118,34 @@ See [MCP servers](mcp.html) for YAML, annotation, native bean, and raw SDK
 examples, lifecycle, and security boundaries. Unknown transport values and
 mixed local/remote settings fail binding. Server definitions do not grant tool
 permissions or automatically disable runtime-provided servers.
+
+<a id="byok-properties"></a>
+
+## BYOK properties
+
+The binding type is `CopilotProviderProperties` in the auto-configuration package.
+`copilot.providers` is an empty-by-default map of `Provider` records. Names
+must match `[A-Za-z][A-Za-z0-9._-]*`. Definitions are validated even when not
+selected; only an explicitly selected provider is supplied to an agent.
+
+Replace `<provider>` with a provider name:
+
+| Property | Type | Default | Meaning and validation |
+| --- | --- | --- | --- |
+| `copilot.providers.<provider>.type` | `openai`, `azure`, or `anthropic` | `openai` | SDK provider type. Use `openai` for OpenAI-compatible endpoints, including Ollama, Foundry Local, and Foundry `/openai/v1/` URLs. |
+| `copilot.providers.<provider>.base-url` | String | Unset | Required absolute HTTP(S) URL with a host, no credentials/fragment, and optional port 1-65535. |
+| `copilot.providers.<provider>.api-key` | String | Unset | Static API key. Optional for local providers. |
+| `copilot.providers.<provider>.api-key-command` | String | Unset | Command the runtime runs before each provider request to obtain an API key. |
+| `copilot.providers.<provider>.bearer-token` | String | Unset | Static bearer token sent as the `Authorization` header; not refreshed. |
+| `copilot.providers.<provider>.wire-api` | `completions` or `responses` | SDK default (`completions`) | OpenAI wire format. Forbidden for `anthropic`. |
+| `copilot.providers.<provider>.azure.api-version` | String | Unset (versionless `v1` route) | Non-blank Azure API version. Only allowed for `azure`. |
+| `copilot.providers.<provider>.headers` | Map of strings | Empty | Additional request headers; keys must not be blank. |
+| `copilot.providers.<provider>.max-prompt-tokens` | Integer | SDK/runtime default | Positive prompt token limit. |
+| `copilot.providers.<provider>.max-output-tokens` | Integer | SDK/runtime default | Positive output token limit. |
+
+`api-key`, `api-key-command`, and `bearer-token` are mutually exclusive and
+must not be blank when set. See [BYOK providers](byok.html) for agent selection,
+native `ProviderConfig` beans, and security notes.
 
 <a id="execution-properties"></a>
 
@@ -205,7 +235,7 @@ an application/environment secret, not a new SDK GitHub authentication property.
 Precedence is:
 
 1. Spring Boot resolves property sources using its standard rules.
-2. Per-agent `model`/`reasoning-effort` and `mcp-servers` properties override annotation values.
+2. Per-agent `model`/`reasoning-effort`, `mcp-servers`, and `provider` properties override annotation values.
 3. Omitted model/reasoning settings leave those choices to SDK/runtime defaults.
 4. Customizers run after declarative session settings, subject to the managed
    ID/permission/streaming invariants described above.

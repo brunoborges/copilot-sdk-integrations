@@ -19,6 +19,8 @@ targeting **Spring Boot 4.1.1**, **Java 21**, and Copilot SDK **1.0.24**.
 - Spring services as tools through the SDK's `@CopilotTool` annotations, invoked
   through the Spring proxy so transactions and security advice still apply.
 - Declarative local (stdio) and remote (HTTP) MCP servers selected per agent.
+- BYOK (bring your own key) model providers per agent: OpenAI, Azure OpenAI /
+  Microsoft Foundry, Anthropic, Ollama, and other OpenAI-compatible endpoints.
 - Session-scoped listeners and SDK configuration customizers.
 - Optional Micrometer observations and token counters, and an optional Reactor
   module for `Flux<CopilotAgentEvent>` streaming.
@@ -98,12 +100,25 @@ or supply credentials through an SDK-supported environment variable such as
 `COPILOT_GITHUB_TOKEN`. Never commit credentials. **Model requests consume your
 account's Copilot usage.**
 
-The Copilot SDK also supports
-[BYOK (bring your own key)](https://github.com/github/copilot-sdk/blob/main/docs/auth/byok.md),
-which uses your own model provider API keys (OpenAI, Azure OpenAI / Microsoft
-Foundry, Anthropic, Ollama, and other OpenAI-compatible endpoints) without a
-GitHub Copilot subscription. This starter does not yet expose BYOK provider
-settings as `copilot.*` properties; see the SDK documentation for configuration.
+Agents can also use
+[BYOK (bring your own key)](src/site/markdown/byok.md) model providers with your
+own API keys, without a GitHub Copilot subscription:
+
+```yaml
+copilot:
+  providers:
+    foundry:
+      base-url: https://my-resource.openai.azure.com/openai/v1/
+      api-key: ${FOUNDRY_API_KEY}
+      wire-api: responses
+  agents:
+    spring-advisor:
+      model: gpt-5.2-codex
+      provider: foundry
+```
+
+See also the SDK's
+[BYOK documentation](https://github.com/github/copilot-sdk/blob/main/docs/auth/byok.md).
 
 ## Documentation
 
@@ -117,6 +132,7 @@ settings as `copilot.*` properties; see the SDK documentation for configuration.
 | Append, replace, and customize modes | [System instructions](src/site/markdown/instructions.md) |
 | `@CopilotTool` services and proxies | [Spring tool beans](src/site/markdown/tools.md) |
 | Local and remote MCP servers | [MCP servers](src/site/markdown/mcp.md) |
+| Bring-your-own-key model providers | [BYOK providers](src/site/markdown/byok.md) |
 | Listeners and customizers | [Events and customizers](src/site/markdown/events.md) |
 | Every `copilot.*` property | [Configuration reference](src/site/markdown/configuration.md) |
 | `Flux<CopilotAgentEvent>` streaming | [Reactive streaming](src/site/markdown/streaming.md) |

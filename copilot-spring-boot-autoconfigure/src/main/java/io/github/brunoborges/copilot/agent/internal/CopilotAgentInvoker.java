@@ -298,6 +298,9 @@ public final class CopilotAgentInvoker implements AutoCloseable {
             if (!definition.mcpServers().isEmpty()) {
                 config.setMcpServers(definition.mcpServers());
             }
+            if (definition.provider() != null) {
+                config.setProvider(definition.provider());
+            }
             definition.customizers().forEach(customizer -> customizer.customize(context, config));
             if (streaming) {
                 config.setStreaming(true);
@@ -320,6 +323,10 @@ public final class CopilotAgentInvoker implements AutoCloseable {
         config.setSystemMessage(definition.systemMessage()).setTools(definition.tools());
         if (!definition.mcpServers().isEmpty()) {
             config.setMcpServers(definition.mcpServers());
+        }
+        // Provider credentials are not persisted with the session, so resumption must resupply them.
+        if (definition.provider() != null) {
+            config.setProvider(definition.provider());
         }
         definition.customizers().forEach(customizer -> customizer.customize(context, config));
         if (streaming) {

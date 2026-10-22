@@ -103,6 +103,6 @@ tool references, not arbitrary lists constructed later by customizers.
 
 ---
 
-**Previous:** [MCP servers](mcp.html)
+**Previous:** [BYOK providers](byok.html)
 
 **Next:** [Configuration reference](configuration.html)

@@ -19,6 +19,7 @@ Website: [Copilot Spring Boot documentation](https://brunoborges.github.io/copil
 | [System instructions](src/site/markdown/instructions.md) | Append, replace, customize, resources, sections, and transforms. |
 | [Spring tool beans](src/site/markdown/tools.md) | SDK annotations, generated metadata, proxies, and permissions. |
 | [MCP servers](src/site/markdown/mcp.md) | Local/remote definitions, per-agent bindings, native SDK beans, and security. |
+| [BYOK providers](src/site/markdown/byok.md) | Bring-your-own-key model providers per agent, native SDK beans, and security. |
 | [Events and customizers](src/site/markdown/events.md) | Session-scoped listeners, native events, and SDK configuration hooks. |
 | [Configuration reference](src/site/markdown/configuration.md) | All supported keys, defaults, validation, precedence, and examples. |
 | [Reactive streaming](src/site/markdown/streaming.md) | Cold subscriptions, native events, buffering, overflow, and cancellation. |
@@ -63,7 +64,8 @@ This heading preserves the existing `DOCS.md#bound-agent-instances` entry point.
 ## Configuration reference
 
 The [configuration chapter](src/site/markdown/configuration.md) is the complete
-reference for `copilot.*`, `copilot.agents.<name>.*`, `copilot.mcp.servers.*`, `copilot.execution.*`,
+reference for `copilot.*`, `copilot.agents.<name>.*`, `copilot.mcp.servers.*`,
+`copilot.providers.*`, `copilot.execution.*`,
 `copilot.observations.enabled`, and `copilot.reactor.buffer-capacity`.
 Settings not listed there are not automatically forwarded to SDK configuration.
 

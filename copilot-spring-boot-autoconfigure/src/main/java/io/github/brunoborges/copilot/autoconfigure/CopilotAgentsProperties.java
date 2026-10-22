@@ -25,12 +25,15 @@ public record CopilotAgentsProperties(Map<String, Agent> agents) {
      * @param reasoningEffort model-specific reasoning effort override
      * @param responseTimeout maximum response wait, excluding session lookup and cleanup
      * @param mcpServers server names overriding the annotation; null retains annotation selection
+     * @param provider BYOK provider name overriding the annotation; null retains annotation selection,
+     *                 empty selects none
      */
     public record Agent(
             String model,
             String reasoningEffort,
             @DefaultValue("60s") Duration responseTimeout,
-            List<String> mcpServers) {
+            List<String> mcpServers,
+            String provider) {
 
         @ConstructorBinding
         public Agent {
@@ -44,10 +47,16 @@ public record CopilotAgentsProperties(Map<String, Agent> agents) {
                 mcpServers = List.copyOf(mcpServers);
                 mcpServers.forEach(name -> Assert.hasText(name, "Agent MCP server references must not be blank"));
             }
+            Assert.isTrue(provider == null || provider.isEmpty() || !provider.isBlank(),
+                    "Agent provider must not be blank");
         }
 
         public Agent(String model, String reasoningEffort, Duration responseTimeout) {
-            this(model, reasoningEffort, responseTimeout, null);
+            this(model, reasoningEffort, responseTimeout, null, null);
+        }
+
+        public Agent(String model, String reasoningEffort, Duration responseTimeout, List<String> mcpServers) {
+            this(model, reasoningEffort, responseTimeout, mcpServers, null);
         }
     }
 }

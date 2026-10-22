@@ -46,6 +46,7 @@ optional observations and streaming.
 | [System instructions](instructions.html) | Append, replace, customize, resources, sections, and transforms. |
 | [Spring tool beans](tools.html) | SDK annotations, generated metadata, Spring proxies, and permissions. |
 | [MCP servers](mcp.html) | Stdio/HTTP definitions, per-agent selection, SDK beans, tool allowlists, and lifecycle. |
+| [BYOK providers](byok.html) | Your own OpenAI, Azure, Anthropic, or local model provider per agent, without a Copilot subscription. |
 | [Events and customizers](events.html) | Session-scoped observers, native event types, and SDK configuration hooks. |
 | [Configuration](configuration.html) | Every integration-owned property, precedence, and deployment examples. |
 | [Reactive streaming](streaming.html) | Cold subscriptions, native events, bounded buffering, and overflow. |

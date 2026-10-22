@@ -69,6 +69,13 @@ public @interface CopilotAgent {
      */
     String[] mcpServers() default {};
 
+    /**
+     * Name of a {@code copilot.providers} entry or SDK {@code ProviderConfig} bean used as a BYOK
+     * (bring your own key) model provider instead of GitHub Copilot; requires a {@link #model()}.
+     * {@code copilot.agents.<name>.provider} replaces this selection when set.
+     */
+    String provider() default "";
+
     /** Names of {@link CopilotAgentListener} beans attached to each invocation's session. */
     String[] listeners() default {};
 

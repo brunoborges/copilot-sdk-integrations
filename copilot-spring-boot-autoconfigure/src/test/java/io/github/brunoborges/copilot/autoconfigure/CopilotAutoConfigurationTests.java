@@ -257,7 +257,7 @@ class CopilotAutoConfigurationTests {
             assertThat(names).containsExactlyInAnyOrder("copilot.enabled", "copilot.eager-start",
                     "copilot.startup-timeout", "copilot.cli-path", "copilot.cli-args",
                     "copilot.working-directory", "copilot.log-level", "copilot.cli-url",
-                    "copilot.tcp-connection-token", "copilot.agents", "copilot.mcp.servers",
+                    "copilot.tcp-connection-token", "copilot.agents", "copilot.mcp.servers", "copilot.providers",
                     "copilot.observations.enabled",
                     "copilot.execution.max-concurrent-invocations", "copilot.execution.max-outstanding-invocations");
             for (var property : properties) {
