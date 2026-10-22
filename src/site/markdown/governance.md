@@ -228,8 +228,11 @@ directly; note that doing so replaces the hooks set by this integration.
 - Prefer allow-lists and narrow policies to `allowAll()`.
 - `workingDirectory` and `additionalDirectories` scope runtime file tools; they
   do not confine your own Spring tool beans.
-- Hooks and permission handlers run on SDK threads: resolve trusted identity
-  explicitly rather than relying on thread-bound security context.
+- Hooks and permission handlers run on SDK threads. With
+  `io.micrometer:context-propagation` present, the caller's security context,
+  MDC, and observation are restored around them (see
+  [Per-user authentication](authentication.html)); without it, resolve trusted
+  identity explicitly rather than relying on thread-bound state.
 
 ---
 

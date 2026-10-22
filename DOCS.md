@@ -20,6 +20,7 @@ Website: [Copilot Spring Boot documentation](https://brunoborges.github.io/copil
 | [Spring tool beans](src/site/markdown/tools.md) | SDK annotations, generated metadata, proxies, and permissions. |
 | [MCP servers](src/site/markdown/mcp.md) | Local/remote definitions, per-agent bindings, native SDK beans, and security. |
 | [BYOK providers](src/site/markdown/byok.md) | Bring-your-own-key model providers per agent, native SDK beans, and security. |
+| [Per-user authentication](src/site/markdown/authentication.md) | Per-user GitHub tokens, the Spring Security OAuth2 adapter, and caller context propagation. |
 | [Events and customizers](src/site/markdown/events.md) | Session-scoped listeners, native events, and SDK configuration hooks. |
 | [Tool governance, permissions, and hooks](src/site/markdown/governance.md) | Tool filtering, permission policies, and session hooks as Spring beans. |
 | [Configuration reference](src/site/markdown/configuration.md) | All supported keys, defaults, validation, precedence, and examples. |

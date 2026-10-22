@@ -27,7 +27,9 @@ targeting **Spring Boot 4.1.1**, **Java 21**, and Copilot SDK **1.0.24**.
   Microsoft Foundry, Anthropic, Ollama, and other OpenAI-compatible endpoints.
 - Per-user GitHub authentication through a `CopilotTokenResolver` or the Spring
   Security OAuth2 client, with the caller's security context, MDC, and observation
-  propagated into tools, permission handlers, and listeners.
+  propagated into tools, permission handlers, hooks, and listeners.
+- Per-agent tool governance: allow/deny lists for built-in, custom, and MCP tools,
+  declarative permission policies, and session hooks as Spring beans.
 - Real cancellation: cancelling a future or `Flux`, or hitting the response
   timeout, aborts the in-flight runtime turn.
 - Session-scoped listeners and SDK configuration customizers.

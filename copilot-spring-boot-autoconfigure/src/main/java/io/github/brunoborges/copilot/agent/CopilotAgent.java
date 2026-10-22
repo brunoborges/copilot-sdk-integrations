@@ -12,7 +12,8 @@ import com.github.copilot.SystemMessageMode;
  * Declares a Copilot agent interface whose abstract methods are implemented by a generated proxy.
  *
  * <p>Interfaces whose methods take a {@link ConversationId} parameter are <em>routed</em> agents and can be
- * injected directly. Interfaces whose methods take only a {@link UserMessage} parameter are ID-less
+ * injected directly. Interfaces without a {@link ConversationId} parameter (prompt supplied by
+ * {@link UserMessage} parameters, {@link P} placeholders, or a method-level template) are ID-less
  * definitions; obtain them through {@link CopilotAgents#create(Class)} or {@link CopilotAgents#resume(Class, String)}.
  *
  * <p>All string attributes support Spring property placeholders. Bean references are resolved by name

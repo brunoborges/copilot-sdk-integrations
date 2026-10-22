@@ -109,11 +109,12 @@ with Copilot access.
 
 ## Caller context in tools and handlers
 
-SDK work runs on virtual threads, and tools, permission handlers, and native
-listeners run on SDK threads. When `io.micrometer:context-propagation` is on
+SDK work runs on virtual threads, and tools, permission handlers, hooks, and
+native listeners run on SDK threads. When `io.micrometer:context-propagation` is on
 the classpath (it is with Actuator or Micrometer observations), the integration
 captures the caller's registered thread-local values with the token and
-restores them around every tool call, permission request, and listener event.
+restores them around every tool call, permission request, hook callback, and
+listener event.
 It removes them afterwards.
 
 | Value | Propagated by |
