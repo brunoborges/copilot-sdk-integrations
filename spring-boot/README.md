@@ -50,7 +50,8 @@ starter never approves tool use implicitly. No artifacts have been published yet
 | Module | Purpose |
 | --- | --- |
 | `copilot-spring-boot-starter` | Dependency-only starter: SDK, auto-configuration, and Spring Boot starter. |
-| `copilot-spring-boot-autoconfigure` | Client configuration, agent API, discovery, execution, tool binding, optional observations, and Actuator support. |
+| `copilot-agent-core` | Shared with the Quarkus extension (built from [`../java-core`](../java-core)): the `@CopilotAgent` API and the framework-neutral agent engine. |
+| `copilot-spring-boot-autoconfigure` | Client configuration, Spring agent discovery and bean binding, optional observations, and Actuator support. |
 | `copilot-spring-boot-reactor` | Optional Reactor return-type adapter for streaming agent methods. |
 | `copilot-spring-boot-test` | Test support: scripted in-memory `CopilotClient`, `@AutoConfigureCopilotTestRuntime`, and Testcontainers `CopilotContainer` with `@ServiceConnection`. |
 | `copilot-spring-boot-example` | Executable, non-web example of raw SDK sessions, typed agents, bound instances, and streaming. |

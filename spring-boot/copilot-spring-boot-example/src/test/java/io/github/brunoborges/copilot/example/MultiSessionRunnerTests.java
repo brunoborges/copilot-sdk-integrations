@@ -146,7 +146,12 @@ class MultiSessionRunnerTests {
     }
 
     @Test
-    void preservesInterruption() {
+    void preservesInterruption() throws Exception {
+        // Block until cancelled so invokeAll must wait, and observe the interrupt, deterministically.
+        doAnswer(invocation -> {
+            new CountDownLatch(1).await();
+            return null;
+        }).when(conversations).converse(anyString(), anyString());
         Thread.currentThread().interrupt();
         try {
             assertThatThrownBy(() -> runner.run(new DefaultApplicationArguments()))

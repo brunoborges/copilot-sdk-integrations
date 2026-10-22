@@ -89,7 +89,7 @@ at subscription time.
 | Selection | Configuration |
 | --- | --- |
 | Global | Exactly one `CopilotTokenResolver` bean (or one marked `@Primary`) applies to every agent. |
-| Per agent | `@CopilotAgent(tokenResolver = "beanName")` selects a named resolver bean and overrides the global one. |
+| Per agent | `@CopilotAgent(tokenResolverRef = "beanName")` selects a named resolver bean and overrides the global one. |
 | None | No resolver bean: ambient authentication. |
 
 A missing named bean, or several unqualified resolver beans without `@Primary`,
@@ -97,7 +97,7 @@ fails initialization. The auto-configured OAuth2 resolver counts as a resolver
 bean.
 
 ```java
-@CopilotAgent(name = "reviewer", tokenResolver = "serviceAccountTokens")
+@CopilotAgent(name = "reviewer", tokenResolverRef = "serviceAccountTokens")
 interface Reviewer { /* ... */ }
 ```
 

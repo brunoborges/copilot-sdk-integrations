@@ -1,0 +1,57 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color-scheme: light dark;
+}
+main {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.messages {
+  list-style: none;
+  padding: 0;
+}
+.messages li {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+}
+.messages .user {
+  background: color-mix(in srgb, CanvasText 8%, Canvas);
+}
+.tool {
+  font-size: 0.875rem;
+  border-left: 3px solid #888;
+  padding-left: 0.5rem;
+  margin: 0.25rem 0;
+}
+.tool.approval-requested {
+  border-color: #d97706;
+}
+.approval button {
+  margin-left: 0.5rem;
+}
+.reasoning {
+  opacity: 0.7;
+  font-style: italic;
+}
+.error {
+  color: #dc2626;
+}
+form {
+  display: flex;
+  gap: 0.5rem;
+}
+form input {
+  flex: 1;
+  padding: 0.5rem;
+}
+pre {
+  white-space: pre-wrap;
+  margin: 0.25rem 0;
+}

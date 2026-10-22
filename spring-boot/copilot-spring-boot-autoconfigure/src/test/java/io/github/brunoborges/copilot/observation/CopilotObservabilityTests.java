@@ -1,5 +1,6 @@
 package io.github.brunoborges.copilot.observation;
 
+import io.github.brunoborges.copilot.agent.spring.SpringTestSupport;
 import java.util.UUID;
 import java.util.Map;
 import java.io.Closeable;
@@ -18,11 +19,11 @@ import com.github.copilot.rpc.ToolNamespace;
 import com.github.copilot.rpc.SessionConfig;
 import com.github.copilot.generated.AssistantUsageEvent;
 import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
-import io.github.brunoborges.copilot.agent.internal.MicrometerAgentTelemetry;
+import io.github.brunoborges.copilot.autoconfigure.internal.MicrometerAgentTelemetry;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
 import io.github.brunoborges.copilot.agent.tools.ObservedToolAgent;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentExecutionProperties;
+import io.github.brunoborges.copilot.agent.internal.CopilotAgentExecutionLimits;
 import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
 import io.github.brunoborges.copilot.autoconfigure.CopilotAgentObservationAutoConfiguration;
 import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsAutoConfiguration;
@@ -147,7 +148,7 @@ class CopilotObservabilityTests {
             }).namespace(new ToolNamespace("reference")).metadata(Map.of("source", "test"));
             var beans = new DefaultListableBeanFactory();
             beans.registerSingleton("tool", tool);
-            var definition = CopilotAgentDefinition.create(ObservedToolAgent.class, beans, new StandardEnvironment(),
+            var definition = SpringTestSupport.definition(ObservedToolAgent.class, beans, new StandardEnvironment(),
                     new DefaultResourceLoader(), new CopilotAgentsProperties(Map.of()));
             var client = mock(CopilotClient.class);
             var session = mock(CopilotSession.class);
@@ -167,7 +168,7 @@ class CopilotObservabilityTests {
             when(session.sendAndWait(any(), anyLong())).thenAnswer(invocation ->
                     observed.get().handler().invoke(new ToolInvocation()).thenApply(value -> reply));
             try (var invoker = new CopilotAgentInvoker(client, new MicrometerAgentTelemetry(registry, meters),
-                    new CopilotAgentExecutionProperties(1, 1))) {
+                    new CopilotAgentExecutionLimits(1, 1))) {
                 assertThat(invoker.invoke(definition, "conversation", "hello").get(5, TimeUnit.SECONDS)).isEqualTo("reply");
             }
             assertThat(observed.get().namespace()).isEqualTo(tool.namespace());

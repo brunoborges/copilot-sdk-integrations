@@ -4,7 +4,10 @@ import com.github.copilot.CopilotClient;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
 import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
 import io.github.brunoborges.copilot.agent.CopilotAgents;
+import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
 import io.github.brunoborges.copilot.agent.internal.DefaultCopilotAgents;
+import io.github.brunoborges.copilot.autoconfigure.internal.CopilotAgentFactoryBean;
+import io.github.brunoborges.copilot.autoconfigure.internal.SpringAgentBinding;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -29,7 +32,8 @@ public class CopilotAgentsAutoConfiguration {
     @ConditionalOnMissingBean
     CopilotAgentInvoker copilotAgentInvoker(CopilotClient client, CopilotAgentTelemetry telemetry,
             CopilotAgentExecutionProperties execution) {
-        return new CopilotAgentInvoker(client, telemetry, execution);
+        return new CopilotAgentInvoker(client, telemetry, SpringAgentBinding.limits(execution),
+                SpringAgentBinding.contextPropagation(CopilotAgentInvoker.class.getClassLoader()));
     }
 
     @Bean
@@ -41,6 +45,9 @@ public class CopilotAgentsAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(CopilotAgents.class)
     CopilotAgents copilotAgents(BeanFactory beans, Environment environment) {
-        return new DefaultCopilotAgents(beans, environment);
+        return new DefaultCopilotAgents(type -> {
+            String name = "&" + CopilotAgentDefinition.name(type, environment::resolveRequiredPlaceholders);
+            return beans.containsBean(name) ? beans.getBean(name, CopilotAgentFactoryBean.class).factory() : null;
+        });
     }
 }

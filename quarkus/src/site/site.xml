@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site xmlns="http://maven.apache.org/SITE/2.1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://maven.apache.org/SITE/2.1.0 https://maven.apache.org/xsd/site-2.1.0.xsd"
+      name="Copilot Quarkus" combine.self="override">
+    <skin>
+        <groupId>io.github.brunoborges</groupId>
+        <artifactId>copilot-quarkus-site-skin</artifactId>
+        <version>${project.version}</version>
+    </skin>
+    <body>
+        <head><![CDATA[
+<meta name="description" content="Guides and API reference for using the Copilot Java SDK with Quarkus."/>
+<script>
+  (() => {
+    const param = new URLSearchParams(window.location.search).get("theme");
+    const modes = ["system", "light", "dark"];
+    let saved;
+    try {
+      saved = window.localStorage.getItem("copilot-docs-theme");
+    } catch (error) {
+      console.warn("Saved documentation theme is unavailable; using the URL or system preference.", error);
+    }
+    const mode = modes.includes(param) ? param : modes.includes(saved) ? saved : "system";
+    const theme = mode === "system"
+      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : mode;
+    document.documentElement.setAttribute("data-theme-mode", mode);
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+<style>
+:root {
+  color-scheme: light;
+  --cp-bg: #f7f4ef;
+  --cp-bg-elevated: #fcfbf8;
+  --cp-surface: #ffffff;
+  --cp-surface-soft: #f5f5f5;
+  --cp-border: #dedede;
+  --cp-border-strong: #919191;
+  --cp-text: #242424;
+  --cp-text-muted: #5c5c5c;
+  --cp-text-soft: #6f6f6f;
+  --cp-accent: #b11f4b;
+  --cp-accent-hover: #9a1a41;
+  --cp-accent-soft: rgba(177, 31, 75, 0.08);
+  --cp-accent-fg: #ffffff;
+  --cp-success: #16a34a;
+  --cp-danger: #dc2626;
+  --cp-warning: #f59e0b;
+  --cp-link: #0078d4;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+  --cp-overlay: rgba(255, 255, 255, 0.8);
+  --cp-panel: rgba(255, 255, 255, 0.86);
+  --cp-panel-strong: rgba(255, 255, 255, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.55);
+  --cp-highlight: rgba(177, 31, 75, 0.12);
+  --cp-syntax-keyword: var(--cp-accent);
+  --cp-syntax-comment: var(--cp-text-soft);
+  --cp-syntax-string: #21673b;
+  --cp-syntax-number: #875000;
+  --cp-syntax-function: #155a8a;
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --cp-bg: #3d3b3a;
+  --cp-bg-elevated: #343231;
+  --cp-surface: #292929;
+  --cp-surface-soft: #2e2e2e;
+  --cp-border: #474747;
+  --cp-border-strong: #5f5f5f;
+  --cp-text: #dedede;
+  --cp-text-muted: #919191;
+  --cp-text-soft: #b0b0b0;
+  --cp-accent: #fd8ea1;
+  --cp-accent-hover: #fb7b91;
+  --cp-accent-soft: rgba(253, 142, 161, 0.14);
+  --cp-accent-fg: #1a1a1a;
+  --cp-success: #4ade80;
+  --cp-danger: #f87171;
+  --cp-warning: #fbbf24;
+  --cp-link: #4da6ff;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  --cp-overlay: rgba(41, 41, 41, 0.88);
+  --cp-panel: rgba(41, 41, 41, 0.72);
+  --cp-panel-strong: rgba(41, 41, 41, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.04);
+  --cp-highlight: rgba(253, 142, 161, 0.12);
+  --cp-syntax-keyword: var(--cp-accent);
+  --cp-syntax-comment: var(--cp-text-soft);
+  --cp-syntax-string: #91d6a7;
+  --cp-syntax-number: #e5bd83;
+  --cp-syntax-function: #8fc7eb;
+}
+</style>
+<script defer="defer" src="./js/vendor/highlight-11.12.0.min.js"></script>
+<script defer="defer" src="./js/site.js"></script>
+        ]]></head>
+        <links>
+            <item name="GitHub" href="https://github.com/brunoborges/copilot-sdk-integrations/tree/main/quarkus"/>
+            <item name="Copilot Java SDK" href="https://github.com/github/copilot-sdk/tree/main/java"/>
+        </links>
+        <menu name="Start here">
+            <item name="Documentation" href="index.html"/>
+            <item name="Getting started" href="getting-started.html"/>
+            <item name="SDK client" href="client.html"/>
+            <item name="Coming from Spring Boot" href="spring-boot.html"/>
+        </menu>
+        <menu name="Build agents">
+            <item name="Agent interfaces" href="agents.html"/>
+            <item name="Bound instances" href="instances.html"/>
+            <item name="Conversations and lifecycle" href="conversations.html"/>
+            <item name="System instructions" href="instructions.html"/>
+            <item name="CDI tool beans" href="tools.html"/>
+            <item name="MCP servers" href="mcp.html"/>
+            <item name="BYOK providers" href="byok.html"/>
+            <item name="Per-user authentication" href="authentication.html"/>
+            <item name="Events and customizers" href="events.html"/>
+            <item name="Tool governance and hooks" href="governance.html"/>
+        </menu>
+        <menu name="Reference">
+            <item name="Configuration" href="configuration.html"/>
+            <item name="Mutiny streaming" href="streaming.html"/>
+            <item name="Observability" href="observability.html"/>
+            <item name="Health, info, and endpoint" href="management.html"/>
+            <item name="Extension SPIs" href="extensions.html"/>
+            <item name="Testing" href="testing.html"/>
+        </menu>
+        <menu name="Operate">
+            <item name="Example application" href="examples.html"/>
+            <item name="Security and troubleshooting" href="operations.html"/>
+        </menu>
+        <footer><![CDATA[
+<p>Copilot Quarkus &middot; Java 21 &middot; Quarkus 3.40 &middot; Copilot SDK 1.0.24</p>
+        ]]></footer>
+    </body>
+</site>

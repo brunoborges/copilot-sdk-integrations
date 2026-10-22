@@ -4,7 +4,7 @@ import java.util.concurrent.CompletableFuture;
 import io.github.brunoborges.copilot.agent.CopilotAgent;
 import io.github.brunoborges.copilot.agent.UserMessage;
 
-@CopilotAgent(name = "callback-bound", listeners = "observer")
+@CopilotAgent(name = "callback-bound", listenerRefs = "observer")
 public interface CallbackAdvisor {
     CompletableFuture<String> answer(@UserMessage String question);
 }

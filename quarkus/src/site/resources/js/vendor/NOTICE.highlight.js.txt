@@ -1,0 +1,11 @@
+Highlight.js 11.12.0
+License: BSD-3-Clause; see LICENSE.highlight.js.txt in this directory.
+Upstream: https://highlightjs.org/
+Browser bundle: https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0/highlight.min.js
+License source: https://raw.githubusercontent.com/highlightjs/highlight.js/11.12.0/LICENSE
+SHA-256 (highlight-11.12.0.min.js):
+8ab71eb09c51f501e5e25157d9cff100e46cc29bcbfc744d0b746d451fca7f53
+
+This version-pinned browser bundle is served locally by Maven Site.
+It includes Java, XML, YAML, JSON, and Bash (including the sh alias).
+Retain the upstream license and update this notice when upgrading.

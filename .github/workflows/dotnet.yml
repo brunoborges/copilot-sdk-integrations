@@ -17,27 +17,39 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
 jobs:
   build:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: dotnet-core
+            dir: dotnet-core
+            solution: CopilotSdk.slnx
+          - name: dotnet-aspire   # references dotnet-core by project
+            dir: dotnet-aspire
+            solution: CopilotSdk.Aspire.slnx
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}   # global.json opts into Microsoft.Testing.Platform
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          global-json-file: dotnet-core/global.json
-      - name: Build core
-        working-directory: dotnet-core
-        run: dotnet build CopilotSdk.slnx -c Release
-      - name: Test core
-        working-directory: dotnet-core   # global.json opts into Microsoft.Testing.Platform
-        run: dotnet test --solution CopilotSdk.slnx -c Release --no-build
-      - name: Build Aspire
-        working-directory: dotnet-aspire
-        run: dotnet build CopilotSdk.Aspire.slnx -c Release
-      - name: Test Aspire
-        working-directory: dotnet-aspire   # global.json opts into Microsoft.Testing.Platform
-        run: dotnet test --solution CopilotSdk.Aspire.slnx -c Release --no-build
+          global-json-file: ${{ matrix.dir }}/global.json
+          cache: true
+          cache-dependency-path: ${{ matrix.dir }}/**/*.csproj
+      - name: Build
+        run: dotnet build ${{ matrix.solution }} -c Release
+      - name: Test
+        run: dotnet test --solution ${{ matrix.solution }} -c Release --no-build

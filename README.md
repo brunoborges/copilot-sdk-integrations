@@ -14,11 +14,11 @@ injection, lifecycle management, security context, observability, and testing.
 | Language | Framework / library | Directory | Status |
 | --- | --- | --- | --- |
 | Java | [Spring Boot](https://spring.io/projects/spring-boot) | [`spring-boot/`](spring-boot/) | Available (unreleased) |
-| Java | [Quarkus](https://quarkus.io/) | `quarkus/` | Planned |
+| Java | [Quarkus](https://quarkus.io/) | [`quarkus/`](quarkus/) | Available (unreleased) |
 | .NET | Generic Host / ASP.NET Core ([Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`) | [`dotnet-core/`](dotnet-core/) | Preview, not yet on NuGet ([design](dotnet-core/docs/design.md)) |
 | .NET | [Aspire](https://aspire.dev/) (AppHost runtime resource + client integration, builds on `dotnet-core`) | [`dotnet-aspire/`](dotnet-aspire/) | Preview, not yet on NuGet ([design](dotnet-aspire/docs/design.md)) |
 | Python | [FastAPI](https://fastapi.tiangolo.com/), [Django](https://www.djangoproject.com/) | `python/` | Under consideration |
-| Node.js | [NestJS](https://nestjs.com/), [Vercel AI SDK](https://ai-sdk.dev/) provider | `nodejs/` | Under consideration |
+| Node.js / TypeScript | [NestJS](https://nestjs.com/), framework-agnostic core, [AI SDK](https://ai-sdk.dev/) adapter | [`nodejs/`](nodejs/) | In development ([DESIGN.md](nodejs/DESIGN.md)) |
 
 ## Design goals
 
@@ -44,15 +44,20 @@ framework's idioms:
 ## Repository layout
 
 Each integration is a self-contained project in its own top-level directory, with its
-own build, README, and documentation. Shared repository files (license, CI workflows,
-and the documentation landing page) live at the root.
+own build, README, and documentation. The Java integrations share the
+framework-neutral agent API and engine in [`java-core/`](java-core/), which both Maven builds
+include as a reactor module. Shared repository files (license, CI workflows, and the
+documentation landing page) live at the root.
 
 ```
 .
-├── spring-boot/     # Spring Boot starter (Java, Maven)
-├── dotnet-core/     # .NET integration for business apps (preview)
-├── dotnet-aspire/   # Aspire integration (.NET) (preview)
-└── .github/         # CI workflows and documentation landing page
+├── java-core/     # Shared Java agent API and engine (copilot-agent-core)
+├── spring-boot/   # Spring Boot starter (Java, Maven)
+├── quarkus/       # Quarkus extension (Java, Maven)
+├── dotnet-core/   # .NET integration for business apps (preview)
+├── dotnet-aspire/ # Aspire integration (.NET) (preview)
+├── nodejs/        # Node.js core, NestJS module, and AI SDK adapter (TypeScript; in development)
+└── .github/       # CI workflows and documentation landing page
 ```
 
 ## Contributing

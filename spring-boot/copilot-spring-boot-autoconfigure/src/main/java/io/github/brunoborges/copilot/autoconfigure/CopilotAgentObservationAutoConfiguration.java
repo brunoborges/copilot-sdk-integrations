@@ -2,7 +2,7 @@ package io.github.brunoborges.copilot.autoconfigure;
 
 import com.github.copilot.CopilotClient;
 import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
-import io.github.brunoborges.copilot.agent.internal.MicrometerAgentTelemetry;
+import io.github.brunoborges.copilot.autoconfigure.internal.MicrometerAgentTelemetry;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.ObservationRegistry;
 import org.springframework.beans.factory.ObjectProvider;
