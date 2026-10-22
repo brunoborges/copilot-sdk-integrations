@@ -71,7 +71,7 @@ The binding type is `CopilotAgentsProperties`, whose `agents()` map contains
 | --- | --- | --- | --- |
 | `copilot.agents.<name>.model` | String | Annotation value, then runtime default | Non-blank override of `model`. |
 | `copilot.agents.<name>.reasoning-effort` | String | Annotation value, then runtime default | Non-blank override of `reasoningEffort`; support depends on the selected model. |
-| `copilot.agents.<name>.response-timeout` | Duration | `60s` | At least `1ms`, representable in signed 64-bit nanoseconds. Bounds SDK response waiting only. |
+| `copilot.agents.<name>.response-timeout` | Duration | `60s` | At least `1ms`, representable in signed 64-bit nanoseconds. Bounds SDK response waiting; synchronous agent methods also wait at most this long in total. |
 | `copilot.agents.<name>.mcp-servers` | List of strings | Annotation selection | Replace the agent's selected property server / SDK bean names. Omitted retains annotation; empty list selects none. Blank, duplicate, missing, or ambiguous references fail initialization. |
 | `copilot.agents.<name>.provider` | String | Annotation selection | Replace the agent's BYOK provider (property or SDK `ProviderConfig` bean name). Omitted retains annotation; empty selects none. Whitespace-only, missing, or ambiguous references, or a provider without a model, fail initialization. |
 

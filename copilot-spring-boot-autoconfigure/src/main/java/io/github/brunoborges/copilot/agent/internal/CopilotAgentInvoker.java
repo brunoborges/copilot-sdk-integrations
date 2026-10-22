@@ -69,11 +69,28 @@ public final class CopilotAgentInvoker implements AutoCloseable {
 
     private CompletableFuture<String> invokeInternal(CopilotAgentDefinition definition, String conversationId, String message,
             Consumer<CopilotAgentEvent> events) {
-        return invokeOwned(definition, conversationId, message, events, CopilotAgentLifetime.Lease.NONE);
+        return invokeOwned(definition, conversationId, message, events, CopilotAgentLifetime.Lease.NONE, null);
+    }
+
+    /**
+     * Invokes with a provider-native response schema and completes with the raw structured (JSON) reply.
+     * {@code lifetime} is null for explicit-ID agents.
+     */
+    public CompletableFuture<String> invokeStructured(CopilotAgentDefinition definition, String conversationId,
+            String message, Map<String, Object> responseSchema, CopilotAgentLifetime lifetime) {
+        Assert.notNull(responseSchema, "Structured invocation requires a response schema");
+        return lifetime == null
+                ? invokeOwned(definition, conversationId, message, null, CopilotAgentLifetime.Lease.NONE, responseSchema)
+                : invokeBound(definition, conversationId, message, null, lifetime, responseSchema);
     }
 
     public CompletableFuture<String> invokeBound(CopilotAgentDefinition definition, String conversationId, String message,
             Consumer<CopilotAgentEvent> events, CopilotAgentLifetime lifetime) {
+        return invokeBound(definition, conversationId, message, events, lifetime, null);
+    }
+
+    private CompletableFuture<String> invokeBound(CopilotAgentDefinition definition, String conversationId, String message,
+            Consumer<CopilotAgentEvent> events, CopilotAgentLifetime lifetime, Map<String, Object> responseSchema) {
         CopilotAgentLifetime.Lease owner;
         try {
             owner = lifetime.acquire();
@@ -81,12 +98,12 @@ public final class CopilotAgentInvoker implements AutoCloseable {
             return CompletableFuture.failedFuture(ex);
         }
         try (var scope = owner.enter()) {
-            return invokeOwned(definition, conversationId, message, events, owner);
+            return invokeOwned(definition, conversationId, message, events, owner, responseSchema);
         }
     }
 
     private CompletableFuture<String> invokeOwned(CopilotAgentDefinition definition, String conversationId, String message,
-            Consumer<CopilotAgentEvent> events, CopilotAgentLifetime.Lease owner) {
+            Consumer<CopilotAgentEvent> events, CopilotAgentLifetime.Lease owner, Map<String, Object> responseSchema) {
         boolean transferred = false;
         try {
             if (conversationId == null || conversationId.isBlank() || message == null || message.isBlank()) {
@@ -128,7 +145,7 @@ public final class CopilotAgentInvoker implements AutoCloseable {
                         .whenComplete((ignored, error) -> {
                             try {
                                 executor.execute(() -> execute(definition, context, message, result, finished,
-                                        observation, subscriber, owner));
+                                        observation, subscriber, owner, responseSchema));
                             } catch (RejectedExecutionException ex) {
                                 var failure = finishObservation(observation, ex, result.isCancelled());
                                 outstanding.release();
@@ -148,7 +165,7 @@ public final class CopilotAgentInvoker implements AutoCloseable {
 
     private void execute(CopilotAgentDefinition definition, CopilotAgentContext context, String message,
             CompletableFuture<String> result, CompletableFuture<Void> finished, CopilotAgentTelemetry.Call observation,
-            Consumer<CopilotAgentEvent> events, CopilotAgentLifetime.Lease owner) {
+            Consumer<CopilotAgentEvent> events, CopilotAgentLifetime.Lease owner, Map<String, Object> responseSchema) {
         var instanceScope = owner.enter();
         String response = null;
         Throwable failure = null;
@@ -165,7 +182,7 @@ public final class CopilotAgentInvoker implements AutoCloseable {
                         throw new RejectedExecutionException("Copilot agent infrastructure is closing");
                     }
                     try (var scope = observation.openScope()) {
-                        response = exchange(definition, context, message, observation, events, owner);
+                        response = exchange(definition, context, message, observation, events, owner, responseSchema);
                     }
                 }
             }
@@ -231,7 +248,7 @@ public final class CopilotAgentInvoker implements AutoCloseable {
 
     private String exchange(CopilotAgentDefinition definition, CopilotAgentContext context, String message,
             CopilotAgentTelemetry.Call observation, Consumer<CopilotAgentEvent> events,
-            CopilotAgentLifetime.Lease owner) throws IOException {
+            CopilotAgentLifetime.Lease owner, Map<String, Object> responseSchema) throws IOException {
         var observerFailure = new AtomicReference<RuntimeException>();
         String content;
         try (var session = open(definition, context, observation, events != null, owner);
@@ -265,8 +282,11 @@ public final class CopilotAgentInvoker implements AutoCloseable {
                 })) {
             Assert.isTrue(context.sessionId().equals(session.getSessionId()),
                     "Copilot runtime did not preserve the requested agent session ID");
-            var reply = session.sendAndWait(new MessageOptions().setPrompt(message),
-                    definition.responseTimeout().toMillis()).join();
+            var options = new MessageOptions().setPrompt(message);
+            if (responseSchema != null) {
+                options.setResponseSchema(responseSchema);
+            }
+            var reply = session.sendAndWait(options, definition.responseTimeout().toMillis()).join();
             if (events == null) {
                 Assert.state(reply != null && reply.getData() != null && reply.getData().content() != null,
                         "Copilot agent completed without an assistant text response");

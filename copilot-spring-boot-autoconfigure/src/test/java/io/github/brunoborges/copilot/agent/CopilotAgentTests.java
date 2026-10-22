@@ -497,7 +497,7 @@ class CopilotAgentTests {
     }
     @CopilotAgent
     public interface WrongReturn {
-        String answer(@ConversationId String id, @UserMessage String message);
+        void answer(@ConversationId String id, @UserMessage String message);
     }
     @CopilotAgent
     public interface MissingId {

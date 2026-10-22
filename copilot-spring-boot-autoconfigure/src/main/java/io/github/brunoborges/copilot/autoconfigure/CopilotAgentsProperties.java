@@ -23,7 +23,8 @@ public record CopilotAgentsProperties(Map<String, Agent> agents) {
     /**
      * @param model model override; omitted values retain the annotation/runtime choice
      * @param reasoningEffort model-specific reasoning effort override
-     * @param responseTimeout maximum response wait, excluding session lookup and cleanup
+     * @param responseTimeout maximum response wait, excluding session lookup and cleanup; synchronous agent
+     *                        methods wait at most this long in total
      * @param mcpServers server names overriding the annotation; null retains annotation selection
      * @param provider BYOK provider name overriding the annotation; null retains annotation selection,
      *                 empty selects none

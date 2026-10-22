@@ -10,8 +10,12 @@ targeting **Spring Boot 4.1.1**, **Java 21**, and Copilot SDK **1.0.24**.
 
 - Auto-configured, Spring-managed `CopilotClient` for a managed local runtime or an
   existing TCP server, with lazy (default) or eager startup and clean shutdown.
-- Typed `@CopilotAgent` interfaces returning `CompletableFuture<String>`, routed by
+- Typed `@CopilotAgent` interfaces returning `CompletableFuture<String>`, structured
+  results (`CompletableFuture<T>` for records, enums, collections, and scalars via
+  provider-native JSON Schema), or synchronous `String`/`T`, routed by
   `@ConversationId` or bound to application-owned instances via `CopilotAgents`.
+- Prompt templates: `@UserMessage("Summarize {{doc}}")` inline or from resources,
+  with `@P`-bound parameters validated at startup.
 - Persistent conversations with create/resume, per-conversation serialization, and
   bounded, non-blocking admission across all agents.
 - Append, replace, or customize system instructions inline, from resources, or from

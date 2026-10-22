@@ -40,7 +40,7 @@ title: Security and troubleshooting
 | No routed agent bean | Put the directly annotated interface under Boot's base package or add `@EnableCopilotAgents`; verify integration is enabled. ID-less definitions are deliberately not singleton business beans. |
 | ID-less interface cannot be injected | Inject `CopilotAgents`, then obtain `CopilotAgentInstance<T>` through `create` or `resume`. |
 | Bean name collision | Set unique explicit agent names; do not rely on bean overriding. |
-| Unsupported method contract | Use supported return types and one consistent form: routed with two annotated strings, or bound with one `@UserMessage` string. Add the Reactor module for `Flux<CopilotAgentEvent>`. |
+| Unsupported method contract | Use supported return types and one consistent form per interface: routed (with a `@ConversationId` parameter) or bound (without). The prompt is either one `@UserMessage` string parameter or a method-level `@UserMessage` template whose `{{placeholders}}` exactly match its `@P` parameters. Structured results must be records, JavaBeans, enums, scalars, or collections of them. Add the Reactor module for `Flux<CopilotAgentEvent>`. |
 | Strict resume fails | Reuse the saved application key with the same interface/name/runtime store; merely allocating and closing a handle does not create history. |
 | Close blocks or callback self-closing fails | Await workflows before closing, keep blocking close off SDK/event-loop callbacks, and remember cancelled futures can still own SDK work. |
 | Missing generated tool metadata | Run `CopilotToolProcessor` in the module declaring the annotated methods, and retain generated classes in the artifact. |
