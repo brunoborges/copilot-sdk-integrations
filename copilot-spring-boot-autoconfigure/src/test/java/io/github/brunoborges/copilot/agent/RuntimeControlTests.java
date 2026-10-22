@@ -95,12 +95,14 @@ class RuntimeControlTests {
             var first = agent.answer("one", "hello");
             assertThat(openingStarted.await(5, TimeUnit.SECONDS)).isTrue();
             assertThat(first.cancel(true)).isTrue();
-            assertThat(telemetry.events).isEmpty();
+            // Cancellation finishes the invocation without waiting for the in-flight session to open.
+            awaitStopped(1);
+            assertThat(telemetry.events).containsExactly("cancelled", "stop");
+            verify(session, never()).close();
             opening.complete(session);
             verify(session, timeout(5000)).close();
             verify(session, never()).sendAndWait(any(), anyLong());
             verify(session, never()).abort();
-            awaitStopped(1);
             assertThat(telemetry.events).containsExactly("cancelled", "stop");
             assertCapacityReleasedOnce(agent, session);
         }
