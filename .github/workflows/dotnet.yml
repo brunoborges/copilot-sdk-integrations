@@ -36,6 +36,8 @@ jobs:
         working-directory: dotnet-core   # global.json opts into Microsoft.Testing.Platform
         run: dotnet test --solution CopilotSdk.slnx -c Release --no-build
       - name: Build Aspire
-        run: dotnet build dotnet-aspire/CopilotSdk.Aspire.slnx -c Release
+        working-directory: dotnet-aspire
+        run: dotnet build CopilotSdk.Aspire.slnx -c Release
       - name: Test Aspire
-        run: dotnet test dotnet-aspire/CopilotSdk.Aspire.slnx -c Release --no-build
+        working-directory: dotnet-aspire   # global.json opts into Microsoft.Testing.Platform
+        run: dotnet test --solution CopilotSdk.Aspire.slnx -c Release --no-build

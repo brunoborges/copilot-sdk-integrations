@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFramework></TargetFramework>
+    <RootNamespace>CopilotSdk.Aspire.Hosting</RootNamespace>
+    <Description>Aspire hosting integration for the GitHub Copilot SDK: runs the Copilot runtime as an AppHost resource and wires models, MCP servers, and BYOK providers into referencing projects.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <!-- PrivateAssets="none" flows the SDK's build targets to the AppHost, which then gets the bundled runtime in its output. -->
+    <PackageReference Include="GitHub.Copilot.SDK" PrivateAssets="none" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>CopilotCliVersion</_Parameter1>
+      <_Parameter2>$(CopilotCliVersion)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CopilotSdk.Aspire.Hosting.Tests" />
+  </ItemGroup>
+
+</Project>
