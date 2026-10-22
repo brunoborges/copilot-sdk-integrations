@@ -14,7 +14,7 @@ injection, lifecycle management, security context, observability, and testing.
 | Language | Framework / library | Directory | Status |
 | --- | --- | --- | --- |
 | Java | [Spring Boot](https://spring.io/projects/spring-boot) | [`spring-boot/`](spring-boot/) | Available (unreleased) |
-| Java | [Quarkus](https://quarkus.io/) | `quarkus/` | Planned |
+| Java | [Quarkus](https://quarkus.io/) | [`quarkus/`](quarkus/) | Available (unreleased) |
 | .NET | ASP.NET Core / Generic Host, [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`, .NET Aspire | `dotnet/` | Under consideration |
 | Python | [FastAPI](https://fastapi.tiangolo.com/), [Django](https://www.djangoproject.com/) | `python/` | Under consideration |
 | Node.js | [NestJS](https://nestjs.com/), [Vercel AI SDK](https://ai-sdk.dev/) provider | `nodejs/` | Under consideration |
@@ -49,6 +49,7 @@ and the documentation landing page) live at the root.
 ```
 .
 ├── spring-boot/   # Spring Boot starter (Java, Maven)
+├── quarkus/       # Quarkus extension (Java, Maven)
 └── .github/       # CI workflows and documentation landing page
 ```
 

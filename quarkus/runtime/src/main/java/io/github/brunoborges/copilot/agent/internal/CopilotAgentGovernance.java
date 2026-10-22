@@ -1,0 +1,193 @@
+package io.github.brunoborges.copilot.agent.internal;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import com.github.copilot.rpc.McpServerConfig;
+import com.github.copilot.rpc.PermissionHandler;
+import com.github.copilot.rpc.ResumeSessionConfig;
+import com.github.copilot.rpc.SessionConfig;
+import com.github.copilot.rpc.ToolDefinition;
+import io.github.brunoborges.copilot.agent.CopilotAgent;
+import io.github.brunoborges.copilot.agent.CopilotAgentContext;
+import io.github.brunoborges.copilot.agent.CopilotAgentHooks;
+import io.github.brunoborges.copilot.agent.CopilotPermissionPolicies;
+import io.github.brunoborges.copilot.quarkus.runtime.config.CopilotAgentsProperties;
+
+/**
+ * Tool, workspace, and hook governance applied identically to created and resumed agent sessions.
+ *
+ * @param availableTools effective runtime allow-list, or null for none
+ * @param excludedTools effective runtime deny-list, or null for none
+ * @param excludedBuiltInAgents built-in subagents to hide, or null for none
+ * @param workingDirectory session working directory, or null for the runtime default
+ * @param additionalDirectories extra accessible directories, or null for none
+ * @param hooks ordered hook beans, global ones first
+ */
+public record CopilotAgentGovernance(List<String> availableTools, List<String> excludedTools,
+        List<String> excludedBuiltInAgents, String workingDirectory, List<String> additionalDirectories,
+        List<CopilotAgentHooks> hooks) {
+
+    static final String ALL_BUILT_IN_TOOLS = "builtin:*";
+
+    public CopilotAgentGovernance {
+        hooks = List.copyOf(hooks);
+    }
+
+    static CopilotAgentGovernance create(String agent, Class<?> type, CopilotAgent annotation, CopilotAgentsProperties.Agent settings,
+            List<ToolDefinition> tools, Map<String, McpServerConfig> mcpServers, BeanLookup beans,
+            PropertyResolver environment) {
+        List<String> available = select(settings, CopilotAgentsProperties.Agent::availableTools,
+                annotation.availableTools(), environment);
+        List<String> excluded = select(settings, CopilotAgentsProperties.Agent::excludedTools,
+                annotation.excludedTools(), environment);
+        boolean builtIns = settings != null && settings.builtInTools() != null
+                ? settings.builtInTools() : annotation.builtInTools();
+        if (!builtIns) {
+            Assert.isTrue(available.isEmpty(), "Copilot agent " + agent
+                    + ": built-in-tools=false cannot be combined with available-tools; list the wanted built-in tools instead");
+            if (!excluded.contains(ALL_BUILT_IN_TOOLS)) {
+                excluded = new ArrayList<>(excluded);
+                excluded.add(ALL_BUILT_IN_TOOLS);
+            }
+        }
+        Assert.isTrue(available.isEmpty() || excluded.isEmpty(), "Copilot agent " + agent
+                + ": available-tools and excluded-tools are mutually exclusive because the runtime ignores the "
+                + "deny-list when an allow-list is set");
+        // The runtime filters every tool source; an explicit allow-list is never widened, so require it to
+        // name the agent's own tool sources rather than silently hiding or exposing them.
+        if (!available.isEmpty()) {
+            Assert.isTrue(tools.isEmpty() || available.stream().anyMatch(name -> name.startsWith("custom:")),
+                    "Copilot agent " + agent + ": available-tools hides every tool bean bound to the agent; add "
+                            + "\"custom:*\" or specific \"custom:<tool>\" entries, or remove the agent's tools");
+            Assert.isTrue(mcpServers.isEmpty() || available.stream().anyMatch(name -> name.startsWith("mcp:")),
+                    "Copilot agent " + agent + ": available-tools hides every MCP server tool bound to the agent; add "
+                            + "\"mcp:*\" or specific \"mcp:<server>/<tool>\" entries, or remove the agent's MCP servers");
+        }
+        List<String> agents = select(settings, CopilotAgentsProperties.Agent::excludedBuiltInAgents,
+                annotation.excludedBuiltInAgents(), environment);
+        String directory = settings != null && settings.workingDirectory() != null
+                ? settings.workingDirectory() : resolve(annotation.workingDirectory(), environment);
+        List<String> directories = select(settings, CopilotAgentsProperties.Agent::additionalDirectories,
+                annotation.additionalDirectories(), environment);
+        List<String> hookNames = select(null, null, annotation.hookRefs(), environment);
+        return new CopilotAgentGovernance(nullIfEmpty(available), nullIfEmpty(excluded), nullIfEmpty(agents),
+                directory.isEmpty() ? null : directory, nullIfEmpty(directories), hooks(agent, type, hookNames, beans));
+    }
+
+    /** Builds the property-driven permission policy, or returns null when none is configured. */
+    static PermissionHandler permissions(String agent, CopilotAgentsProperties.Agent settings, boolean handlerBean,
+            List<ToolDefinition> tools) {
+        var policy = settings == null ? null : settings.permissions();
+        if (policy == null || policy.isEmpty()) {
+            return null;
+        }
+        Assert.isTrue(!handlerBean, "Copilot agent " + agent
+                + ": permissions properties cannot be combined with a permissionHandlerRef bean");
+        var handlers = new ArrayList<PermissionHandler>();
+        if (!policy.allow().isEmpty()) {
+            handlers.add(CopilotPermissionPolicies.allowKinds(policy.allow()));
+        }
+        if (!policy.allowTools().isEmpty()) {
+            handlers.add(CopilotPermissionPolicies.allowTools(policy.allowTools()));
+        }
+        if (!policy.allowMcpServers().isEmpty()) {
+            handlers.add(CopilotPermissionPolicies.allowMcpServers(policy.allowMcpServers()));
+        }
+        if (policy.allowAgentTools()) {
+            handlers.add(CopilotPermissionPolicies.allowCustomTools(tools));
+        }
+        if (policy.allowReadOnly()) {
+            handlers.add(CopilotPermissionPolicies.allowReadOnly());
+        }
+        return CopilotPermissionPolicies.anyOf(handlers);
+    }
+
+    void apply(CopilotAgentContext context, SessionConfig config, Supplier<CopilotAgentLifetime.Scope> callbackScope) {
+        if (availableTools != null) {
+            config.setAvailableTools(new ArrayList<>(availableTools));
+        }
+        if (excludedTools != null) {
+            config.setExcludedTools(new ArrayList<>(excludedTools));
+        }
+        if (excludedBuiltInAgents != null) {
+            config.setExcludedBuiltInAgents(excludedBuiltInAgents);
+        }
+        if (workingDirectory != null) {
+            config.setWorkingDirectory(workingDirectory);
+        }
+        if (additionalDirectories != null) {
+            config.setAdditionalDirectories(new ArrayList<>(additionalDirectories));
+        }
+        if (!hooks.isEmpty()) {
+            config.setHooks(CopilotAgentHookChain.sessionHooks(hooks, context, callbackScope));
+        }
+    }
+
+    void apply(CopilotAgentContext context, ResumeSessionConfig config, Supplier<CopilotAgentLifetime.Scope> callbackScope) {
+        if (availableTools != null) {
+            config.setAvailableTools(new ArrayList<>(availableTools));
+        }
+        if (excludedTools != null) {
+            config.setExcludedTools(new ArrayList<>(excludedTools));
+        }
+        if (excludedBuiltInAgents != null) {
+            config.setExcludedBuiltInAgents(excludedBuiltInAgents);
+        }
+        if (workingDirectory != null) {
+            config.setWorkingDirectory(workingDirectory);
+        }
+        if (additionalDirectories != null) {
+            config.setAdditionalDirectories(new ArrayList<>(additionalDirectories));
+        }
+        if (!hooks.isEmpty()) {
+            config.setHooks(CopilotAgentHookChain.sessionHooks(hooks, context, callbackScope));
+        }
+    }
+
+    private static List<String> select(CopilotAgentsProperties.Agent settings,
+            Function<CopilotAgentsProperties.Agent, List<String>> property, String[] annotation, PropertyResolver environment) {
+        if (settings != null && property.apply(settings) != null) {
+            return property.apply(settings);
+        }
+        return Arrays.stream(annotation).map(value -> {
+            String resolved = resolve(value, environment);
+            Assert.hasText(resolved, "Copilot agent annotation list entries must not be blank");
+            return resolved;
+        }).toList();
+    }
+
+    private static List<CopilotAgentHooks> hooks(String agent, Class<?> type, List<String> names, BeanLookup beans) {
+        var selected = new IdentityHashMap<CopilotAgentHooks, Boolean>();
+        var ordered = new ArrayList<CopilotAgentHooks>();
+        for (var group : List.of(beans.globalHooks(), beans.targetedHooks(type))) {
+            group.forEach(hook -> {
+                if (selected.put(hook, true) == null) {
+                    ordered.add(hook);
+                }
+            });
+        }
+        for (String name : names) {
+            var hook = BeanRefs.resolve(agent, "hookRefs", name, CopilotAgentHooks.class, beans);
+            if (selected.put(hook, true) == null) {
+                ordered.add(hook);
+            }
+        }
+        return ordered;
+    }
+
+    private static List<String> nullIfEmpty(List<String> values) {
+        return values.isEmpty() ? null : List.copyOf(values);
+    }
+
+    private static String resolve(String value, PropertyResolver environment) {
+        String resolved = environment.resolveRequiredPlaceholders(value);
+        Assert.isTrue(resolved.isEmpty() || !resolved.isBlank(), "Copilot agent annotation values must not be blank");
+        return resolved;
+    }
+}
