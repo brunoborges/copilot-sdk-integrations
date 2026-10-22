@@ -116,10 +116,19 @@ export type ToolInput =
 
 /** Structural shape of an AI SDK `tool()` object (no dependency on `ai`). */
 export interface AiSdkToolLike {
-  description?: string;
+  /** AI SDK 7 also accepts a function of the tool context. */
+  description?: string | ((options: { context: any; experimental_sandbox?: any }) => string);
   inputSchema?: unknown;
-  execute?: (input: any, options: { toolCallId: string; abortSignal?: AbortSignal; messages: unknown[] }) => unknown;
-  needsApproval?: boolean | ((input: any, options: { toolCallId: string; messages: unknown[] }) => boolean | Promise<boolean>);
+  // Method syntax keeps parameters bivariant so AI SDK tools (stricter option types) are assignable.
+  execute?(
+    input: any,
+    options: { toolCallId: string; abortSignal?: AbortSignal; messages: unknown[]; context?: unknown },
+  ): unknown;
+  needsApproval?:
+    | boolean
+    | {
+        bivarianceHack(input: any, options: { toolCallId: string; messages: unknown[]; context?: unknown }): boolean | PromiseLike<boolean>;
+      }["bivarianceHack"];
 }
 
 // ---------------------------------------------------------------------------
