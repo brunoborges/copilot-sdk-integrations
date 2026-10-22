@@ -17,7 +17,8 @@ injection, lifecycle management, security context, observability, and testing.
 | Java | [Quarkus](https://quarkus.io/) | `quarkus/` | Planned |
 | .NET | ASP.NET Core / Generic Host, [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`, .NET Aspire | `dotnet/` | Under consideration |
 | Python | [FastAPI](https://fastapi.tiangolo.com/), [Django](https://www.djangoproject.com/) | `python/` | Under consideration |
-| Node.js | [NestJS](https://nestjs.com/), [Vercel AI SDK](https://ai-sdk.dev/) provider | `nodejs/` | Under consideration |
+| TypeScript / Node.js | [Vercel](https://vercel.com/) ([AI SDK](https://ai-sdk.dev/), Next.js, Fluid compute, Sandbox, AI Gateway) | [`vercel/`](vercel/) | Design ([DESIGN.md](vercel/DESIGN.md)) |
+| Node.js | [NestJS](https://nestjs.com/) | `nodejs/` | Under consideration |
 
 ## Design goals
 
@@ -49,6 +50,7 @@ and the documentation landing page) live at the root.
 ```
 .
 ├── spring-boot/   # Spring Boot starter (Java, Maven)
+├── vercel/        # Vercel integration (TypeScript; design stage)
 └── .github/       # CI workflows and documentation landing page
 ```
 
