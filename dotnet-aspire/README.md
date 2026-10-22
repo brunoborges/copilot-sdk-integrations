@@ -3,6 +3,12 @@
 [Aspire](https://aspire.dev/) integration for the
 [GitHub Copilot SDK for .NET](https://github.com/github/copilot-sdk/tree/main/dotnet).
 
+This is the **orchestration** layer: it runs, secures, and wires the Copilot
+runtime in an Aspire AppHost, and connects service projects to it. Application
+features (agents, `IChatClient`, tools, permissions, testing) come from the
+[core .NET integration](../dotnet-core/), which this package builds on, the same
+way `Aspire.Npgsql` builds on `Npgsql`.
+
 > **Status: design phase.** No code or packages yet. Read the
 > [design document](docs/design.md) and open an issue or PR with feedback.
 
@@ -20,11 +26,11 @@ builder.AddProject<Projects.Api>("api").WithReference(chat).WaitFor(chat);
 Service:
 
 ```csharp
-builder.AddCopilotClient("chat")
+builder.AddCopilotClient("chat")                     // Aspire: connection string, health, telemetry
        .AddAgent("support", agent => agent
            .WithInstructions("You help customers with orders.")
            .WithTools<OrderTools>())
-       .AddChatClient();                               // Microsoft.Extensions.AI IChatClient
+       .AddKeyedChatClient("support");                 // core API: keyed IChatClient
 
 app.MapPost("/ask", async ([FromKeyedServices("support")] IChatClient chat, string q) =>
     (await chat.GetResponseAsync(q)).Text);
@@ -38,12 +44,11 @@ Highlights of the design:
   GitHub token as a secret parameter and a generated connection token.
 - **End-to-end traces** on the Aspire dashboard: app request → Copilot turn →
   model call → tool callback.
-- **`IChatClient` and Agent Framework `AIAgent`** surfaces over named agent
-  profiles, so existing `Microsoft.Extensions.AI` code works unchanged.
-- **DI services as tools**, each call in its own scope; MCP servers and BYOK
-  providers wired from other Aspire resources.
-- **Safe defaults**: deny-by-default permissions, isolated client mode, and
-  explicit tool and MCP allow-lists.
+- **MCP servers and BYOK providers** wired by reference from other Aspire
+  resources (projects, containers, Azure AI Foundry, OpenAI, Ollama).
+- **A thin client package** that maps the connection string onto core options
+  and returns the core builder, so service code is identical with or without
+  Aspire.
 
 See [the Spring Boot starter](../spring-boot/) for the equivalent Java integration.
 

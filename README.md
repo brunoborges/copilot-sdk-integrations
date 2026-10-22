@@ -15,7 +15,8 @@ injection, lifecycle management, security context, observability, and testing.
 | --- | --- | --- | --- |
 | Java | [Spring Boot](https://spring.io/projects/spring-boot) | [`spring-boot/`](spring-boot/) | Available (unreleased) |
 | Java | [Quarkus](https://quarkus.io/) | `quarkus/` | Planned |
-| .NET | [Aspire](https://aspire.dev/) (AppHost resource + client integration, [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`) | [`dotnet-aspire/`](dotnet-aspire/) | Design ([draft](dotnet-aspire/docs/design.md)) |
+| .NET | Generic Host / ASP.NET Core ([Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`, typed agents, [Agent Framework](https://learn.microsoft.com/agent-framework/)) | [`dotnet-core/`](dotnet-core/) | Design ([draft](dotnet-core/docs/design.md)) |
+| .NET | [Aspire](https://aspire.dev/) (AppHost runtime resource + client integration, builds on `dotnet-core`) | [`dotnet-aspire/`](dotnet-aspire/) | Design ([draft](dotnet-aspire/docs/design.md)) |
 | Python | [FastAPI](https://fastapi.tiangolo.com/), [Django](https://www.djangoproject.com/) | `python/` | Under consideration |
 | Node.js | [NestJS](https://nestjs.com/), [Vercel AI SDK](https://ai-sdk.dev/) provider | `nodejs/` | Under consideration |
 
@@ -49,6 +50,7 @@ and the documentation landing page) live at the root.
 ```
 .
 ├── spring-boot/     # Spring Boot starter (Java, Maven)
+├── dotnet-core/     # .NET integration for business apps, design phase
 ├── dotnet-aspire/   # Aspire integration (.NET), design phase
 └── .github/         # CI workflows and documentation landing page
 ```
