@@ -6,6 +6,13 @@ title: Example application
 
 # Example application
 
+Clone the repository and switch to the Spring Boot project:
+
+```sh
+git clone https://github.com/brunoborges/copilot-sdk-integrations.git
+cd copilot-sdk-integrations/spring-boot
+```
+
 Build:
 
 ```sh
