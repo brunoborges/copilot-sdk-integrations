@@ -11,7 +11,7 @@ the [Spring Boot starter](../spring-boot/) or the [Quarkus extension](../quarkus
   `BindingContext` and `BeanLookup`. This package is not a supported API.
 
 The module has no Maven wrapper of its own; both integration builds include it as a
-reactor module (`<module>../core</module>`):
+reactor module (`<module>../java-core</module>`):
 
 ```
 cd spring-boot && ./mvnw verify   # or: cd quarkus && ./mvnw verify
