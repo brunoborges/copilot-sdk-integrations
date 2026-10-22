@@ -47,6 +47,8 @@ public sealed class CopilotOptions
 
     /// <summary>
     /// GitHub token used as the service identity when the SDK starts its bundled runtime. Store it in a secret store.
+    /// When unset, the first of the <c>COPILOT_GITHUB_TOKEN</c>, <c>GH_TOKEN</c>, and <c>GITHUB_TOKEN</c> environment
+    /// variables is used; when none is set, the signed-in Copilot CLI user is used.
     /// Cannot be combined with <see cref="Endpoint"/>: a shared runtime manages its own sign-in.
     /// </summary>
     public string? GitHubToken { get; set; }

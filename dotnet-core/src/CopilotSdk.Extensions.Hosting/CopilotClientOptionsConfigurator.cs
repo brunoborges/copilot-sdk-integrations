@@ -36,12 +36,30 @@ internal sealed class CopilotClientOptionsConfigurator(IServiceProvider services
             return;
         }
 
-        if (copilotOptions.GitHubToken is not null)
+        var token = copilotOptions.GitHubToken ?? ReadEnvironmentToken(services.GetService<IConfiguration>());
+        if (token is not null)
         {
-            options.GitHubToken = copilotOptions.GitHubToken;
+            options.GitHubToken = token;
         }
 
         options.Telemetry ??= CreateTelemetry(services.GetService<IConfiguration>(), logger);
+    }
+
+    /// <summary>The environment variables checked, in order, when <see cref="CopilotOptions.GitHubToken"/> is not set.</summary>
+    internal static readonly string[] TokenEnvironmentKeys = ["COPILOT_GITHUB_TOKEN", "GH_TOKEN", "GITHUB_TOKEN"];
+
+    internal static string? ReadEnvironmentToken(IConfiguration? configuration)
+    {
+        foreach (var key in TokenEnvironmentKeys)
+        {
+            var value = configuration?[key];
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
+        }
+
+        return null;
     }
 
     internal static TelemetryConfig? CreateTelemetry(IConfiguration? configuration, ILogger? logger)

@@ -388,12 +388,12 @@ A sample AppHost (runtime, model, MCP server, and API) is still to come.
 
 ---
 
-## 9. Open questions
+## 9. Decisions
 
-1. **Package prefix.** `CopilotSdk.Aspire.*` vs. targeting the Aspire Community
-   Toolkit (`CommunityToolkit.Aspire.Hosting.GitHub.Copilot`) from day one.
-2. **Multiple runtimes.** Keyed clients share one runtime today. Should a
-   service be able to connect to several?
+1. **Package prefix.** `CopilotSdk.Aspire.*` (and `CopilotSdk.Aspire.Hosting`).
+2. **One runtime per service.** Keyed clients share one runtime, like named
+   agents in core. Connecting a service to several runtimes may be revisited
+   later.
 
 ---
 

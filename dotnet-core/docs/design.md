@@ -342,7 +342,7 @@ SignalR prompts) belong in the app, not the library.
 | Mode | How |
 | --- | --- |
 | **Signed-in user** (local development) | Nothing to configure: the SDK-managed runtime uses the user signed in to the Copilot CLI. |
-| **Service identity** (workers, internal tools) | `Copilot:GitHubToken` from a secret store (SDK-managed runtime only). |
+| **Service identity** (workers, internal tools) | `Copilot:GitHubToken`, or the `COPILOT_GITHUB_TOKEN` / `GH_TOKEN` / `GITHUB_TOKEN` environment variable (SDK-managed runtime only). |
 | **Per-user identity** (usage billed to and scoped by the signed-in user) | `o.GitHubTokenProvider`, called at the start of each turn. |
 | **BYOK** (your own model deployment) | `Copilot:Provider`. |
 
@@ -356,6 +356,13 @@ The provider runs on the caller's thread when the turn starts (so
 300-second expiry; refreshes call it again under the caller's context. If it
 returns `null`, the call throws `InvalidOperationException` instead of falling
 back to the service identity.
+
+**Service token resolution.** For the SDK-managed runtime, the first non-empty
+value wins: `Copilot:GitHubToken` → `COPILOT_GITHUB_TOKEN` → `GH_TOKEN` →
+`GITHUB_TOKEN` → the signed-in CLI user. The environment variables are read
+through `IConfiguration` and passed to the runtime explicitly, because the
+SDK-managed runtime does not pick them up on its own. They are ignored when
+`Endpoint` is set (a shared runtime manages its own identity).
 
 **Mode and runtime home.** The client runs with `Mode = Empty`: built-in
 tools, skills, memory, and custom instructions are off by design. Unless
@@ -461,13 +468,13 @@ writing the same code without it.
 
 ---
 
-## 14. Open questions
+## 14. Decisions
 
 1. **Package name.** `CopilotSdk.Extensions.Hosting` (the `GitHub.*` and
-   `Microsoft.*` prefixes are reserved), or propose upstream to
-   `github/copilot-sdk`.
-2. **Multiple runtimes.** Every agent shares one `CopilotClient`. Should keyed
-   clients connect to different runtimes?
+   `Microsoft.*` prefixes are reserved).
+2. **One runtime per app.** Every agent shares one `CopilotClient` and runtime;
+   named agents differ only in session settings. Connecting different agents
+   to different runtimes may be revisited if samples need it.
 
 ---
 

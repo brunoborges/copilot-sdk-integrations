@@ -48,9 +48,11 @@ full SDK access. See the [design document](docs/design.md).
 Prerequisites: the .NET 10 SDK, and a GitHub account with Copilot access.
 Locally, the integration uses the user signed in to the
 [Copilot CLI](https://docs.github.com/copilot/how-tos/set-up/install-copilot-cli);
-nothing to configure. Elsewhere, set a service token as `Copilot:GitHubToken`
-(for example `export Copilot__GitHubToken=<token>`, or user secrets), or point
-`Copilot:Endpoint` at a shared runtime. The SDK downloads its bundled runtime on
+nothing to configure. Elsewhere, supply a service token either as
+`Copilot:GitHubToken` (user secrets, a secret store, or
+`export Copilot__GitHubToken=<token>`) or through the standard
+`COPILOT_GITHUB_TOKEN`, `GH_TOKEN`, or `GITHUB_TOKEN` environment variables;
+or point `Copilot:Endpoint` at a shared runtime. The SDK downloads its bundled runtime on
 first build.
 
 From `dotnet-core/`:
