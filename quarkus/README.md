@@ -3,6 +3,9 @@
 Quarkus extension for the [Copilot SDK for Java](https://github.com/github/copilot-sdk/tree/main/java),
 targeting **Quarkus 3.40**, **Java 21**, and Copilot SDK **1.0.24**.
 
+📖 **[Read the documentation](https://brunoborges.github.io/copilot-sdk-integrations/quarkus/)**
+([chapter sources](src/site/markdown/)).
+
 It offers the same programming model as the [Spring Boot starter](../spring-boot/):
 the `io.github.brunoborges.copilot.agent` API (`@CopilotAgent`, `@ConversationId`,
 `@UserMessage`, `CopilotAgents`, hooks, listeners, customizers, token resolvers) is
@@ -55,6 +58,7 @@ been published yet.
 | `deployment` | `copilot-quarkus-deployment` | Build steps: agent discovery and validation, synthetic agent beans, hook catalog, endpoint routes. |
 | `test` | `copilot-quarkus-test` | Scripted `CopilotTestRuntime` and the `CopilotContainerTestResource` for Testcontainers. |
 | `example` | (not published) | A Quarkus REST application with conversational, bound, and streaming agents. |
+| `site-skin` | `copilot-quarkus-site-skin` | Internal Maven Site layout for the documentation; not an application dependency. |
 
 ## Quick start
 
@@ -222,7 +226,20 @@ class QuarkusAdvisorTest {
 
 To test against a real Copilot CLI, set `quarkus.copilot.test-runtime.enabled=false` and
 use `@WithTestResource(CopilotContainerTestResource.class)` with an image that runs
-`copilot --server` (see the Spring Boot testing guide for a sample Dockerfile).
+`copilot --server` (see the [testing chapter](https://brunoborges.github.io/copilot-sdk-integrations/quarkus/testing.html#testcontainers-and-a-real-cli-server)).
+
+## Documentation site
+
+Chapter sources live in `src/site/markdown/`. Render the site locally (no model
+requests or authentication needed):
+
+```sh
+./mvnw --batch-mode --no-transfer-progress -pl site-skin -am install
+./mvnw --batch-mode --no-transfer-progress -N site
+```
+
+Open `target/site/index.html`, or run `./mvnw -N site:run` and browse
+`http://localhost:8080`.
 
 ## Building
 

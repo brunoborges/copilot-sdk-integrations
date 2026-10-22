@@ -25,17 +25,25 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-          cache-dependency-path: 'spring-boot/**/pom.xml'
+          cache-dependency-path: |
+            spring-boot/**/pom.xml
+            quarkus/**/pom.xml
       - uses: actions/configure-pages@v6
       - name: Build Spring Boot documentation site
         working-directory: spring-boot
         run: |
           ./mvnw --batch-mode --no-transfer-progress -pl copilot-spring-boot-site-skin -am install
           ./mvnw --batch-mode --no-transfer-progress -N site
+      - name: Build Quarkus documentation site
+        working-directory: quarkus
+        run: |
+          ./mvnw --batch-mode --no-transfer-progress -pl site-skin -am install
+          ./mvnw --batch-mode --no-transfer-progress -N site
       - name: Assemble site
         run: |
           mkdir -p _site
           cp -R spring-boot/target/site _site/spring-boot
+          cp -R quarkus/target/site _site/quarkus
           cp .github/pages/index.html _site/index.html
       - uses: actions/upload-pages-artifact@v5
         with:
