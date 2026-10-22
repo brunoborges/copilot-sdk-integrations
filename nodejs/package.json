@@ -5,12 +5,16 @@
   "workspaces": [
     "packages/core",
     "packages/ai",
-    "packages/nestjs"
+    "packages/nestjs",
+    "examples/express",
+    "examples/nestjs-chat",
+    "examples/nestjs-chat/web"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "vitest run"
+    "test": "vitest run",
+    "site": "node site/build.mjs"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"

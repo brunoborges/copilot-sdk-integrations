@@ -69,6 +69,7 @@ interface InvokeOverrides {
 
 interface PendingPermission {
   conversationId?: string;
+  principal?: string;
   respond(response: PermissionResponse): void;
 }
 
@@ -194,11 +195,21 @@ export class CopilotAgents implements OnModuleInit {
 
   /**
    * Resolves an "ask-user" permission emitted on a streaming call (`permission-request` event).
-   * Returns false when no such request is pending (already resolved, expired, or another conversation).
+   * Only the principal that started the turn can answer: the caller's principal is `options.principal`,
+   * or the current Copilot context's principal (set per request by the context interceptor).
+   * Returns false when no such request is pending (already resolved, expired, another conversation,
+   * or another principal).
    */
-  respondToPermission(conversationId: string | undefined, requestId: string, decision: boolean | PermissionResponse): boolean {
+  respondToPermission(
+    conversationId: string | undefined,
+    requestId: string,
+    decision: boolean | PermissionResponse,
+    options: { principal?: string } = {},
+  ): boolean {
     const pending = this.pending.get(requestId);
     if (!pending || (pending.conversationId !== undefined && pending.conversationId !== conversationId)) return false;
+    const principal = "principal" in options ? options.principal : getCopilotContext()?.principal;
+    if (pending.principal !== principal) return false;
     this.pending.delete(requestId);
     pending.respond(typeof decision === "boolean" ? { approved: decision } : decision);
     return true;
@@ -381,7 +392,7 @@ export class CopilotAgents implements OnModuleInit {
       const iterable = bound
         ? bound.stream(prompt, streamOptions)
         : handle.stream({ ...streamOptions, prompt, ...(conversationId !== undefined ? { conversationId } : {}) });
-      return this.track(iterable, conversationId);
+      return this.track(iterable, conversationId, captured?.principal);
     };
     const inContext = <R>(fn: () => R): R => (captured ? runWithCopilotContext(captured, fn) : fn());
 
@@ -402,14 +413,18 @@ export class CopilotAgents implements OnModuleInit {
   }
 
   /** Tracks pending "ask-user" permissions so `respondToPermission` can resolve them. */
-  private track(iterable: AsyncIterable<CopilotAgentEvent>, conversationId: string | undefined): AsyncGenerator<CopilotAgentEvent> {
+  private track(
+    iterable: AsyncIterable<CopilotAgentEvent>,
+    conversationId: string | undefined,
+    principal: string | undefined,
+  ): AsyncGenerator<CopilotAgentEvent> {
     const pending = this.pending;
     return (async function* () {
       const seen: string[] = [];
       try {
         for await (const event of iterable) {
           if (event.type === "permission-request") {
-            pending.set(event.requestId, { conversationId, respond: event.respond });
+            pending.set(event.requestId, { conversationId, principal, respond: event.respond });
             seen.push(event.requestId);
           } else if (event.type === "permission-resolved") {
             pending.delete(event.requestId);

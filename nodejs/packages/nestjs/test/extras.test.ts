@@ -13,7 +13,7 @@ import {
 } from "@nestjs/common";
 import { EventEmitterModule, OnEvent } from "@nestjs/event-emitter";
 import { Test, type TestingModule } from "@nestjs/testing";
-import { CopilotConfigurationError, getCopilotContext, permissions, type CopilotAgentEvent, type CopilotContext } from "@copilot-sdk-integrations/core";
+import { CopilotConfigurationError, getCopilotContext, permissions, runWithCopilotContext, type CopilotAgentEvent, type CopilotContext } from "@copilot-sdk-integrations/core";
 import { ClsModule, ClsService } from "nestjs-cls";
 import { Observable, lastValueFrom, tap, toArray } from "rxjs";
 import request from "supertest";
@@ -388,16 +388,36 @@ describe("CopilotAgents.respondToPermission", () => {
           if (event.type !== "permission-request") return;
           results.push(agents.respondToPermission("other-conversation", event.requestId, true));
           results.push(agents.respondToPermission("c1", "unknown-id", true));
+          results.push(agents.respondToPermission("c1", event.requestId, true, { principal: "mallory" }));
           results.push(agents.respondToPermission("c1", event.requestId, true));
           results.push(agents.respondToPermission("c1", event.requestId, false));
         }),
         toArray(),
       ),
     );
-    expect(results).toEqual([false, false, true, false]);
+    expect(results).toEqual([false, false, false, true, false]);
     expect(events.map((e) => e.type)).toEqual(expect.arrayContaining(["permission-request", "permission-resolved", "tool-end", "done"]));
     expect(events.find((e) => e.type === "permission-resolved")).toMatchObject({ approved: true });
     expect(runtime.toolCalls[0]).toMatchObject({ name: "refund", approved: true, result: "refunded" });
+  });
+
+  it("only lets the principal that started the turn answer", async () => {
+    const { agents, agent, runtime } = await refundApp();
+    const results: boolean[] = [];
+    await lastValueFrom(
+      runWithCopilotContext({ principal: "alice" }, () => agent.chat("c3", "refund order 9")).pipe(
+        tap((event) => {
+          if (event.type !== "permission-request") return;
+          results.push(agents.respondToPermission("c3", event.requestId, true, { principal: "bob" }));
+          results.push(runWithCopilotContext({ principal: "bob" }, () => agents.respondToPermission("c3", event.requestId, true)));
+          results.push(agents.respondToPermission("c3", event.requestId, true, { principal: undefined }));
+          results.push(runWithCopilotContext({ principal: "alice" }, () => agents.respondToPermission("c3", event.requestId, true)));
+        }),
+        toArray(),
+      ),
+    );
+    expect(results).toEqual([false, false, false, true]);
+    expect(runtime.toolCalls[0]).toMatchObject({ name: "refund", approved: true });
   });
 
   it("denies with feedback, and forgets requests once the stream ends", async () => {

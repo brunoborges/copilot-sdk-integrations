@@ -91,6 +91,9 @@ agents.bind(SupportAgent, "c1").answer("More");  // resume-only → CopilotConve
 agents.respondToPermission("c1", requestId, true); // answer an "ask-user" permission-request event
 ```
 
+`respondToPermission` only accepts an answer from the principal that started the turn (taken from the
+request's Copilot context, or `{ principal }` as a fourth argument); otherwise it returns `false`.
+
 Functional agents: `CopilotModule.forFeature([defineAgent({...})])`, then inject the core `AgentHandle` with `@InjectAgent("name")`.
 
 ## Tools, permissions, hooks, events
