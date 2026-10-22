@@ -65,8 +65,14 @@ public static class CopilotServiceCollectionExtensions
         services.TryAddSingleton(static sp => sp.GetRequiredService<ICopilotClientProvider>().Client);
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IHostedService, CopilotClientLifetime>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<ICopilotClientConfigurator, CopilotClientOptionsConfigurator>());
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<ICopilotClientConfigurator, CopilotModeClientConfigurator>());
+        services.TryAddSingleton<CopilotToolCatalog>();
 
         services.TryAddSingleton<CopilotSessionConfigFactory>();
+        services.TryAddSingleton<CopilotTurnContextRegistry>();
+        services.TryAddSingleton<ICopilotSessionGateway, CopilotSessionGateway>();
+        services.TryAddSingleton<CopilotConversationLocks>();
+        services.TryAddSingleton<CopilotTurnLimiter>();
         services.TryAddEnumerable(ServiceDescriptor.Singleton<ICopilotSessionConfigurator, CopilotOptionsSessionConfigurator>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<ICopilotSessionConfigurator, CopilotToolsSessionConfigurator>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<ICopilotSessionConfigurator, CopilotPermissionsSessionConfigurator>());

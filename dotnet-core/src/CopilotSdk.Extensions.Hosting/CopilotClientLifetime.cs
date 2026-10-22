@@ -4,8 +4,8 @@ using Microsoft.Extensions.Options;
 namespace CopilotSdk.Extensions.Hosting;
 
 /// <summary>
-/// Starts the shared client with the host when <see cref="CopilotOptions.EagerStart"/> is set, and stops it
-/// with the host, force-stopping if shutdown times out.
+/// Starts the shared client with the host when <see cref="CopilotOptions.EagerStart"/> is set (otherwise it starts on
+/// first use), and stops it with the host, force-stopping if the host's shutdown timeout fires.
 /// </summary>
 internal sealed class CopilotClientLifetime(ICopilotClientProvider provider, IOptionsMonitor<CopilotOptions> options) : IHostedService
 {
@@ -17,22 +17,5 @@ internal sealed class CopilotClientLifetime(ICopilotClientProvider provider, IOp
         }
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken)
-    {
-        if (!provider.IsStarted)
-        {
-            return;
-        }
-
-        // TODO(chat-client agent): harden (log failures, handle exceptions from StopAsync).
-        var client = provider.Client;
-        try
-        {
-            await client.StopAsync().WaitAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            await client.ForceStopAsync().ConfigureAwait(false);
-        }
-    }
+    public Task StopAsync(CancellationToken cancellationToken) => provider.StopAsync(cancellationToken);
 }

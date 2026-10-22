@@ -1,16 +1,28 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace CopilotSdk.Extensions.Hosting;
 
 /// <summary>
-/// Composes <see cref="CopilotOptions"/> for an agent. For the default agent: code actions, then the
-/// <c>Copilot</c> section. For a named agent: the default agent's code actions and section first, then the
-/// named agent's code actions and the <c>Copilot:Agents:{name}</c> section. Configuration overrides code.
+/// Composes <see cref="CopilotOptions"/> for an agent. Configuration overrides code.
 /// </summary>
+/// <remarks>
+/// <list type="number">
+/// <item>Default agent: its code actions, then the <c>Copilot</c> section.</item>
+/// <item>Named agent <c>N</c>: the default agent's code actions and the <c>Copilot</c> section, then <c>N</c>'s code
+/// actions, then <c>Copilot:Agents:N</c>. Because both run on the same instance, a named agent inherits the default
+/// agent's delegates, <see cref="CopilotOptions.McpServers"/>, and <see cref="CopilotOptions.ConfigureSession"/> actions,
+/// and adds its own.</item>
+/// <item>Finally, <c>ConnectionStrings:{ConnectionName}</c> fills values that are still unset
+/// (see <see cref="CopilotConnectionInfo.ApplyTo"/>).</item>
+/// </list>
+/// </remarks>
 internal sealed class CopilotOptionsSetup(CopilotAgentRegistry registry, IServiceProvider services) : IConfigureNamedOptions<CopilotOptions>
 {
+    internal const string AgentsSectionName = "Agents";
+
     public void Configure(CopilotOptions options) => Configure(Options.DefaultName, options);
 
     public void Configure(string? name, CopilotOptions options)
@@ -25,11 +37,44 @@ internal sealed class CopilotOptionsSetup(CopilotAgentRegistry registry, IServic
         if (name != Options.DefaultName)
         {
             Apply(registry.GetConfigureActions(name), options);
-            section?.GetSection("Agents").GetSection(name).Bind(options);
+            section?.GetSection(AgentsSectionName).GetSection(name).Bind(options);
         }
 
-        // TODO(config agent): overlay ConnectionStrings:{options.ConnectionName}
-        // (Endpoint=...;ConnectionToken=...;Model=...) where explicit Copilot:* values are not set.
+        if (configuration is not null)
+        {
+            ApplyConnectionString(configuration, options);
+        }
+    }
+
+    private void ApplyConnectionString(IConfiguration configuration, CopilotOptions options)
+    {
+        if (string.IsNullOrWhiteSpace(options.ConnectionName))
+        {
+            return;
+        }
+
+        var connectionString = configuration.GetConnectionString(options.ConnectionName);
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return;
+        }
+
+        if (!CopilotConnectionString.TryParse(connectionString, out var info))
+        {
+            throw new InvalidOperationException(
+                $"ConnectionStrings:{options.ConnectionName} is not a valid Copilot connection string. " +
+                "Expected 'Endpoint=tcp://host:port;ConnectionToken=...;Model=...'.");
+        }
+
+        if (info.UnknownKeys.Count > 0)
+        {
+            services.GetService<ILoggerFactory>()?.CreateLogger<CopilotOptions>().LogWarning(
+                "Ignoring unknown keys in connection string '{ConnectionName}': {Keys}.",
+                options.ConnectionName,
+                string.Join(", ", info.UnknownKeys));
+        }
+
+        info.ApplyTo(options);
     }
 
     private static void Apply(IReadOnlyList<Action<CopilotOptions>> actions, CopilotOptions options)

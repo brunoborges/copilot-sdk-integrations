@@ -12,6 +12,11 @@ public static class CopilotHealthCheckExtensions
     /// Adds a health check that pings the shared Copilot runtime and checks its auth status.
     /// It never starts a client that hasn't been used yet.
     /// </summary>
+    /// <remarks>
+    /// Reports Healthy before the client starts; <paramref name="failureStatus"/> when the runtime does not respond;
+    /// Degraded when the runtime is not signed in and no BYOK provider or per-user token provider is configured;
+    /// otherwise Healthy, with <c>login</c>, <c>authType</c>, and <c>host</c> in the result data.
+    /// </remarks>
     /// <param name="builder">The health checks builder.</param>
     /// <param name="name">The health check name. Defaults to <c>copilot</c>.</param>
     /// <param name="failureStatus">The status to report on failure. Defaults to <see cref="HealthStatus.Unhealthy"/>.</param>

@@ -24,7 +24,7 @@ internal sealed record CopilotToolRegistration(
 /// <remarks>
 /// Registration only records what the app asked for. Building <c>AIFunction</c>s (DI scope per call,
 /// <c>ExecutionContext</c> flow, snake_case names, <c>SkipPermission</c>, <see cref="RequiresApprovalAttribute"/>)
-/// happens in <see cref="CopilotToolsSessionConfigurator"/>.
+/// happens in <see cref="CopilotToolFactory"/> (cached per agent by <see cref="CopilotToolCatalog"/>).
 /// </remarks>
 internal sealed class CopilotToolRegistry
 {
@@ -35,6 +35,22 @@ internal sealed class CopilotToolRegistry
     public void Add(CopilotToolRegistration registration)
     {
         ArgumentNullException.ThrowIfNull(registration);
+
+        if (registration.ToolType is { } toolType && !CopilotToolFactory.GetToolMethods(toolType).Any())
+        {
+            throw new ArgumentException(
+                $"'{toolType}' has no public methods marked with [Description]; WithTools<T>() exposes only those methods as tools.",
+                nameof(registration));
+        }
+
+        if (registration.Function is { } function &&
+            string.IsNullOrWhiteSpace(registration.Name) &&
+            CopilotToolFactory.GetToolName(function.Method) is null)
+        {
+            throw new ArgumentException(
+                "A tool name is required for a lambda or anonymous delegate. Pass a name to WithTool or use a named method.",
+                nameof(registration));
+        }
 
         if (registration.ToolType is not null &&
             _registrations.Exists(r => r.AgentName == registration.AgentName && r.ToolType == registration.ToolType))

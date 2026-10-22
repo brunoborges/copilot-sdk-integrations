@@ -6,10 +6,16 @@ namespace CopilotSdk.Extensions.Hosting;
 /// </summary>
 public sealed class CopilotMcpServerOptions
 {
-    /// <summary>Server transport: <c>http</c> or <c>stdio</c>. Defaults to <c>http</c> when <see cref="Url"/> is set.</summary>
+    /// <summary>
+    /// Server transport: <c>http</c> (also accepts <c>sse</c>) or <c>stdio</c> (also accepts <c>local</c>).
+    /// When not set, <c>http</c> is used if <see cref="Url"/> is set and <c>stdio</c> if <see cref="Command"/> is set.
+    /// </summary>
     public string? Type { get; set; }
 
-    /// <summary>Tools the agent may call on this server. Only listed tools are allowed by the default permission handler.</summary>
+    /// <summary>
+    /// Tools the agent may call on this server. Only listed tools are exposed and allowed by the default permission
+    /// handler; an empty list exposes none.
+    /// </summary>
     public IList<string> Tools { get; set; } = [];
 
     /// <summary>Optional timeout in milliseconds for tool calls to this server.</summary>

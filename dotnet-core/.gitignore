@@ -5,3 +5,7 @@ obj/
 TestResults/
 *.nupkg
 *.snupkg
+
+# per-agent build outputs
+.artifacts*/
+.scratch*/

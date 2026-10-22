@@ -33,7 +33,18 @@ internal sealed class CopilotOptionsSessionConfigurator(IOptionsMonitor<CopilotO
             config.Provider = o.Provider;
         }
 
-        // TODO(config agent): map o.McpServers (CopilotMcpServerOptions) to SDK McpStdioServerConfig / McpHttpServerConfig
-        // in config.McpServers.
+        if (o.McpServers.Count > 0)
+        {
+            var servers = config.McpServers ?? new Dictionary<string, McpServerConfig>(StringComparer.OrdinalIgnoreCase);
+            foreach (var (name, server) in o.McpServers)
+            {
+                if (server is not null && CopilotMcpServerMapper.Map(server) is { } mapped)
+                {
+                    servers[name] = mapped;
+                }
+            }
+
+            config.McpServers = servers;
+        }
     }
 }

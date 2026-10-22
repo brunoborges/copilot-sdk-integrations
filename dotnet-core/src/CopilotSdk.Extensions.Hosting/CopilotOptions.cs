@@ -45,12 +45,15 @@ public sealed class CopilotOptions
     /// <summary>When <see langword="true"/>, the client starts with the host instead of on first use.</summary>
     public bool EagerStart { get; set; }
 
-    /// <summary>GitHub token used as the service identity. Store it in a secret store.</summary>
+    /// <summary>
+    /// GitHub token used as the service identity when the SDK starts its bundled runtime. Store it in a secret store.
+    /// Cannot be combined with <see cref="Endpoint"/>: a shared runtime manages its own sign-in.
+    /// </summary>
     public string? GitHubToken { get; set; }
 
     /// <summary>
-    /// Address of a shared, already-running runtime (for example <c>tcp://host:port</c>).
-    /// When <see langword="null"/>, the SDK starts its bundled runtime.
+    /// Address of a shared, already-running runtime: <c>tcp://host:port</c>, <c>http(s)://host:port</c>,
+    /// <c>host:port</c>, or a loopback port number. When <see langword="null"/>, the SDK starts its bundled runtime.
     /// </summary>
     public string? Endpoint { get; set; }
 
@@ -64,7 +67,10 @@ public sealed class CopilotOptions
     /// </summary>
     public string ConnectionName { get; set; } = DefaultConnectionName;
 
-    /// <summary>MCP servers available to the agent, keyed by server name.</summary>
+    /// <summary>
+    /// MCP servers available to the agent, keyed by server name. Named agents inherit the default agent's servers
+    /// and can add or override entries.
+    /// </summary>
     public IDictionary<string, CopilotMcpServerOptions> McpServers { get; set; } =
         new Dictionary<string, CopilotMcpServerOptions>(StringComparer.OrdinalIgnoreCase);
 
