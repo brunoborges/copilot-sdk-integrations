@@ -19,7 +19,7 @@
     </licenses>
 
     <modules>
-        <module>../java-core</module>
+        <module>../core</module>
         <module>runtime</module>
         <module>deployment</module>
         <module>test</module>

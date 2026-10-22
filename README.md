@@ -46,14 +46,14 @@ framework's idioms:
 
 Each integration is a self-contained project in its own directory, with its own build,
 README, and documentation. Java integrations live under [`java/`](java/) and share the
-framework-neutral agent API and engine in [`java/java-core/`](java/java-core/), which both Maven builds
+framework-neutral agent API and engine in [`java/core/`](java/core/), which both Maven builds
 include as a reactor module. Shared repository files (license, CI workflows, and the
 documentation landing page) live at the root.
 
 ```
 .
 ├── java/
-│   ├── java-core/   # Shared Java agent API and engine (copilot-agent-core)
+│   ├── core/        # Shared Java agent API and engine (copilot-agent-core)
 │   ├── spring-boot/ # Spring Boot starter (Java, Maven)
 │   └── quarkus/     # Quarkus extension (Java, Maven)
 ├── dotnet/        # .NET integration for business apps (preview)

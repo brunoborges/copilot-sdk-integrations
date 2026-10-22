@@ -4,12 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      - 'java/java-core/**'
+      - 'java/core/**'
       - 'java/quarkus/**'
       - '.github/workflows/quarkus.yml'
   pull_request:
     paths:
-      - 'java/java-core/**'
+      - 'java/core/**'
       - 'java/quarkus/**'
       - '.github/workflows/quarkus.yml'
   workflow_dispatch:
@@ -33,6 +33,6 @@ jobs:
           cache: maven
           cache-dependency-path: |
             java/quarkus/**/pom.xml
-            java/java-core/pom.xml
+            java/core/pom.xml
       - name: Build
         run: ./mvnw --batch-mode --no-transfer-progress verify

@@ -28,7 +28,7 @@ jobs:
           cache-dependency-path: |
             java/spring-boot/**/pom.xml
             java/quarkus/**/pom.xml
-            java/java-core/pom.xml
+            java/core/pom.xml
       - uses: actions/setup-node@v7
         with:
           node-version: '22'

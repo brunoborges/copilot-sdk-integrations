@@ -27,7 +27,7 @@
     </licenses>
 
     <modules>
-        <module>../java-core</module>
+        <module>../core</module>
         <module>copilot-spring-boot-site-skin</module>
         <module>copilot-spring-boot-autoconfigure</module>
         <module>copilot-spring-boot-starter</module>
