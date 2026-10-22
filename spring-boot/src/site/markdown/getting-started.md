@@ -71,6 +71,34 @@ your own model provider without a Copilot subscription; see
 [BYOK providers](byok.html). An external
 server is another option; see [Client properties](configuration.html#client-properties).
 
+<a id="java-modules"></a>
+
+### Java modules
+
+Each library artifact ships a `module-info` and works on the class path or the
+module path. Only the packages listed below are exported; implementation
+packages such as `io.github.brunoborges.copilot.agent.internal` are not part of
+the API, and module-path code cannot compile against them.
+
+| Artifact | Module | Exported packages |
+| --- | --- | --- |
+| `copilot-spring-boot-autoconfigure` | `io.github.brunoborges.copilot.spring.boot.autoconfigure` | `io.github.brunoborges.copilot.agent`, `.autoconfigure`, `.actuate`, `.security` |
+| `copilot-spring-boot-reactor` | `io.github.brunoborges.copilot.spring.boot.reactor` | `io.github.brunoborges.copilot.reactor` |
+| `copilot-spring-boot-test` | `io.github.brunoborges.copilot.spring.boot.test` | `io.github.brunoborges.copilot.test`, `.test.testcontainers` |
+
+On the module path, open packages that hold agent interfaces, tool beans, and
+`@Configuration` classes to Spring and to the starter. The starter loads the
+SDK-generated `$$CopilotToolMeta` classes reflectively:
+
+```java
+module com.example.app {
+    requires io.github.brunoborges.copilot.spring.boot.autoconfigure;
+
+    opens com.example.app to spring.core, spring.beans, spring.context, spring.aop,
+            io.github.brunoborges.copilot.spring.boot.autoconfigure;
+}
+```
+
 <a id="quick-start"></a>
 
 ## Quick start

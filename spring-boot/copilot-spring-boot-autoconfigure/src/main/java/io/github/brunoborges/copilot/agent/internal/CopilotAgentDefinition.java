@@ -1,6 +1,5 @@
 package io.github.brunoborges.copilot.agent.internal;
 
-import java.beans.Introspector;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -26,6 +25,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 public record CopilotAgentDefinition(
         String name, String typeName, String model, String reasoningEffort, Duration responseTimeout,
@@ -45,7 +45,7 @@ public record CopilotAgentDefinition(
         var annotation = type.getAnnotation(CopilotAgent.class);
         String name = environment.resolveRequiredPlaceholders(annotation.name());
         if (name.isEmpty()) {
-            name = Introspector.decapitalize(type.getSimpleName());
+            name = StringUtils.uncapitalizeAsProperty(type.getSimpleName());
         }
         Assert.isTrue(name.matches("[A-Za-z][A-Za-z0-9._-]*"), "Invalid Copilot agent name on " + type.getName());
         return name;

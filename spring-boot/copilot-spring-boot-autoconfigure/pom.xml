@@ -107,6 +107,37 @@
                         <annotationProcessor>org.springframework.boot.configurationprocessor.ConfigurationMetadataAnnotationProcessor</annotationProcessor>
                         <annotationProcessor>com.github.copilot.tool.CopilotToolProcessor</annotationProcessor>
                     </annotationProcessors>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-configuration-processor</artifactId>
+                        </path>
+                        <path>
+                            <groupId>com.github</groupId>
+                            <artifactId>copilot-sdk-java</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Tests patch fixtures into the named module; open them to the frameworks that reflect on them. -->
+                    <argLine>
+                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.agent=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
+                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.agent.tools=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
+                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.agent.fixtures=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
+                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.agent.internal=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
+                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.bound=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
+                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.bound.callbacks=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
+                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.bound.fixtures=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
+                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.actuate=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
+                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.actuate.fixtures=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
+                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.autoconfigure=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
+                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.observation=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
+                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.security=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
+                    </argLine>
                 </configuration>
             </plugin>
         </plugins>

@@ -56,6 +56,23 @@
                     <annotationProcessors>
                         <annotationProcessor>com.github.copilot.tool.CopilotToolProcessor</annotationProcessor>
                     </annotationProcessors>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>com.github</groupId>
+                            <artifactId>copilot-sdk-java</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Tests patch fixtures into the named module; open them to the frameworks that reflect on them. -->
+                    <argLine>
+                        --add-opens io.github.brunoborges.copilot.spring.boot.test/io.github.brunoborges.copilot.test=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.autoconfigure,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.spring.boot.autoconfigure
+                        --add-opens io.github.brunoborges.copilot.spring.boot.test/io.github.brunoborges.copilot.test.app=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.autoconfigure,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.spring.boot.autoconfigure
+                    </argLine>
                 </configuration>
             </plugin>
         </plugins>
