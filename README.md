@@ -98,6 +98,13 @@ or supply credentials through an SDK-supported environment variable such as
 `COPILOT_GITHUB_TOKEN`. Never commit credentials. **Model requests consume your
 account's Copilot usage.**
 
+The Copilot SDK also supports
+[BYOK (bring your own key)](https://github.com/github/copilot-sdk/blob/main/docs/auth/byok.md),
+which uses your own model provider API keys (OpenAI, Azure OpenAI / Microsoft
+Foundry, Anthropic, Ollama, and other OpenAI-compatible endpoints) without a
+GitHub Copilot subscription. This starter does not yet expose BYOK provider
+settings as `copilot.*` properties; see the SDK documentation for configuration.
+
 ## Documentation
 
 | Topic | Chapter |
