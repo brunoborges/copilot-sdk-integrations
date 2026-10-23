@@ -36,7 +36,10 @@ public record CopilotAgentDefinition(
     };
 
     public static String name(Class<?> type, PropertyResolver environment) {
-        var annotation = type.getAnnotation(CopilotAgent.class);
+        return name(type, type.getAnnotation(CopilotAgent.class), environment);
+    }
+
+    private static String name(Class<?> type, CopilotAgent annotation, PropertyResolver environment) {
         String name = environment.resolveRequiredPlaceholders(annotation.name());
         if (name.isEmpty()) {
             name = uncapitalizeAsProperty(type.getSimpleName());
@@ -46,11 +49,20 @@ public record CopilotAgentDefinition(
     }
 
     public static CopilotAgentDefinition create(Class<?> type, BindingContext binding) {
+        return create(type, type.getAnnotation(CopilotAgent.class), binding);
+    }
+
+    /**
+     * Creates a definition from attributes supplied programmatically rather than read from {@code type}, for
+     * integrations that configure agents without an annotated interface (such as Camel endpoints). {@code type}
+     * still names the agent for session identity and selects {@code @CopilotAgentHooksFor} hooks.
+     */
+    public static CopilotAgentDefinition create(Class<?> type, CopilotAgent annotation, BindingContext binding) {
+        Assert.notNull(annotation, "@CopilotAgent attributes are required for " + type.getName());
         BeanLookup beans = binding.beans();
         PropertyResolver environment = binding.environment();
         CopilotAgentSettings properties = binding.agents();
-        var annotation = type.getAnnotation(CopilotAgent.class);
-        String name = name(type, environment);
+        String name = name(type, annotation, environment);
         String instructions = resolve(annotation.instructions(), environment);
         String resource = resolve(annotation.instructionsResource(), environment);
         String systemBean = resolve(annotation.systemMessageRef(), environment);

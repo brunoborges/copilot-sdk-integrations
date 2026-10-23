@@ -1,0 +1,38 @@
+name: Camel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'java/core/**'
+      - 'java/camel/**'
+      - '.github/workflows/camel.yml'
+  pull_request:
+    paths:
+      - 'java/core/**'
+      - 'java/camel/**'
+      - '.github/workflows/camel.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: java/camel
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: |
+            java/camel/**/pom.xml
+            java/core/pom.xml
+      - name: Build
+        run: ./mvnw --batch-mode --no-transfer-progress verify
