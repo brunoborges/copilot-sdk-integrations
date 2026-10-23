@@ -1,4 +1,4 @@
-import { CopilotConfigurationError, composeHooks, getCopilotContext, type CopilotAgentEvent, type CopilotContext, type ToolCallInfo, type ToolInput, type CopilotToolDefinition } from "@copilot-sdk-integrations/core";
+import { CopilotConfigurationError, composeHooks, getCopilotContext, type CopilotAgentEvent, type CopilotContext, type ToolCallInfo, type ToolInput, type CopilotToolDefinition } from "@copilot-sdk-integrations/agent-core";
 import { Inject, Injectable, Logger, Scope, type Type } from "@nestjs/common";
 import { ContextIdFactory, DiscoveryService, MetadataScanner, ModuleRef } from "@nestjs/core";
 import { COPILOT_CONTEXT_BRIDGE, EVENT_LISTENER_METADATA, HOOK_METADATA, TOOL_INTERCEPTORS_METADATA, TOOL_METADATA } from "./constants.js";

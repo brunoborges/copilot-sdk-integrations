@@ -1,5 +1,5 @@
 /**
- * Shared contracts for @copilot-sdk-integrations/core.
+ * Shared contracts for @copilot-sdk-integrations/agent-core.
  *
  * Every module in core, and the framework packages built on it, depend on these
  * types. Change them deliberately.

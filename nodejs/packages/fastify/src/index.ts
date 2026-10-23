@@ -20,4 +20,4 @@ export {
   copilotErrorCode,
   CLIENT_CLOSED_REQUEST,
   type CopilotHttpError,
-} from "@copilot-sdk-integrations/core";
+} from "@copilot-sdk-integrations/agent-core";

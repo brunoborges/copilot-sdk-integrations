@@ -1,8 +1,9 @@
 ---
-title: Getting started (NestJS)
+sites: nestjs
+title: NestJS module
 ---
 
-# Getting started (NestJS)
+# NestJS module
 
 **In this chapter**
 
@@ -29,7 +30,7 @@ npm run build
 In your application, the NestJS integration needs core, Zod, and the usual NestJS peers:
 
 ```sh
-npm install @copilot-sdk-integrations/nestjs @copilot-sdk-integrations/core zod
+npm install @copilot-sdk-integrations/nestjs @copilot-sdk-integrations/agent-core zod
 npm install @nestjs/common @nestjs/core reflect-metadata rxjs
 ```
 
@@ -101,7 +102,7 @@ import { z } from "zod";
 import {
   ConversationId, CopilotAgent, Message, P, Returns, UserMessage, implementedByCopilot,
 } from "@copilot-sdk-integrations/nestjs";
-import { permissions } from "@copilot-sdk-integrations/core";
+import { permissions } from "@copilot-sdk-integrations/agent-core";
 
 const Order = z.object({ id: z.string(), status: z.enum(["shipped", "pending"]) });
 

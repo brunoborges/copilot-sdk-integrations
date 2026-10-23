@@ -1,6 +1,6 @@
 import { afterEach } from "vitest";
 import type { UIMessageChunk } from "ai";
-import { createTestCopilot, type CreateTestCopilotOptions, type TestCopilot } from "@copilot-sdk-integrations/core/testing";
+import { createTestCopilot, type CreateTestCopilotOptions, type TestCopilot } from "@copilot-sdk-integrations/agent-core/testing";
 
 let current: TestCopilot[] = [];
 

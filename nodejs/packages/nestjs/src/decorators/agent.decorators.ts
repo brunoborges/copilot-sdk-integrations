@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { CopilotConfigurationError, type CopilotAgentDefinition, type PermissionPolicy, type StructuredSchema } from "@copilot-sdk-integrations/core";
+import { CopilotConfigurationError, type CopilotAgentDefinition, type PermissionPolicy, type StructuredSchema } from "@copilot-sdk-integrations/agent-core";
 import type { Type } from "@nestjs/common";
 import {
   AGENT_METADATA,

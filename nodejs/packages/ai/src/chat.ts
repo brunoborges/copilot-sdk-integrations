@@ -1,6 +1,6 @@
 import type { ServerResponse } from "node:http";
 import { createUIMessageStreamResponse, isToolUIPart, type UIMessage, type UIMessageChunk } from "ai";
-import { getCopilotContext, type AgentHandle, type CopilotAgentEvent, type SendOptions } from "@copilot-sdk-integrations/core";
+import { getCopilotContext, type AgentHandle, type CopilotAgentEvent, type SendOptions } from "@copilot-sdk-integrations/agent-core";
 import { defaultApprovalStore, type ApprovalOwner, type CopilotApprovalStore } from "./approvals.js";
 import {
   definedInit,

@@ -55,6 +55,7 @@ principal, and conversation id.
 | `resume-only` | `CopilotConversationNotFoundError` (HTTP `404`) | resumed |
 | `create-only` | created | `CopilotConversationExistsError` (HTTP `409`) |
 
+<!-- only:nestjs -->
 In NestJS, `CopilotAgents.create(Agent, id)` is `create-or-resume` and
 `CopilotAgents.bind(Agent, id, { mode })` defaults to `resume-only`. A method called directly
 with a `@ConversationId()` argument uses `create-or-resume`.
@@ -65,13 +66,29 @@ continue(@Param("id") id: string, @Body("text") text: string) {
   return this.agents.bind(SupportAgent, id).answer(text); // 404 for unknown conversations
 }
 ```
+<!-- /only -->
+<!-- only:fastify -->
+In Fastify, `request.copilot.agent(name).conversation(id)` is `resume-only` by default, and
+the plugin's error handler turns a missing conversation into a `404`:
+
+```ts
+app.post<{ Params: { id: string }; Body: { text: string } }>("/conversations/:id/messages", async (request) => ({
+  answer: await request.copilot.agent("support").conversation(request.params.id).send(request.body.text),
+}));
+```
+<!-- /only -->
 
 ## Deleting conversations
 
 ```ts
 await agent.deleteConversation("c1");                     // core
+<!-- only:nestjs -->
 await agents.delete(SupportAgent, "c1");                  // NestJS
 await agents.delete("support", "c1", { principal: "u1" }); // explicit principal
+<!-- /only -->
+<!-- only:fastify -->
+await request.copilot.agent("support").deleteConversation("c1"); // Fastify, scoped to the request's principal
+<!-- /only -->
 ```
 
 Deletion takes the conversation lock, so it waits for a running turn.
@@ -95,8 +112,14 @@ Each turn goes through, in order:
 
 - `responseTimeout` (default 5 minutes), or the per-call `timeout`, bounds the whole turn
   **including** time spent queued. On expiry the turn fails with `CopilotTimeoutError` (HTTP `504`).
+<!-- only:nestjs -->
 - An aborted `signal` fails the turn with `CopilotAbortedError` (HTTP `499`). In NestJS the
   request signal is aborted when the client disconnects.
+<!-- /only -->
+<!-- only:fastify -->
+- An aborted `signal` fails the turn with `CopilotAbortedError` (HTTP `499`). In Fastify,
+  `request.copilot` turns are aborted when the client disconnects.
+<!-- /only -->
 - On timeout or abort, the runtime session is aborted (`session.abort()`), so the model stops
   generating and tools stop being called.
 - Breaking out of a stream, or unsubscribing from an Observable, aborts the turn.

@@ -1,4 +1,4 @@
-import { defineAgent } from "@copilot-sdk-integrations/core";
+import { defineAgent } from "@copilot-sdk-integrations/agent-core";
 import Fastify from "fastify";
 import { describe, expect, it } from "vitest";
 import { copilotPlugin, type CopilotPluginOptions } from "../src/index.js";

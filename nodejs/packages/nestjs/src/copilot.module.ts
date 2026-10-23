@@ -1,4 +1,4 @@
-import type { Copilot, CopilotAgentDefinition } from "@copilot-sdk-integrations/core";
+import type { Copilot, CopilotAgentDefinition } from "@copilot-sdk-integrations/agent-core";
 import { Module, type DynamicModule, type Provider, type Type } from "@nestjs/common";
 import { APP_FILTER, APP_INTERCEPTOR, DiscoveryModule, HttpAdapterHost } from "@nestjs/core";
 import { COPILOT, COPILOT_CLIENT, getAgentToken } from "./constants.js";

@@ -1,6 +1,11 @@
 #!/usr/bin/env node
-// Static documentation site generator: renders site/markdown/*.md into site/dist/.
+// Static documentation site generator: renders site/markdown/*.md into one site per framework
+// (site/dist/nestjs, site/dist/fastify).
 // Usage: node site/build.mjs (from nodejs/), or `npm run site`.
+//
+// Pages are shared unless their front matter lists `sites: nestjs` or `sites: fastify`; `page:` overrides the
+// output name (e.g. `index-nestjs.md` -> `index.html`). Inside shared pages, wrap framework-specific Markdown
+// in `<!-- only:nestjs -->` ... `<!-- /only -->` (or `only:fastify`).
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,56 +14,84 @@ import { Marked } from "marked";
 const here = dirname(fileURLToPath(import.meta.url));
 const markdownDir = join(here, "markdown");
 const assetsDir = join(here, "assets");
-const outDir = join(here, "dist");
+const distDir = join(here, "dist");
 
-const version = JSON.parse(readFileSync(join(here, "..", "packages", "core", "package.json"), "utf8")).version;
-const sdkVersion = JSON.parse(readFileSync(join(here, "..", "packages", "core", "package.json"), "utf8")).dependencies["@github/copilot-sdk"].replace(/^\^/, "");
+const corePackage = JSON.parse(readFileSync(join(here, "..", "packages", "core", "package.json"), "utf8"));
+const version = corePackage.version;
+const sdkVersion = corePackage.dependencies["@github/copilot-sdk"].replace(/^\^/, "");
 
-const site = {
-  name: "Copilot SDK for Node.js",
-  description: "Guides and API reference for using the GitHub Copilot SDK with NestJS, Fastify, the Vercel AI SDK, and plain Node.js.",
-  links: [
-    { name: "GitHub", href: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/nodejs" },
-    { name: "Copilot Node SDK", href: "https://github.com/github/copilot-sdk/tree/main/nodejs" },
-  ],
-  menus: [
-    {
-      name: "Start here",
-      items: [
-        ["Documentation", "index"],
-        ["Getting started (NestJS)", "getting-started"],
-        ["Fastify plugin", "fastify"],
-        ["Core without a framework", "core"],
-      ],
-    },
-    {
-      name: "Build agents",
-      items: [
-        ["Agents", "agents"],
-        ["Tools", "tools"],
-        ["Tool governance and hooks", "governance"],
-        ["Conversations", "conversations"],
-        ["Context and per-user identity", "context-and-identity"],
-      ],
-    },
-    {
-      name: "Reference",
-      items: [
-        ["Streaming", "streaming"],
-        ["Vercel AI SDK", "ai-sdk"],
-        ["Configuration", "configuration"],
-        ["Testing", "testing"],
-      ],
-    },
-    {
-      name: "Operate",
-      items: [
-        ["Example applications", "examples"],
-        ["Operations", "operations"],
-      ],
-    },
-  ],
-  footer: `Copilot SDK integrations for Node.js &middot; ${version} &middot; Node.js 20.19+ / 22.12+ &middot; NestJS 11/12 &middot; Fastify 5 &middot; AI SDK 7 &middot; Copilot SDK ${sdkVersion}`,
+const sharedMenus = [
+  {
+    name: "Build agents",
+    items: [
+      ["Agents", "agents"],
+      ["Tools", "tools"],
+      ["Tool governance and hooks", "governance"],
+      ["Conversations", "conversations"],
+      ["Context and per-user identity", "context-and-identity"],
+    ],
+  },
+  {
+    name: "Reference",
+    items: [
+      ["Streaming", "streaming"],
+      ["Vercel AI SDK", "ai-sdk"],
+      ["Configuration", "configuration"],
+      ["Testing", "testing"],
+    ],
+  },
+  {
+    name: "Operate",
+    items: [
+      ["Example applications", "examples"],
+      ["Operations", "operations"],
+    ],
+  },
+];
+
+const sites = {
+  nestjs: {
+    name: "Copilot Agents for NestJS",
+    description: "Guides and API reference for building GitHub Copilot agents in NestJS applications.",
+    links: [
+      { name: "GitHub", href: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/nodejs/packages/nestjs" },
+      { name: "Copilot Node SDK", href: "https://github.com/github/copilot-sdk/tree/main/nodejs" },
+    ],
+    accent: { light: ["#e0234e", "#c41d43", "rgba(224, 35, 78, 0.08)", "rgba(224, 35, 78, 0.12)"], dark: ["#ff6b88", "#ff5577", "rgba(255, 107, 136, 0.14)", "rgba(255, 107, 136, 0.12)"] },
+    menus: [
+      {
+        name: "Start here",
+        items: [
+          ["Documentation", "index"],
+          ["NestJS module", "nestjs"],
+          ["Agent Core without a framework", "core"],
+        ],
+      },
+      ...sharedMenus,
+    ],
+    footer: `Copilot Agents for NestJS &middot; ${version} &middot; Node.js 20.19+ / 22.12+ &middot; NestJS 11/12 &middot; AI SDK 7 &middot; Copilot SDK ${sdkVersion}`,
+  },
+  fastify: {
+    name: "Copilot Agents for Fastify",
+    description: "Guides and API reference for building GitHub Copilot agents in Fastify applications.",
+    links: [
+      { name: "GitHub", href: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/nodejs/packages/fastify" },
+      { name: "Copilot Node SDK", href: "https://github.com/github/copilot-sdk/tree/main/nodejs" },
+    ],
+    accent: { light: ["#1f1f1f", "#000000", "rgba(0, 0, 0, 0.06)", "rgba(0, 0, 0, 0.08)"], dark: ["#f2f2f2", "#ffffff", "rgba(255, 255, 255, 0.1)", "rgba(255, 255, 255, 0.08)"] },
+    menus: [
+      {
+        name: "Start here",
+        items: [
+          ["Documentation", "index"],
+          ["Fastify plugin", "fastify"],
+          ["Agent Core without a framework", "core"],
+        ],
+      },
+      ...sharedMenus,
+    ],
+    footer: `Copilot Agents for Fastify &middot; ${version} &middot; Node.js 20.19+ / 22.12+ &middot; Fastify 5 &middot; AI SDK 7 &middot; Copilot SDK ${sdkVersion}`,
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -177,7 +210,7 @@ function parseFrontMatter(source) {
 // ---------------------------------------------------------------------------
 // Template
 
-const THEME_HEAD = `<script>
+const themeHead = (accent) => `<script>
   (() => {
     const param = new URLSearchParams(window.location.search).get("theme");
     const modes = ["system", "light", "dark"];
@@ -207,9 +240,9 @@ const THEME_HEAD = `<script>
   --cp-text: #242424;
   --cp-text-muted: #5c5c5c;
   --cp-text-soft: #6f6f6f;
-  --cp-accent: #e0234e;
-  --cp-accent-hover: #c41d43;
-  --cp-accent-soft: rgba(224, 35, 78, 0.08);
+  --cp-accent: ${accent.light[0]};
+  --cp-accent-hover: ${accent.light[1]};
+  --cp-accent-soft: ${accent.light[2]};
   --cp-accent-fg: #ffffff;
   --cp-success: #16a34a;
   --cp-danger: #dc2626;
@@ -220,7 +253,7 @@ const THEME_HEAD = `<script>
   --cp-panel: rgba(255, 255, 255, 0.86);
   --cp-panel-strong: rgba(255, 255, 255, 0.96);
   --cp-sheen: rgba(255, 255, 255, 0.55);
-  --cp-highlight: rgba(224, 35, 78, 0.12);
+  --cp-highlight: ${accent.light[3]};
   --cp-syntax-keyword: var(--cp-accent);
   --cp-syntax-comment: var(--cp-text-soft);
   --cp-syntax-string: #21673b;
@@ -238,9 +271,9 @@ html[data-theme="dark"] {
   --cp-text: #dedede;
   --cp-text-muted: #919191;
   --cp-text-soft: #b0b0b0;
-  --cp-accent: #ff6b88;
-  --cp-accent-hover: #ff5577;
-  --cp-accent-soft: rgba(255, 107, 136, 0.14);
+  --cp-accent: ${accent.dark[0]};
+  --cp-accent-hover: ${accent.dark[1]};
+  --cp-accent-soft: ${accent.dark[2]};
   --cp-accent-fg: #1a1a1a;
   --cp-success: #4ade80;
   --cp-danger: #f87171;
@@ -251,7 +284,7 @@ html[data-theme="dark"] {
   --cp-panel: rgba(41, 41, 41, 0.72);
   --cp-panel-strong: rgba(41, 41, 41, 0.96);
   --cp-sheen: rgba(255, 255, 255, 0.04);
-  --cp-highlight: rgba(255, 107, 136, 0.12);
+  --cp-highlight: ${accent.dark[3]};
   --cp-syntax-keyword: var(--cp-accent);
   --cp-syntax-comment: var(--cp-text-soft);
   --cp-syntax-string: #91d6a7;
@@ -260,7 +293,7 @@ html[data-theme="dark"] {
 }
 </style>`;
 
-function renderNav(current) {
+function renderNav(site, current) {
   return site.menus
     .map((menu) => {
       const items = menu.items
@@ -275,7 +308,7 @@ function renderNav(current) {
     .join("\n");
 }
 
-function renderPage({ page, title, body }) {
+function renderPage(site, { page, title, body }) {
   const links = site.links.map((l) => `      <a href="${escapeHtml(l.href)}">${escapeHtml(l.name)}</a>`).join("\n");
   const fullTitle = page === "index" ? site.name : `${title} – ${site.name}`;
   return `<!DOCTYPE html>
@@ -284,7 +317,7 @@ function renderPage({ page, title, body }) {
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="description" content="${escapeHtml(site.description)}"/>
-${THEME_HEAD}
+${themeHead(site.accent)}
   <script defer="defer" src="./js/site.js"></script>
   <title>${escapeHtml(fullTitle)}</title>
   <link rel="stylesheet" href="./css/site.css"/>
@@ -313,7 +346,7 @@ ${links}
   <div class="docs-layout">
     <aside id="leftColumn">
       <div id="navcolumn">
-${renderNav(page)}
+${renderNav(site, page)}
       </div>
     </aside>
     <main id="bodyColumn">
@@ -331,7 +364,7 @@ ${body}
 // ---------------------------------------------------------------------------
 // Link check: every relative link must point to a generated page and an existing id.
 
-function checkLinks(pages) {
+function checkLinks(pages, outDir) {
   const ids = new Map();
   for (const [file, html] of pages) {
     ids.set(file, new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1])));
@@ -361,33 +394,64 @@ function checkLinks(pages) {
 
 // ---------------------------------------------------------------------------
 
-function build() {
-  const sources = readdirSync(markdownDir).filter((f) => f.endsWith(".md"));
-  const navPages = site.menus.flatMap((m) => m.items.map(([, page]) => page));
-  const missing = navPages.filter((page) => !sources.includes(`${page}.md`));
-  if (missing.length > 0) throw new Error(`Navigation references missing pages: ${missing.join(", ")}`);
+// `<!-- only:<site> -->` ... `<!-- /only -->` blocks are kept for that site and dropped for the others.
+function filterForSite(markdown, siteId) {
+  return markdown.replace(/<!-- only:(\w+) -->\n?([\s\S]*?)<!-- \/only -->\n?/g, (_, only, content) =>
+    only === siteId ? content : "",
+  );
+}
 
-  rmSync(outDir, { recursive: true, force: true });
+function readSources() {
+  return readdirSync(markdownDir)
+    .filter((f) => f.endsWith(".md"))
+    .map((source) => {
+      const { meta, body } = parseFrontMatter(readFileSync(join(markdownDir, source), "utf8"));
+      const sitesOf = meta.sites ? meta.sites.split(/[,\s]+/).filter(Boolean) : Object.keys(sites);
+      for (const id of sitesOf) {
+        if (!sites[id]) throw new Error(`${source}: unknown site "${id}"`);
+      }
+      return { source, page: meta.page ?? source.slice(0, -3), meta, markdown: body, sites: sitesOf };
+    });
+}
+
+function buildSite(siteId, sources) {
+  const site = sites[siteId];
+  const outDir = join(distDir, siteId);
+  const selected = sources.filter((s) => s.sites.includes(siteId));
+  const pageNames = selected.map((s) => s.page);
+  const duplicate = pageNames.find((p, i) => pageNames.indexOf(p) !== i);
+  if (duplicate) throw new Error(`${siteId}: more than one source renders ${duplicate}.html`);
+  const navPages = site.menus.flatMap((m) => m.items.map(([, page]) => page));
+  const missing = navPages.filter((page) => !pageNames.includes(page));
+  if (missing.length > 0) throw new Error(`${siteId}: navigation references missing pages: ${missing.join(", ")}`);
+
   mkdirSync(outDir, { recursive: true });
   cpSync(assetsDir, outDir, { recursive: true });
 
   const pages = new Map();
-  for (const source of sources) {
-    const page = source.slice(0, -3);
-    const { meta, body: markdown } = parseFrontMatter(readFileSync(join(markdownDir, source), "utf8"));
-    const body = createMarked().parse(markdown);
+  for (const { page, meta, markdown } of selected) {
+    const filtered = filterForSite(markdown, siteId);
+    if (/<!-- \/?only/.test(filtered)) throw new Error(`${siteId}: unbalanced only block in ${page}`);
+    const body = createMarked().parse(filtered);
     const title = meta.title ?? /<h1[^>]*>(.*?)<\/h1>/.exec(body)?.[1]?.replace(/<[^>]+>/g, "") ?? page;
-    const html = renderPage({ page, title, body });
+    const html = renderPage(site, { page, title, body });
     pages.set(`${page}.html`, html);
     writeFileSync(join(outDir, `${page}.html`), html);
   }
 
-  const errors = checkLinks(pages);
+  const errors = checkLinks(pages, outDir);
   if (errors.length > 0) {
-    console.error(errors.join("\n"));
-    throw new Error(`${errors.length} broken link(s)`);
+    console.error(errors.map((e) => `${siteId}/${e}`).join("\n"));
+    throw new Error(`${errors.length} broken link(s) in the ${siteId} site`);
   }
   console.log(`Built ${pages.size} pages into ${outDir} (links checked)`);
+  return pages;
+}
+
+function build() {
+  const sources = readSources();
+  rmSync(distDir, { recursive: true, force: true });
+  for (const id of Object.keys(sites)) buildSite(id, sources);
 }
 
 try {

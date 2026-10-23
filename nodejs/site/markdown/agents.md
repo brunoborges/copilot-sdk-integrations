@@ -15,11 +15,15 @@ Every turn opens (or resumes) a Copilot session configured from it.
 - [BYOK providers](#byok-providers)
 - [MCP servers](#mcp-servers)
 - [Session customization](#session-customization)
+<!-- only:nestjs -->
 - [NestJS agent classes](#nestjs-agent-classes)
 - [Prompt templates](#prompt-templates)
 - [Return types](#return-types)
+<!-- /only -->
 - [Structured output](#structured-output)
+<!-- only:nestjs -->
 - [Functional agents in NestJS](#functional-agents-in-nestjs)
+<!-- /only -->
 - [Per-agent configuration overrides](#per-agent-configuration-overrides)
 
 ## Agent definitions
@@ -70,8 +74,15 @@ so they can be shared between handles, tests, and the AI SDK provider.
 ## Models and reasoning
 
 `model` and `reasoningEffort` are passed to the session. Use `copilot.client()` for raw SDK
-calls such as listing models. In NestJS, override them per environment with
+calls such as listing models.
+<!-- only:nestjs -->
+In NestJS, override them per environment with
 [`agents.<name>`](#per-agent-configuration-overrides) instead of editing decorators.
+<!-- /only -->
+<!-- only:fastify -->
+In Fastify, override them per environment with
+[`agentOverrides`](#per-agent-configuration-overrides) instead of editing definitions.
+<!-- /only -->
 
 ## BYOK providers
 
@@ -86,8 +97,10 @@ defineAgent({
 ```
 
 `type` is `openai` (default, any OpenAI-compatible API), `azure`, or `anthropic`; local
-servers such as Ollama need only `baseUrl`. In NestJS, declare named providers once and
-reference them by name:
+servers such as Ollama need only `baseUrl`.
+<!-- only:nestjs -->
+
+In NestJS, declare named providers once and reference them by name:
 
 ```ts
 CopilotModule.forRoot({
@@ -99,6 +112,7 @@ export abstract class AdvisorAgent { /* ... */ }
 ```
 
 An unknown provider name fails at bootstrap.
+<!-- /only -->
 
 ## MCP servers
 
@@ -132,14 +146,19 @@ mcpServers: {
 ```
 
 MCP tool calls go through the
-[permission policy](governance.md). In NestJS, define servers once in the module's
+[permission policy](governance.md).
+<!-- only:nestjs -->
+In NestJS, define servers once in the module's
 `mcpServers` option and list their names in `@CopilotAgent({ mcpServers: ["github"] })`.
+<!-- /only -->
 
 ## Session customization
 
 `configureSession(config, context)` receives the final SDK `SessionConfig` and the
 [`CopilotContext`](context-and-identity.md) and returns the config to use. It must not change
-`sessionId` or remove the permission handler; both are rejected. In NestJS, providers bound
+`sessionId` or remove the permission handler; both are rejected.
+<!-- only:nestjs -->
+In NestJS, providers bound
 to `COPILOT_SESSION_CUSTOMIZER` run after it with `(config, context, agentDefinition)`.
 
 ## NestJS agent classes
@@ -227,6 +246,7 @@ template files into the build output, or point `templatesDir` at the source fold
 (`import { Observable } from "rxjs"`), or set `{ stream: "observable" }` explicitly.
 `@Returns` cannot be combined with a streaming result.
 
+<!-- /only -->
 ## Structured output
 
 ```ts
@@ -236,8 +256,9 @@ const order = await agent.send({ prompt: "Extract the order from: ...", schema: 
 
 The schema is converted to JSON Schema and sent as the response format; the reply is parsed
 and validated. Non-object schemas are wrapped as `{ value }` on the wire and unwrapped for you.
-Invalid replies raise `CopilotOutputValidationError` (HTTP `502` in NestJS).
+Invalid replies raise `CopilotOutputValidationError` (HTTP [`502`](operations.md#http-error-mapping)).
 
+<!-- only:nestjs -->
 ## Functional agents in NestJS
 
 Plain `defineAgent()` definitions can be registered too, and injected as core `AgentHandle`s:
@@ -256,8 +277,10 @@ export class TicketsService {
 
 The injection token is `getAgentToken("triage")`.
 
+<!-- /only -->
 ## Per-agent configuration overrides
 
+<!-- only:nestjs -->
 The module option `agents.<name>` overrides decorator values per environment. It accepts
 `description`, `instructions`, `model`, `reasoningEffort`, `provider` (name or inline),
 `mcpServers` (names or inline), `availableTools`, `excludedTools`, and `builtInTools`.
@@ -267,3 +290,17 @@ CopilotModule.forRoot({
   agents: { support: { model: "claude-sonnet-4.5", provider: "foundry" } },
 });
 ```
+<!-- /only -->
+<!-- only:fastify -->
+The plugin option `agentOverrides` overrides definition fields by agent name, for example per
+environment, without editing the shared `defineAgent()` definitions. `fastify.copilot.agents()`
+returns the definitions with the overrides applied, and overrides for unknown agent names are
+logged as a warning when the app is ready.
+
+```ts
+await app.register(copilotPlugin, {
+  agents: [support],
+  agentOverrides: { support: { model: "claude-sonnet-4.5" } },
+});
+```
+<!-- /only -->

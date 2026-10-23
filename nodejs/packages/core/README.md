@@ -1,9 +1,9 @@
-# @copilot-sdk-integrations/core
+# @copilot-sdk-integrations/agent-core
 
-Framework-agnostic integration layer for the [GitHub Copilot SDK](https://github.com/github/copilot-sdk) for Node.js. It manages one runtime client per application (lazy start, admission limits, timeouts, graceful shutdown, restart after a crash), declarative agents with Zod-typed tools, permission policies, conversations, streaming events, and a scripted test runtime. [`@copilot-sdk-integrations/nestjs`](../nestjs) and [`@copilot-sdk-integrations/ai`](../ai) are built on it; see [`DESIGN.md`](../../DESIGN.md) for the full design.
+Agent Core: the framework-agnostic integration layer for the [GitHub Copilot SDK](https://github.com/github/copilot-sdk) for Node.js. It manages one runtime client per application (lazy start, admission limits, timeouts, graceful shutdown, restart after a crash), declarative agents with Zod-typed tools, permission policies, conversations, streaming events, and a scripted test runtime. [`@copilot-sdk-integrations/nestjs`](../nestjs), [`@copilot-sdk-integrations/fastify`](../fastify), and [`@copilot-sdk-integrations/ai`](../ai) are built on it; see [`DESIGN.md`](../../DESIGN.md) for the full design.
 
 ```sh
-npm install @copilot-sdk-integrations/core zod
+npm install @copilot-sdk-integrations/agent-core zod
 ```
 
 The package is ESM-only. CommonJS apps load it with `require()` on Node `^20.19` or `>=22.12` (`require(esm)`).
@@ -13,7 +13,7 @@ The package is ESM-only. CommonJS apps load it with `require()` on Node `^20.19`
 Create one `Copilot` per application and share it. The runtime starts on the first turn.
 
 ```ts
-import { createCopilot } from "@copilot-sdk-integrations/core";
+import { createCopilot } from "@copilot-sdk-integrations/agent-core";
 
 const copilot = createCopilot({
   limits: { maxConcurrentTurns: 8, maxQueuedTurns: 32 },
@@ -31,7 +31,7 @@ process.on("SIGTERM", () => copilot.stop({ gracePeriodMs: 30_000 }));
 
 ```ts
 import { z } from "zod";
-import { defineAgent, defineCopilotTool, permissions } from "@copilot-sdk-integrations/core";
+import { defineAgent, defineCopilotTool, permissions } from "@copilot-sdk-integrations/agent-core";
 
 const lookupOrder = defineCopilotTool({
   name: "lookupOrder",
@@ -80,7 +80,7 @@ Every call accepts `signal`, `timeout`, extra `tools`, and `context`. Wrap reque
 Policies decide each runtime permission request (`approve`, `deny`, `ask-user`, or `abstain`):
 
 ```ts
-import { PermissionKinds, permissions } from "@copilot-sdk-integrations/core";
+import { PermissionKinds, permissions } from "@copilot-sdk-integrations/agent-core";
 
 permissions.denyAll();                          // the default
 permissions.allowReadOnly();
@@ -95,10 +95,10 @@ permissions.allOf(permissions.allowCustomTools(), (request, { context }) => (con
 
 ## Testing
 
-`@copilot-sdk-integrations/core/testing` replaces the runtime with a scripted, in-process one: no CLI, no network.
+`@copilot-sdk-integrations/agent-core/testing` replaces the runtime with a scripted, in-process one: no CLI, no network.
 
 ```ts
-import { createTestCopilot } from "@copilot-sdk-integrations/core/testing";
+import { createTestCopilot } from "@copilot-sdk-integrations/agent-core/testing";
 
 await using test = createTestCopilot({
   script: (rt) => rt.onPrompt(/order/).callTool("lookupOrder", { id: "42" }).thenReply("It shipped."),

@@ -4,12 +4,12 @@ title: Examples
 
 # Examples
 
-Three runnable apps live in
+Runnable apps live in
 [`nodejs/examples`](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/nodejs/examples).
-All three host a "Node.js advisor" agent, the Node.js counterpart of the Spring Boot
-`spring-advisor` sample, and all have tests that run without credentials or a runtime
-process.
+Each hosts a "Node.js advisor" agent, the Node.js counterpart of the Spring Boot
+`spring-advisor` sample, and has tests that run without credentials or a runtime process.
 
+<!-- only:nestjs -->
 ## NestJS chat
 
 [`examples/nestjs-chat`](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/nodejs/examples/nestjs-chat)
@@ -28,6 +28,8 @@ that CommonJS Nest apps can use the ESM packages.
 | A `useChat` endpoint with tool approvals | [Vercel AI SDK](ai-sdk.md#tool-approvals) |
 | Terminus health check and HTTP error mapping | [Operations](operations.md) |
 | End-to-end tests with `CopilotTestingModule` | [Testing](testing.md#nestjs-tests) |
+<!-- /only -->
+<!-- only:fastify -->
 
 ## Fastify
 
@@ -45,20 +47,22 @@ endpoints as the Express example plus a raw-events SSE route.
 | A `useChat` endpoint with owner-scoped tool approvals (`reply.copilotChat`) | [Fastify plugin](fastify.md#usechat-and-approvals) |
 | The plugin's health route | [Fastify plugin](fastify.md#health-info-and-under-pressure) |
 | Tests with `buildCopilotTestApp` and `app.inject()` | [Fastify plugin](fastify.md#testing) |
+<!-- /only -->
 
 ## Express
 
+The Express example shows Agent Core without a framework integration.
 [`examples/express`](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/nodejs/examples/express)
-is a plain Express 5 app that uses only `@copilot-sdk-integrations/core` and
+is a plain Express 5 app that uses only `@copilot-sdk-integrations/agent-core` and
 `@copilot-sdk-integrations/ai`.
 
 | Feature | Docs |
 | --- | --- |
-| `createCopilot` with lazy start and graceful shutdown | [Core](core.md) |
+| `createCopilot` with lazy start and graceful shutdown | [Agent Core](core.md) |
 | `defineAgent` with instructions, tools, and a permission policy | [Agents](agents.md) |
 | A core tool (`defineCopilotTool` with Zod) and an AI SDK `tool()` with `needsApproval` | [Tools](tools.md) |
 | Per-user identity passed as turn context and read by tools | [Context and identity](context-and-identity.md) |
-| A `useChat` endpoint, a one-shot SSE stream, and a request/response endpoint | [Vercel AI SDK](ai-sdk.md#express-and-nestjs) |
+| A `useChat` endpoint, a one-shot SSE stream, and a request/response endpoint | [Vercel AI SDK](ai-sdk.md#express) |
 | Health without starting the runtime | [Operations](operations.md#health) |
 | Tests with `createTestCopilot` | [Testing](testing.md#core-tests) |
 
@@ -71,9 +75,15 @@ its prerequisites, environment variables, and endpoints:
 cd nodejs
 npm install
 npm run build                          # packages and examples
-npm start -w examples/express          # or: examples/fastify, examples/nestjs-chat
+<!-- only:nestjs -->
+npm start -w examples/nestjs-chat      # or: examples/express
 npm run dev -w examples/nestjs-chat/web  # the chat UI, proxying /api to the NestJS app
-npm test -w examples/express           # or: examples/fastify, examples/nestjs-chat
+npm test -w examples/nestjs-chat       # or: examples/express
+<!-- /only -->
+<!-- only:fastify -->
+npm start -w examples/fastify          # or: examples/express
+npm test -w examples/fastify           # or: examples/express
+<!-- /only -->
 ```
 
 Without a token, the examples use the user logged in to the Copilot CLI. Their tests use the

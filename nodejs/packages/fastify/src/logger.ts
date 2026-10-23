@@ -1,4 +1,4 @@
-import type { CopilotLogger } from "@copilot-sdk-integrations/core";
+import type { CopilotLogger } from "@copilot-sdk-integrations/agent-core";
 import type { FastifyBaseLogger } from "fastify";
 
 /** Adapts a Fastify (pino) logger to the core `CopilotLogger` interface. */

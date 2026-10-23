@@ -16,7 +16,7 @@ import {
   type PermissionResponse,
   type StructuredSchema,
   type ToolInput,
-} from "@copilot-sdk-integrations/core";
+} from "@copilot-sdk-integrations/agent-core";
 import { Inject, Injectable, type OnModuleInit, type Type } from "@nestjs/common";
 import { ModuleRef } from "@nestjs/core";
 import { Observable } from "rxjs";

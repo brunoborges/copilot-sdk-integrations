@@ -1,4 +1,4 @@
-import type { PermissionResponse } from "@copilot-sdk-integrations/core";
+import type { PermissionResponse } from "@copilot-sdk-integrations/agent-core";
 import type { TurnPump } from "./ui-stream.js";
 
 export interface CopilotApprovalStoreOptions {

@@ -1,4 +1,4 @@
-import { runWithCopilotContext, type CopilotContext } from "@copilot-sdk-integrations/core";
+import { runWithCopilotContext, type CopilotContext } from "@copilot-sdk-integrations/agent-core";
 import { Inject, Injectable, type CallHandler, type ExecutionContext, type NestInterceptor } from "@nestjs/common";
 import { Observable } from "rxjs";
 import { COPILOT_MODULE_OPTIONS } from "./copilot.module-definition.js";

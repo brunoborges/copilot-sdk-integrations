@@ -15,14 +15,19 @@ v7 (`ai@^7`):
   `streamText` can run on Copilot agents. `createCopilotAgent` returns an AI SDK `Agent`.
 
 ```sh
-npm install @copilot-sdk-integrations/ai @copilot-sdk-integrations/core ai
+npm install @copilot-sdk-integrations/ai @copilot-sdk-integrations/agent-core ai
 ```
 
 **In this chapter**
 
 - [Chat UIs with useChat](#chat-uis-with-usechat)
-- [Express and NestJS](#express-and-nestjs)
+- [Express](#express)
+<!-- only:nestjs -->
+- [NestJS](#nestjs)
+<!-- /only -->
+<!-- only:fastify -->
 - [Fastify](#fastify)
+<!-- /only -->
 - [Tool approvals](#tool-approvals)
 - [UI message stream mapping](#ui-message-stream-mapping)
 - [AI SDK provider](#ai-sdk-provider)
@@ -34,7 +39,7 @@ A Next.js route handler:
 
 ```ts
 // app/api/chat/route.ts
-import { createCopilot, defineAgent, permissions } from "@copilot-sdk-integrations/core";
+import { createCopilot, defineAgent, permissions } from "@copilot-sdk-integrations/agent-core";
 import { createCopilotChatResponse } from "@copilot-sdk-integrations/ai";
 import type { UIMessage } from "ai";
 
@@ -71,35 +76,43 @@ Omit `conversationId` for an ephemeral turn.
 | `tools`, `context`, `timeout` | As for `agent.send()`. |
 | `sendReasoning`, `sendStart`, `sendFinish`, `dynamicTools`, `messageMetadata`, `onError`, `generateId` | Stream options; see [the mapping](#ui-message-stream-mapping). |
 
-## Express and NestJS
+## Express
 
 `pipeCopilotChatToResponse(res, options)` writes the stream to a Node.js `ServerResponse`:
 
 ```ts
 import { pipeCopilotChatToResponse } from "@copilot-sdk-integrations/ai";
 
-// Express
 app.post("/api/chat", express.json(), async (req, res) => {
   await pipeCopilotChatToResponse(res, { agent: copilot.agent(support), messages: req.body.messages, conversationId: req.body.id });
 });
+```
 
-// NestJS
+Cancelling the stream, for example when the browser disconnects, aborts the Copilot turn.
+
+<!-- only:nestjs -->
+## NestJS
+
+`pipeCopilotChatToResponse` works with the Express response that NestJS injects with `@Res()`:
+
+```ts
 @Post("chat")
 async chat(@Body() body: { id: string; messages: UIMessage[] }, @Res() res: Response) {
   await pipeCopilotChatToResponse(res, { agent: this.copilot.agent(support), messages: body.messages, conversationId: body.id });
 }
 ```
 
-In NestJS, inject the core instance with `@InjectCopilot()` and pass a definition, or use the
-`AgentHandle` of a functional agent (`@InjectAgent("support")`). Cancelling the stream, for
-example when the browser disconnects, aborts the Copilot turn.
-
+Inject the core instance with `@InjectCopilot()` and pass a definition, or use the
+`AgentHandle` of a functional agent (`@InjectAgent("support")`).
+<!-- /only -->
+<!-- only:fastify -->
 ## Fastify
 
 The [Fastify plugin](fastify.md#usechat-and-approvals)'s `./ai` entry point wraps these
 helpers: `reply.copilotChat({ agent: "support" })` answers a `useChat` request with the request's
 context and disconnect signal, a per-user conversation id, and an app-wide approval store, and
 `reply.copilotUIStream(events)` streams any event iterable.
+<!-- /only -->
 
 ## Tool approvals
 

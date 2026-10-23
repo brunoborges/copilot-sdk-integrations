@@ -1,5 +1,5 @@
-import { defineAgent, type CopilotAgentEvent } from "@copilot-sdk-integrations/core";
-import { parseSse } from "@copilot-sdk-integrations/core/testing";
+import { defineAgent, type CopilotAgentEvent } from "@copilot-sdk-integrations/agent-core";
+import { parseSse } from "@copilot-sdk-integrations/agent-core/testing";
 import { request } from "node:http";
 import { describe, expect, it } from "vitest";
 import { setup, waitFor } from "./helpers.js";

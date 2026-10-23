@@ -1,5 +1,5 @@
 import type { CopilotApprovalStore } from "@copilot-sdk-integrations/ai";
-import { getCopilotContext, type Copilot, type CopilotOptions } from "@copilot-sdk-integrations/core";
+import { getCopilotContext, type Copilot, type CopilotOptions } from "@copilot-sdk-integrations/agent-core";
 import { copilotPlugin } from "@copilot-sdk-integrations/fastify";
 import { copilotAiPlugin, type CopilotChatBody } from "@copilot-sdk-integrations/fastify/ai";
 import Fastify, { type FastifyInstance, type FastifyRequest, type FastifyServerOptions } from "fastify";
