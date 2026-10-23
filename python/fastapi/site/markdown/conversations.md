@@ -28,6 +28,42 @@ conversation doesn't exist. `@prompt` methods accept a `conversation_id=` keywor
 Each call opens the session, sends one message, waits for the reply, and disconnects. Nothing
 is held open between requests, so any worker process can continue any conversation.
 
+## Listing, reading and deleting sessions
+
+`copilot.session_store` returns a `CopilotSessionStore` for administrative work across
+conversations, for example a chat history endpoint. Use it as a dependency. Every method has
+a blocking variant without the `a` prefix.
+
+```python
+from copilot_fastapi import CopilotSessionStore
+
+Sessions = Annotated[CopilotSessionStore, Depends(copilot.session_store)]
+
+@app.get("/chats/{chat_id}")
+async def history(chat_id: str, agent: Support, sessions: Sessions):
+    messages = await sessions.aget_messages(sessions.session_id_for(agent, chat_id))
+    if messages is None:
+        raise HTTPException(404)
+    return [{"role": m.role, "content": m.content} for m in messages]
+```
+
+- `alist()`: local session metadata, most recently modified first.
+- `aget(id)` / `aexists(id)`: metadata or `None`, and a boolean.
+- `aget_messages(id)`: user and assistant messages read from the persisted history without
+  resuming the session. Tool calls and sub-agent messages are skipped.
+- `adelete(id)`: `False` if the session did not exist. It waits for a turn in flight on that
+  session and removes the session's working directory.
+- `session_id_for(agent, conversation_id)`: an agent instance supplies its own user; an agent
+  class or name takes `user=`.
+
+## Removing old sessions
+
+Cleanup is off by default. Set `COPILOT_SESSIONS__MAX_AGE` and the lifespan runs a background
+task that deletes sessions created by this integration (their IDs start with `agent-`) that
+have not been modified for that long. Remote sessions and sessions with a turn in flight are
+never deleted, and a sweep never starts the runtime; see
+[Configuration](configuration.md#session-cleanup).
+
 ## Partitioning by user
 
 The runtime session ID is a hash of the agent class, the agent name, the conversation ID, and a

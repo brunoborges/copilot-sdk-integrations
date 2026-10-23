@@ -208,5 +208,53 @@ public sealed class OptionsTests
         Assert.Null(config.SystemMessage);
         Assert.Null(config.McpServers);
         Assert.Null(config.Provider);
+        Assert.Null(config.ToolSearch);
+    }
+
+    [Fact]
+    public void ToolSearch_BindsFromConfiguration_ForNamedAgents()
+    {
+        using var sp = TestHost.Build(
+            s => { s.AddCopilot(); s.AddCopilot("triage"); },
+            new()
+            {
+                ["Copilot:ToolSearch:DeferThreshold"] = "50",
+                ["Copilot:Agents:triage:ToolSearch:Enabled"] = "true",
+                ["Copilot:Agents:triage:ToolSearch:DeferThreshold"] = "10",
+            });
+
+        var d = sp.GetOptions().ToolSearch;
+        var t = sp.GetOptions("triage").ToolSearch;
+
+        Assert.Equal((null, 50), (d.Enabled, d.DeferThreshold));
+        Assert.Equal((true, 10), (t.Enabled, t.DeferThreshold));
+    }
+
+    [Fact]
+    public void SessionConfigurator_MapsToolSearch_ToFreshConfigPerSession()
+    {
+        using var sp = TestHost.Build(s => s.AddCopilot(o => o.ToolSearch = new() { Enabled = true, DeferThreshold = 12 }));
+        var configurator = new CopilotOptionsSessionConfigurator(sp.GetRequiredService<IOptionsMonitor<CopilotOptions>>());
+
+        var created = new SessionConfig();
+        var resumed = new ResumeSessionConfig();
+        configurator.Configure(Options.DefaultName, created, sp);
+        configurator.Configure(Options.DefaultName, resumed, sp);
+
+        Assert.Equal((true, 12), (created.ToolSearch!.Enabled, created.ToolSearch.DeferThreshold));
+        Assert.Equal((true, 12), (resumed.ToolSearch!.Enabled, resumed.ToolSearch.DeferThreshold));
+        Assert.NotSame(created.ToolSearch, resumed.ToolSearch);
+    }
+
+    [Fact]
+    public void SessionConfigurator_MapsToolSearch_WhenOnlyEnabledIsSet()
+    {
+        using var sp = TestHost.Build(s => s.AddCopilot(), new() { ["Copilot:ToolSearch:Enabled"] = "false" });
+
+        var config = new SessionConfig();
+        new CopilotOptionsSessionConfigurator(sp.GetRequiredService<IOptionsMonitor<CopilotOptions>>())
+            .Configure(Options.DefaultName, config, sp);
+
+        Assert.Equal((false, null), (config.ToolSearch!.Enabled, config.ToolSearch.DeferThreshold));
     }
 }

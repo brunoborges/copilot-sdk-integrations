@@ -8,10 +8,11 @@ set as JSON, for example ``COPILOT_AGENTS='{"support": {"model": "gpt-5"}}'``.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, SecretStr, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, PositiveInt, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Connection = Literal["stdio", "uri", "tcp", "inprocess"]
@@ -58,6 +59,55 @@ class DefaultSettings(BaseModel):
     working_directory: str = "isolated"
 
 
+class SessionSettings(BaseModel):
+    """Session retention. Cleanup is off unless ``max_age`` is set.
+
+    Durations accept seconds or ISO 8601 (``COPILOT_SESSIONS__MAX_AGE=P7D``).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    max_age: timedelta | None = Field(
+        default=None, description="Delete sessions created by this app that were not modified within this age"
+    )
+    cleanup_interval: timedelta | None = Field(
+        default=None, description="Time between sweeps; defaults to half of max_age, between 1 minute and 1 hour"
+    )
+
+    @field_validator("max_age", "cleanup_interval", mode="before")
+    @classmethod
+    def _seconds(cls, value: object) -> object:
+        if isinstance(value, str):
+            try:
+                return float(value)
+            except ValueError:
+                return value
+        return value
+
+    @field_validator("max_age", "cleanup_interval")
+    @classmethod
+    def _positive(cls, value: timedelta | None) -> timedelta | None:
+        if value is not None and value <= timedelta(0):
+            raise ValueError("must be a positive duration")
+        return value
+
+
+class ToolSearchSettings(BaseModel):
+    """Runtime tool search override; unset fields keep the runtime default."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool | None = None
+    defer_threshold: PositiveInt | None = None
+
+    @field_validator("defer_threshold", mode="before")
+    @classmethod
+    def _reject_bool(cls, value: Any) -> Any:
+        if isinstance(value, bool):
+            raise ValueError("defer_threshold must be an integer, not a bool")
+        return value
+
+
 class AgentOverrides(BaseModel):
     """Per-agent overrides; only fields that are set replace the agent's class attributes."""
 
@@ -74,16 +124,21 @@ class AgentOverrides(BaseModel):
     excluded_tools: list[str] | None = None
     excluded_built_in_agents: list[str] | None = None
     built_in_tools: bool | None = None
+    tool_search: ToolSearchSettings | None = None
     working_directory: str | None = None
     additional_directories: list[str] | None = None
     permissions: str | dict[str, Any] | None = None
     hooks: list[str] | None = None
     token_resolver: str | None = None
     timeout: PositiveFloat | None = None
+    message_source: str | None = None
 
     def values(self) -> Mapping[str, Any]:
         """The fields explicitly set."""
-        return {name: getattr(self, name) for name in self.model_fields_set}
+        values = {name: getattr(self, name) for name in self.model_fields_set}
+        if isinstance(values.get("tool_search"), ToolSearchSettings):
+            values["tool_search"] = values["tool_search"].model_dump(exclude_unset=True, exclude_none=True)
+        return values
 
 
 class CopilotSettings(BaseSettings):
@@ -99,6 +154,7 @@ class CopilotSettings(BaseSettings):
     runtime: RuntimeSettings = Field(default_factory=RuntimeSettings)
     auth: AuthSettings = Field(default_factory=AuthSettings)
     defaults: DefaultSettings = Field(default_factory=DefaultSettings)
+    sessions: SessionSettings = Field(default_factory=SessionSettings)
     mcp_servers: dict[str, dict[str, Any]] = Field(default_factory=dict)
     providers: dict[str, dict[str, Any]] = Field(default_factory=dict)
     agents: dict[str, AgentOverrides] = Field(default_factory=dict)

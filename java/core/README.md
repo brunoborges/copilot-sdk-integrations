@@ -6,10 +6,13 @@ the [Spring Boot starter](../spring-boot/), the [Quarkus extension](../quarkus/)
 [Micronaut integration](../micronaut/).
 
 - `io.github.brunoborges.copilot.agent`: the public API (`@CopilotAgent`, `CopilotAgents`,
-  `AgentConversation`, hooks, telemetry, and related types).
+  `AgentConversation`, hooks, telemetry, and related types), plus `CopilotSessionStore` for
+  listing, reading, and deleting the agents' persisted sessions.
 - `io.github.brunoborges.copilot.agent.internal`: the shared engine (agent definitions,
   proxies, invocation, governance, tool/MCP/provider binding). Frameworks plug in through
-  `BindingContext` and `BeanLookup`. This package is not a supported API.
+  `BindingContext` and `BeanLookup`. `DefaultCopilotSessionStore` and
+  `CopilotSessionCleaner` implement the session store and the opt-in age-based cleanup
+  that each framework schedules. This package is not a supported API.
 
 The module has no Maven wrapper of its own; each integration build includes it as a
 reactor module (`<module>../core</module>`):
@@ -55,3 +58,13 @@ opens its own fresh session.
   Quarkus `@Scheduled` method, a Micronaut `@Scheduled` job, or a Camel route bean
   (`bean:copilotLoops`). With `iterationTimeout`, iterations run on a virtual thread and
   `ThreadLocal` context is not propagated.
+
+## Error-recovery hooks
+
+`CopilotErrorRecoveryHooks` is an opt-in `CopilotAgentHooks` implementation based on the Copilot SDK
+cookbook's [error-recovery recipe](https://github.com/github/awesome-copilot/blob/main/cookbook/copilot-sdk/python/error-recovery-hooks.md).
+It sorts tool failures by phrase lists (permission denied, shell error, tool failure), adds a
+"keep going" note as `additionalContext`, and stops after a configurable number of consecutive
+failures of the same tool. Build it with `CopilotErrorRecoveryHooks.builder()` and register it like any
+hooks bean; Spring Boot also offers `copilot.error-recovery.enabled=true`. The Java SDK has no
+error-occurred hook, so transient model/runtime errors cannot be retried from Java.

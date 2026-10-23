@@ -82,11 +82,14 @@ alternative.
 
 `CopilotSettings` reads `COPILOT_*` environment variables (`__` for nesting) and `.env`.
 It is grouped into `runtime`, `auth`, `defaults`, `mcp_servers`, `providers`, `agents`,
-`hooks` and `telemetry`, mirroring Django's `COPILOT` setting.
+`hooks`, `sessions` and `telemetry`, mirroring Django's `COPILOT` setting.
 
 - Per-agent overrides use `extra="forbid"`, so typos fail at startup.
 - Permission mappings accept lower-case keys.
 - Secrets are `SecretStr` values.
+- `sessions.max_age` (off by default) makes the lifespan run `SessionCleanup.run()` as an
+  asyncio task, cancelled on shutdown. `copilot.session_store` is a dependency returning a
+  `CopilotSessionStore` (list, read history without resuming, delete).
 
 ## 5. Identity and partitioning
 

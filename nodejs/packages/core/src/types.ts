@@ -19,6 +19,8 @@ import type {
   SessionHooks,
   SystemMessageConfig,
   Tool as SdkTool,
+  MessageSource,
+  ToolSearchConfig,
 } from "@github/copilot-sdk";
 
 // ---------------------------------------------------------------------------
@@ -28,8 +30,8 @@ import type {
 /** The subset of `CopilotSession` the core depends on. */
 export interface SessionLike {
   readonly sessionId: string;
-  send(options: { prompt: string; mode?: "enqueue" | "immediate" }): Promise<string>;
-  sendAndWait(options: { prompt: string }, responseSchema: StructuredSchema<unknown>, timeout?: number): Promise<unknown>;
+  send(options: { prompt: string; mode?: "enqueue" | "immediate"; source?: MessageSource }): Promise<string>;
+  sendAndWait(options: { prompt: string; source?: MessageSource }, responseSchema: StructuredSchema<unknown>, timeout?: number): Promise<unknown>;
   on(handler: (event: SessionEvent) => void): () => void;
   abort(): Promise<void>;
   disconnect(): Promise<void>;
@@ -44,6 +46,17 @@ export interface ClientLike {
   resumeSession(sessionId: string, config: ResumeSessionConfig): Promise<SessionLike>;
   deleteSession(sessionId: string): Promise<void>;
   getSessionMetadata?(sessionId: string): Promise<unknown | undefined>;
+  /** Lists persisted sessions (SDK `SessionMetadata`). Required by `copilot.sessions.list()` and the session cleanup. */
+  listSessions?(): Promise<unknown[]>;
+  /**
+   * Server RPC surface. `copilot.sessions.getMessages()` uses `rpc.sessions.readPersistedEvents` to
+   * read a session's history without resuming it.
+   */
+  readonly rpc?: {
+    readonly sessions?: {
+      readPersistedEvents?(params: { sessionId: string; cursor?: string; max?: number }): Promise<PersistedEventsPage>;
+    };
+  };
   listModels?(): Promise<Array<{ id: string; name?: string }>>;
   getStatus?(): Promise<{ version?: string } & Record<string, unknown>>;
   /**
@@ -51,6 +64,14 @@ export interface ClientLike {
    * has no public state accessor) core treats a throwing `rpc` accessor as a lost connection.
    */
   isConnected?(): boolean;
+}
+
+/** One page of `sessions.readPersistedEvents`. */
+export interface PersistedEventsPage {
+  events: SessionEvent[];
+  cursor: string;
+  hasMore: boolean;
+  cursorStatus?: string;
 }
 
 /** Creates the underlying client. Default: `new CopilotClient(options)` from the SDK. */
@@ -217,11 +238,22 @@ export interface CopilotAgentDefinition {
   excludedTools?: string[];
   /** When false, no built-in runtime tools are available. Default: false. */
   builtInTools?: boolean;
+  /**
+   * Tool search: defers MCP/external tool definitions behind the built-in `tool_search_tool` once
+   * the tool count reaches `deferThreshold`. Unset: runtime default (enabled, threshold 30).
+   */
+  toolSearch?: ToolSearchConfig;
   /** Default: `permissions.denyAll()`. */
   permissions?: PermissionPolicy;
   hooks?: SessionHooks;
   customAgents?: CustomAgentConfig[];
   infiniteSessions?: boolean;
+  /**
+   * Provenance label sent with each prompt: `"user"`, `"system"` (an automated caller), or
+   * `"agent-<id>"`. Omitted: the runtime default (`user`). Caller-supplied provenance, not an
+   * authenticated identity. A `withMessageSource` scope and calls from another agent's tool take precedence.
+   */
+  messageSource?: MessageSource;
   /** Escape hatch: adjust the final SDK session config. */
   configureSession?: (config: SessionConfig, context: CopilotContext) => SessionConfig;
 }
@@ -383,6 +415,68 @@ export interface BoundConversation {
   stream(prompt: string, options?: Omit<SendOptions, "prompt" | "conversationId" | "schema">): AsyncIterable<CopilotAgentEvent>;
 }
 
+/** Metadata of a persisted session (normalized from the SDK's `SessionMetadata`). */
+export interface CopilotSessionMetadata {
+  sessionId: string;
+  startTime: Date;
+  modifiedTime: Date;
+  summary?: string;
+  /** Remote (cloud) sessions are never listed or swept. */
+  isRemote: boolean;
+  /** Working-directory context recorded at session creation, as reported by the SDK. */
+  context?: unknown;
+}
+
+/** A user or assistant message of a session's history. */
+export interface CopilotSessionMessage {
+  role: "user" | "assistant";
+  content: string;
+  /** The SDK event id. */
+  id: string;
+  messageId?: string;
+  timestamp?: Date;
+  /** The raw SDK event. */
+  event: SessionEvent;
+}
+
+/**
+ * Lists, reads, and deletes persisted Copilot sessions (`copilot.sessions`). Every method except
+ * `sessionId()` and `deleteExpired()` starts a lazy runtime.
+ *
+ * With the SDK-managed runtime, sessions live in its `baseDirectory` (COPILOT_HOME), which may also
+ * hold sessions created by other tools; with `cliUrl`, every session of the shared runtime is visible.
+ */
+export interface CopilotSessions {
+  /** Local (non-remote) sessions, most recently modified first. */
+  list(): Promise<CopilotSessionMetadata[]>;
+  /** A session's metadata, or `undefined` when it does not exist. */
+  get(sessionId: string): Promise<CopilotSessionMetadata | undefined>;
+  exists(sessionId: string): Promise<boolean>;
+  /**
+   * The session's user and assistant messages in order, read from its persisted history without
+   * resuming it. Sub-agent events, tool calls, and empty assistant messages are omitted.
+   * `undefined` when the session does not exist.
+   */
+  getMessages(sessionId: string): Promise<CopilotSessionMessage[] | undefined>;
+  /**
+   * Deletes a session and its history; waits (up to `limits.conversationWaitMs`) for a turn in flight
+   * on it to finish first. Returns `false` when the session did not exist.
+   */
+  delete(sessionId: string): Promise<boolean>;
+  /**
+   * The SDK session id of an agent's conversation (see `deriveSessionId`). `principal` defaults to the
+   * ambient context's principal, like `agent.deleteConversation()`.
+   */
+  sessionId(agent: string | CopilotAgentDefinition, conversationId: string, options?: { principal?: string }): string;
+  /**
+   * Deletes local sessions created by this library (ids starting with `COPILOT_SESSION_ID_PREFIX`)
+   * that were not modified within `maxAgeMs`. Skips sessions with a turn in flight and re-checks each
+   * session's metadata right before deleting it. Never starts the runtime: returns 0 while it isn't
+   * running. Per-session failures are logged and skipped. Returns the number of sessions deleted.
+   */
+  deleteExpired(maxAgeMs: number): Promise<number>;
+}
+
 export type CopilotClientState = "not-started" | "starting" | "running" | "stopping" | "stopped" | "failed";
 
 export interface CopilotCapacity {
@@ -405,6 +499,8 @@ export interface Copilot {
   client(): Promise<ClientLike>;
   agent(definition: CopilotAgentDefinition): AgentHandle;
   capacity(): CopilotCapacity;
+  /** Lists, reads, and deletes persisted sessions. */
+  readonly sessions: CopilotSessions;
   /** Runtime info without starting a lazy client. */
   health(): Promise<{ state: CopilotClientState; version?: string; capacity: CopilotCapacity }>;
 }

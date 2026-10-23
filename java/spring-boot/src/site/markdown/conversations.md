@@ -10,6 +10,8 @@ title: Conversations and lifecycle
 
 - [Conversation lifecycle](#conversation-lifecycle)
 - [Threading, errors, and cancellation](#threading-errors-and-cancellation)
+- [Listing, reading, and deleting sessions](#session-store)
+- [Deleting old sessions](#session-cleanup)
 
 <a id="conversation-lifecycle"></a>
 
@@ -30,8 +32,9 @@ For a normal invocation, the integration:
 8. Unsubscribes and closes the session attachment.
 9. Releases execution/admission bookkeeping and completes the result.
 
-There is no idle session cache, implicit default conversation, automatic retry,
-or automatic history deletion. Persisted history belongs to the runtime.
+There is no idle session cache, implicit default conversation, or automatic
+retry. History is deleted automatically only when
+[session cleanup](#session-cleanup) is enabled. Persisted history belongs to the runtime.
 Changing an interface's fully qualified name or logical agent name changes the
 derived identity. Do not depend on the exact digest encoding as an application
 API; listeners expose the actual SDK session ID when needed.
@@ -101,3 +104,72 @@ behavior.
 **Previous:** [Bound instances](instances.html)
 
 **Next:** [System instructions](instructions.html)
+
+<a id="session-store"></a>
+
+## Listing, reading, and deleting sessions
+
+Inject `CopilotSessionStore` to build a conversation list, restore a transcript,
+or let users delete their history. It is auto-configured with the agents.
+
+```java
+@RestController
+class HistoryController {
+
+    private final CopilotSessionStore sessions;
+
+    HistoryController(CopilotSessionStore sessions) {
+        this.sessions = sessions;
+    }
+
+    @GetMapping("/conversations/{id}/messages")
+    List<CopilotSessionMessage> messages(@PathVariable String id) {
+        String sessionId = sessions.sessionId(SupportAgent.class, id);
+        return sessions.messages(sessionId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    @DeleteMapping("/conversations/{id}")
+    ResponseEntity<Void> delete(@PathVariable String id) {
+        return sessions.delete(sessions.sessionId(SupportAgent.class, id))
+                ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+}
+```
+
+| Method | Behavior |
+| --- | --- |
+| `list()` | Local agent sessions (IDs starting with `agent-`), most recently modified first. Sessions created outside the starter on a shared runtime are not listed. |
+| `get(sessionId)` / `exists(sessionId)` | SDK `SessionMetadata`, or empty when the session does not exist. |
+| `messages(sessionId)` | User and assistant messages, in order, read from persisted events without resuming the session. Sub-agent messages, tool calls, and empty assistant messages are omitted. Empty when the session does not exist. |
+| `delete(sessionId)` | Deletes the session and its history; `false` when it did not exist. Waits for a turn in flight on that session and holds turns submitted meanwhile until the deletion completes. |
+| `sessionId(agentType, conversationId)` | The session ID an invocation of that agent on the current thread uses, including the [token resolver's partition](authentication.html). |
+
+Calls block for at most `copilot.sessions.timeout` (default `2m`) and start a
+lazily configured client on first use. Scope ownership in the application: the
+store does not know which user owns a conversation, so check that the caller
+may access a conversation before reading or deleting it.
+
+<a id="session-cleanup"></a>
+
+## Deleting old sessions
+
+Sessions otherwise accumulate in the runtime's storage. Set a maximum age to
+delete agent sessions that have not been modified for that long:
+
+```yaml
+copilot:
+  sessions:
+    cleanup:
+      max-age: 30d     # unset (default) disables cleanup
+      interval: 1h     # optional; defaults to half of max-age, between 1m and 1h
+```
+
+The cleanup runs on its own single-thread Spring task scheduler and is
+deliberately conservative:
+
+- It deletes only local sessions whose ID starts with `agent-`, so sessions
+  created by other tools on a shared runtime are never touched.
+- It never starts the client: sweeps are skipped until the client is connected.
+- Sessions with a turn queued or running are skipped until the next sweep, and
+  each candidate's metadata is read again right before it is deleted.
+- Failures are logged and retried at the next sweep.

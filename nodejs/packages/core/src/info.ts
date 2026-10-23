@@ -15,6 +15,7 @@ export interface CopilotAgentInfo {
   mcpServers: string[];
   availableTools?: string[];
   excludedTools?: string[];
+  toolSearch?: { enabled?: boolean; deferThreshold?: number };
   instructions?: unknown;
 }
 
@@ -52,6 +53,7 @@ export function describeAgent(def: CopilotAgentDefinition, options: DescribeAgen
   }
   if (def.availableTools !== undefined) info.availableTools = [...def.availableTools];
   if (def.excludedTools !== undefined) info.excludedTools = [...def.excludedTools];
+  if (def.toolSearch !== undefined) info.toolSearch = { ...def.toolSearch };
   if (options.includeInstructions && def.instructions !== undefined) info.instructions = def.instructions;
   return info;
 }

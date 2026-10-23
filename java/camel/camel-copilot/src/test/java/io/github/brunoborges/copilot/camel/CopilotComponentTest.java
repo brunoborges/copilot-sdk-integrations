@@ -3,6 +3,7 @@ package io.github.brunoborges.copilot.camel;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -14,10 +15,12 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.support.PropertyBindingSupport;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.github.copilot.rpc.MessageSource;
 import com.github.copilot.rpc.PermissionHandler;
 import com.github.copilot.rpc.PermissionInvocation;
 import com.github.copilot.rpc.PermissionRequest;
@@ -28,7 +31,10 @@ import io.github.brunoborges.copilot.agent.ConversationId;
 import io.github.brunoborges.copilot.agent.CopilotAgent;
 import io.github.brunoborges.copilot.agent.CopilotLoops;
 import io.github.brunoborges.copilot.agent.CopilotPermissionPolicies;
+import io.github.brunoborges.copilot.agent.CopilotSessionStore;
 import io.github.brunoborges.copilot.agent.UserMessage;
+import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
+import io.github.brunoborges.copilot.camel.test.CopilotTestPrompt;
 import io.github.brunoborges.copilot.camel.test.CopilotTestRuntime;
 
 class CopilotComponentTest {
@@ -69,6 +75,49 @@ class CopilotComponentTest {
     }
 
     @Test
+    void scheduledRoutesLabelPromptsAsSystemUnlessConfigured() throws Exception {
+        start(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("timer:digest?repeatCount=1").setBody(constant("Summarize")).to("copilot:agent:digest");
+                from("timer:report?repeatCount=1").setBody(constant("Report"))
+                        .to("copilot:agent:report?messageSource=agent-reporting");
+                from("direct:ask").to("copilot:agent:support");
+            }
+        });
+        runtime.anyAgent().replies("ok");
+
+        template.requestBody("direct:ask", "hi");
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+        while ((runtime.prompts("digest").isEmpty() || runtime.prompts("report").isEmpty())
+                && System.nanoTime() < deadline) {
+            Thread.sleep(20);
+        }
+
+        assertThat(source("digest")).isEqualTo(MessageSource.SYSTEM);
+        assertThat(source("report")).isEqualTo(MessageSource.agent("reporting"));
+        assertThat(source("support")).as("request-driven routes keep the runtime default").isNull();
+    }
+
+    @Test
+    void rejectsInvalidMessageSources() throws Exception {
+        start(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:ask").to("copilot:agent:support?messageSource=admin");
+            }
+        });
+
+        assertThatThrownBy(() -> template.requestBody("direct:ask", "hi")).hasStackTraceContaining("message source");
+        assertThat(runtime.prompts()).isEmpty();
+    }
+
+    private MessageSource source(String agent) {
+        return runtime.receivedPrompts().stream().filter(p -> agent.equals(p.agent())).findFirst()
+                .map(CopilotTestPrompt::options).orElseThrow().getSource();
+    }
+
+    @Test
     void sendsBodyAsPromptAndRepliesWithAnswer() throws Exception {
         start(new RouteBuilder() {
             @Override
@@ -91,6 +140,28 @@ class CopilotComponentTest {
         assertThat(config.getModel()).isEqualTo("gpt-5");
         assertThat(config.getSystemMessage().getContent()).isEqualTo("Answer briefly.");
         assertThat(config.getExcludedTools()).as("endpoint agents run without built-in tools by default").isNotEmpty();
+        assertThat(config.getToolSearch()).isNull();
+    }
+
+    @Test
+    void toolSearchOptionsReachTheSession() throws Exception {
+        start(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:ask").to("copilot:agent:support?toolSearch=true&toolSearchDeferThreshold=20");
+            }
+        });
+        runtime.agent("support").replies("ok");
+
+        Exchange reply = template.request("direct:ask", exchange -> {
+            exchange.getMessage().setBody("hi");
+            exchange.getMessage().setHeader(CopilotConstants.CONVERSATION_ID, "c-1");
+        });
+
+        assertThat(reply.getException()).isNull();
+        var search = runtime.sessionConfig("support").getToolSearch();
+        assertThat(search.getEnabled()).isTrue();
+        assertThat(search.getDeferThreshold()).isEqualTo(20);
     }
 
     @Test
@@ -317,6 +388,72 @@ class CopilotComponentTest {
         assertThat(runtime.sessionConfig("advisor").getSystemMessage().getContent())
                 .isEqualTo("You advise on Camel routes.");
         assertThat(context.getRegistry().lookupByNameAndType("copilotLoops", CopilotLoops.class)).isNotNull();
+    }
+
+    @Test
+    void sessionStoreListsMapsAndDeletesAgentSessions() throws Exception {
+        var component = new CopilotComponent();
+        component.setAgentTypes(Advisor.class.getName());
+        context.addComponent("copilot", component);
+        start(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:ask").to("copilot:agent:advisor");
+            }
+        });
+        runtime.agent("advisor").replies("Use split/aggregate.");
+        template.requestBodyAndHeader("direct:ask", "How do I batch?", CopilotConstants.CONVERSATION_ID, "c-9");
+
+        CopilotSessionStore store = component.sessionStore();
+        String sessionId = store.sessionId(Advisor.class, "c-9");
+
+        assertThat(context.getRegistry().lookupByNameAndType("copilotSessionStore", CopilotSessionStore.class))
+                .isSameAs(store);
+        assertThat(sessionId).isEqualTo(CopilotAgentInvoker.sessionId(component.factory(Advisor.class).definition(), "c-9"))
+                .startsWith(CopilotAgentInvoker.MANAGED_SESSION_PREFIX);
+        assertThat(store.list()).extracting(session -> session.getSessionId()).containsExactly(sessionId);
+        assertThat(store.delete(sessionId)).isTrue();
+        assertThat(store.exists(sessionId)).isFalse();
+        assertThatThrownBy(() -> store.sessionId(String.class, "c-9")).isInstanceOf(IllegalArgumentException.class);
+        assertThat(component.activeCleanupInterval()).as("cleanup is disabled by default").isNull();
+    }
+
+    @Test
+    void sessionCleanupRunsWhenAMaxAgeIsSet() throws Exception {
+        var component = new CopilotComponent();
+        PropertyBindingSupport.build().bind(context, component, new java.util.HashMap<>(Map.of("sessionMaxAge", "1h")));
+        context.addComponent("copilot", component);
+        start(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:ask").to("copilot:agent:support");
+            }
+        });
+
+        assertThat(component.getSessionMaxAge()).isEqualTo(Duration.ofHours(1));
+        assertThat(component.activeCleanupInterval()).isEqualTo(Duration.ofMinutes(30));
+
+        context.stop();
+        assertThat(component.activeCleanupInterval()).isNull();
+        assertThatThrownBy(component::sessionStore).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void sessionCleanupUsesTheConfiguredInterval() throws Exception {
+        var component = new CopilotComponent();
+        component.setSessionMaxAge(Duration.ofDays(7));
+        component.setSessionCleanupInterval(Duration.ofMinutes(5));
+        context.addComponent("copilot", component);
+        start(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:ask").to("copilot:agent:support");
+            }
+        });
+
+        assertThat(component.activeCleanupInterval()).isEqualTo(Duration.ofMinutes(5));
+        assertThatThrownBy(() -> component.setSessionMaxAge(Duration.ZERO))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

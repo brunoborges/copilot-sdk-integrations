@@ -93,6 +93,78 @@ await request.copilot.agent("support").deleteConversation("c1"); // Fastify, sco
 
 Deletion takes the conversation lock, so it waits for a running turn.
 
+## Listing and cleaning up sessions
+
+`copilot.sessions` reads and deletes the runtime's persisted sessions without resuming them:
+
+```ts
+const sessions = copilot.sessions; // core
+<!-- only:nestjs -->
+// NestJS: inject CopilotSessionsService (same API)
+constructor(private readonly sessions: CopilotSessionsService) {}
+<!-- /only -->
+<!-- only:fastify -->
+// Fastify: fastify.copilotSessions (also fastify.copilot.sessions)
+<!-- /only -->
+
+await sessions.list();                // local (non-remote) sessions, most recently modified first
+await sessions.get(id);               // metadata, or undefined
+await sessions.exists(id);            // boolean
+await sessions.getMessages(id);       // user + assistant messages, or undefined when missing
+await sessions.delete(id);            // true when deleted, false when it didn't exist
+sessions.sessionId(agent, "c1", { principal: "u1" }); // the id deriveSessionId would use
+```
+
+- Metadata is `{ sessionId, startTime, modifiedTime, summary?, isRemote, context? }` with `Date`
+  timestamps.
+- `getMessages` pages through the runtime's `sessions.readPersistedEvents` RPC. It returns the
+  top-level user and assistant messages in order and skips sub-agent events, tool-call-bound
+  assistant messages, and empty assistant messages.
+- `delete` waits for a running turn of the session (conversation lock, then store lease), like
+  `deleteConversation`.
+- `list`, `get`, `exists`, `getMessages`, and `delete` start a lazy runtime.
+
+### Cleanup job
+
+The cleanup job deletes old sessions periodically. It is **off by default**; configure a maximum
+age (milliseconds) to turn it on:
+
+<!-- only:nestjs -->
+```ts
+CopilotModule.forRoot({ sessionCleanup: { maxAge: 7 * 24 * 3_600_000 } });
+```
+
+The `CopilotSessionCleanup` provider starts the timer in `onApplicationBootstrap` and stops it in
+`onModuleDestroy`; `cleanup.sweep()` runs a sweep by hand.
+<!-- /only -->
+<!-- only:fastify -->
+```ts
+await app.register(copilotPlugin, { sessionCleanup: { maxAge: 7 * 24 * 3_600_000 } });
+```
+
+The timer starts in `onReady` and stops in `onClose`; `fastify.copilotSessionCleanup` is the job
+(`null` when off), and `fastify.copilotSessionCleanup.sweep()` runs a sweep by hand.
+<!-- /only -->
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `sessionCleanup.maxAge` | none (off) | Delete sessions not modified for this long. |
+| `sessionCleanup.interval` | `maxAge / 2`, between 1 minute and 1 hour | Time between sweeps. |
+
+A sweep is conservative. It deletes a session only when all of these hold:
+
+- its id starts with `copilot-` (`COPILOT_SESSION_ID_PREFIX`), so it was created by this library;
+- it isn't remote;
+- its `modifiedTime` is older than `maxAge`, checked again just before deleting;
+- no turn of it is running in this process (ephemeral turns included), and with a `store`, no
+  other replica holds its lease.
+
+A sweep never starts the runtime: while the client isn't running, it deletes nothing. Errors are
+logged and the sweep runs again at the next interval; a failed delete doesn't stop the others.
+The timer is `unref()`'d. In core, use
+`createSessionCleanup(copilot.sessions, { maxAge, interval })` with `start()` / `stop()` /
+`sweep()`, or call `copilot.sessions.deleteExpired(maxAge)`.
+
 ## Turn admission
 
 Each turn goes through, in order:

@@ -18,12 +18,14 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.github.copilot.CopilotClient;
 import com.github.copilot.CopilotSession;
 import com.github.copilot.rpc.MessageOptions;
+import com.github.copilot.rpc.MessageSource;
 import com.github.copilot.rpc.PermissionHandler;
 import com.github.copilot.rpc.ResumeSessionConfig;
 import com.github.copilot.rpc.SessionConfig;
@@ -35,11 +37,19 @@ import io.github.brunoborges.copilot.agent.CopilotTokenResolver;
 import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
 import io.github.brunoborges.copilot.agent.CopilotAgentEvent;
 import io.github.brunoborges.copilot.agent.CopilotConversationNotFoundException;
+import io.github.brunoborges.copilot.agent.CopilotMessageSources;
 
 
 public final class CopilotAgentInvoker implements AutoCloseable {
 
     private static final Logger log = Logger.getLogger(CopilotAgentInvoker.class.getName());
+
+    /** Prefix of every session ID this library derives; sessions without it were not created by an agent. */
+    public static final String MANAGED_SESSION_PREFIX = "agent-";
+
+    /** Name of the agent whose tool handler is running on this thread, for agent-to-agent provenance. */
+    private static final ThreadLocal<String> DELEGATING_AGENT = new ThreadLocal<>();
+
     private final CopilotClient client;
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private final Map<String, CompletableFuture<Void>> pending = new HashMap<>();
@@ -202,7 +212,45 @@ public final class CopilotAgentInvoker implements AutoCloseable {
                     + "override CopilotTokenResolver.partitionKey to isolate sessions per caller, or return "
                     + "CopilotTokenResolver.SHARED to share them");
         }
-        return new InvocationState(token, propagation.capture());
+        return new InvocationState(token, propagation.capture(), messageSource(definition));
+    }
+
+    /**
+     * Resolves provenance on the caller thread: an explicit scope, then the agent whose tool is calling, then the
+     * agent's configured default. Inference only ever yields an {@code agent-<id>} source, never {@code user}.
+     */
+    static MessageSource messageSource(CopilotAgentDefinition definition) {
+        var scoped = CopilotMessageSources.current();
+        if (scoped != null) {
+            return scoped;
+        }
+        var delegating = DELEGATING_AGENT.get();
+        return delegating != null ? MessageSource.agent(delegating) : definition.messageSource();
+    }
+
+    /**
+     * Marks tool handlers so agent invocations they start on their own thread are labeled {@code agent-<name>}, and
+     * suspends any caller scope so it cannot relabel those delegated calls.
+     */
+    private static List<ToolDefinition> attributedTools(List<ToolDefinition> tools, String agent) {
+        if (tools == null) {
+            return null;
+        }
+        return tools.stream().map(tool -> new ToolDefinition(tool.name(), tool.description(), tool.parameters(), invocation -> {
+            var previous = DELEGATING_AGENT.get();
+            DELEGATING_AGENT.set(agent);
+            var scope = MessageSourceScope.swap(null);
+            try {
+                return tool.handler().invoke(invocation);
+            } finally {
+                MessageSourceScope.swap(scope);
+                if (previous == null) {
+                    DELEGATING_AGENT.remove();
+                } else {
+                    DELEGATING_AGENT.set(previous);
+                }
+            }
+        }, tool.overridesBuiltInTool(), tool.skipPermission(), tool.defer(), tool.metadata(), tool.isTerminal(), tool.namespace())).toList();
     }
 
     /** Enters the bound instance's lifetime and restores the caller's context for SDK-thread callbacks. */
@@ -363,6 +411,9 @@ public final class CopilotAgentInvoker implements AutoCloseable {
             Assert.isTrue(context.sessionId().equals(session.getSessionId()),
                     "Copilot runtime did not preserve the requested agent session ID");
             var options = new MessageOptions().setPrompt(message);
+            if (state.messageSource() != null) {
+                options.setSource(state.messageSource());
+            }
             if (responseSchema != null) {
                 options.setResponseSchema(responseSchema);
             }
@@ -430,7 +481,7 @@ public final class CopilotAgentInvoker implements AutoCloseable {
             if (state.gitHubToken() != null && config.getGitHubToken() == null && config.getGitHubTokenProvider() == null) {
                 config.setGitHubToken(state.gitHubToken());
             }
-            config.setTools(propagatedTools(observedTools(config.getTools(), observation, owner), state));
+            config.setTools(propagatedTools(observedTools(attributedTools(config.getTools(), definition.name()), observation, owner), state));
             Assert.isTrue(context.sessionId().equals(config.getSessionId()), "Agent customizers must not change the session ID");
             Assert.notNull(config.getOnPermissionRequest(), "Agent customizers must not remove the permission handler");
             config.setOnPermissionRequest(propagatedPermissions(ownedPermissions(config.getOnPermissionRequest(), owner), state));
@@ -462,7 +513,7 @@ public final class CopilotAgentInvoker implements AutoCloseable {
         if (state.gitHubToken() != null && config.getGitHubToken() == null && config.getGitHubTokenProvider() == null) {
             config.setGitHubToken(state.gitHubToken());
         }
-        config.setTools(propagatedTools(observedTools(config.getTools(), observation, owner), state));
+        config.setTools(propagatedTools(observedTools(attributedTools(config.getTools(), definition.name()), observation, owner), state));
         Assert.notNull(config.getOnPermissionRequest(), "Agent customizers must not remove the permission handler");
         config.setOnPermissionRequest(propagatedPermissions(ownedPermissions(config.getOnPermissionRequest(), owner), state));
         var session = state.join(client.resumeSession(context.sessionId(), config), definition.responseTimeout(), CopilotAgentInvoker::closeQuietly);
@@ -542,8 +593,66 @@ public final class CopilotAgentInvoker implements AutoCloseable {
         finished.complete(null);
     }
 
+    /**
+     * Runs {@code action} once every queued turn on {@code sessionId} has finished, holding the session's turn
+     * queue so that turns submitted meanwhile start only after the action completes.
+     */
+    public <T> CompletableFuture<T> exclusive(String sessionId, Supplier<CompletableFuture<T>> action) {
+        return exclusive(sessionId, action, true);
+    }
+
+    /**
+     * Like {@link #exclusive(String, Supplier)}, but returns {@code null} without running {@code action} when a
+     * turn is queued or running on {@code sessionId}.
+     */
+    public <T> CompletableFuture<T> tryExclusive(String sessionId, Supplier<CompletableFuture<T>> action) {
+        return exclusive(sessionId, action, false);
+    }
+
+    private <T> CompletableFuture<T> exclusive(String sessionId, Supplier<CompletableFuture<T>> action, boolean wait) {
+        Assert.hasText(sessionId, "Session ID must not be blank");
+        Assert.notNull(action, "Exclusive session action is required");
+        var finished = new CompletableFuture<Void>();
+        CompletableFuture<Void> previous;
+        synchronized (pending) {
+            if (closed) {
+                return CompletableFuture.failedFuture(new IllegalStateException("Copilot agent infrastructure is closed"));
+            }
+            if (!wait && pending.containsKey(sessionId)) {
+                return null;
+            }
+            previous = pending.put(sessionId, finished);
+        }
+        var result = new CompletableFuture<T>();
+        (previous == null ? CompletableFuture.<Void>completedFuture(null) : previous).whenComplete((ignored, error) -> {
+            CompletableFuture<T> running;
+            try {
+                running = action.get();
+            } catch (RuntimeException | Error ex) {
+                running = CompletableFuture.failedFuture(ex);
+            }
+            running.whenComplete((value, failure) -> {
+                finish(sessionId, finished);
+                if (failure != null) {
+                    result.completeExceptionally(failure);
+                } else {
+                    result.complete(value);
+                }
+            });
+        });
+        return result;
+    }
+
     public static String sessionId(CopilotAgentDefinition definition, String conversationId) {
         return sessionId(definition, conversationId, null);
+    }
+
+    /** The session ID an invocation on the current thread would use, including the token resolver's partition. */
+    public static String callerSessionId(CopilotAgentDefinition definition, String conversationId) {
+        Assert.hasText(conversationId, "Conversation ID must not be blank");
+        var resolver = definition.tokenResolver();
+        return sessionId(definition, conversationId,
+                resolver == null ? null : resolver.partitionKey(definition.name(), conversationId));
     }
 
     /** A null or {@link CopilotTokenResolver#SHARED} partition yields the unpartitioned ID. */
@@ -554,7 +663,7 @@ public final class CopilotAgentInvoker implements AutoCloseable {
                 identity0 += "\0" + partition;
             }
             byte[] identity = identity0.getBytes(StandardCharsets.UTF_8);
-            return "agent-" + HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(identity));
+            return MANAGED_SESSION_PREFIX + HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(identity));
         } catch (NoSuchAlgorithmException ex) {
             throw new IllegalStateException("Required SHA-256 digest is unavailable", ex);
         }

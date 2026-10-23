@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.copilot.ConnectionState;
 import com.github.copilot.CopilotClient;
 import com.github.copilot.rpc.CopilotClientOptions;
+import com.github.copilot.rpc.StdioRuntimeConnection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -87,6 +88,38 @@ class CopilotAutoConfigurationTests {
                     assertThat(context.getBean(CopilotProperties.class).toString()).doesNotContain("test-token");
                     assertThat(context.getBean(CopilotClient.class).getState()).isEqualTo(ConnectionState.DISCONNECTED);
                 });
+    }
+
+    @Test
+    void stdioConnectionPinsTheLocalRuntime() {
+        runner.withPropertyValues("copilot.connection=stdio", "copilot.cli-path=/missing/copilot",
+                "copilot.cli-args[0]=--flag", "copilot.working-directory=/work").run(context -> {
+                    assertThat(context).hasNotFailed();
+                    var options = context.getBean(CopilotClientOptions.class);
+                    assertThat(options.getConnection()).isInstanceOfSatisfying(StdioRuntimeConnection.class,
+                            stdio -> {
+                                assertThat(stdio.getPath()).isEqualTo("/missing/copilot");
+                                assertThat(stdio.getArgs()).containsExactly("--flag");
+                            });
+                    assertThat(options.getCwd()).isEqualTo("/work");
+                    assertThat(context.getBean(CopilotClient.class).getState()).isEqualTo(ConnectionState.DISCONNECTED);
+                });
+    }
+
+    @Test
+    void inProcessConnectionFailsFastWithoutJna() {
+        runner.withPropertyValues("copilot.connection=inprocess").run(context ->
+                assertThat(context).hasFailed().getFailure().hasStackTraceContaining(
+                        "copilot.connection=inprocess requires JNA on the classpath"));
+    }
+
+    @Test
+    void inProcessConnectionReportsRejectedSettings() {
+        runner.withPropertyValues("copilot.connection=inprocess", "copilot.cli-path=/bin/copilot",
+                "copilot.cli-args[0]=--flag", "copilot.working-directory=/work").run(context ->
+                assertThat(context).hasFailed().getFailure().hasStackTraceContaining(
+                        "copilot.connection=inprocess cannot be combined with copilot.cli-path, copilot.cli-args, "
+                                + "copilot.working-directory"));
     }
 
     @Test
@@ -224,6 +257,11 @@ class CopilotAutoConfigurationTests {
                 Arguments.of(new String[]{"copilot.cli-url=localhost:4321", "copilot.working-directory=/work"},
                         "cannot be combined"),
                 Arguments.of(new String[]{"copilot.tcp-connection-token=test-token"}, "requires copilot.cli-url"),
+                Arguments.of(new String[]{"copilot.connection=tcp"}, "copilot.connection"),
+                Arguments.of(new String[]{"copilot.connection=stdio", "copilot.cli-url=localhost:4321"},
+                        "copilot.connection=stdio cannot be combined with copilot.cli-url"),
+                Arguments.of(new String[]{"copilot.connection=inprocess", "copilot.cli-url=localhost:4321"},
+                        "copilot.connection=inprocess cannot be combined with copilot.cli-url"),
                 Arguments.of(new String[]{"copilot.cli-url=localhost:4321", "copilot.tcp-connection-token="},
                         "copilot.tcp-connection-token must not be blank"));
     }
@@ -256,9 +294,13 @@ class CopilotAutoConfigurationTests {
             assertThat(names).containsExactlyInAnyOrder("copilot.enabled", "copilot.eager-start",
                     "copilot.startup-timeout", "copilot.cli-path", "copilot.cli-args",
                     "copilot.working-directory", "copilot.log-level", "copilot.cli-url",
-                    "copilot.tcp-connection-token", "copilot.agents", "copilot.mcp.servers", "copilot.providers",
+                    "copilot.tcp-connection-token", "copilot.connection", "copilot.agents", "copilot.mcp.servers", "copilot.providers",
                     "copilot.observations.enabled",
+                    "copilot.error-recovery.enabled", "copilot.error-recovery.permission-phrases",
+                    "copilot.error-recovery.shell-error-phrases", "copilot.error-recovery.permission-note",
+                    "copilot.error-recovery.error-note", "copilot.error-recovery.max-consecutive-failures",
                     "copilot.execution.max-concurrent-invocations", "copilot.execution.max-outstanding-invocations",
+                    "copilot.sessions.timeout", "copilot.sessions.cleanup.max-age", "copilot.sessions.cleanup.interval",
                     "copilot.health.timeout", "copilot.health.start-client",
                     "copilot.health.require-authentication", "copilot.endpoint.timeout",
                     "copilot.endpoint.start-client", "copilot.endpoint.show-instructions",
@@ -289,7 +331,7 @@ class CopilotAutoConfigurationTests {
         };
         runner.withBean(CopilotConnectionDetails.class, () -> details)
                 .withPropertyValues("copilot.cli-path=/missing/copilot", "copilot.cli-args[0]=--flag",
-                        "copilot.working-directory=/work")
+                        "copilot.working-directory=/work", "copilot.connection=inprocess")
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     var options = context.getBean(CopilotClientOptions.class);
@@ -297,6 +339,7 @@ class CopilotAutoConfigurationTests {
                     assertThat(options.getTcpConnectionToken()).isEqualTo("container-token");
                     assertThat(options.isUseStdio()).isFalse();
                     assertThat(options.getCliPath()).isNull();
+                    assertThat(options.getConnection()).isNull();
                     assertThat(context.getBean(CopilotClient.class).getState()).isEqualTo(ConnectionState.DISCONNECTED);
                 });
     }

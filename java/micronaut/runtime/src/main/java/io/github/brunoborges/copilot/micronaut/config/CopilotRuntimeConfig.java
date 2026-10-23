@@ -28,6 +28,7 @@ public record CopilotRuntimeConfig(
         Optional<String> logLevel,
         Optional<String> cliUrl,
         Optional<String> tcpConnectionToken,
+        Optional<Connection> connection,
         Execution execution,
         Map<String, Agent> agents,
         Mcp mcp,
@@ -35,9 +36,18 @@ public record CopilotRuntimeConfig(
         Health health,
         Endpoint endpoint,
         Security security,
-        Streaming streaming) {
+        Streaming streaming,
+        Sessions sessions) {
 
     public static final String PREFIX = "micronaut.copilot";
+
+    /** How the client reaches the Copilot runtime ({@code micronaut.copilot.connection}). */
+    public enum Connection {
+        /** Child process over stdin/stdout, regardless of {@code COPILOT_SDK_DEFAULT_CONNECTION}. */
+        STDIO,
+        /** Runtime hosted inside this JVM (experimental); needs JNA and the platform runtime artifact. */
+        INPROCESS
+    }
 
     public record Execution(int maxConcurrentInvocations, int maxOutstandingInvocations) {
     }
@@ -54,7 +64,12 @@ public record CopilotRuntimeConfig(
             Optional<Boolean> builtInTools,
             Optional<String> workingDirectory,
             Optional<List<String>> additionalDirectories,
-            Permissions permissions) {
+            Permissions permissions,
+            ToolSearch toolSearch,
+            Optional<String> messageSource) {
+    }
+
+    public record ToolSearch(Optional<Boolean> enabled, OptionalInt deferThreshold) {
     }
 
     public record Permissions(
@@ -108,6 +123,31 @@ public record CopilotRuntimeConfig(
     public record Streaming(int bufferCapacity) {
     }
 
+    /**
+     * @param timeout maximum time a {@code CopilotSessionStore} or cleanup call waits for the Copilot runtime,
+     *        including how long a deletion waits for a turn in flight on the session
+     * @param cleanup age-based deletion of agent sessions; disabled unless {@code max-age} is set
+     */
+    public record Sessions(Duration timeout, Cleanup cleanup) {
+
+        /**
+         * @param maxAge deletes agent sessions not modified for longer than this; empty disables cleanup
+         * @param interval time between sweeps; defaults to half of {@code max-age}, between one minute and one hour
+         */
+        public record Cleanup(Optional<Duration> maxAge, Optional<Duration> interval) {
+        }
+    }
+
+    private static Connection connection(String value) {
+        String normalized = value.trim().replace("-", "").replace("_", "").toUpperCase(Locale.ROOT);
+        for (Connection connection : Connection.values()) {
+            if (connection.name().equals(normalized)) {
+                return connection;
+            }
+        }
+        throw new IllegalArgumentException(PREFIX + ".connection must be stdio or inprocess");
+    }
+
     /** Reads the configuration, applying the documented defaults. */
     public static CopilotRuntimeConfig from(PropertyResolver properties) {
         var reader = new Reader(properties);
@@ -120,6 +160,7 @@ public record CopilotRuntimeConfig(
                 reader.text(PREFIX + ".log-level"),
                 reader.text(PREFIX + ".cli-url"),
                 reader.text(PREFIX + ".tcp-connection-token"),
+                reader.text(PREFIX + ".connection").map(CopilotRuntimeConfig::connection),
                 new Execution(reader.integer(PREFIX + ".execution.max-concurrent-invocations", 8),
                         reader.integer(PREFIX + ".execution.max-outstanding-invocations", 64)),
                 reader.named(PREFIX + ".agents", reader::agent),
@@ -135,7 +176,10 @@ public record CopilotRuntimeConfig(
                         reader.bool(PREFIX + ".endpoint.show-session-summaries", false)),
                 new Security(new Security.Identity(reader.bool(PREFIX + ".security.identity.ambient-fallback", false),
                         reader.text(PREFIX + ".security.identity.token-attribute").orElse("accessToken"))),
-                new Streaming(reader.integer(PREFIX + ".streaming.buffer-capacity", 256)));
+                new Streaming(reader.integer(PREFIX + ".streaming.buffer-capacity", 256)),
+                new Sessions(reader.duration(PREFIX + ".sessions.timeout", Duration.ofMinutes(2)),
+                        new Sessions.Cleanup(properties.getProperty(PREFIX + ".sessions.cleanup.max-age", Duration.class),
+                                properties.getProperty(PREFIX + ".sessions.cleanup.interval", Duration.class))));
     }
 
     private record Reader(PropertyResolver properties) {
@@ -162,7 +206,10 @@ public record CopilotRuntimeConfig(
                     new Permissions(list(prefix + ".permissions.allow"), list(prefix + ".permissions.allow-tools"),
                             list(prefix + ".permissions.allow-mcp-servers"),
                             bool(prefix + ".permissions.allow-agent-tools", false),
-                            bool(prefix + ".permissions.allow-read-only", false)));
+                            bool(prefix + ".permissions.allow-read-only", false)),
+                    new ToolSearch(properties.getProperty(prefix + ".tool-search.enabled", Boolean.class),
+                            optionalInt(prefix + ".tool-search.defer-threshold")),
+                    text(prefix + ".message-source"));
         }
 
         McpServer mcpServer(String prefix) {

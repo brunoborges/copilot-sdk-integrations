@@ -126,7 +126,7 @@ has registered its bean.
   (`instructions`, `instructionsResource`, `instructionsMode`, `systemMessageRef`, `model`,
   `reasoningEffort`, `permissionHandlerRef`, `toolRefs`, `mcpServers`, `provider`, `listenerRefs`,
   `customizerRefs`, `availableTools`, `excludedTools`, `excludedBuiltInAgents`, `builtInTools`,
-  `workingDirectory`, `additionalDirectories`, `hookRefs`, `tokenResolverRef`) and are passed to
+  `toolSearch`, `toolSearchDeferThreshold`, `workingDirectory`, `additionalDirectories`, `hookRefs`, `tokenResolverRef`) and are passed to
   core's `CopilotAgentDefinition.create(type, attributes, binding)`, so validation and governance
   are identical to the other integrations. Endpoint agents use the identity type
   `CopilotEndpointAgent`.
@@ -197,6 +197,9 @@ Implemented:
   output), `copilot:tool`, `copilot:permission`, `copilot:events`.
 - Registry-backed `BindingContext`, client reuse, execution limits
   (`maxConcurrentInvocations`, `maxOutstandingInvocations`), telemetry from the registry.
+- Session management: the component's `sessionStore()` (also bound as `copilotSessionStore`) lists,
+  reads, and deletes agent sessions; `sessionMaxAge` enables age-based cleanup on a scheduled
+  executor from Camel's `ExecutorServiceManager`, shut down with the component.
 - `camel-copilot-test`: the scripted in-memory runtime, shared with the Spring Boot and Quarkus
   test modules.
 

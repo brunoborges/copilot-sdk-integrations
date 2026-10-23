@@ -36,6 +36,8 @@ All three are applied to both newly created and resumed sessions, before
 | `availableTools` | `copilot.agents.<name>.available-tools` | `availableTools` allow-list |
 | `excludedTools` | `copilot.agents.<name>.excluded-tools` | `excludedTools` deny-list |
 | `builtInTools` | `copilot.agents.<name>.built-in-tools` | `false` adds `builtin:*` to `excludedTools` |
+| `toolSearch` | `copilot.agents.<name>.tool-search.enabled` | `toolSearch.enabled` |
+| `toolSearchDeferThreshold` | `copilot.agents.<name>.tool-search.defer-threshold` | `toolSearch.deferThreshold` |
 | `excludedBuiltInAgents` | `copilot.agents.<name>.excluded-built-in-agents` | `excludedBuiltInAgents` |
 | `workingDirectory` | `copilot.agents.<name>.working-directory` | `workingDirectory` for tool operations |
 | `additionalDirectories` | `copilot.agents.<name>.additional-directories` | `additionalDirectories` the session may access |
@@ -81,6 +83,13 @@ Semantics, as defined by the SDK and runtime:
   cannot be combined with an allow-list: list the built-in tools you want
   instead.
 - `excludedBuiltInAgents` hides runtime built-in sub-agents by name.
+- Tool search defers MCP and external tool definitions behind the runtime's
+  tool-search tool once the agent's total tool count reaches the defer
+  threshold, so agents selecting large MCP servers (such as GitHub or
+  Playwright) do not load every tool definition up front. Leave it unset to keep
+  the runtime default (enabled, threshold 30); `toolSearch = "false"` preloads
+  every tool, and a defer threshold cannot be combined with it. Each property
+  overrides only its own annotation value.
 
 A property overrides the annotation value; an empty list property clears it,
 and an empty `working-directory` restores the runtime default. Annotation
@@ -230,6 +239,51 @@ Hooks run inside the agent's lifetime scope, like permission handlers. Hooks
 that are not modelled here, such as the pre-MCP-tool-call hook, remain
 available through a `CopilotAgentCustomizer` that sets SDK `SessionHooks`
 directly; note that doing so replaces the hooks set by this integration.
+
+<a id="error-recovery"></a>
+
+## Error-recovery hooks
+
+`CopilotErrorRecoveryHooks` is a ready-made hook based on the Copilot SDK
+cookbook's [error-recovery recipe](https://github.com/github/awesome-copilot/blob/main/cookbook/copilot-sdk/python/error-recovery-hooks.md).
+It is off by default. Turn it on for every agent with:
+
+```properties
+copilot.error-recovery.enabled=true
+```
+
+- After a tool call it classifies the output, by case-insensitive phrase lists,
+  as permission denied, shell error, or (for failed calls) a generic tool failure.
+- On a failure it adds a `[SYSTEM NOTE: ...]` as `additionalContext` telling the
+  model not to stop and to try another approach. The tool result is unchanged.
+- After `maxConsecutiveFailures` (default 3, `0` = unlimited) failures of the
+  same tool in a session, the note stops, so the model is not nudged into a
+  loop. A successful call resets the count.
+
+| Property | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `copilot.error-recovery.enabled` | Boolean | `false` | Register `CopilotErrorRecoveryHooks` as a global hooks bean. |
+| `copilot.error-recovery.permission-phrases` | List | see `CopilotErrorRecoveryHooks.DEFAULT_PERMISSION_PHRASES` | Phrases that mark a permission failure. |
+| `copilot.error-recovery.shell-error-phrases` | List | see `CopilotErrorRecoveryHooks.DEFAULT_SHELL_ERROR_PHRASES` | Phrases that mark a shell error. |
+| `copilot.error-recovery.permission-note` | String | built-in note | Context added after a permission failure. |
+| `copilot.error-recovery.error-note` | String | built-in note | Context added after other failures. |
+| `copilot.error-recovery.max-consecutive-failures` | int | `3` | Stop adding notes after this many consecutive failures of a tool; `0` = no cap. |
+
+To apply it only to some agents, leave the property off and declare the bean
+yourself, for example with `@CopilotAgentHooksFor` or `hookRefs`:
+
+```java
+@Bean
+@CopilotAgentHooksFor(OpsAgent.class)
+CopilotErrorRecoveryHooks opsRecovery() {
+    return CopilotErrorRecoveryHooks.builder().maxConsecutiveFailures(5).build();
+}
+```
+
+A `CopilotErrorRecoveryHooks` bean of your own replaces the auto-configured one.
+The Java SDK has no error-occurred hook (`SessionHooks` has no `onErrorOccurred`), so
+unlike the Python and Node.js versions this hook cannot retry transient model or runtime
+errors. It only handles tool failures.
 
 <a id="security-notes"></a>
 

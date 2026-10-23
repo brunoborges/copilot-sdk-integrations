@@ -176,6 +176,11 @@ COPILOT = {
         "support": {"MODEL": "claude-sonnet-4.5", "AVAILABLE_TOOLS": ["custom:*"]},
     },
     "HOOKS": [],                          # global hooks, §12
+    "SESSIONS": {                         # retention, §10; cleanup is off by default
+        "MAX_AGE": None,                  # seconds or timedelta
+        "CLEANUP_INTERVAL": None,         # default MAX_AGE / 2, clamped to 1 min..1 h
+        "BACKGROUND_CLEANUP": True,       # daemon sweeper thread per process
+    },
     "TELEMETRY": {"OTEL": True},
 }
 ```
@@ -242,6 +247,7 @@ Parity with Java `@CopilotAgent`:
 | `model`, `reasoningEffort`, `provider` | `model`, `reasoning_effort`, `provider` |
 | `toolRefs`, `mcpServers` | `tools`, `mcp_servers` |
 | `availableTools`, `excludedTools`, `excludedBuiltInAgents`, `builtInTools` | `available_tools`, `excluded_tools`, `excluded_built_in_agents`, `built_in_tools` |
+| `toolSearch` (`enabled`, `deferThreshold`) | `tool_search` (`{"enabled": ..., "defer_threshold": ...}`) |
 | `workingDirectory`, `additionalDirectories` | `working_directory`, `additional_directories` |
 | `permissionHandlerRef` | `permissions` |
 | `hookRefs`, `listenerRefs`, `customizerRefs` | `hooks`, `listeners`, `customizers` |
@@ -448,6 +454,18 @@ user is `None` unless given.
   - Read-only admins, plus approve/deny admin actions on `PendingApproval`
   - Deleting a `Conversation` also deletes the runtime session (`client.delete_session`).
 
+- **Session store** (`copilot_django.get_session_store()`, a `copilot_agents.SessionStore`):
+  `list`, `get`, `exists`, `get_messages` (persisted events, read without resuming),
+  `delete` (waits for turns in flight on that session and removes the isolated workspace),
+  and `session_id_for(agent, conversation_id, user=...)`, which accepts an agent class,
+  instance or name. Sync methods plus `a`-prefixed async variants.
+- **Cleanup** (opt-in): with `SESSIONS.MAX_AGE` set, `AppConfig.ready()` starts a daemon
+  thread in each process (restarted after fork) that periodically deletes sessions that are
+  not remote, start with `agent-`, and were last modified before `now - MAX_AGE`. It
+  re-checks metadata before each delete, skips busy sessions, and never starts the runtime.
+  Set `BACKGROUND_CLEANUP: False` and run `copilot_cleanup_sessions` from cron instead to
+  sweep from one place.
+
 ## 11. Background work
 
 The sync API works unchanged inside Celery, RQ, Django-Q, and Django's built-in tasks
@@ -486,6 +504,7 @@ fork-safe. We add:
 | `copilot_check` | Starts the runtime; reports version, auth status, models, and each agent's resolved tools, MCP servers, and policy. |
 | `copilot_chat <agent> [--conversation ID] [--user USERNAME]` | Development REPL against an agent. |
 | `copilot_sessions [list\|delete]` | Inspect or prune runtime sessions created by the project. |
+| `copilot_cleanup_sessions [--max-age SECONDS]` | One cleanup sweep (§10); starts the runtime if needed. |
 
 ## 14. Testing
 

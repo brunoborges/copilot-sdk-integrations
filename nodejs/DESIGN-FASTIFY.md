@@ -172,6 +172,8 @@ interface CopilotPluginOptions {
   shutdownGracePeriod?: number;
   /** Stop the client on close. Default: true when the plugin created it, false when one was passed in. */
   stopOnClose?: boolean;
+  /** Periodically delete old sessions (ms). Off unless maxAge is set; interval defaults to maxAge / 2 (1 min–1 h). */
+  sessionCleanup?: { maxAge: number; interval?: number };
 }
 ```
 
@@ -192,6 +194,8 @@ interface CopilotPluginOptions {
 | --- | --- | --- |
 | `fastify.copilot` | `FastifyCopilot` | The core `Copilot` plus `agent(name)`, `agents()`, and `registerAgent(def)` |
 | `request.copilot` | `RequestCopilot` | `agent(name)` handles bound to this request's context and abort signal; `context`; `signal` |
+| `fastify.copilotSessions` | `CopilotSessions` | The core `copilot.sessions`: list, read messages, and delete persisted sessions |
+| `fastify.copilotSessionCleanup` | `SessionCleanup \| null` | The `sessionCleanup` job (`sweep()` runs one by hand); `null` when off |
 | `reply.copilotEvents(events, options?)` | method | Streams Copilot events as SSE (§9) |
 | `reply.copilotChat(...)`, `reply.copilotUIStream(...)` | methods, `./ai` only | AI SDK UI message stream responses (§10) |
 
@@ -217,9 +221,9 @@ interface CopilotPluginOptions {
 | Fastify hook | Behaviour |
 | --- | --- |
 | `register` | Validate options, create the client (or adopt the given one), validate agent tool filters |
-| `onReady` | `startup: "eager"`: `await copilot.start()`, so `app.ready()` and `app.listen()` fail if the runtime can't start |
+| `onReady` | `startup: "eager"`: `await copilot.start()`, so `app.ready()` and `app.listen()` fail if the runtime can't start; then start the `sessionCleanup` timer, if configured |
 | `preClose` | Stop admitting turns and drain in-flight turns for up to `shutdownGracePeriod` |
-| `onClose` | Abort remaining turns, disconnect sessions, stop the runtime (only when `stopOnClose`) |
+| `onClose` | Stop the `sessionCleanup` timer; abort remaining turns, disconnect sessions, stop the runtime (only when `stopOnClose`) |
 
 - Fastify's `return503OnClosing` (on by default) rejects new requests while closing, so
   the drain only sees requests already running.

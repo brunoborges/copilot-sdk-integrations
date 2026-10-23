@@ -10,9 +10,12 @@ import com.github.copilot.rpc.CopilotClientOptions;
 import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
 import io.github.brunoborges.copilot.agent.CopilotAgents;
 import io.github.brunoborges.copilot.agent.CopilotLoops;
+import io.github.brunoborges.copilot.agent.CopilotSessionStore;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
+import io.github.brunoborges.copilot.agent.internal.CopilotSessionStorage;
 import io.github.brunoborges.copilot.agent.internal.DefaultCopilotAgents;
 import io.github.brunoborges.copilot.agent.internal.DefaultCopilotLoops;
+import io.github.brunoborges.copilot.agent.internal.DefaultCopilotSessionStore;
 import io.github.brunoborges.copilot.micronaut.config.CopilotConfigs;
 import io.github.brunoborges.copilot.micronaut.config.CopilotRuntimeConfig;
 import io.micronaut.context.BeanProvider;
@@ -76,5 +79,17 @@ public class CopilotFactory {
     @Secondary
     CopilotLoops copilotLoops(CopilotAgents agents) {
         return new DefaultCopilotLoops(agents);
+    }
+
+    @Singleton
+    @Secondary
+    CopilotSessionStore copilotSessionStore(CopilotClient client, CopilotAgentInvoker invoker,
+            CopilotAgentRegistry registry, CopilotRuntimeConfig config) {
+        var timeout = config.sessions().timeout();
+        CopilotConfigs.requirePositive(timeout, CopilotRuntimeConfig.PREFIX + ".sessions.timeout");
+        return new DefaultCopilotSessionStore(CopilotSessionStorage.of(client), invoker, type -> {
+            var factory = registry.factory(type);
+            return factory == null ? null : factory.definition();
+        }, timeout);
     }
 }

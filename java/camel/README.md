@@ -50,11 +50,17 @@ from("kafka:tickets")
   afterward.
 - The producer is asynchronous; Camel's `onException`, redelivery, and circuit breakers apply.
 
+Prompts carry a provenance label (`messageSource`: `user`, `system`, or `agent-<id>`). When the
+endpoint sets none and no `CopilotMessageSources` scope is active, exchanges from `timer:`,
+`scheduler:`, `quartz:`, or `cron:` routes are sent as `system`; other routes leave it unset
+(runtime default `user`). The label is caller-supplied provenance, not an authenticated identity:
+never authorize from it.
+
 Endpoint options mirror `@CopilotAgent` attributes: `instructions`, `instructionsResource`,
 `instructionsMode`, `systemMessageRef`, `model`, `reasoningEffort`, `toolRefs`, `mcpServers`,
 `provider`, `permissionHandlerRef`, `listenerRefs`, `customizerRefs`, `hookRefs`,
 `tokenResolverRef`, `availableTools`, `excludedTools`, `excludedBuiltInAgents`, `builtInTools`,
-`workingDirectory`, `additionalDirectories`. Lists are comma separated; `*Ref` values are bean
+`toolSearch`, `toolSearchDeferThreshold`, `workingDirectory`, `additionalDirectories`, `messageSource`. Lists are comma separated; `*Ref` values are bean
 names in the Camel registry. Agent settings can also be set per endpoint: `responseTimeout`
 (e.g. `PT2M`) and the permission shortcuts `allow`, `allowTools`, `allowMcpServers`,
 `allowAgentTools`, `allowReadOnly`.
@@ -125,6 +131,21 @@ from("direct:advice").to("copilot:agent:advisor");
 Declarative agents are configured on the interface only. Explicit-ID agents are also bound in the
 registry under their name, and a `copilotAgents` bean creates and resumes the rest.
 
+## Error-recovery hooks
+
+`CopilotErrorRecoveryHooks` (from copilot-agent-core) is an opt-in hook based on the Copilot SDK cookbook's
+[error-recovery recipe](https://github.com/github/awesome-copilot/blob/main/cookbook/copilot-sdk/python/error-recovery-hooks.md).
+When a tool fails it adds a note telling the model to keep going, and it stops after `maxConsecutiveFailures`
+consecutive failures of the same tool. Bind it in the registry and reference it with `hookRefs`:
+
+```java
+context.getRegistry().bind("errorRecovery", CopilotErrorRecoveryHooks.builder().build());
+from("direct:ops").to("copilot:agent:ops?hookRefs=errorRecovery");
+```
+
+To apply it to every agent, subclass it with `@GlobalCopilotAgentHooks` on the class and bind the subclass.
+The Java SDK has no error-occurred hook, so transient model or runtime errors are not retried.
+
 ## Component options
 
 | Option | Description |
@@ -134,6 +155,29 @@ registry under their name, and a `copilotAgents` bean creates and resumes the re
 | `agentSettings` | `CopilotAgentSettings`. Default: the single registry bean, else defaults. |
 | `agentTypes` | Comma-separated `@CopilotAgent` interface names. |
 | `maxConcurrentInvocations`, `maxOutstandingInvocations` | Execution limits shared by all agents. |
+| `sessionTimeout` | Maximum wait for each session store or cleanup call. Default: `2m`. |
+| `sessionMaxAge` | Deletes agent sessions not modified for longer than this. Default: unset (no cleanup). |
+| `sessionCleanupInterval` | Delay between cleanup sweeps. Default: half of `sessionMaxAge`, between `1m` and `1h`. |
+
+## Sessions
+
+Each conversation is persisted in a Copilot session. The started component's `sessionStore()` (also bound in
+the registry as `copilotSessionStore`) lists, reads, and deletes them:
+
+```java
+CopilotSessionStore sessions = context.getComponent("copilot", CopilotComponent.class).sessionStore();
+
+String id = sessions.sessionId(Advisor.class, conversationId); // agents listed in agentTypes
+sessions.messages(id).ifPresent(history -> history.forEach(m -> log.info(m.role() + ": " + m.content())));
+sessions.delete(id);
+```
+
+`list()` returns only agent-created (`agent-…`) sessions, newest first, including those of `copilot:agent`
+endpoints. Deleting a session waits for a turn in flight on it.
+
+Set `sessionMaxAge` (for example `camel.component.copilot.session-max-age=30d`) to delete agent sessions not
+modified for that long. Cleanup runs on a Camel-managed scheduled thread while the component is started, never
+starts the client, and skips sessions with a turn in progress.
 
 ## Headers
 

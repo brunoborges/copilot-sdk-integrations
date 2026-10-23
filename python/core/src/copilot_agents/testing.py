@@ -27,6 +27,8 @@ from types import SimpleNamespace
 from typing import Any
 
 from copilot import ToolInvocation, ToolResult
+from copilot.client import SessionMetadata
+from copilot.generated.rpc import CursorStatus, EventsReadResult
 from copilot.generated.session_events import (
     AssistantMessageData,
     PermissionRequestCustomTool,
@@ -34,10 +36,12 @@ from copilot.generated.session_events import (
     SessionEventType,
     ToolExecutionCompleteData,
     ToolExecutionStartData,
+    UserMessageData,
 )
 from pydantic import BaseModel
 
 from .context import current_invocation
+from .message_sources import to_str as to_wire
 from .runtime import CopilotRuntime
 
 __all__ = ["AgentScript", "CopilotTestRuntime", "RecordedToolCall"]
@@ -129,6 +133,24 @@ class _StoredSession:
     session_id: str
     agent: str
     options: dict[str, Any] = field(default_factory=dict)
+    start_time: datetime = field(default_factory=lambda: datetime.now(UTC))
+    modified_time: datetime = field(default_factory=lambda: datetime.now(UTC))
+    is_remote: bool = False
+    summary: str | None = None
+    events: list[SessionEvent] = field(default_factory=list)
+
+    def metadata(self) -> SessionMetadata:
+        return SessionMetadata(
+            session_id=self.session_id,
+            start_time=self.start_time,
+            modified_time=self.modified_time,
+            is_remote=self.is_remote,
+            summary=self.summary,
+        )
+
+    def append(self, event: SessionEvent) -> None:
+        self.events.append(event)
+        self.modified_time = max(self.modified_time, event.timestamp)
 
 
 def _event(event_type: SessionEventType, data: Any) -> SessionEvent:
@@ -170,7 +192,10 @@ class _FakeSession:
         if self.disconnected:
             raise RuntimeError("Session is disconnected")
         agent = self._stored.agent
-        self._runtime._record_prompt(agent, prompt)
+        self._runtime._record_prompt(agent, prompt, kwargs.get("source"))
+        self._stored.append(
+            _event(SessionEventType.USER_MESSAGE, UserMessageData(content=prompt, message_id=uuid.uuid4().hex))
+        )
         turn = self._runtime.agent(agent)._next_turn()
         for step in turn:
             if isinstance(step, _ToolStep):
@@ -188,6 +213,7 @@ class _FakeSession:
             SessionEventType.ASSISTANT_MESSAGE,
             AssistantMessageData(content=text, message_id=uuid.uuid4().hex),
         )
+        self._stored.append(event)
         for handler in list(self._handlers):
             handler(event)
         return event
@@ -237,10 +263,17 @@ class _FakeSession:
             )
             result = await _maybe_await(tool.handler(invocation))
             ok = result.result_type == "success"
-            key = "on_post_tool_use" if ok else "on_post_tool_use_failure"
-            if key in hooks:
+            if ok and "on_post_tool_use" in hooks:
                 await _maybe_await(
-                    hooks[key]({**hook_input, "toolResult": result.text_result_for_llm}, {"session_id": self.session_id})
+                    hooks["on_post_tool_use"](
+                        {**hook_input, "toolResult": result.text_result_for_llm}, {"session_id": self.session_id}
+                    )
+                )
+            elif not ok and "on_post_tool_use_failure" in hooks:
+                await _maybe_await(
+                    hooks["on_post_tool_use_failure"](
+                        {**hook_input, "error": result.text_result_for_llm}, {"session_id": self.session_id}
+                    )
                 )
         else:
             ok = False
@@ -281,9 +314,26 @@ class _FakeClient:
     async def list_models(self) -> list[Any]:
         return [SimpleNamespace(id="test-model", name="Test model")]
 
-    async def get_session_metadata(self, session_id: str) -> Any:
+    async def get_session_metadata(self, session_id: str) -> SessionMetadata | None:
         stored = self._runtime._sessions.get(session_id)
-        return None if stored is None else SimpleNamespace(session_id=session_id)
+        return None if stored is None else stored.metadata()
+
+    async def list_sessions(self, filter: Any = None) -> list[SessionMetadata]:
+        return [stored.metadata() for stored in list(self._runtime._sessions.values())]
+
+    @property
+    def rpc(self) -> Any:
+        return SimpleNamespace(sessions=SimpleNamespace(read_persisted_events=self._read_persisted_events))
+
+    async def _read_persisted_events(self, params: Any, **kwargs: Any) -> EventsReadResult:
+        stored = self._runtime._sessions.get(params.session_id)
+        if stored is None:
+            raise RuntimeError(f"Session not found: {params.session_id}")
+        start = int(params.cursor or 0)
+        end = start + (params.max or 200)
+        page = list(stored.events[start:end])
+        has_more = end < len(stored.events)
+        return EventsReadResult(str(end), CursorStatus.OK, page, has_more)
 
     async def create_session(self, *, session_id: str | None = None, **options: Any) -> _FakeSession:
         if options.get("on_permission_request") is None:
@@ -321,6 +371,7 @@ class CopilotTestRuntime:
         self._scripts: dict[str, AgentScript] = {}
         self._sessions: dict[str, _StoredSession] = {}
         self._prompts: dict[str, list[str]] = defaultdict(list)
+        self._sources: dict[str, list[str | None]] = defaultdict(list)
         self._tool_calls: list[RecordedToolCall] = []
         self._lock = threading.Lock()
         self.created: list[str] = []
@@ -340,6 +391,10 @@ class CopilotTestRuntime:
     def prompts(self, agent: str) -> list[str]:
         return list(self._prompts.get(agent, ()))
 
+    def sources(self, agent: str) -> list[str | None]:
+        """Wire-form message source of each prompt (``None`` when not set), aligned with :meth:`prompts`."""
+        return list(self._sources.get(agent, ()))
+
     def tool_calls(self, agent: str | None = None) -> list[RecordedToolCall]:
         return [call for call in self._tool_calls if agent is None or call.agent == agent]
 
@@ -358,11 +413,44 @@ class CopilotTestRuntime:
                 return dict(options)
         raise LookupError(f"No session for agent {agent!r}")
 
+    def add_session(
+        self,
+        session_id: str,
+        *,
+        agent: str = "default",
+        modified: datetime | None = None,
+        started: datetime | None = None,
+        is_remote: bool = False,
+        summary: str | None = None,
+        events: list[SessionEvent] | None = None,
+    ) -> None:
+        """Seed a persisted session (for session store and cleanup tests)."""
+        now = datetime.now(UTC)
+        modified = modified or now
+        self._sessions[session_id] = _StoredSession(
+            session_id,
+            agent,
+            start_time=started or modified,
+            modified_time=modified,
+            is_remote=is_remote,
+            summary=summary,
+            events=list(events or ()),
+        )
+
+    def touch(self, session_id: str, modified: datetime | None = None) -> None:
+        """Set a session's last-modified time (now by default)."""
+        self._sessions[session_id].modified_time = modified or datetime.now(UTC)
+
+    def session_events(self, session_id: str) -> list[SessionEvent]:
+        """The events recorded for a session (user prompts and assistant replies)."""
+        return list(self._sessions[session_id].events)
+
     def reset(self) -> None:
         with self._lock:
             self._scripts.clear()
             self._sessions.clear()
             self._prompts.clear()
+            self._sources.clear()
             self._tool_calls.clear()
             for log in (self.created, self.resumed, self.deleted, self.aborted, self._history):
                 log.clear()
@@ -377,9 +465,10 @@ class CopilotTestRuntime:
         finally:
             runtime.set_client_factory(previous)
 
-    def _record_prompt(self, agent: str, prompt: str) -> None:
+    def _record_prompt(self, agent: str, prompt: str, source: Any = None) -> None:
         with self._lock:
             self._prompts[agent].append(prompt)
+            self._sources[agent].append(to_wire(source))
 
     def _record_tool_call(self, call: RecordedToolCall) -> None:
         with self._lock:

@@ -15,8 +15,9 @@ import type {
   ToolInvocation,
   ToolSet,
   ToolResultObject,
+  MessageSource,
 } from "@github/copilot-sdk";
-import type { ClientFactory, ClientLike, SessionLike, StructuredSchema } from "../types.js";
+import type { ClientFactory, ClientLike, PersistedEventsPage, SessionLike, StructuredSchema } from "../types.js";
 import {
   PromptScript,
   matches,
@@ -53,6 +54,8 @@ export interface TestPrompt {
   sessionId: string;
   messageId: string;
   prompt: string;
+  /** Message source sent with the prompt; `undefined` when not set (runtime default). */
+  source?: MessageSource;
 }
 
 export interface TestModel {
@@ -253,6 +256,12 @@ export class CopilotTestRuntime {
   events(sessionId: string): SessionEvent[] {
     return [...(this.sessions.get(sessionId)?.events ?? [])];
   }
+  /** Overrides a session's last-modified time (e.g. to test session cleanup). Throws for an unknown session. */
+  setModifiedTime(sessionId: string, modifiedTime: Date): void {
+    const state = this.sessions.get(sessionId);
+    if (!state) throw new Error(`Session not found: ${sessionId}`);
+    state.modifiedTime = modifiedTime;
+  }
 
   // -------------------------------------------------------------------------
   // Client operations (used by TestClient)
@@ -353,6 +362,23 @@ export class CopilotTestRuntime {
   }
 
   /** @internal */
+  async listSessions(): Promise<TestSessionMetadata[]> {
+    const ids = [...this.sessions.keys()];
+    const result = await Promise.all(ids.map((id) => this.getSessionMetadata(id)));
+    return result.filter((m): m is TestSessionMetadata => m !== undefined);
+  }
+
+  /** @internal Pages the session's persisted (non-ephemeral) events; the cursor is an offset. */
+  async readPersistedEvents(params: { sessionId: string; cursor?: string; max?: number }): Promise<PersistedEventsPage> {
+    const state = this.sessions.get(params.sessionId);
+    if (!state) throw new Error(`Session not found: ${params.sessionId}`);
+    const persisted = state.events.filter((e) => !(e as { ephemeral?: boolean }).ephemeral);
+    const start = params.cursor === undefined ? 0 : Number(params.cursor);
+    const end = Math.min(persisted.length, start + (params.max ?? 200));
+    return { events: persisted.slice(start, end), cursor: String(end), hasMore: end < persisted.length, cursorStatus: "ok" };
+  }
+
+  /** @internal */
   async listModels(): Promise<TestModel[]> {
     return this.models.map((m) => ({ ...m }));
   }
@@ -372,9 +398,9 @@ export class CopilotTestRuntime {
   // -------------------------------------------------------------------------
 
   /** @internal */
-  enqueueTurn(state: SessionState, prompt: string): string {
+  enqueueTurn(state: SessionState, prompt: string, source?: MessageSource): string {
     const messageId = randomUUID();
-    this._prompts.push({ sessionId: state.id, messageId, prompt });
+    this._prompts.push(source === undefined ? { sessionId: state.id, messageId, prompt } : { sessionId: state.id, messageId, prompt, source });
     state.summary ??= prompt.slice(0, 80);
     state.queue = state.queue.then(
       () =>
@@ -909,6 +935,14 @@ class TestClient implements ClientLike {
   getSessionMetadata(sessionId: string): Promise<TestSessionMetadata | undefined> {
     return this.runtime.getSessionMetadata(sessionId);
   }
+  listSessions(): Promise<TestSessionMetadata[]> {
+    return this.runtime.listSessions();
+  }
+  readonly rpc = {
+    sessions: {
+      readPersistedEvents: (params: { sessionId: string; cursor?: string; max?: number }) => this.runtime.readPersistedEvents(params),
+    },
+  };
   listModels(): Promise<TestModel[]> {
     return this.runtime.listModels();
   }
@@ -937,13 +971,13 @@ export class TestSession implements SessionLike {
     return this.state.config;
   }
 
-  async send(options: { prompt: string; mode?: "enqueue" | "immediate" }): Promise<string> {
+  async send(options: { prompt: string; mode?: "enqueue" | "immediate"; source?: MessageSource }): Promise<string> {
     if (this.disconnected) throw new Error("Session is disconnected");
-    return this.runtime.enqueueTurn(this.state, options.prompt);
+    return this.runtime.enqueueTurn(this.state, options.prompt, options.source);
   }
 
   async sendAndWait(
-    options: { prompt: string },
+    options: { prompt: string; source?: MessageSource },
     responseSchema?: StructuredSchema<unknown> | number,
     timeout?: number,
   ): Promise<unknown> {

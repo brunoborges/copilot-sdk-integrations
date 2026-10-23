@@ -20,6 +20,7 @@ npm install @copilot-sdk-integrations/nestjs @copilot-sdk-integrations/agent-cor
         providers: { foundry: { type: "azure", baseUrl: config.get("FOUNDRY_URL")!, apiKey: config.get("FOUNDRY_KEY") } },
         agents: { support: { model: config.get("SUPPORT_MODEL") } }, // per-agent overrides beat decorators
         context: { headers: ["x-tenant"] },     // copied into CopilotContext.attributes.headers
+        sessionCleanup: { maxAge: 7 * 24 * 3_600_000 }, // delete sessions idle for a week (default: off)
       }),
     }),
     SupportModule,
@@ -34,6 +35,8 @@ export class AppModule {}
 - `COPILOT_CLIENT`, an accessor `() => Promise<client>` that starts a lazy runtime, injected with `@InjectCopilotClient()`.
 - `CopilotAgents`.
 - `CopilotHealthIndicator`.
+- `CopilotSessionsService`, which lists, reads (`getMessages`), and deletes persisted sessions without resuming them.
+- `CopilotSessionCleanup`, which deletes old sessions every `sessionCleanup.interval` (default `maxAge / 2`, clamped to 1 minute–1 hour) when `sessionCleanup.maxAge` is set. It only touches sessions created by this library that aren't remote or running, and never starts the runtime.
 - A global `CopilotContextInterceptor` (disable it with `context: false`).
 - A global `CopilotExceptionFilter` (disable it with `exceptionFilter: false`).
 
@@ -117,7 +120,7 @@ export class OrdersTools {
   - an injectable class with `evaluate(request, ctx)`
   - an instance
   - an app-wide default provided as `COPILOT_PERMISSION_POLICY`
-- **Hooks**: `@CopilotHook("preToolUse", { agents: [SupportAgent] })` methods are composed with each agent's `hooks`. Global hooks run first.
+- **Hooks**: `@CopilotHook("preToolUse", { agents: [SupportAgent] })` methods are composed with each agent's `hooks`. Global hooks run first. For opt-in error recovery (keep going after failed tool calls, retry transient errors), pass `hooks: errorRecoveryHooks()` from agent-core to `forRoot`; see [Error recovery](../core/README.md#error-recovery).
 - **Events**: `@OnCopilotEvent("done" | "tool-end" | "*")` methods receive `(event, context)`. Listener failures are logged and never break a turn.
 - **`@nestjs/event-emitter`**: set `eventEmitter: true` (or `{ prefix: "ai" }`) in `forRoot` and import `EventEmitterModule.forRoot()`. Every agent event is then re-emitted on `EventEmitter2` as `copilot.<type>` (for example `copilot.done`, `copilot.tool-end`, `copilot.permission-request`) with `(event, context)`, so `@OnEvent("copilot.done")` works. Bootstrap fails if the option is set but `EventEmitterModule` isn't imported. Emitter failures are logged and never break a turn. The package is an optional peer dependency, loaded only when the option is set.
 - **MCP servers with per-user credentials**: an MCP server's `headers` (HTTP) or `env` (stdio) values may be functions of the `CopilotContext`, or the whole map may be one function. They're resolved for every session create and resume, after the token resolver runs, so `ctx.githubToken` is available. Entries that resolve to `undefined` are dropped.

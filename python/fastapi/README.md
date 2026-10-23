@@ -84,7 +84,7 @@ Copilot lifespan around yours and installs the exception handlers.
 
 - **Agents.** Subclass `CopilotAgent` and set any of these class attributes:
   `instructions`, `model`, `reasoning_effort`, `tools`, `mcp_servers`, `available_tools` /
-  `excluded_tools`, `built_in_tools`, `permissions`, `hooks`, `working_directory`,
+  `excluded_tools`, `built_in_tools`, `tool_search`, `permissions`, `hooks`, `working_directory`,
   `provider`, `token_resolver` and `timeout`. Every attribute can be overridden per
   environment through `COPILOT_AGENTS`. Agent names must be unique within a `Copilot`
   instance.
@@ -112,6 +112,19 @@ Copilot lifespan around yours and installs the exception handlers.
   attribute, or the value itself if it is a `str`/`int`. Users therefore cannot resume each
   other's conversations. If a user has no key, the call fails; sessions are never silently
   shared.
+- **Sessions.** `copilot.session_store` is a dependency that returns a store to list, read
+  (without resuming), check and delete sessions. `store.session_id_for(agent,
+  conversation_id)` maps a conversation to its session ID for the agent's user. Set
+  `COPILOT_SESSIONS__MAX_AGE` to have the lifespan delete this integration's sessions that
+  have not been modified for that long (off by default).
+
+  ```python
+  Sessions = Annotated[CopilotSessionStore, Depends(copilot.session_store)]
+
+  @app.delete("/chats/{chat_id}")
+  async def delete_chat(chat_id: str, agent: Support, sessions: Sessions):
+      return {"deleted": await sessions.adelete(sessions.session_id_for(agent, chat_id))}
+  ```
 - **Safe defaults.**
   - Permissions default to `deny`.
   - Every session gets an isolated working directory under `<base_directory>/workspaces`.
@@ -153,7 +166,13 @@ COPILOT_DEFAULTS__PERMISSIONS=deny
 COPILOT_MCP_SERVERS='{"docs": {"type": "http", "url": "https://example.com/mcp"}}'
 COPILOT_AGENTS='{"support": {"model": "claude-sonnet-4.5", "timeout": 60}}'
 COPILOT_HOOKS='["app.hooks.AuditHooks"]'
+COPILOT_SESSIONS__MAX_AGE=P30D             # seconds or ISO 8601; unset = no cleanup
+COPILOT_SESSIONS__CLEANUP_INTERVAL=3600    # default: MAX_AGE / 2, between 1 minute and 1 hour
 ```
+
+To have agents keep going after failed tool calls and retry transient errors, add the opt-in
+[`ErrorRecoveryHooks`](../core/README.md#error-recovery):
+`COPILOT_HOOKS='["copilot_agents.ErrorRecoveryHooks"]'`, or pass an instance with `Copilot(hooks=[ErrorRecoveryHooks(...)])`.
 
 Unknown keys in agent overrides are rejected. Secrets are `SecretStr` values and never
 appear in `repr` or in logs. To download the runtime at image build time, run

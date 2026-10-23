@@ -41,6 +41,7 @@ from .executor import (
     default_fallback,
 )
 from .hooks import session_hooks
+from .message_sources import resolve as resolve_message_source
 from .runtime import CopilotRuntime
 from .session_ids import SHARED, derive_session_id
 from .tokens import CallerIdentity
@@ -85,6 +86,7 @@ class _Binding:
 class _Call:
     context: AgentContext
     token: str | None
+    source: Any = None
 
 
 class AgentInvoker:
@@ -149,7 +151,7 @@ class AgentInvoker:
             partition_key=partition,
             attributes=dict(attributes or {}),
         )
-        return _Call(ctx, token)
+        return _Call(ctx, token, resolve_message_source(definition.message_source))
 
     def _context_for(self, conversation_id: str, user: Any, request: Any) -> AgentContext:
         identity = CallerIdentity(self.definition.name, user, request)
@@ -180,7 +182,7 @@ class AgentInvoker:
         executor = CallerThreadExecutor()
         binding = _Binding(call.context, CallerThreadDispatcher(executor, self.fallback))
         timeout = self.definition.timeout if timeout is None else timeout
-        coro = self._run(call, binding, prompt, result, require_existing, timeout)
+        coro = self._tracked(call, self._run(call, binding, prompt, result, require_existing, timeout))
         return self._wait_sync(executor, self.runtime.submit(coro), timeout)
 
     def delete(self, conversation_id: str, *, user: Any = None, request: Any = None) -> None:
@@ -213,7 +215,9 @@ class AgentInvoker:
         resolved = await dispatcher.sync_runner(lambda: self._resolve(identity))
         call = self._prepare(conversation_id, user, request, attributes, resolved)
         timeout = self.definition.timeout if timeout is None else timeout
-        coro = self._run(call, _Binding(call.context, dispatcher), prompt, result, require_existing, timeout)
+        coro = self._tracked(
+            call, self._run(call, _Binding(call.context, dispatcher), prompt, result, require_existing, timeout)
+        )
         try:
             return await asyncio.wait_for(
                 self.runtime.run_async(coro), timeout + OUTER_TIMEOUT_MARGIN
@@ -251,11 +255,15 @@ class AgentInvoker:
                 f"Copilot agent {self.definition.name!r} did not reply within {timeout} seconds"
             ) from None
 
+    async def _tracked(self, call: _Call, turn: Any) -> Any:
+        return await self.runtime.activity.track(call.context.session_id, turn)
+
     async def _delete(self, ctx: AgentContext) -> None:
         client = await self.runtime.client()
-        if await client.get_session_metadata(ctx.session_id) is not None:
-            await client.delete_session(ctx.session_id)
-        await self._release(ctx)
+        async with self.runtime.activity.exclusive(ctx.session_id):
+            if await client.get_session_metadata(ctx.session_id) is not None:
+                await client.delete_session(ctx.session_id)
+            await self._release(ctx)
 
     async def _release(self, ctx: AgentContext) -> None:
         release = self.definition.release_working_directory
@@ -305,6 +313,8 @@ class AgentInvoker:
             options["provider"] = dict(definition.provider)
         if definition.available_tools:
             options["available_tools"] = list(definition.available_tools)
+        if definition.tool_search is not None:
+            options["tool_search"] = dict(definition.tool_search)
         excluded = definition.effective_excluded_tools
         if excluded:
             options["excluded_tools"] = list(excluded)
@@ -360,6 +370,8 @@ class AgentInvoker:
                 kwargs: dict[str, Any] = {"timeout": timeout}
                 if typed:
                     kwargs["response_schema"] = result
+                if call.source is not None:
+                    kwargs["source"] = call.source
                 try:
                     event = await session.send_and_wait(prompt, **kwargs)
                 except asyncio.CancelledError:

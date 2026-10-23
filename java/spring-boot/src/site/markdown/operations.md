@@ -75,8 +75,9 @@ reference. There is no automatic POJO structured-response agent mapping,
 declarative MCP/hook/attachment configuration layer, distributed conversation
 lock, user authorization implementation, automatic permission approval, or
 automatic CLI installation. Advanced SDK capabilities remain available through
-native beans and customizers. This guide does not claim native-image/AOT or
-experimental in-process runtime setup support.
+native beans and customizers. This guide does not claim native-image/AOT
+support. The experimental in-process runtime is covered in
+[Configuration](configuration.html#in-process-runtime-experimental).
 
 Source entry points:
 

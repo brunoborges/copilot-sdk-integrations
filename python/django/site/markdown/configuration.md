@@ -35,6 +35,11 @@ COPILOT = {
     "PROVIDERS": {},                  # name -> BYOK provider config
     "AGENTS": {},                     # agent name -> attribute overrides
     "HOOKS": [],                      # dotted paths to CopilotAgentHooks for every agent
+    "SESSIONS": {
+        "MAX_AGE": None,              # seconds or timedelta; None: no cleanup
+        "CLEANUP_INTERVAL": None,     # default: MAX_AGE / 2, between 1 minute and 1 hour
+        "BACKGROUND_CLEANUP": True,
+    },
     "TELEMETRY": None,                # SDK telemetry config
 }
 ```
@@ -84,8 +89,26 @@ attribute names:
 COPILOT = {
     "AGENTS": {
         "support": {"MODEL": "claude-sonnet-4.5", "TIMEOUT": 120},
+        "github_triage": {"TOOL_SEARCH": {"enabled": True, "defer_threshold": 50}},
     },
 }
 ```
 
 Precedence is `AGENTS` overrides, then class attributes, then `DEFAULTS`.
+
+## Session cleanup
+
+Session cleanup is opt-in because deleting sessions is destructive. With `MAX_AGE` set, each
+process sweeps every `CLEANUP_INTERVAL` from a daemon thread started in `AppConfig.ready()`
+(and restarted after `fork()`). A sweep deletes only sessions that are not remote, whose ID
+starts with `agent-`, and whose last modification is older than `MAX_AGE`. It re-reads the
+metadata right before deleting, skips sessions with a turn in flight, and does nothing until
+the runtime has been started by a request. Errors are logged and retried on the next sweep.
+
+```python
+COPILOT = {"SESSIONS": {"MAX_AGE": timedelta(days=30)}}
+```
+
+To sweep from one place instead of every worker, set `"BACKGROUND_CLEANUP": False` and
+schedule [`copilot_cleanup_sessions`](operations.md#copilotcleanupsessions) with cron or
+your task scheduler.

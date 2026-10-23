@@ -1,7 +1,11 @@
 package io.github.brunoborges.copilot.camel;
 
+import java.time.Clock;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -15,14 +19,18 @@ import com.github.copilot.CopilotClient;
 import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
 import io.github.brunoborges.copilot.agent.CopilotAgents;
 import io.github.brunoborges.copilot.agent.CopilotLoops;
+import io.github.brunoborges.copilot.agent.CopilotSessionStore;
 import io.github.brunoborges.copilot.agent.internal.BindingContext;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentExecutionLimits;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentFactory;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentSettings;
+import io.github.brunoborges.copilot.agent.internal.CopilotSessionCleaner;
+import io.github.brunoborges.copilot.agent.internal.CopilotSessionStorage;
 import io.github.brunoborges.copilot.agent.internal.DefaultCopilotAgents;
 import io.github.brunoborges.copilot.agent.internal.DefaultCopilotLoops;
+import io.github.brunoborges.copilot.agent.internal.DefaultCopilotSessionStore;
 import io.github.brunoborges.copilot.agent.internal.ResourceLookup;
 
 /**
@@ -47,6 +55,9 @@ public class CopilotComponent extends DefaultComponent {
     private String agentTypes;
     private int maxConcurrentInvocations = CopilotAgentExecutionLimits.DEFAULT.maxConcurrentInvocations();
     private int maxOutstandingInvocations = CopilotAgentExecutionLimits.DEFAULT.maxOutstandingInvocations();
+    private Duration sessionTimeout = DefaultCopilotSessionStore.DEFAULT_TIMEOUT;
+    private Duration sessionMaxAge;
+    private Duration sessionCleanupInterval;
 
     private final Map<String, Class<?>> declaredAgents = new ConcurrentHashMap<>();
     private final Map<Class<?>, CopilotAgentFactory> factories = new ConcurrentHashMap<>();
@@ -54,6 +65,9 @@ public class CopilotComponent extends DefaultComponent {
     private volatile boolean ownsClient;
     private volatile CopilotAgentInvoker invoker;
     private volatile BindingContext binding;
+    private volatile CopilotSessionStore sessionStore;
+    private volatile ScheduledExecutorService sessionCleanup;
+    private volatile Duration activeCleanupInterval;
 
     public CopilotComponent() {
     }
@@ -94,11 +108,32 @@ public class CopilotComponent extends DefaultComponent {
         invoker = new CopilotAgentInvoker(activeClient,
                 selectedTelemetry != null ? selectedTelemetry : CopilotAgentTelemetry.NOOP,
                 new CopilotAgentExecutionLimits(maxConcurrentInvocations, maxOutstandingInvocations));
+        var storage = CopilotSessionStorage.of(activeClient);
+        sessionStore = new DefaultCopilotSessionStore(storage, invoker, type -> {
+            var factory = factory(type);
+            return factory == null ? null : factory.definition();
+        }, sessionTimeout);
+        if (sessionMaxAge != null) {
+            var cleaner = new CopilotSessionCleaner(storage, invoker, sessionMaxAge, sessionTimeout, Clock.systemUTC());
+            activeCleanupInterval = CopilotSessionCleaner.interval(sessionMaxAge, sessionCleanupInterval);
+            long interval = activeCleanupInterval.toMillis();
+            sessionCleanup = getCamelContext().getExecutorServiceManager()
+                    .newSingleThreadScheduledExecutor(this, "CopilotSessionCleanup");
+            sessionCleanup.scheduleWithFixedDelay(cleaner::sweepQuietly, interval, interval, TimeUnit.MILLISECONDS);
+        }
+        getCamelContext().getRegistry().bind("copilotSessionStore", CopilotSessionStore.class, sessionStore);
         registerDeclaredAgents();
     }
 
     @Override
     protected void doStop() throws Exception {
+        var cleanup = sessionCleanup;
+        sessionCleanup = null;
+        activeCleanupInterval = null;
+        if (cleanup != null) {
+            getCamelContext().getExecutorServiceManager().shutdownNow(cleanup);
+        }
+        sessionStore = null;
         var current = invoker;
         invoker = null;
         if (current != null) {
@@ -172,6 +207,25 @@ public class CopilotComponent extends DefaultComponent {
 
     CopilotClient activeClient() {
         return activeClient;
+    }
+
+    /**
+     * Lists, reads, and deletes the persisted sessions of this component's agents. {@link
+     * CopilotSessionStore#sessionId(Class, String)} resolves the agent types listed in {@link #setAgentTypes(String)}.
+     *
+     * @throws IllegalStateException if the component is not started
+     */
+    public CopilotSessionStore sessionStore() {
+        var current = sessionStore;
+        if (current == null) {
+            throw new IllegalStateException("The copilot component is not started");
+        }
+        return current;
+    }
+
+    /** The interval between cleanup sweeps, or {@code null} when cleanup is not scheduled. */
+    Duration activeCleanupInterval() {
+        return activeCleanupInterval;
     }
 
     BindingContext binding() {
@@ -250,5 +304,47 @@ public class CopilotComponent extends DefaultComponent {
 
     public void setMaxOutstandingInvocations(int maxOutstandingInvocations) {
         this.maxOutstandingInvocations = maxOutstandingInvocations;
+    }
+
+    public Duration getSessionTimeout() {
+        return sessionTimeout;
+    }
+
+    /**
+     * Maximum time a {@link #sessionStore() session store} or cleanup call waits for the Copilot runtime, including
+     * how long a deletion waits for a turn in flight on the session. Default: 2 minutes.
+     */
+    public void setSessionTimeout(Duration sessionTimeout) {
+        if (sessionTimeout == null || !sessionTimeout.isPositive()) {
+            throw new IllegalArgumentException("sessionTimeout must be positive");
+        }
+        this.sessionTimeout = sessionTimeout;
+    }
+
+    public Duration getSessionMaxAge() {
+        return sessionMaxAge;
+    }
+
+    /**
+     * Deletes agent sessions not modified for longer than this, while the component runs. Default: unset, which
+     * disables cleanup.
+     */
+    public void setSessionMaxAge(Duration sessionMaxAge) {
+        if (sessionMaxAge != null && !sessionMaxAge.isPositive()) {
+            throw new IllegalArgumentException("sessionMaxAge must be positive");
+        }
+        this.sessionMaxAge = sessionMaxAge;
+    }
+
+    public Duration getSessionCleanupInterval() {
+        return sessionCleanupInterval;
+    }
+
+    /** Time between cleanup sweeps. Default: half of {@code sessionMaxAge}, between one minute and one hour. */
+    public void setSessionCleanupInterval(Duration sessionCleanupInterval) {
+        if (sessionCleanupInterval != null && !sessionCleanupInterval.isPositive()) {
+            throw new IllegalArgumentException("sessionCleanupInterval must be positive");
+        }
+        this.sessionCleanupInterval = sessionCleanupInterval;
     }
 }

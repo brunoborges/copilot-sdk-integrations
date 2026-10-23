@@ -109,6 +109,13 @@ describe("info route", () => {
     expect(res.json().agents[0].instructions).toBe("Secret instructions");
   });
 
+  it("includes toolSearch settings", async () => {
+    const searcher = defineAgent({ name: "searcher", toolSearch: { enabled: true, deferThreshold: 12 } });
+    const { fastify } = await setup({ agents: [searcher], info: true });
+    const res = await fastify.inject("/copilot/info");
+    expect(res.json().agents[0].toolSearch).toEqual({ enabled: true, deferThreshold: 12 });
+  });
+
   it("warns when the info route has no guard", async () => {
     const warn = vi.fn();
     await setup({ info: true }, {}, (f) => {

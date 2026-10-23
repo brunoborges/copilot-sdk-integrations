@@ -85,6 +85,7 @@ export async function buildApp({ client = {} }: { client?: CopilotOptions | Copi
 | `errorHandler` | `true` | Installs the [error handler](#errors) |
 | `health`, `info` | off | [Health and info routes](#health-info-and-under-pressure) |
 | `shutdownGracePeriod` | `30_000` | How long `close()` waits for in-flight turns |
+| `sessionCleanup` | off | `{ maxAge, interval? }` (ms): periodically delete old sessions; see [cleanup job](conversations.md#cleanup-job) |
 | `stopOnClose` | `true` when the plugin created the client | Stop the client in `onClose` |
 
 Options are validated at registration; an invalid option fails `register` with a
@@ -270,9 +271,9 @@ await app.register(underPressure, { healthCheck: copilotHealthCheck(app), health
 | Fastify hook | Behaviour |
 | --- | --- |
 | `register` | Validate options, create the client (or adopt the given one) |
-| `onReady` | With `startup: "eager"`, start the runtime; `ready()` / `listen()` reject when it can't start |
+| `onReady` | With `startup: "eager"`, start the runtime; `ready()` / `listen()` reject when it can't start. Start the `sessionCleanup` timer, if configured |
 | `preClose` | Stop admitting turns (new turns get `503`) and start draining for up to `shutdownGracePeriod` |
-| `onClose` | Wait for the drain, abort what's left, and stop the runtime (when `stopOnClose`) |
+| `onClose` | Stop the `sessionCleanup` timer; wait for the drain, abort what's left, and stop the runtime (when `stopOnClose`) |
 
 Crash restarts are the core's [runtime restarts](operations.md#runtime-restarts), unchanged.
 Signal handling stays with the app: call `app.close()` on `SIGINT` and `SIGTERM`, by hand or

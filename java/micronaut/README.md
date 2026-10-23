@@ -104,6 +104,36 @@ existing TCP server):
 micronaut.copilot.cli-path=/absolute/path/to/copilot
 ```
 
+To run the runtime inside the JVM instead, set the experimental `micronaut.copilot.connection=inprocess`
+(or `stdio` to pin the child-process transport). It needs JNA and the platform runtime artifact:
+
+```xml
+<dependency>
+  <groupId>net.java.dev.jna</groupId>
+  <artifactId>jna</artifactId>
+  <version>5.19.1</version>
+</dependency>
+<dependency>
+  <groupId>com.github</groupId>
+  <artifactId>copilot-sdk-java-runtime</artifactId>
+  <version>${copilot-sdk.version}</version>
+  <classifier>darwin-arm64</classifier>
+</dependency>
+```
+
+Classifiers are `linux-x64`, `linux-arm64`, `linuxmusl-x64`, `linuxmusl-arm64`,
+`win32-x64`, `win32-arm64`, `darwin-x64`, and `darwin-arm64`. A `runtime.node`
+next to the CLI named by `COPILOT_CLI_PATH`, or next to `copilot` on `PATH`,
+also works. Startup fails with the missing dependency and the classifier for the
+current platform when JNA or the runtime cannot be found.
+
+In-process mode cannot be combined with `cli-path`, `cli-args`,
+`working-directory`, `cli-url`, or `tcp-connection-token`; startup names every
+conflicting setting. A JVM loads only one native runtime library.
+On JDK 24 and later, add `--enable-native-access=ALL-UNNAMED` to avoid native
+access warnings. `micronaut.copilot.connection=stdio` pins the child-process transport even
+when `COPILOT_SDK_DEFAULT_CONNECTION=inprocess` is set.
+
 Declare an agent interface:
 
 ```java
@@ -161,6 +191,26 @@ Beans looked up by type (hooks, return-type adapters, telemetry decorators) are 
 The integration's default beans (`CopilotClient`, `CopilotClientOptions`, `CopilotAgents`, telemetry) are
 `@Secondary`, so an application bean of the same type wins; use `@Replaces` to remove a default entirely.
 
+### Error-recovery hooks
+
+`CopilotErrorRecoveryHooks` (from copilot-agent-core) is an opt-in hook based on the Copilot SDK cookbook's
+[error-recovery recipe](https://github.com/github/awesome-copilot/blob/main/cookbook/copilot-sdk/python/error-recovery-hooks.md).
+When a tool fails it adds a note telling the model to keep going, and it stops after `maxConsecutiveFailures`
+consecutive failures of the same tool. Register it from a factory:
+
+```java
+@Factory
+class RecoveryFactory {
+    @Singleton
+    @GlobalCopilotAgentHooks
+    CopilotErrorRecoveryHooks errorRecovery() {
+        return CopilotErrorRecoveryHooks.builder().maxConsecutiveFailures(3).build();
+    }
+}
+```
+
+The Java SDK has no error-occurred hook, so transient model or runtime errors are not retried.
+
 ## Configuration
 
 All settings live under `micronaut.copilot`. The keys and defaults match the Spring Boot starter's
@@ -178,7 +228,12 @@ micronaut.copilot.agents.micronaut-advisor.response-timeout=2m
 micronaut.copilot.agents.micronaut-advisor.excluded-tools=shell
 micronaut.copilot.agents.micronaut-advisor.permissions.allow=read
 micronaut.copilot.agents.micronaut-advisor.mcp-servers=github
+# Defer MCP tool definitions behind tool search once the agent has 20+ tools
+micronaut.copilot.agents.micronaut-advisor.tool-search.defer-threshold=20
 micronaut.copilot.agents.micronaut-advisor.provider=foundry
+# Prompt provenance: user, system, or agent-<id> (none clears @CopilotAgent(messageSource)).
+# Caller-supplied, not an authenticated identity; never authorize from it.
+micronaut.copilot.agents.micronaut-advisor.message-source=system
 
 # MCP servers
 micronaut.copilot.mcp.servers.github.type=http
@@ -208,6 +263,34 @@ Reactor streams buffer up to `micronaut.copilot.streaming.buffer-capacity` (defa
 
 Agents and their bean references are validated at startup, so a missing tool bean or an unknown MCP server fails
 the application instead of the first request.
+
+## Sessions
+
+Each conversation is persisted in a Copilot session. Inject `CopilotSessionStore` to list, read, or delete them,
+for example to build a conversation history view:
+
+```java
+@Inject CopilotSessionStore sessions;
+
+String id = sessions.sessionId(Advisor.class, conversationId);
+sessions.messages(id).ifPresent(history -> history.forEach(m -> LOG.info(m.role() + ": " + m.content())));
+sessions.delete(id);
+```
+
+`list()` returns only agent-created (`agent-…`) sessions, newest first. Deleting a session waits for a turn in
+flight on it. Calls block, so run them on the blocking executor (for example with `@ExecuteOn(TaskExecutors.BLOCKING)`);
+each waits at most `micronaut.copilot.sessions.timeout` (default `2m`). The store is `@Secondary`, so an application
+bean replaces it.
+
+Old sessions are kept until deleted. To delete agent sessions not modified for a while, set a max age:
+
+| Property | Default | Effect |
+| --- | --- | --- |
+| `micronaut.copilot.sessions.cleanup.max-age` | unset (disabled) | Deletes agent sessions not modified for longer than this. |
+| `micronaut.copilot.sessions.cleanup.interval` | half the max age, between `1m` and `1h` | Delay between sweeps. |
+
+Cleanup runs on the `scheduled` task executor, never starts the client, only deletes local `agent-` sessions, and
+skips sessions with a turn in progress.
 
 ## Testing
 

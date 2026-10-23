@@ -11,6 +11,12 @@ import {
 // ---------------------------------------------------------------------------
 
 /**
+ * Prefix of every session id this library creates (conversation and ephemeral sessions). The
+ * session cleanup only ever deletes sessions with this prefix.
+ */
+export const COPILOT_SESSION_ID_PREFIX = "copilot-";
+
+/**
  * Derives the SDK session id for a conversation.
  *
  * The id is a SHA-256 digest of the length-prefixed agent name, principal, and conversation id,
@@ -42,7 +48,7 @@ export function deriveSessionId(agentName: string, principal: string | undefined
   part("agent", agentName);
   part("principal", principal);
   part("conversation", conversationId);
-  return `copilot-${agentName}-${hash.digest("hex").slice(0, 32)}`;
+  return `${COPILOT_SESSION_ID_PREFIX}${agentName}-${hash.digest("hex").slice(0, 32)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,6 +85,13 @@ export class ConversationLocks {
 
   isLocked(key: string): boolean {
     return this.entries.has(key);
+  }
+
+  /** Acquires the key only if it is free right now. Returns its release function, or `undefined` when held. */
+  tryAcquire(key: string): (() => void) | undefined {
+    if (this.entries.has(key)) return undefined;
+    this.entries.set(key, { waiters: [] });
+    return this.releaser(key);
   }
 
   acquire(

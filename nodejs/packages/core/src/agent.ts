@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
-import type { MCPServerConfig, ResumeSessionConfig, SessionConfig, SessionEvent, SessionHooks, SystemMessageConfig } from "@github/copilot-sdk";
+import type { MCPServerConfig, MessageSource, ResumeSessionConfig, SessionConfig, SessionEvent, SessionHooks, SystemMessageConfig } from "@github/copilot-sdk";
 import type { CopilotRuntime } from "./client.js";
 import { bindCopilotContext, getCopilotContext, runWithCopilotContext } from "./context.js";
-import { abortReason, deriveSessionId } from "./conversation.js";
+import { abortReason, COPILOT_SESSION_ID_PREFIX, deriveSessionId } from "./conversation.js";
 import { defineAgent } from "./define-agent.js";
 import {
   CopilotAbortedError,
@@ -16,6 +16,7 @@ import {
   CopilotTimeoutError,
 } from "./errors.js";
 import { createEventMappingState, mapSessionEvent } from "./events.js";
+import { resolveMessageSource, runAsToolOf } from "./message-source.js";
 import { buildToolFilterConfig, composeHooks, evaluatePermission, toPermissionResult } from "./governance/index.js";
 import { toJsonSchema, toSdkTools } from "./tools/index.js";
 import type {
@@ -39,7 +40,7 @@ import type {
 } from "./types.js";
 
 /** Extra lease time beyond the turn timeout, so a lease outlives its turn's cleanup. */
-const LEASE_MARGIN_MS = 30_000;
+export const LEASE_MARGIN_MS = 30_000;
 
 /** Store key for a conversation's cross-replica lease. */
 export function conversationLeaseKey(sessionId: string): string {
@@ -181,7 +182,7 @@ async function runTurn(runtime: CopilotRuntime, def: CopilotAgentDefinition, req
   const conversationId = req.conversationId;
   const ephemeral = conversationId === undefined;
   const sessionId = ephemeral
-    ? `copilot-${def.name}-${randomUUID()}`
+    ? `${COPILOT_SESSION_ID_PREFIX}${def.name}-${randomUUID()}`
     : deriveSessionId(def.name, principal, conversationId);
 
   const emittedErrors = new WeakSet<Error>();
@@ -213,12 +214,14 @@ async function runTurn(runtime: CopilotRuntime, def: CopilotAgentDefinition, req
   try {
     if (signal.aborted) throw abortReason(signal);
     ticket = runtime.admission.reserve();
+    // Ephemeral session ids are unique, so their lock is never contended; holding it marks the
+    // session as in flight for the session cleanup.
+    releaseLock = await runtime.locks.acquire(sessionId, {
+      waitMs: runtime.conversationWaitMs,
+      signal,
+      conversationId,
+    });
     if (!ephemeral) {
-      releaseLock = await runtime.locks.acquire(sessionId, {
-        waitMs: runtime.conversationWaitMs,
-        signal,
-        conversationId,
-      });
       const store = runtime.options.store;
       if (store) {
         const lease = await raceAbort(
@@ -291,10 +294,12 @@ async function executeTurn(
 ): Promise<TurnResult> {
   const { sessionId, signal, emit } = turn;
   const context = getCopilotContext()!;
+  const source = resolveMessageSource(def.messageSource);
   const client = await raceAbort(runtime.acquireClient(turn.controller), signal);
 
   const { tools, customToolNames, approvalRequired } = toSdkTools([...(def.tools ?? []), ...(req.tools ?? [])], {
     getContext: () => context,
+    wrapHandler: (fn) => runAsToolOf(def.name, fn),
   });
 
   const askUser = async (request: PermissionRequest): Promise<PermissionRequestResult> => {
@@ -364,6 +369,7 @@ async function executeTurn(
   if (def.mcpServers !== undefined) config.mcpServers = await raceAbort(resolveMcpServers(def.mcpServers, context), signal);
   if (def.customAgents !== undefined) config.customAgents = def.customAgents;
   if (def.infiniteSessions !== undefined) config.infiniteSessions = { enabled: def.infiniteSessions };
+  if (def.toolSearch !== undefined) config.toolSearch = { ...def.toolSearch };
   const hooks = bindHooks(composeHooks(runtime.options.hooks, def.hooks));
   if (hooks !== undefined) config.hooks = hooks;
   if (req.streaming) config.streaming = true;
@@ -434,10 +440,10 @@ async function executeTurn(
     let text: string;
     let value: unknown;
     if (req.schema) {
-      value = await runStructured(session, req.schema, req.prompt, turn, completion);
+      value = await runStructured(session, req.schema, req.prompt, source, turn, completion);
       text = lastMessage;
     } else {
-      await raceAbort(session.send({ prompt: req.prompt }), signal);
+      await raceAbort(session.send(source === undefined ? { prompt: req.prompt } : { prompt: req.prompt, source }), signal);
       // Some runtimes don't echo `user.message`; once send() has returned, the next idle is ours.
       started = true;
       text = await raceAbort(completion, signal);
@@ -468,6 +474,7 @@ async function runStructured(
   session: SessionLike,
   schema: StructuredSchema<unknown>,
   prompt: string,
+  source: MessageSource | undefined,
   turn: TurnRuntime,
   failure: Promise<unknown>,
 ): Promise<unknown> {
@@ -478,7 +485,7 @@ async function runStructured(
   let raw: unknown;
   try {
     raw = await raceAbort(
-      Promise.race([session.sendAndWait({ prompt }, responseSchema, remaining + 1_000), failure.then(() => new Promise<never>(() => undefined))]),
+      Promise.race([session.sendAndWait(source === undefined ? { prompt } : { prompt, source }, responseSchema, remaining + 1_000), failure.then(() => new Promise<never>(() => undefined))]),
       turn.signal,
     );
   } catch (error) {

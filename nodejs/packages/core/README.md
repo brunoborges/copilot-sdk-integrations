@@ -75,6 +75,10 @@ for await (const event of agent.stream({ prompt: "Summarize order 42", conversat
 
 Every call accepts `signal`, `timeout`, extra `tools`, and `context`. Wrap request handling in `runWithCopilotContext({ principal })` so conversations are scoped per user and tools, policies, and hooks can read `getCopilotContext()`.
 
+## Sessions
+
+`copilot.sessions` lists, reads, and deletes persisted sessions without resuming them: `list()`, `get(id)`, `exists(id)`, `getMessages(id)`, `delete(id)`, and `sessionId(agent, conversationId)`. `createSessionCleanup(copilot.sessions, { maxAge })` periodically deletes this library's sessions (ids starting with `copilot-`) that haven't been modified for `maxAge` ms; it skips remote sessions and sessions with a turn running, and never starts the runtime. See [Conversations](../../site/markdown/conversations.md#listing-and-cleaning-up-sessions).
+
 ## Permissions
 
 Policies decide each runtime permission request (`approve`, `deny`, `ask-user`, or `abstain`):
@@ -117,6 +121,32 @@ console.log(result.stopReason); // "stop-condition" | "check" | "max-iterations"
 The loop stops at the first of `stopWhen` (after a successful iteration), `check` returning `false` (only between iterations), a failed or timed-out iteration (unless `continueOnFailure`), `signal` aborting, or `maxIterations`. Pass a function `({ iteration, prompt, signal, timeout }) => output` instead of an agent to run a custom step; it must open a fresh session itself.
 
 Each iteration uses the agent's permission policy; nothing is approved implicitly. Run loops against a disposable checkout inside a container or VM, observe tool use with the agent's hooks, and schedule them with any job runner (BullMQ, node-cron, a CI job).
+
+## Error recovery
+
+`errorRecoveryHooks()` is an opt-in set of `SessionHooks` based on the Copilot SDK cookbook's
+[error-recovery recipe](https://github.com/github/awesome-copilot/blob/main/cookbook/copilot-sdk/python/error-recovery-hooks.md).
+Pass it as global `hooks` (or an agent's `hooks`); it composes with other hooks.
+
+```ts
+import { createCopilot, errorRecoveryHooks } from "@copilot-sdk-integrations/agent-core";
+
+const copilot = createCopilot({
+  hooks: errorRecoveryHooks({ maxConsecutiveFailures: 3, retryCount: 2, onFailure: (e) => log.debug(e) }),
+});
+```
+
+- `onPostToolUse` / `onPostToolUseFailure` classify the tool output as permission denied, shell error, or
+  generic tool failure by case-insensitive phrase lists (`permissionPhrases`, `shellErrorPhrases`) and add a
+  `[SYSTEM NOTE: ...]` as `additionalContext` telling the model not to stop. The tool result is unchanged.
+- After `maxConsecutiveFailures` (default 3, `0` = unlimited) failures of the same tool in a session the note
+  stops, so the model is not nudged into a loop. A successful call resets the count.
+- `onErrorOccurred` retries transient errors (timeouts, 429, 5xx, connection resets, or errors the SDK marks
+  `recoverable`) `retryCount` times. Other errors get `unrecoverableHandling` (`"skip"` by default, `"abort"`,
+  or `null` for the SDK default).
+
+In NestJS pass it as `CopilotModule.forRoot({ hooks: errorRecoveryHooks() })`; in Fastify as
+`client: { hooks: errorRecoveryHooks() }`.
 
 ## Testing
 
