@@ -10,7 +10,8 @@ namespace CopilotSdk.Extensions.Hosting;
 /// the runtime endpoint, the host's logger, and runtime OpenTelemetry export.
 /// </summary>
 /// <remarks>
-/// Runtime telemetry is enabled only when the SDK starts the runtime (no <see cref="CopilotOptions.Endpoint"/>) and
+/// <see cref="CopilotOptions.InProcess"/> hosts the runtime in this process. Runtime telemetry is enabled only when the
+/// SDK starts the runtime as a child process (no <see cref="CopilotOptions.Endpoint"/>, not in-process) and
 /// <c>OTEL_EXPORTER_OTLP_ENDPOINT</c> is configured. The runtime exports OTLP over HTTP only, so a
 /// <c>grpc</c> <c>OTEL_EXPORTER_OTLP_PROTOCOL</c> is skipped. Message content is never captured.
 /// </remarks>
@@ -19,6 +20,9 @@ internal sealed class CopilotClientOptionsConfigurator(IServiceProvider services
     internal const string OtlpEndpointKey = "OTEL_EXPORTER_OTLP_ENDPOINT";
     internal const string OtlpProtocolKey = "OTEL_EXPORTER_OTLP_PROTOCOL";
     internal const string LoggerCategory = "GitHub.Copilot.CopilotClient";
+
+    /// <summary>The SDK's environment variable that selects the default connection when none is set.</summary>
+    internal const string DefaultConnectionKey = "COPILOT_SDK_DEFAULT_CONNECTION";
 
     public void Configure(CopilotClientOptions options, CopilotOptions copilotOptions)
     {
@@ -42,8 +46,29 @@ internal sealed class CopilotClientOptionsConfigurator(IServiceProvider services
             options.GitHubToken = token;
         }
 
+        if (copilotOptions.InProcess)
+        {
+            options.Connection ??= RuntimeConnection.ForInProcess();
+        }
+
+        if (IsInProcess(options))
+        {
+            // The SDK rejects TelemetryConfig for an in-process runtime.
+            if (!string.IsNullOrWhiteSpace(services.GetService<IConfiguration>()?[OtlpEndpointKey]))
+            {
+                logger?.LogDebug("Copilot runtime telemetry is not enabled: the runtime runs in-process.");
+            }
+
+            return;
+        }
+
         options.Telemetry ??= CreateTelemetry(services.GetService<IConfiguration>(), logger);
     }
+
+    private static bool IsInProcess(CopilotClientOptions options) =>
+        options.Connection is InProcessRuntimeConnection
+        || (options.Connection is null
+            && string.Equals(Environment.GetEnvironmentVariable(DefaultConnectionKey), "inprocess", StringComparison.OrdinalIgnoreCase));
 
     /// <summary>The environment variables checked, in order, when <see cref="CopilotOptions.GitHubToken"/> is not set.</summary>
     internal static readonly string[] TokenEnvironmentKeys = ["COPILOT_GITHUB_TOKEN", "GH_TOKEN", "GITHUB_TOKEN"];

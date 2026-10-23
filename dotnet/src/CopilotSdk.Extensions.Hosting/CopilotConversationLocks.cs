@@ -51,6 +51,26 @@ internal sealed class CopilotConversationLocks
         return new Releaser(this, conversationId, entry);
     }
 
+    /// <summary>Takes exclusive access to <paramref name="conversationId"/> only if it is free right now.</summary>
+    /// <returns>A releaser to dispose, or <see langword="null"/> when the conversation is locked.</returns>
+    public IDisposable? TryAcquire(string conversationId)
+    {
+        ArgumentNullException.ThrowIfNull(conversationId);
+
+        lock (_entries)
+        {
+            if (_entries.ContainsKey(conversationId))
+            {
+                return null;
+            }
+
+            var entry = new Entry { References = 1 };
+            entry.Semaphore.Wait(0);
+            _entries.Add(conversationId, entry);
+            return new Releaser(this, conversationId, entry);
+        }
+    }
+
     private void Release(string conversationId, Entry entry, bool acquired)
     {
         lock (_entries)

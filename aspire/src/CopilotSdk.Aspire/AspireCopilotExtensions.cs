@@ -79,6 +79,9 @@ public static class AspireCopilotExtensions
         builder.Services.PostConfigure<CopilotOptions>(Microsoft.Extensions.Options.Options.DefaultName, options =>
         {
             if (options.Endpoint is null
+#pragma warning disable GHCP001 // InProcess is experimental.
+                && !options.InProcess
+#pragma warning restore GHCP001
                 && CopilotConnectionString.TryParse(configuration.GetConnectionString(connectionName), out var info)
                 && info.Endpoint is not null)
             {

@@ -125,4 +125,23 @@ public sealed class TelemetryTests
 
         Assert.False(otel.EnableSensitiveData);
     }
+
+    [Fact]
+    public void InProcess_UsesInProcessConnection_AndSkipsTelemetry()
+    {
+        var options = ConfigureClient(
+            new() { ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:4318", ["GH_TOKEN"] = "env-token" },
+            o => o.InProcess = true);
+
+        Assert.IsType<InProcessRuntimeConnection>(options.Connection);
+        Assert.Null(options.Telemetry);
+        Assert.Equal("env-token", options.GitHubToken);
+    }
+
+    [Fact]
+    public void InProcess_BindsFromConfiguration()
+    {
+        using var sp = TestHost.Build(s => s.AddCopilot(), new() { ["Copilot:InProcess"] = "true" });
+        Assert.True(sp.GetOptions().InProcess);
+    }
 }

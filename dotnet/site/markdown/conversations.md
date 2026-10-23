@@ -89,5 +89,48 @@ app.MapPost("/tickets/{id:int}/chat", async (int id, ChatRequest req, TicketStor
 
 Sessions are disconnected after each call and resumed on the next; history stays in the
 runtime (see [Runtime and identity](identity.md#client-mode-and-runtime-home) for where the
-SDK-managed runtime keeps its state). For full session management, use the injected
+SDK-managed runtime keeps its state) until it is deleted.
+
+### Listing, reading, and deleting
+
+Inject `ICopilotSessionStore` to manage that history:
+
+```cs
+app.MapGet("/tickets/{id:int}/messages", async (int id, TicketStore tickets,
+    ICopilotSessionStore sessions, ClaimsPrincipal user, CancellationToken ct) =>
+{
+    var ticket = await tickets.FindForUserAsync(id, user, ct);   // your authorization
+    if (ticket?.ConversationId is not { } conversationId) return Results.NotFound();
+
+    var messages = await sessions.GetMessagesAsync(conversationId, ct);
+    return Results.Ok(messages?.Select(m => new { Role = m.Role.Value, m.Text }) ?? []);
+});
+```
+
+| Method | Returns |
+| --- | --- |
+| `ListAsync()` | Local sessions' `SessionMetadata`, most recently modified first. |
+| `GetAsync(id)` | One session's metadata, or `null`. |
+| `GetMessagesAsync(id)` | The user and assistant messages as `ChatMessage`s, or `null`. Reads the persisted history without resuming the session; sub-agent messages and tool calls are omitted. |
+| `DeleteAsync(id)` | `true` if deleted, `false` if not found. Waits for a turn in flight to finish first. |
+
+The same [ownership](#ownership) rule applies: look up the conversation id from your own
+entity rather than accepting it from the caller.
+
+### Automatic cleanup
+
+Set `Copilot:SessionRetention` to delete sessions that haven't been modified for that long:
+
+```json
+{ "Copilot": { "SessionRetention": "30.00:00:00" } }
+```
+
+A background service sweeps every half retention period (between one minute and one hour).
+It never starts the runtime on its own, so it only runs after the client has started, and it
+skips conversations with a turn in flight. It is off by default.
+
+With the SDK-managed runtime, only this app's sessions live in its runtime home. With a shared
+`Endpoint`, the store lists, and cleanup deletes, sessions from every client of that runtime.
+
+For anything else, use the injected
 [`CopilotClient`](chat-clients.md#the-copilotclient-escape-hatch).

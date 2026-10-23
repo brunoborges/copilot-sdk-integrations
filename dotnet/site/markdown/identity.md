@@ -93,6 +93,23 @@ which is how an Aspire AppHost hands its runtime to your service. See the
 [Copilot SDK for Aspire](https://brunoborges.github.io/copilot-sdk-integrations/aspire/)
 documentation.
 
+## In-process runtime
+
+By default the SDK starts its bundled runtime as a child process. Set `Copilot:InProcess` to
+`true` to host it inside your process instead, with no child process or local port:
+
+```json
+{ "Copilot": { "InProcess": true } }
+```
+
+In-process hosting is experimental in the SDK (diagnostic `GHCP001`; set it in code inside
+`#pragma warning disable GHCP001`, or bind it from configuration). The token resolution and
+runtime home below apply unchanged. Runtime OpenTelemetry export is not available in-process,
+so `OTEL_EXPORTER_OTLP_ENDPOINT` is ignored for the runtime (MEAI telemetry still works).
+`InProcess` cannot be combined with `Endpoint`, and a connection string's endpoint is ignored
+when it is set. The SDK's `COPILOT_SDK_DEFAULT_CONNECTION=inprocess` environment variable is
+also honored.
+
 ## Client mode and runtime home
 
 The client runs with `Mode = CopilotClientMode.Empty`: built-in tools, skills, plugins,

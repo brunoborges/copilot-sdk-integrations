@@ -114,4 +114,18 @@ public sealed class ValidationTests
         var ex = await Assert.ThrowsAsync<OptionsValidationException>(() => host.StartAsync(TestContext.Current.CancellationToken));
         Assert.Contains("Copilot:ConnectionToken is required", ex.Message);
     }
+
+    [Fact]
+    public void InProcess_CannotBeCombinedWithEndpoint()
+    {
+        AssertFails(Validate(o => { o.InProcess = true; o.Endpoint = "5000"; }), "Copilot:InProcess cannot be combined with Copilot:Endpoint");
+        Assert.True(Validate(o => o.InProcess = true).Succeeded);
+    }
+
+    [Fact]
+    public void SessionRetention_MustBePositive()
+    {
+        AssertFails(Validate(o => o.SessionRetention = TimeSpan.Zero), "Copilot:SessionRetention must be positive");
+        Assert.True(Validate(o => o.SessionRetention = TimeSpan.FromDays(1)).Succeeded);
+    }
 }

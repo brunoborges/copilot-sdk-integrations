@@ -14,8 +14,8 @@ namespace CopilotSdk.Extensions.Hosting;
 /// </para>
 /// <para>
 /// Client-level settings (<see cref="Endpoint"/>, <see cref="ConnectionToken"/>, <see cref="ConnectionName"/>,
-/// <see cref="GitHubToken"/>, <see cref="EagerStart"/>, <see cref="MaxConcurrentTurns"/>, and
-/// <see cref="ConfigureClient"/>) are read from the default agent only, because every agent shares one
+/// <see cref="GitHubToken"/>, <see cref="EagerStart"/>, <see cref="MaxConcurrentTurns"/>, <see cref="InProcess"/>,
+/// <see cref="SessionRetention"/>, and <see cref="ConfigureClient"/>) are read from the default agent only, because every agent shares one
 /// <see cref="CopilotClient"/>.
 /// </para>
 /// </remarks>
@@ -58,6 +58,22 @@ public sealed class CopilotOptions
     /// <c>host:port</c>, or a loopback port number. When <see langword="null"/>, the SDK starts its bundled runtime.
     /// </summary>
     public string? Endpoint { get; set; }
+
+    /// <summary>
+    /// When <see langword="true"/>, the SDK hosts the runtime in this process instead of starting a child process.
+    /// Experimental in the SDK. Cannot be combined with <see cref="Endpoint"/>, and runtime OpenTelemetry export is
+    /// not available in-process.
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("GHCP001")]
+    public bool InProcess { get; set; }
+
+    /// <summary>
+    /// When set, sessions not modified for this long are deleted in the background. Defaults to
+    /// <see langword="null"/> (keep sessions forever). Sweeps run only once the client has started, and skip
+    /// conversations with a turn in flight. With <see cref="Endpoint"/>, every session on the shared runtime is
+    /// eligible, including those of other applications.
+    /// </summary>
+    public TimeSpan? SessionRetention { get; set; }
 
     /// <summary>Shared secret for <see cref="Endpoint"/>. Required when the endpoint is not loopback.</summary>
     public string? ConnectionToken { get; set; }

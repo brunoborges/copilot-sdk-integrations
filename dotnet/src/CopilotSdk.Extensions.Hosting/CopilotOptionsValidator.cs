@@ -7,7 +7,8 @@ namespace CopilotSdk.Extensions.Hosting;
 /// </summary>
 /// <remarks>
 /// Client-level settings (<see cref="CopilotOptions.Endpoint"/>, <see cref="CopilotOptions.ConnectionToken"/>,
-/// <see cref="CopilotOptions.GitHubToken"/>, <see cref="CopilotOptions.MaxConcurrentTurns"/>) are validated on the
+/// <see cref="CopilotOptions.GitHubToken"/>, <see cref="CopilotOptions.MaxConcurrentTurns"/>,
+/// <see cref="CopilotOptions.InProcess"/>, <see cref="CopilotOptions.SessionRetention"/>) are validated on the
 /// default agent only, because the client is shared.
 /// </remarks>
 internal sealed class CopilotOptionsValidator : IValidateOptions<CopilotOptions>
@@ -35,6 +36,16 @@ internal sealed class CopilotOptionsValidator : IValidateOptions<CopilotOptions>
             if (options.MaxConcurrentTurns is <= 0)
             {
                 failures.Add($"{clientPrefix}{nameof(CopilotOptions.MaxConcurrentTurns)} must be positive when set.");
+            }
+
+            if (options.SessionRetention is { } retention && retention <= TimeSpan.Zero)
+            {
+                failures.Add($"{clientPrefix}{nameof(CopilotOptions.SessionRetention)} must be positive when set.");
+            }
+
+            if (options.InProcess && options.Endpoint is not null)
+            {
+                failures.Add($"{clientPrefix}{nameof(CopilotOptions.InProcess)} cannot be combined with {clientPrefix}{nameof(CopilotOptions.Endpoint)}: choose an in-process runtime or a shared one.");
             }
 
             ValidateEndpoint(options, clientPrefix, failures);
