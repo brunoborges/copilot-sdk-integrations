@@ -281,6 +281,50 @@
     .tok-s { color: #a5d6ff; }
     .tok-t { color: #ffa657; }
 
+    .tok-c { color: #8b949e; }
+    .code.flip { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+    .code.flip > :first-child { order: 2; }
+    .code .fw {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+    .code .fw .logo {
+      display: grid;
+      place-items: center;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 0.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
+    .code .fw .logo svg { width: 1.35rem; height: 1.35rem; }
+    .code .fw-lang { color: var(--muted); font-weight: 500; }
+    .code h2 code, .feature code, .code li code, .section-lead code { font-size: 0.875em; }
+    .code .more { display: inline-block; margin-top: 1rem; font-weight: 600; text-decoration: none; }
+    .code .more:hover, .code .more:focus-visible { text-decoration: underline; }
+    .stack { display: grid; gap: 1rem; }
+
+    .features { margin-top: clamp(3rem, 6vw, 5rem); }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+      gap: 1rem;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .feature {
+      padding: 1rem 1.1rem;
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      background: var(--card);
+    }
+    .feature h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+    .feature p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+
     footer {
       margin-top: 3.5rem;
       padding-top: 1.5rem;
@@ -298,6 +342,8 @@
     }
     @media (max-width: 60rem) {
       .hero, .code { grid-template-columns: 1fr; }
+      .code.flip { grid-template-columns: 1fr; }
+      .code.flip > :first-child { order: 0; }
       .diagram { max-width: 42rem; width: 100%; justify-self: center; }
       .topbar { margin-bottom: 2rem; }
     }
@@ -643,35 +689,438 @@
       </ul>
     </section>
 
-    <section class="code" aria-labelledby="code-title">
+    <section class="code" id="spring-boot-example" aria-labelledby="spring-boot-example-title">
       <div>
-        <h2 id="code-title">Agents as plain interfaces</h2>
+        <span class="fw"><span class="logo" aria-hidden="true"><svg fill="#6db33f"><use href="#i-spring"/></svg></span><span>Spring Boot <span class="fw-lang">· Java</span></span></span>
+        <h2 id="spring-boot-example-title">Agents as plain interfaces</h2>
         <p class="section-lead">Declare what you need; the integration does the wiring.</p>
         <ul>
           <li>Conversation history owned by the Copilot runtime</li>
-          <li>Spring or CDI beans exposed as Copilot tools</li>
+          <li>Spring beans exposed as Copilot tools</li>
           <li>Local and remote MCP servers per agent</li>
-          <li>Micrometer metrics and framework health checks</li>
+          <li>Micrometer metrics and Actuator health checks</li>
         </ul>
+        <a class="more" href="spring-boot/">Spring Boot documentation →</a>
       </div>
-      <div class="window">
-        <div class="bar" aria-hidden="true">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-          <span class="file">SpringAdvisor.java</span>
-        </div>
+      <div class="stack">
+        <div class="window">
+          <div class="bar" aria-hidden="true">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="file">SpringAdvisor.java</span>
+          </div>
 <pre><code><span class="tok-a">@CopilotAgent</span>(
     name = <span class="tok-s">"spring-advisor"</span>,
     instructions = <span class="tok-s">"Explain Spring Boot concepts concisely."</span>)
-<span class="tok-k">public interface</span> <span class="tok-t">SpringAdvisor</span> {
+<span class="tok-k">public</span> <span class="tok-k">interface</span> <span class="tok-t">SpringAdvisor</span> {
     <span class="tok-t">CompletableFuture</span>&lt;<span class="tok-t">String</span>&gt; answer(
         <span class="tok-a">@ConversationId</span> <span class="tok-t">String</span> conversationId,
         <span class="tok-a">@UserMessage</span> <span class="tok-t">String</span> question);
 }</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="features" id="features" aria-labelledby="features-title">
+      <h2 id="features-title">The same patterns in every framework</h2>
+      <p class="section-lead">The patterns from the Copilot SDK cookbook are built into each integration. Write configuration, not boilerplate.</p>
+      <ul class="feature-grid">
+        <li class="feature"><h3>Typed agents</h3><p>Declare an agent as an interface, decorated class, or subclass. The integration implements it and routes each call to the right conversation.</p></li>
+        <li class="feature"><h3>Your components as tools</h3><p>Spring and CDI beans, NestJS providers, .NET services, Django and FastAPI functions, and even Camel routes become tools, called with their normal DI, transactions, and security.</p></li>
+        <li class="feature"><h3>Deny-by-default permissions</h3><p>Tool use is denied unless you grant it. You can use declarative policies, allow-lists, and human-in-the-loop approvals; nothing is approved implicitly.</p></li>
+        <li class="feature"><h3>Conversations and sessions</h3><p>Create-or-resume per conversation ID, one turn at a time per session, and a session store that can list, read, and delete sessions. Age-based cleanup is opt-in.</p></li>
+        <li class="feature"><h3>MCP, BYOK, and tool search</h3><p>Local and remote MCP servers and your own model providers (OpenAI, Azure AI Foundry, Anthropic, Ollama), set per agent. Large tool catalogs can be deferred behind runtime tool search.</p></li>
+        <li class="feature"><h3>Streaming and structured output</h3><p>Streams use the framework's own types (Mutiny, Reactor, RxJS, SSE, AI SDK <code>useChat</code>). Typed results come from records, zod schemas, and pydantic models.</p></li>
+        <li class="feature"><h3>Per-user identity</h3><p>Token resolvers authenticate each turn as the signed-in user, using Spring Security, Quarkus and Micronaut Security, Django auth, or your own resolver.</p></li>
+        <li class="feature"><h3>Observability and testing</h3><p>Micrometer, OpenTelemetry, framework health checks, and the Aspire dashboard. A scripted, in-memory runtime runs framework tests without consuming model usage.</p></li>
+        <li class="feature"><h3>Error-recovery hooks</h3><p>Opt-in hooks that tell the model to keep going after a failed tool call, with a limit on consecutive failures. Transient errors are retried in Python and Node.js.</p></li>
+        <li class="feature"><h3>Fresh-session loops</h3><p>A Ralph-loop runner that starts a fresh session on every iteration, with checks between iterations, stop conditions, timeouts, and cancellation.</p></li>
+        <li class="feature"><h3>Message provenance</h3><p>Label each prompt as <code>user</code>, <code>system</code>, or <code>agent-&lt;id&gt;</code>. Scheduled jobs and agent-to-agent calls are labeled automatically.</p></li>
+        <li class="feature"><h3>In-process runtime</h3><p>Java integrations can run the Copilot runtime inside the JVM instead of a child process. Startup checks the native dependencies and fails fast if any are missing.</p></li>
+      </ul>
+    </section>
+
+    <section class="code flip" id="quarkus-example" aria-labelledby="quarkus-example-title">
+      <div>
+        <span class="fw"><span class="logo" aria-hidden="true"><svg fill="#4695eb"><use href="#i-quarkus"/></svg></span><span>Quarkus <span class="fw-lang">· Java</span></span></span>
+        <h2 id="quarkus-example-title">CDI beans as tools, streamed with Mutiny</h2>
+        <p class="section-lead">Tools run through the bean's client proxy, so <code>@Transactional</code> and security interceptors still apply.</p>
+        <ul>
+          <li>Agents discovered at build time and injected with <code>@Inject</code></li>
+          <li><code>Multi&lt;CopilotAgentEvent&gt;</code> streaming; cancelling the stream aborts the turn</li>
+          <li>SmallRye Health readiness, Micrometer timers, and a <code>/q/copilot</code> endpoint</li>
+          <li><code>@QuarkusTest</code> with a scripted in-memory runtime</li>
+        </ul>
+        <a class="more" href="quarkus/">Quarkus documentation →</a>
+      </div>
+      <div class="stack">
+        <div class="window">
+          <div class="bar" aria-hidden="true">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="file">InventoryAgent.java</span>
+          </div>
+<pre><code><span class="tok-a">@ApplicationScoped</span>
+<span class="tok-a">@Named</span>(<span class="tok-s">"inventoryTools"</span>)
+<span class="tok-k">public</span> <span class="tok-k">class</span> <span class="tok-t">InventoryTools</span> {
+    <span class="tok-a">@Inject</span> <span class="tok-t">StockRepository</span> stock;
+
+    <span class="tok-a">@Transactional</span>
+    <span class="tok-a">@CopilotTool</span>(value = <span class="tok-s">"Count units in stock"</span>, name = <span class="tok-s">"check_stock"</span>)
+    <span class="tok-k">public</span> long checkStock(<span class="tok-a">@CopilotToolParam</span>(<span class="tok-s">"SKU"</span>) <span class="tok-t">String</span> sku) {
+        <span class="tok-k">return</span> stock.countBySku(sku);
+    }
+}
+
+<span class="tok-a">@CopilotAgent</span>(name = <span class="tok-s">"inventory"</span>,
+        instructions = <span class="tok-s">"Answer stock questions using the tools."</span>,
+        toolRefs = <span class="tok-s">"inventoryTools"</span>,
+        permissionHandlerRef = <span class="tok-s">"inventoryApprovals"</span>)
+<span class="tok-k">public</span> <span class="tok-k">interface</span> <span class="tok-t">InventoryAgent</span> {
+    <span class="tok-t">Multi</span>&lt;<span class="tok-t">CopilotAgentEvent</span>&gt; chat(<span class="tok-a">@ConversationId</span> <span class="tok-t">String</span> id,
+                                  <span class="tok-a">@UserMessage</span> <span class="tok-t">String</span> question);
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="code" id="micronaut-example" aria-labelledby="micronaut-example-title">
+      <div>
+        <span class="fw"><span class="logo" aria-hidden="true"><svg style="fill: var(--fg)"><use href="#i-micronaut"/></svg></span><span>Micronaut <span class="fw-lang">· Java</span></span></span>
+        <h2 id="micronaut-example-title">Agent governance in configuration</h2>
+        <p class="section-lead">Override any <code>@CopilotAgent</code> attribute per environment. The settings are validated at startup, so a missing tool bean or unknown MCP server stops the app from starting.</p>
+        <ul>
+          <li>Agents registered at compile time, without reflection</li>
+          <li>Per-agent model, permissions, MCP servers, BYOK provider, and tool search</li>
+          <li>Experimental in-process runtime: no child process, with a fail-fast native check</li>
+          <li>Micronaut Security identity, health, <code>/info</code>, and Micrometer</li>
+        </ul>
+        <a class="more" href="https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/micronaut">Micronaut documentation →</a>
+      </div>
+      <div class="stack">
+        <div class="window">
+          <div class="bar" aria-hidden="true">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="file">application.properties</span>
+          </div>
+<pre><code><span class="tok-c"># Run the Copilot runtime inside the JVM</span>
+<span class="tok-t">micronaut.copilot.connection</span>=<span class="tok-s">inprocess</span>
+
+<span class="tok-c"># Per-agent overrides of @CopilotAgent attributes</span>
+<span class="tok-t">micronaut.copilot.agents.advisor.model</span>=<span class="tok-s">gpt-5.2-codex</span>
+<span class="tok-t">micronaut.copilot.agents.advisor.permissions.allow</span>=<span class="tok-s">read</span>
+<span class="tok-t">micronaut.copilot.agents.advisor.mcp-servers</span>=<span class="tok-s">github</span>
+<span class="tok-t">micronaut.copilot.agents.advisor.provider</span>=<span class="tok-s">foundry</span>
+<span class="tok-t">micronaut.copilot.agents.advisor.tool-search.defer-threshold</span>=<span class="tok-s">20</span>
+
+<span class="tok-t">micronaut.copilot.mcp.servers.github.type</span>=<span class="tok-s">http</span>
+<span class="tok-t">micronaut.copilot.mcp.servers.github.url</span>=<span class="tok-s">https://api.githubcopilot.com/mcp/</span>
+
+<span class="tok-t">micronaut.copilot.providers.foundry.base-url</span>=<span class="tok-s">${FOUNDRY_URL}</span>
+<span class="tok-t">micronaut.copilot.providers.foundry.api-key</span>=<span class="tok-s">${FOUNDRY_API_KEY}</span></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="code flip" id="camel-example" aria-labelledby="camel-example-title">
+      <div>
+        <span class="fw"><span class="logo" aria-hidden="true"><svg><use href="#i-camel"/></svg></span><span>Apache Camel <span class="fw-lang">· Java</span></span></span>
+        <h2 id="camel-example-title">Agents as route steps, routes as tools</h2>
+        <p class="section-lead">A <code>copilot:</code> component that turns an agent into one more step in your integration flows.</p>
+        <ul>
+          <li>Structured output into a POJO, then routed with Camel's own EIPs</li>
+          <li>One Copilot session per <code>CopilotConversationId</code> header</li>
+          <li>Any route can be a tool (SQL, REST, Kafka) behind agent permissions</li>
+          <li>Human-in-the-loop approvals and session events as Camel routes</li>
+        </ul>
+        <a class="more" href="https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/camel">Apache Camel documentation →</a>
+      </div>
+      <div class="stack">
+        <div class="window">
+          <div class="bar" aria-hidden="true">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="file">TriageRoutes.java</span>
+          </div>
+<pre><code>from(<span class="tok-s">"kafka:tickets"</span>)
+    .setHeader(<span class="tok-s">"CopilotConversationId"</span>, header(<span class="tok-s">"ticketId"</span>))
+    .to(<span class="tok-s">"copilot:agent:triage"</span>
+        + <span class="tok-s">"?instructions=Classify the support ticket."</span>
+        + <span class="tok-s">"&amp;toolRefs=lookupOrder&amp;allowAgentTools=true"</span>
+        + <span class="tok-s">"&amp;outputClass=com.acme.Triage"</span>)
+    .choice()
+        .when(simple(<span class="tok-s">"${body.severity} == 'HIGH'"</span>)).to(<span class="tok-s">"jira:create"</span>)
+        .otherwise().to(<span class="tok-s">"log:triage"</span>);
+
+from(<span class="tok-s">"copilot:tool:lookupOrder"</span>
+        + <span class="tok-s">"?description=Look up an order by id"</span>
+        + <span class="tok-s">"&amp;parametersClass=com.acme.OrderQuery"</span>)
+    .to(<span class="tok-s">"sql:select status from orders where id = :#${body.id()}"</span>
+        + <span class="tok-s">"?outputType=SelectOne"</span>);</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="code" id="nestjs-example" aria-labelledby="nestjs-example-title">
+      <div>
+        <span class="fw"><span class="logo" aria-hidden="true"><svg fill="#e0234e"><use href="#i-nestjs"/></svg></span><span>NestJS <span class="fw-lang">· TypeScript</span></span></span>
+        <h2 id="nestjs-example-title">Decorated agents with injectable tools</h2>
+        <p class="section-lead">Agents are classes with decorators, and tools are ordinary providers that run on the DI instance.</p>
+        <ul>
+          <li><code>@Returns(zod)</code> for typed results, <code>Observable</code> for streams</li>
+          <li>Templates validated at bootstrap; tool interceptors and hooks as providers</li>
+          <li>Request-scoped identity and per-user MCP credentials</li>
+          <li>Terminus health, SSE, and an AI SDK adapter for <code>useChat</code></li>
+        </ul>
+        <a class="more" href="nestjs/">NestJS documentation →</a>
+      </div>
+      <div class="stack">
+        <div class="window">
+          <div class="bar" aria-hidden="true">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="file">support.agent.ts</span>
+          </div>
+<pre><code><span class="tok-a">@Injectable</span>()
+<span class="tok-k">export</span> <span class="tok-k">class</span> <span class="tok-t">OrdersTools</span> {
+  constructor(<span class="tok-k">private</span> <span class="tok-k">readonly</span> orders: <span class="tok-t">OrdersService</span>) {}
+
+  <span class="tok-a">@CopilotTool</span>({
+    description: <span class="tok-s">"Look up an order"</span>,
+    input: z.object({ id: z.string() }),
+  })
+  lookupOrder({ id }: { id: string }, invocation: <span class="tok-t">CopilotToolInvocation</span>) {
+    <span class="tok-k">return</span> this.orders.find(id, invocation.context.principal);
+  }
+}
+
+<span class="tok-a">@CopilotAgent</span>({
+  name: <span class="tok-s">"support"</span>,
+  instructions: <span class="tok-s">"You are a support agent."</span>,
+  tools: [<span class="tok-t">OrdersTools</span>],
+  permissions: permissions.allowCustomTools(),
+})
+<span class="tok-k">export</span> <span class="tok-k">abstract</span> <span class="tok-k">class</span> <span class="tok-t">SupportAgent</span> {
+  <span class="tok-a">@UserMessage</span>(<span class="tok-s">"Extract the order from: {{text}}"</span>)
+  <span class="tok-a">@Returns</span>(<span class="tok-t">Order</span>)
+  extract(<span class="tok-a">@P</span>(<span class="tok-s">"text"</span>) text: string): <span class="tok-t">Promise</span>&lt;z.infer&lt;typeof <span class="tok-t">Order</span>&gt;&gt; {
+    <span class="tok-k">return</span> implementedByCopilot();
+  }
+
+  <span class="tok-a">@UserMessage</span>()
+  chat(<span class="tok-a">@ConversationId</span>() id: string,
+       <span class="tok-a">@Message</span>() q: string): <span class="tok-t">Observable</span>&lt;<span class="tok-t">CopilotAgentEvent</span>&gt; {
+    <span class="tok-k">return</span> implementedByCopilot();
+  }
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="code flip" id="fastify-example" aria-labelledby="fastify-example-title">
+      <div>
+        <span class="fw"><span class="logo" aria-hidden="true"><svg style="fill: var(--fg)"><use href="#i-fastify"/></svg></span><span>Fastify <span class="fw-lang">· TypeScript</span></span></span>
+        <h2 id="fastify-example-title">From plugin to chat UI in a few lines</h2>
+        <p class="section-lead">Register the plugin once. Each request gets agents bound to the caller, and replies can stream as SSE or as the AI SDK UI message stream.</p>
+        <ul>
+          <li><code>request.copilot.agent()</code> is bound to the request's identity and abort signal</li>
+          <li><code>reply.copilotChat()</code> serves <code>useChat</code>, including tool approvals</li>
+          <li>Typed agent names, health routes, and graceful shutdown</li>
+          <li>Opt-in age-based session cleanup</li>
+        </ul>
+        <a class="more" href="fastify/">Fastify documentation →</a>
+      </div>
+      <div class="stack">
+        <div class="window">
+          <div class="bar" aria-hidden="true">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="file">server.ts</span>
+          </div>
+<pre><code><span class="tok-k">const</span> support = defineAgent({
+  name: <span class="tok-s">"support"</span>,
+  model: <span class="tok-s">"gpt-5"</span>,
+  instructions: <span class="tok-s">"You help customers."</span>,
+});
+
+<span class="tok-k">await</span> app.register(copilotPlugin, {
+  agents: [support],
+  health: true,                         <span class="tok-c">// GET /health/copilot</span>
+  sessionCleanup: { maxAge: <span class="tok-t">WEEK_MS</span> },  <span class="tok-c">// delete idle sessions</span>
+});
+<span class="tok-k">await</span> app.register(copilotAiPlugin);
+
+<span class="tok-c">// AI SDK useChat endpoint, with tool approvals</span>
+app.post(<span class="tok-s">"/api/chat"</span>, <span class="tok-k">async</span> (request, reply) =&gt;
+  reply.copilotChat({ agent: <span class="tok-s">"support"</span> }));
+
+<span class="tok-c">// Server-Sent Events</span>
+app.get(<span class="tok-s">"/stream"</span>, <span class="tok-k">async</span> (request, reply) =&gt;
+  reply.copilotEvents(
+    request.copilot.agent(<span class="tok-s">"support"</span>).stream({ prompt: <span class="tok-s">"Hi"</span> })));</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="code" id="dotnet-example" aria-labelledby="dotnet-example-title">
+      <div>
+        <span class="fw"><span class="logo" aria-hidden="true"><svg fill="#512bd4"><use href="#i-dotnet"/></svg></span><span>.NET <span class="fw-lang">· C#</span></span></span>
+        <h2 id="dotnet-example-title">Copilot behind <code>IChatClient</code></h2>
+        <p class="section-lead">Built on Microsoft.Extensions.AI. Inject <code>IChatClient</code> and the integration handles sessions, tools, and approvals.</p>
+        <ul>
+          <li>DI services as tools, each call in its own DI scope with <code>HttpContext</code> intact</li>
+          <li><code>[RequiresApproval]</code> tools go through <code>OnApproval</code>; everything else is denied</li>
+          <li>Typed results: <code>GetResponseAsync&lt;TicketTriage&gt;(prompt)</code></li>
+          <li>Health checks, OpenTelemetry, and a <code>CopilotLoopRunner</code></li>
+        </ul>
+        <a class="more" href="dotnet/">.NET documentation →</a>
+      </div>
+      <div class="stack">
+        <div class="window">
+          <div class="bar" aria-hidden="true">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="file">Program.cs</span>
+          </div>
+<pre><code>builder.<span class="tok-t">Services</span>.<span class="tok-t">AddCopilot</span>(o =&gt;
+{
+    o.<span class="tok-t">Instructions</span> = <span class="tok-s">"You are Contoso's customer support assistant."</span>;
+    o.<span class="tok-t">OnApproval</span> = call =&gt;
+        <span class="tok-t">ValueTask</span>.<span class="tok-t">FromResult</span>(call.<span class="tok-t">GetArgument</span>&lt;decimal&gt;(<span class="tok-s">"amount"</span>) &lt; 100);
+}).<span class="tok-t">WithTools</span>&lt;<span class="tok-t">OrderTools</span>&gt;();         <span class="tok-c">// DI service methods become tools</span>
+
+app.<span class="tok-t">MapPost</span>(<span class="tok-s">"/chat"</span>, <span class="tok-k">async</span> (<span class="tok-t">IChatClient</span> chat, <span class="tok-t">ChatRequest</span> req,
+                            <span class="tok-t">CancellationToken</span> ct) =&gt;
+{
+    <span class="tok-k">var</span> response = <span class="tok-k">await</span> chat.<span class="tok-t">GetResponseAsync</span>(req.<span class="tok-t">Message</span>,
+        <span class="tok-k">new</span>() { <span class="tok-t">ConversationId</span> = req.<span class="tok-t">ConversationId</span> }, ct);
+    <span class="tok-k">return</span> <span class="tok-k">new</span> <span class="tok-t">ChatReply</span>(response.<span class="tok-t">Text</span>, response.<span class="tok-t">ConversationId</span>);
+});</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="code flip" id="aspire-example" aria-labelledby="aspire-example-title">
+      <div>
+        <span class="fw"><span class="logo" aria-hidden="true"><svg><use href="#i-aspire"/></svg></span><span>Aspire <span class="fw-lang">· Polyglot</span></span></span>
+        <h2 id="aspire-example-title">The Copilot runtime as an AppHost resource</h2>
+        <p class="section-lead">Aspire runs the runtime, manages its secrets and connection strings, and connects every service that references it.</p>
+        <ul>
+          <li>One <code>WithReference</code> wires services in .NET, Java, Node.js, or Python</li>
+          <li>GitHub token as a secret parameter, with a generated connection token</li>
+          <li>End-to-end traces on the dashboard: request → turn → model → tool</li>
+          <li>MCP servers and BYOK providers referenced from other resources</li>
+        </ul>
+        <a class="more" href="aspire/">Aspire documentation →</a>
+      </div>
+      <div class="stack">
+        <div class="window">
+          <div class="bar" aria-hidden="true">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="file">AppHost.cs</span>
+          </div>
+<pre><code><span class="tok-k">var</span> copilot = builder.<span class="tok-t">AddCopilot</span>(<span class="tok-s">"copilot"</span>);  <span class="tok-c">// headless runtime</span>
+<span class="tok-k">var</span> chat    = copilot.<span class="tok-t">AddModel</span>(<span class="tok-s">"chat"</span>, <span class="tok-s">"gpt-5.4"</span>);
+
+builder.<span class="tok-t">AddProject</span>&lt;<span class="tok-t">Projects</span>.<span class="tok-t">Api</span>&gt;(<span class="tok-s">"api"</span>)
+       .<span class="tok-t">WithReference</span>(chat)
+       .<span class="tok-t">WaitFor</span>(chat);</code></pre>
+        </div>
+        <div class="window">
+          <div class="bar" aria-hidden="true">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="file">Api/Program.cs</span>
+          </div>
+<pre><code>builder.<span class="tok-t">AddCopilotClient</span>(<span class="tok-s">"chat"</span>,
+           o =&gt; o.<span class="tok-t">Instructions</span> = <span class="tok-s">"You help customers with orders."</span>)
+       .<span class="tok-t">WithTools</span>&lt;<span class="tok-t">OrderTools</span>&gt;();
+
+app.<span class="tok-t">MapPost</span>(<span class="tok-s">"/ask"</span>, <span class="tok-k">async</span> (<span class="tok-t">IChatClient</span> chat, string q) =&gt;
+    (<span class="tok-k">await</span> chat.<span class="tok-t">GetResponseAsync</span>(q)).<span class="tok-t">Text</span>);</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="code" id="django-example" aria-labelledby="django-example-title">
+      <div>
+        <span class="fw"><span class="logo" aria-hidden="true"><svg style="fill:#44b78b"><use href="#i-django"/></svg></span><span>Django <span class="fw-lang">· Python</span></span></span>
+        <h2 id="django-example-title">ORM-aware tools with Django permissions</h2>
+        <p class="section-lead">Tools check <code>user.has_perm</code>, can run in <code>transaction.atomic</code>, and only see the current user's data.</p>
+        <ul>
+          <li><code>@prompt</code> methods typed by their return annotation (<code>str</code> or pydantic)</li>
+          <li>Conversations partitioned per user, so users can't resume each other's sessions</li>
+          <li>System checks, a <code>copilot_check</code> command, and session cleanup for cron</li>
+          <li>Autodiscovered <code>copilot_tools</code> and <code>copilot_agents</code> modules</li>
+        </ul>
+        <a class="more" href="django/">Django documentation →</a>
+      </div>
+      <div class="stack">
+        <div class="window">
+          <div class="bar" aria-hidden="true">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="file">shop/copilot_agents.py</span>
+          </div>
+<pre><code><span class="tok-a">@copilot_tool</span>
+<span class="tok-k">def</span> lookup_order(order_id: int, ctx: <span class="tok-t">ToolContext</span>) -&gt; dict:
+    <span class="tok-s">""</span><span class="tok-s">"Look up one of the current user's orders."</span><span class="tok-s">""</span>
+    order = <span class="tok-t">Order</span>.objects.get(pk=order_id, owner=ctx.user)
+    <span class="tok-k">return</span> {<span class="tok-s">"id"</span>: order.pk, <span class="tok-s">"status"</span>: order.status}
+
+<span class="tok-a">@copilot_tool</span>(permission_required=<span class="tok-s">"shop.refund_order"</span>, atomic=<span class="tok-k">True</span>)
+<span class="tok-k">def</span> refund_order(order_id: int, ctx: <span class="tok-t">ToolContext</span>) -&gt; str:
+    <span class="tok-s">""</span><span class="tok-s">"Refund an order."</span><span class="tok-s">""</span>
+    ...
+
+<span class="tok-k">class</span> <span class="tok-t">SupportAgent</span>(<span class="tok-t">CopilotAgent</span>):
+    instructions = <span class="tok-s">"You are a support agent. Be concise."</span>
+    tools = [lookup_order, refund_order]
+    permissions = policies.allow_registered_tools()
+
+    <span class="tok-a">@prompt</span>(<span class="tok-s">"Should order {{ order_id }} be refunded? "</span>
+            <span class="tok-s">"Reason given: {{ reason }}"</span>)
+    <span class="tok-k">def</span> decide_refund(self, order_id: int, reason: str) -&gt; <span class="tok-t">Decision</span>: ...</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="code flip" id="fastapi-example" aria-labelledby="fastapi-example-title">
+      <div>
+        <span class="fw"><span class="logo" aria-hidden="true"><svg fill="#009688"><use href="#i-fastapi"/></svg></span><span>FastAPI <span class="fw-lang">· Python</span></span></span>
+        <h2 id="fastapi-example-title">Agents injected with <code>Depends</code></h2>
+        <p class="section-lead">Agents are dependencies. Their tools see the current user and anything you inject, such as a database session.</p>
+        <ul>
+          <li>Typed <code>@prompt</code> methods returning pydantic models</li>
+          <li><code>HTTPException</code> in a tool becomes the message the model sees</li>
+          <li>pydantic-settings configuration with validation in the app's lifespan</li>
+          <li><code>GET /copilot/health</code> and a scripted test runtime</li>
+        </ul>
+        <a class="more" href="https://github.com/brunoborges/copilot-sdk-integrations/tree/main/python/fastapi">FastAPI documentation →</a>
+      </div>
+      <div class="stack">
+        <div class="window">
+          <div class="bar" aria-hidden="true">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="file">app/main.py</span>
+          </div>
+<pre><code>copilot = <span class="tok-t">Copilot</span>(agents=[<span class="tok-t">SupportAgent</span>], current_user=get_current_user)
+app = <span class="tok-t">FastAPI</span>(lifespan=copilot.lifespan,
+              exception_handlers=copilot.exception_handlers)
+app.include_router(copilot.router())        <span class="tok-c"># GET /copilot/health</span>
+
+<span class="tok-t">Support</span> = <span class="tok-t">Annotated</span>[
+    <span class="tok-t">SupportAgent</span>, copilot.depends(<span class="tok-t">SupportAgent</span>, db=<span class="tok-t">Depends</span>(get_db))
+]
+
+
+<span class="tok-a">@app.get</span>(<span class="tok-s">"/orders/{order_id}/status"</span>)
+<span class="tok-k">async</span> <span class="tok-k">def</span> status(order_id: int, agent: <span class="tok-t">Support</span>) -&gt; dict:
+    <span class="tok-k">return</span> {<span class="tok-s">"answer"</span>: <span class="tok-k">await</span> agent.where_is(order_id)}
+
+
+<span class="tok-a">@app.post</span>(<span class="tok-s">"/chat/{conversation_id}"</span>)
+<span class="tok-k">async</span> <span class="tok-k">def</span> chat(conversation_id: str, message: str, agent: <span class="tok-t">Support</span>):
+    reply = <span class="tok-k">await</span> agent.conversation(conversation_id).asend(message)
+    <span class="tok-k">return</span> {<span class="tok-s">"answer"</span>: reply}</code></pre>
+        </div>
       </div>
     </section>
 
     <footer>
-      <span>GitHub Copilot, Spring, Quarkus, Java, NestJS, Fastify, TypeScript, .NET, Node.js, Django, Python, Aspire, Anthropic, OpenAI, and Ollama are trademarks of their respective owners.</span>
+      <span>GitHub Copilot, Spring, Quarkus, Java, NestJS, Fastify, TypeScript, .NET, Node.js, Django, Python, Micronaut, Apache Camel, FastAPI, Aspire, Anthropic, OpenAI, and Ollama are trademarks of their respective owners.</span>
       <span>Source on <a href="https://github.com/brunoborges/copilot-sdk-integrations">GitHub</a>.</span>
     </footer>
   </main>
