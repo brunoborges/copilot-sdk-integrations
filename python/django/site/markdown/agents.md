@@ -40,6 +40,7 @@ Two agents with the same name are reported as `copilot.E005`.
 | `available_tools`, `excluded_tools` | Runtime tool filters such as `builtin:view`, `custom:*`, `mcp:docs/*`. |
 | `built_in_tools` | `False` excludes the runtime's built-in tools (shell, file edits, ...). |
 | `excluded_built_in_agents` | Built-in sub-agents to disable. |
+| `tool_search` | `{"enabled": bool, "defer_threshold": int}` (either key optional): override the runtime's tool search, which defers MCP and external tools behind `tool_search_tool` once the tool count reaches the threshold (runtime default: enabled, 30). Default: `None`, the runtime default. |
 | `working_directory` | `"isolated"` (default), a path, or a callable `(ctx) -> path`. |
 | `additional_directories` | Extra directories the agent may read. |
 | `permissions` | A [permission policy](permissions.md). Default: deny everything. |
@@ -49,7 +50,7 @@ Two agents with the same name are reported as `copilot.E005`.
 | `message_source` | `"user"`, `"system"` or `"agent-<id>"` provenance label for prompts (see [Message source](#message-source)). |
 
 Any attribute can be overridden per environment in `COPILOT["AGENTS"][name]` with upper-case
-keys (for example `"MODEL"`, `"TOOLS"`, `"PERMISSIONS"`).
+keys (for example `"MODEL"`, `"TOOLS"`, `"PERMISSIONS"`, `"TOOL_SEARCH"`).
 
 ## Calling an agent
 

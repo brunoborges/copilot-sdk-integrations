@@ -12,8 +12,9 @@ record CopilotAgentAttributes(String name, String instructions, String instructi
         SystemMessageMode instructionsMode, String systemMessageRef, String model, String reasoningEffort,
         String permissionHandlerRef, String[] toolRefs, String[] mcpServers, String provider, String[] listenerRefs,
         String[] customizerRefs, String[] availableTools, String[] excludedTools, String[] excludedBuiltInAgents,
-        boolean builtInTools, String workingDirectory, String[] additionalDirectories, String[] hookRefs,
-        String tokenResolverRef, String messageSource) implements CopilotAgent {
+        boolean builtInTools, String toolSearch, int toolSearchDeferThreshold, String workingDirectory,
+        String[] additionalDirectories, String[] hookRefs, String tokenResolverRef, String messageSource)
+        implements CopilotAgent {
 
     @Override
     public Class<? extends Annotation> annotationType() {

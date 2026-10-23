@@ -60,7 +60,7 @@ Endpoint options mirror `@CopilotAgent` attributes: `instructions`, `instruction
 `instructionsMode`, `systemMessageRef`, `model`, `reasoningEffort`, `toolRefs`, `mcpServers`,
 `provider`, `permissionHandlerRef`, `listenerRefs`, `customizerRefs`, `hookRefs`,
 `tokenResolverRef`, `availableTools`, `excludedTools`, `excludedBuiltInAgents`, `builtInTools`,
-`workingDirectory`, `additionalDirectories`, `messageSource`. Lists are comma separated; `*Ref` values are bean
+`toolSearch`, `toolSearchDeferThreshold`, `workingDirectory`, `additionalDirectories`, `messageSource`. Lists are comma separated; `*Ref` values are bean
 names in the Camel registry. Agent settings can also be set per endpoint: `responseTimeout`
 (e.g. `PT2M`) and the permission shortcuts `allow`, `allowTools`, `allowMcpServers`,
 `allowAgentTools`, `allowReadOnly`.

@@ -30,6 +30,16 @@ const agentOverrides = z.strictObject({
   availableTools: stringList.optional(),
   excludedTools: stringList.optional(),
   builtInTools: z.boolean().optional(),
+  toolSearch: z
+    .strictObject({
+      enabled: z.boolean().optional(),
+      deferThreshold: z.number().int().min(1).optional(),
+    })
+    .refine((value) => !(value.enabled === false && value.deferThreshold !== undefined), {
+      message: "deferThreshold has no effect when enabled is false",
+      path: ["deferThreshold"],
+    })
+    .optional(),
   messageSource: z.string().optional(),
 });
 

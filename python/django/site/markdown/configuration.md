@@ -84,6 +84,7 @@ attribute names:
 COPILOT = {
     "AGENTS": {
         "support": {"MODEL": "claude-sonnet-4.5", "TIMEOUT": 120},
+        "github_triage": {"TOOL_SEARCH": {"enabled": True, "defer_threshold": 50}},
     },
 }
 ```

@@ -307,6 +307,8 @@ class AgentInvoker:
             options["provider"] = dict(definition.provider)
         if definition.available_tools:
             options["available_tools"] = list(definition.available_tools)
+        if definition.tool_search is not None:
+            options["tool_search"] = dict(definition.tool_search)
         excluded = definition.effective_excluded_tools
         if excluded:
             options["excluded_tools"] = list(excluded)

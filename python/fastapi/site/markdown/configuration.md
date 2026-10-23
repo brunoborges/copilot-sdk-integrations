@@ -77,6 +77,7 @@ An agent can also pass a mapping of server configs or a provider mapping directl
 
 ```sh
 COPILOT_AGENTS='{"support": {"model": "claude-sonnet-4.5", "timeout": 120}}'
+COPILOT_AGENTS='{"github_triage": {"tool_search": {"enabled": true, "defer_threshold": 50}}}'
 ```
 
 Precedence is `agents` overrides, then class attributes, then `defaults`. Overrides for agents

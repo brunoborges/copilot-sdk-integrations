@@ -100,6 +100,12 @@ public sealed class CopilotOptions
     public IDictionary<string, CopilotMcpServerOptions> McpServers { get; set; } =
         new Dictionary<string, CopilotMcpServerOptions>(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Tool search settings, which defer MCP and external tools behind a search tool once the agent has many tools.
+    /// When no value is set, the runtime default applies.
+    /// </summary>
+    public CopilotToolSearchOptions ToolSearch { get; set; } = new();
+
     /// <summary>Bring-your-own-key model provider, using the SDK's <see cref="ProviderConfig"/> shape.</summary>
     public ProviderConfig? Provider { get; set; }
 

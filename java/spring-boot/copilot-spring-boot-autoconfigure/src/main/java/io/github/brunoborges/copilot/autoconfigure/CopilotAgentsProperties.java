@@ -39,6 +39,7 @@ public record CopilotAgentsProperties(Map<String, Agent> agents) {
      * @param workingDirectory session working directory; null retains the annotation, empty selects the runtime default
      * @param additionalDirectories directories accessible beyond the working directory; null retains the annotation
      * @param permissions declarative permission policy used when the agent has no permission handler bean
+     * @param toolSearch runtime tool-search overrides; each unset value retains the annotation
      * @param messageSource default prompt provenance ({@code user}, {@code system}, or {@code agent-<id>}); null
      *                      retains the annotation, empty omits the source. Not an authenticated identity.
      */
@@ -55,6 +56,7 @@ public record CopilotAgentsProperties(Map<String, Agent> agents) {
             String workingDirectory,
             List<String> additionalDirectories,
             Permissions permissions,
+            ToolSearch toolSearch,
             String messageSource) {
 
         @ConstructorBinding
@@ -87,12 +89,12 @@ public record CopilotAgentsProperties(Map<String, Agent> agents) {
                 List<String> excludedBuiltInAgents, Boolean builtInTools, String workingDirectory,
                 List<String> additionalDirectories, Permissions permissions) {
             this(model, reasoningEffort, responseTimeout, mcpServers, provider, availableTools, excludedTools,
-                    excludedBuiltInAgents, builtInTools, workingDirectory, additionalDirectories, permissions, null);
+                    excludedBuiltInAgents, builtInTools, workingDirectory, additionalDirectories, permissions, null, null);
         }
 
         public Agent(String model, String reasoningEffort, Duration responseTimeout, List<String> mcpServers,
                 String provider) {
-            this(model, reasoningEffort, responseTimeout, mcpServers, provider, null, null, null, null, null, null, null, null);
+            this(model, reasoningEffort, responseTimeout, mcpServers, provider, null, null, null, null, null, null, null, null, null);
         }
 
         public Agent(String model, String reasoningEffort, Duration responseTimeout) {
@@ -110,6 +112,22 @@ public record CopilotAgentsProperties(Map<String, Agent> agents) {
             values = List.copyOf(values);
             values.forEach(value -> Assert.hasText(value, "Agent " + property + " entries must not be blank"));
             return values;
+        }
+    }
+
+    /**
+     * Runtime tool search, which defers MCP and external tool definitions behind a tool-search tool once the agent
+     * has many tools.
+     *
+     * @param enabled whether tool search is enabled; null retains the annotation or runtime default
+     * @param deferThreshold total tool count at which tools are deferred, at least 1; null retains the annotation
+     *                       or runtime default
+     */
+    public record ToolSearch(Boolean enabled, Integer deferThreshold) {
+
+        public ToolSearch {
+            Assert.isTrue(deferThreshold == null || deferThreshold >= 1,
+                    "Agent tool-search.defer-threshold must be at least 1");
         }
     }
 

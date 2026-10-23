@@ -115,3 +115,47 @@ def test_isolated_workspace_is_created_and_removed(copilot_runtime, settings):
     import os
 
     assert not os.path.exists(workspace)
+
+
+def test_tool_search_is_not_passed_by_default(copilot_runtime):
+    copilot_runtime.agent("locked").replies("ok")
+    LockedAgent(user=None).ask("x")
+    assert LockedAgent.definition().tool_search is None
+    assert "tool_search" not in copilot_runtime.last_session_options("locked")
+
+
+@pytest.mark.django_db
+def test_tool_search_attribute_passed_to_create_and_resume(copilot_runtime, isolated_registry, django_user_model):
+    class SearchingAgent(CopilotAgent):
+        tool_search = {"enabled": True, "defer_threshold": 5}
+
+    user = django_user_model.objects.create_user("ana")
+    copilot_runtime.agent("searching").replies("1", "2")
+    conversation = SearchingAgent(user=user).conversation("c1")
+    conversation.send("first")
+    created = copilot_runtime.last_session_options("searching")["tool_search"]
+    conversation.send("second")
+    assert copilot_runtime.resumed == [conversation.session_id]
+    resumed = copilot_runtime.last_session_options("searching")["tool_search"]
+    assert created == resumed == {"enabled": True, "defer_threshold": 5}
+    assert created is not resumed
+
+
+def test_tool_search_settings_override(isolated_registry):
+    class SearchingAgent(CopilotAgent):
+        tool_search = {"enabled": True, "defer_threshold": 5}
+
+    with override_settings(COPILOT={"AGENTS": {"searching": {"TOOL_SEARCH": {"enabled": False}}}}):
+        assert SearchingAgent.definition().tool_search == {"enabled": False}
+    assert SearchingAgent.definition().tool_search == {"enabled": True, "defer_threshold": 5}
+
+
+def test_tool_search_validation(isolated_registry):
+    class BadSearchAgent(CopilotAgent):
+        tool_search = {"enabled": False, "defer_threshold": 5}
+
+    with pytest.raises(CopilotConfigurationError, match="defer_threshold"):
+        BadSearchAgent.definition()
+    with override_settings(COPILOT={"AGENTS": {"bad_search": {"TOOL_SEARCH": {"defer_threshold": 0}}}}):
+        with pytest.raises(CopilotConfigurationError, match="defer_threshold must be an int >= 1"):
+            BadSearchAgent.definition()

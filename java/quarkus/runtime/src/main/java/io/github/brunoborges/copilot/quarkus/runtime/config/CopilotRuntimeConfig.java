@@ -43,6 +43,21 @@ public interface CopilotRuntimeConfig {
     /** Authentication token for an existing TCP server; requires {@code cli-url}. */
     Optional<String> tcpConnectionToken();
 
+    /**
+     * Runtime transport: {@code stdio} or the experimental {@code inprocess}, which hosts the runtime in this JVM and
+     * needs JNA and the platform {@code com.github:copilot-sdk-java-runtime} artifact. Omitted values keep the SDK
+     * default (the {@code cli-url} server, {@code COPILOT_SDK_DEFAULT_CONNECTION}, or stdio).
+     */
+    Optional<Connection> connection();
+
+    /** How the client reaches the Copilot runtime. */
+    enum Connection {
+        /** Child process over stdin/stdout, regardless of {@code COPILOT_SDK_DEFAULT_CONNECTION}. */
+        STDIO,
+        /** Runtime hosted inside this JVM (experimental). */
+        INPROCESS
+    }
+
     /** Shared invocation limits. */
     Execution execution();
 
@@ -124,6 +139,18 @@ public interface CopilotRuntimeConfig {
          * Overrides the annotation. Not an authenticated identity.
          */
         Optional<String> messageSource();
+
+        /** Runtime tool search, deferring MCP and external tool definitions once the agent has many tools. */
+        ToolSearch toolSearch();
+    }
+
+    /** Tool-search overrides; omitted values retain the annotation or runtime default. */
+    interface ToolSearch {
+        /** Whether tool search is enabled. */
+        Optional<Boolean> enabled();
+
+        /** Total tool count at which MCP and external tools are deferred; at least 1. */
+        OptionalInt deferThreshold();
     }
 
     /** Declarative permission policy; a request is approved when any rule matches. */

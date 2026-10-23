@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 namespace CopilotSdk.Extensions.Hosting;
 
 /// <summary>
-/// Applies <see cref="CopilotOptions"/> values (model, instructions, reasoning effort, BYOK provider, MCP servers)
+/// Applies <see cref="CopilotOptions"/> values (model, instructions, reasoning effort, tool search, BYOK provider, MCP servers)
 /// to the session config.
 /// </summary>
 internal sealed class CopilotOptionsSessionConfigurator(IOptionsMonitor<CopilotOptions> options) : ICopilotSessionConfigurator
@@ -26,6 +26,11 @@ internal sealed class CopilotOptionsSessionConfigurator(IOptionsMonitor<CopilotO
         if (!string.IsNullOrWhiteSpace(o.Instructions))
         {
             config.SystemMessage = new SystemMessageConfig { Mode = SystemMessageMode.Append, Content = o.Instructions };
+        }
+
+        if (o.ToolSearch is { } toolSearch && (toolSearch.Enabled is not null || toolSearch.DeferThreshold is not null))
+        {
+            config.ToolSearch = new ToolSearchConfig { Enabled = toolSearch.Enabled, DeferThreshold = toolSearch.DeferThreshold };
         }
 
         if (o.Provider is not null)

@@ -11,6 +11,7 @@ import com.github.copilot.rpc.CopilotClientOptions;
 import io.github.brunoborges.copilot.agent.internal.Assert;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentExecutionLimits;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentSettings;
+import io.github.brunoborges.copilot.agent.internal.CopilotRuntimeConnections;
 
 /** Converts {@link CopilotRuntimeConfig} into validated settings and SDK options. */
 public final class CopilotConfigs {
@@ -45,9 +46,16 @@ public final class CopilotConfigs {
                             permissions.allowMcpServers().orElse(List.of()),
                             permissions.allowAgentTools(),
                             permissions.allowReadOnly()),
+                    toolSearch(agent.toolSearch()),
                     agent.messageSource().map(value -> "none".equals(value) ? "" : value).orElse(null)));
         });
         return new CopilotAgentSettings(agents);
+    }
+
+    private static CopilotAgentSettings.ToolSearch toolSearch(CopilotRuntimeConfig.ToolSearch toolSearch) {
+        Integer threshold = toolSearch.deferThreshold().isPresent() ? toolSearch.deferThreshold().getAsInt() : null;
+        return toolSearch.enabled().isEmpty() && threshold == null ? null
+                : new CopilotAgentSettings.ToolSearch(toolSearch.enabled().orElse(null), threshold);
     }
 
     public static CopilotMcpProperties mcp(CopilotRuntimeConfig config) {
@@ -108,6 +116,12 @@ public final class CopilotConfigs {
         }
         if (token != null) {
             options.setTcpConnectionToken(token);
+        }
+        var connection = config.connection().orElse(null);
+        if (connection == CopilotRuntimeConfig.Connection.STDIO) {
+            CopilotRuntimeConnections.useStdio(options, "quarkus.copilot.");
+        } else if (connection == CopilotRuntimeConfig.Connection.INPROCESS) {
+            CopilotRuntimeConnections.useInProcess(options, "quarkus.copilot.");
         }
         return options;
     }

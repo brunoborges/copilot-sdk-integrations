@@ -15,6 +15,7 @@ from .tokens import CopilotTokenResolver
 from .tools import CopilotTool, as_tool
 
 ALL_BUILT_IN_TOOLS = "builtin:*"
+TOOL_SEARCH_KEYS = frozenset({"enabled", "defer_threshold"})
 
 InstructionsMode = Literal["append", "replace", "customize"]
 Listener = Callable[[AgentContext, Any], Any]
@@ -41,6 +42,9 @@ class AgentDefinition:
     ``builtin:view``, ``custom:*``, or ``mcp:github/*``. ``built_in_tools=False`` adds
     ``builtin:*`` to the excluded tools. An allow-list is never widened: when the agent has
     tools or MCP servers, it must include ``custom:`` or ``mcp:`` entries.
+
+    ``tool_search`` overrides the runtime's tool search (``{"enabled": bool,
+    "defer_threshold": int}``, either key optional); ``None`` keeps the runtime default.
     """
 
     name: str
@@ -57,6 +61,7 @@ class AgentDefinition:
     excluded_tools: Sequence[str] = ()
     excluded_built_in_agents: Sequence[str] = ()
     built_in_tools: bool = True
+    tool_search: Mapping[str, Any] | None = None
     working_directory: WorkingDirectory = None
     release_working_directory: Callable[[AgentContext], Any] | None = None
     additional_directories: Sequence[str] = ()
@@ -85,6 +90,8 @@ class AgentDefinition:
         set_(self, "customizers", tuple(self.customizers))
         if self.available_tools is not None:
             set_(self, "available_tools", tuple(self.available_tools))
+        if isinstance(self.tool_search, Mapping):
+            set_(self, "tool_search", dict(self.tool_search))
         errors = self.validate()
         if errors:
             raise CopilotConfigurationError("; ".join(map(str, errors)), errors)
@@ -123,6 +130,7 @@ class AgentDefinition:
                     f"{prefix}: available_tools hides every MCP server tool bound to the agent; "
                     'add "mcp:*" or specific "mcp:<server>/<tool>" entries',
                 ))
+        errors += self._validate_tool_search(prefix)
         if self.provider is not None and not self.model:
             errors.append(ConfigIssue("byok", f"{prefix}: a BYOK provider requires a model"))
         names = [t.name for t in self.tools]
@@ -135,6 +143,31 @@ class AgentDefinition:
             parse_message_source(self.message_source)
         except ValueError as exc:
             errors.append(ConfigIssue("invalid", f"{prefix}: message_source: {exc}"))
+        return errors
+
+    def _validate_tool_search(self, prefix: str) -> list[ConfigIssue]:
+        config = self.tool_search
+        if config is None:
+            return []
+        if not isinstance(config, Mapping):
+            return [ConfigIssue("invalid", f"{prefix}: tool_search must be a mapping with enabled / defer_threshold")]
+        errors: list[ConfigIssue] = []
+        unknown = sorted(str(key) for key in config if key not in TOOL_SEARCH_KEYS)
+        if unknown:
+            errors.append(ConfigIssue(
+                "invalid", f"{prefix}: unknown tool_search keys {unknown}; expected enabled, defer_threshold"
+            ))
+        enabled = config.get("enabled")
+        if "enabled" in config and not isinstance(enabled, bool):
+            errors.append(ConfigIssue("invalid", f"{prefix}: tool_search enabled must be a bool"))
+        threshold = config.get("defer_threshold")
+        if "defer_threshold" in config:
+            if isinstance(threshold, bool) or not isinstance(threshold, int) or threshold < 1:
+                errors.append(ConfigIssue("invalid", f"{prefix}: tool_search defer_threshold must be an int >= 1"))
+            elif enabled is False:
+                errors.append(ConfigIssue(
+                    "invalid", f"{prefix}: tool_search defer_threshold has no effect when enabled is False"
+                ))
         return errors
 
     @property

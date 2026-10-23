@@ -136,7 +136,7 @@ class MessageSourceTests {
 
     private static CopilotAgentsProperties settings(String agent, String source) {
         return new CopilotAgentsProperties(Map.of(agent, new CopilotAgentsProperties.Agent(null, null,
-                Duration.ofSeconds(60), null, null, null, null, null, null, null, null, null, source)));
+                Duration.ofSeconds(60), null, null, null, null, null, null, null, null, null, null, source)));
     }
 
     private <T> T agent(Class<T> type, CopilotAgentInvoker invoker, CopilotAgentsProperties settings) {

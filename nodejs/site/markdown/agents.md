@@ -53,6 +53,7 @@ const advisor = defineAgent({
 | `mcpServers` | [MCP servers](#mcp-servers), keyed by name. |
 | `availableTools` / `excludedTools` | [Tool filters](tools.md#tool-filters); mutually exclusive. |
 | `builtInTools` | Expose the runtime's built-in tools (shell, file edits, URL fetch). Default `false`. |
+| `toolSearch` | [Tool search](#tool-search): `{ enabled?, deferThreshold? }`. Default: the runtime's setting. |
 | `permissions` | A [permission policy](governance.md#permission-policies). Default: deny everything. |
 | `hooks` | SDK [session hooks](governance.md#hooks). |
 | `customAgents` | SDK custom (sub-)agent configurations. |
@@ -178,6 +179,21 @@ MCP tool calls go through the
 In NestJS, define servers once in the module's
 `mcpServers` option and list their names in `@CopilotAgent({ mcpServers: ["github"] })`.
 <!-- /only -->
+
+### Tool search
+
+Large MCP servers (GitHub, Playwright) add many tool definitions to every request. With tool
+search, the runtime defers MCP and external tool definitions behind a built-in
+`tool_search_tool` once the agent's total tool count reaches `deferThreshold`; the model
+searches for the tools it needs. The runtime default is enabled with a threshold of 30.
+
+```ts
+defineAgent({ name: "dev", mcpServers: { github }, toolSearch: { deferThreshold: 10 } });
+defineAgent({ name: "small", toolSearch: { enabled: false } }); // always send every tool
+```
+
+When `toolSearch` is unset, the session uses the runtime default. `deferThreshold` must be an
+integer `>= 1`, and setting it together with `enabled: false` is a configuration error.
 
 ## Session customization
 
@@ -311,7 +327,7 @@ The injection token is `getAgentToken("triage")`.
 The module option `agents.<name>` overrides decorator values per environment. It accepts
 `description`, `instructions`, `model`, `reasoningEffort`, `provider` (name or inline),
 `mcpServers` (names or inline), `availableTools`, `excludedTools`, `builtInTools`, and
-`messageSource` (`""` clears the decorator value).
+`toolSearch`, and `messageSource` (`""` clears the decorator value).
 
 ```ts
 CopilotModule.forRoot({

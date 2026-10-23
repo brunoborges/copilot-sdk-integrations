@@ -44,6 +44,10 @@ const infoSchema = {
           mcpServers: stringArray,
           availableTools: stringArray,
           excludedTools: stringArray,
+          toolSearch: {
+            type: "object",
+            properties: { enabled: { type: "boolean" }, deferThreshold: { type: "integer" } },
+          },
           instructions: {},
         },
         required: ["name", "builtInTools", "tools", "mcpServers"],
