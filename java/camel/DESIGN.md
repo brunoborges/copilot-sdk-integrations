@@ -4,7 +4,7 @@ Status: **MVP implemented** (unreleased). Section 7 lists what is built and what
 see [README.md](README.md) for usage.
 
 This document designs `copilot-camel`, an [Apache Camel](https://camel.apache.org/) component that
-brings the GitHub Copilot agent runtime into Camel routes. It builds on the
+brings the GitHub Copilot Harness into Camel routes. It builds on the
 [Copilot SDK for Java](https://github.com/github/copilot-sdk) and reuses the framework-neutral
 engine in [`java/core`](../core/) (`copilot-core`), the same engine behind the
 [Spring Boot starter](../spring-boot/) and the [Quarkus extension](../quarkus/).
@@ -44,7 +44,7 @@ Goals, aligned with the [repository design goals](../../README.md#design-goals):
 Non-goals:
 
 - A general LLM chat abstraction. Camel already has LangChain4j-based components for raw chat
-  completion. `copilot-camel` targets the *agent runtime*: sessions, built-in tools, MCP
+  completion. `copilot-camel` targets the *Copilot Harness*: sessions, built-in tools, MCP
   servers, permissions, and hooks.
 - Reimplementing agent governance. Permission policies, tool allow/deny lists, limits, and
   hooks come from `copilot-core`.
@@ -66,7 +66,7 @@ flowchart LR
     end
     P --> ENG
     ENG --> SDK["Copilot SDK for Java: CopilotClient / CopilotSession"]
-    SDK <--> RT["Copilot agent runtime"]
+    SDK <--> RT["Copilot Harness"]
     RT -. tool call .-> T1
     RT -. tool call .-> T2
     RT -. permission request .-> PERM
