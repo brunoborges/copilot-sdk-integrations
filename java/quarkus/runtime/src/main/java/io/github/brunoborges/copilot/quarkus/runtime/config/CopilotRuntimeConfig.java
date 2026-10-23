@@ -69,6 +69,9 @@ public interface CopilotRuntimeConfig {
     /** Streaming settings. */
     Streaming streaming();
 
+    /** Session store and cleanup settings. */
+    Sessions sessions();
+
     /** Invocation limits. */
     interface Execution {
         /** Maximum invocations executing SDK work at once across all agents. */
@@ -268,5 +271,27 @@ public interface CopilotRuntimeConfig {
         /** Events buffered per {@code Multi} subscriber before the stream fails with an overflow. */
         @WithDefault("256")
         int bufferCapacity();
+    }
+
+    /** Session store and cleanup settings. */
+    interface Sessions {
+        /**
+         * Maximum time a {@code CopilotSessionStore} or cleanup call waits for the Copilot runtime, including how
+         * long a deletion waits for a turn in flight on the session.
+         */
+        @WithDefault("2m")
+        Duration timeout();
+
+        /** Age-based deletion of agent sessions; disabled unless {@code max-age} is set. */
+        Cleanup cleanup();
+
+        /** Age-based session cleanup. */
+        interface Cleanup {
+            /** Deletes agent sessions not modified for longer than this; unset disables cleanup. */
+            Optional<Duration> maxAge();
+
+            /** Time between sweeps; defaults to half of {@code max-age}, between one minute and one hour. */
+            Optional<Duration> interval();
+        }
     }
 }

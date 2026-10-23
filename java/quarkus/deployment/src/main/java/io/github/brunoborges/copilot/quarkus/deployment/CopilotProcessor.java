@@ -31,6 +31,7 @@ import io.github.brunoborges.copilot.quarkus.runtime.CopilotAgentRegistry;
 import io.github.brunoborges.copilot.quarkus.runtime.CopilotAgentTelemetryDecorator;
 import io.github.brunoborges.copilot.quarkus.runtime.CopilotProducers;
 import io.github.brunoborges.copilot.quarkus.runtime.CopilotRecorder;
+import io.github.brunoborges.copilot.quarkus.runtime.CopilotSessionCleanup;
 import io.github.brunoborges.copilot.quarkus.runtime.HookRegistration;
 import io.github.brunoborges.copilot.quarkus.runtime.endpoint.CopilotEndpoint;
 import io.github.brunoborges.copilot.quarkus.runtime.endpoint.CopilotEndpointRecorder;
@@ -84,7 +85,7 @@ class CopilotProcessor {
     void beans(CopilotBuildTimeConfig config, Capabilities capabilities, BuildProducer<AdditionalBeanBuildItem> beans,
             BuildProducer<UnremovableBeanBuildItem> unremovable) {
         beans.produce(AdditionalBeanBuildItem.builder().addBeanClasses(CopilotProducers.class,
-                CopilotAgentRegistry.class).setUnremovable().build());
+                CopilotAgentRegistry.class, CopilotSessionCleanup.class).setUnremovable().build());
 
         List<String> integrations = new ArrayList<>();
         if (config.health().enabled() && capabilities.isPresent(Capability.SMALLRYE_HEALTH)) {

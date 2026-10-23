@@ -187,6 +187,7 @@ tools, policies, and hooks. For an AI SDK `useChat` front end, see
 | Tool filters | `validateToolFilters`, `buildToolFilterConfig`, `ALL_BUILT_IN_TOOLS` (see [Tool filters](tools.md#tool-filters)) |
 | MCP | `resolveMcpServers` (resolves context-derived `headers`/`env`), `CopilotMCPServerConfig` |
 | Conversations | `deriveSessionId`, `memoryStore`, `SessionStore` |
+| Sessions | `copilot.sessions` (`CopilotSessions`, `CopilotSessionMetadata`, `CopilotSessionMessage`), `createSessionCleanup`, `sessionCleanupInterval`, `COPILOT_SESSION_ID_PREFIX` (see [Listing and cleaning up sessions](conversations.md#listing-and-cleaning-up-sessions)) |
 | Context | `getCopilotContext`, `runWithCopilotContext`, `bindCopilotContext`, `CopilotContext` |
 | Events | `mapSessionEvent`, `CopilotAgentEvent` |
 | Errors | `CopilotIntegrationError` and subclasses (see [Operations](operations.md#errors)) |

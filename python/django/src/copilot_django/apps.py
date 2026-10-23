@@ -23,16 +23,21 @@ class CopilotConfig(AppConfig):
             from .runtime import start
 
             start()
+        if get_settings().SESSIONS.get("MAX_AGE"):
+            from .sessions import start_cleanup
+
+            start_cleanup()
 
 
 def _on_setting_changed(*, setting: str, **kwargs: Any) -> None:
-    from . import conf, registry, runtime, templating
+    from . import conf, registry, runtime, sessions, templating
 
     if setting in ("COPILOT", "BASE_DIR"):
         conf.reload()
         registry.clear_cache()
         if setting == "COPILOT":
             runtime.settings_changed()
+            sessions.settings_changed()
     elif setting == "DEBUG":
         registry.clear_cache()
     elif setting in ("TEMPLATES", "INSTALLED_APPS"):

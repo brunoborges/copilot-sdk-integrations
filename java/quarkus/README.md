@@ -189,6 +189,32 @@ Build-time switches:
 Agents and their bean references are validated at startup, so a missing tool bean or
 an unknown MCP server fails the application instead of the first request.
 
+## Sessions
+
+Each conversation is persisted in a Copilot session. Inject `CopilotSessionStore` to list,
+read, or delete them, for example to build a conversation history view:
+
+```java
+@Inject CopilotSessionStore sessions;
+
+String id = sessions.sessionId(Advisor.class, conversationId);
+sessions.messages(id).ifPresent(history -> history.forEach(m -> log.info(m.role() + ": " + m.content())));
+sessions.delete(id);
+```
+
+`list()` returns only agent-created (`agent-…`) sessions, newest first. Deleting a session waits
+for a turn in flight on it. Calls wait at most `quarkus.copilot.sessions.timeout` (default `2m`).
+
+Old sessions are kept until deleted. To delete agent sessions not modified for a while, set a max age:
+
+```properties
+quarkus.copilot.sessions.cleanup.max-age=30d
+# Optional; defaults to half the max age, between 1m and 1h
+quarkus.copilot.sessions.cleanup.interval=1h
+```
+
+Cleanup runs on a daemon thread, never starts the client, and skips sessions with a turn in progress.
+
 ## Testing
 
 Add the test module:

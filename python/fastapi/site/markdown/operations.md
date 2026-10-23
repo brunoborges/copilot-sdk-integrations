@@ -8,7 +8,9 @@ title: Startup, errors and health
 
 `copilot.lifespan` is a FastAPI lifespan. On startup it validates every registered agent
 (unless `COPILOT_VALIDATE_ON_STARTUP=false`) and, with `COPILOT_RUNTIME__START=eager`, starts the
-runtime. On shutdown it stops the runtime.
+runtime. When `COPILOT_SESSIONS__MAX_AGE` is set it also starts the
+[session cleanup](configuration.md#session-cleanup) task. On shutdown it cancels that task and
+stops the runtime.
 
 ```python
 app = FastAPI(lifespan=copilot.lifespan, exception_handlers=copilot.exception_handlers)

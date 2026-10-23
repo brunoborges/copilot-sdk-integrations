@@ -9,6 +9,7 @@ title: Conversations and lifecycle
 **In this chapter**
 
 - [Conversation lifecycle](#conversation-lifecycle)
+- [Managing sessions](#managing-sessions)
 - [Threading, errors, and cancellation](#threading-errors-and-cancellation)
 
 <a id="conversation-lifecycle"></a>
@@ -30,8 +31,9 @@ For a normal invocation, the extension:
 8. Unsubscribes and closes the session attachment.
 9. Releases execution/admission bookkeeping and completes the result.
 
-There is no idle session cache, implicit default conversation, automatic retry,
-or automatic history deletion. Persisted history belongs to the runtime.
+There is no idle session cache, implicit default conversation, or automatic
+retry. Persisted history belongs to the runtime and is kept until deleted through
+`CopilotSessionStore` or [age-based cleanup](#managing-sessions).
 Changing an interface's fully qualified name or logical agent name changes the
 derived identity. Do not depend on the exact digest encoding as an application
 API; listeners expose the actual SDK session ID when needed.
@@ -45,6 +47,37 @@ custom IDs, and persistence in the same backing store.
 The global bounds are `quarkus.copilot.execution.max-concurrent-invocations`
 (default `8`) and `quarkus.copilot.execution.max-outstanding-invocations`
 (default `64`); see [Configuration](configuration.html).
+
+<a id="managing-sessions"></a>
+
+## Managing sessions
+
+Inject `io.github.brunoborges.copilot.agent.CopilotSessionStore` to list, read,
+and delete the persisted sessions behind conversations:
+
+```java
+@Inject CopilotSessionStore sessions;
+
+String id = sessions.sessionId(Advisor.class, conversationId);
+Optional<List<CopilotSessionMessage>> history = sessions.messages(id);
+boolean deleted = sessions.delete(id);
+```
+
+| Method | Behavior |
+| --- | --- |
+| `list()` | Local agent-created (`agent-…`) sessions, most recently modified first. |
+| `get(id)` / `exists(id)` | Session metadata, or empty when the session does not exist. |
+| `messages(id)` | User and assistant messages in order, without resuming the session; sub-agent messages and tool calls are omitted. |
+| `delete(id)` | Deletes the session and its history after any turn in flight finishes; turns submitted meanwhile wait for the deletion. Returns `false` when the session did not exist. |
+| `sessionId(type, conversationId)` | The session ID the agent uses for the conversation on the current thread, including the token resolver's partition. Throws `IllegalArgumentException` for an undiscovered type. |
+
+Every call blocks for at most `quarkus.copilot.sessions.timeout` (default `2m`)
+and starts a lazily configured client on first use, so call it from a worker
+thread (for example a `@Blocking` endpoint), not the Vert.x event loop. Replace
+the bean by declaring your own `CopilotSessionStore`.
+
+Set `quarkus.copilot.sessions.cleanup.max-age` to delete agent sessions not
+modified for that long; see [Session properties](configuration.html#session-properties).
 
 <a id="threading-errors-and-cancellation"></a>
 

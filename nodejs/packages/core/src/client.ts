@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { CopilotClient, RuntimeConnection, type CopilotClientOptions } from "@github/copilot-sdk";
 import { createAgentHandle } from "./agent.js";
 import { AdmissionController, ConversationLocks } from "./conversation.js";
+import { createCopilotSessions } from "./sessions.js";
 import {
   CopilotConfigurationError,
   CopilotIntegrationError,
@@ -51,6 +52,8 @@ export interface CopilotRuntime {
   checkConnection(client: ClientLike): void;
   /** Track an executing turn so `stop()` can abort it. Returns an unregister function. */
   registerTurn(controller: AbortController): () => void;
+  /** The client when the runtime is running, without starting it. */
+  runningClient(): ClientLike | undefined;
 }
 
 /** Default logger: `console`, prefixed with `[copilot]`. Debug messages are dropped. */
@@ -314,7 +317,12 @@ export function createCopilot(options: CopilotOptions = {}): Copilot {
       turns.set(controller, undefined);
       return () => turns.delete(controller);
     },
+    runningClient() {
+      if (client) checkConnection(client);
+      return state === "running" ? client : undefined;
+    },
   };
+  const sessions = createCopilotSessions(runtime);
 
   const agents = new WeakMap<CopilotAgentDefinition, AgentHandle>();
 
@@ -366,6 +374,7 @@ export function createCopilot(options: CopilotOptions = {}): Copilot {
       return handle;
     },
     capacity,
+    sessions,
     async health() {
       let version: string | undefined;
       const current = client;

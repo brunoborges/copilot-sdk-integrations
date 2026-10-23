@@ -15,6 +15,7 @@ from .invoker import AgentInvoker, CopilotReply, ToolCall
 from .policies import PermissionPolicy
 from .runtime import CopilotRuntime
 from .session_ids import SHARED, derive_session_id
+from .sessions import SessionCleanup, SessionMessage, SessionStore
 from .tokens import CallerIdentity, CopilotTokenResolver, StaticTokenResolver
 from .tools import CopilotTool, ToolContext, ToolError, tool
 
@@ -36,6 +37,9 @@ __all__ = [
     "CopilotTokenResolver",
     "CopilotTool",
     "PermissionPolicy",
+    "SessionCleanup",
+    "SessionMessage",
+    "SessionStore",
     "StaticTokenResolver",
     "ToolCall",
     "ToolContext",

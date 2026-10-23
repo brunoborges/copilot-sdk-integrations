@@ -5,6 +5,9 @@ import type {
   CopilotAgentEvent,
   CopilotContext,
   CopilotOptions,
+  CopilotSessionCleanupOptions,
+  CopilotSessions,
+  SessionCleanup,
   ToSseStreamOptions,
 } from "@copilot-sdk-integrations/agent-core";
 import type { FastifyReply, FastifyRequest, onRequestHookHandler } from "fastify";
@@ -104,6 +107,12 @@ export interface CopilotPluginOptions {
   shutdownGracePeriod?: number;
   /** Stop the client on close. Default: true when the plugin created it, false when one was passed in. */
   stopOnClose?: boolean;
+  /**
+   * Periodically delete sessions created by this library that were not modified within `maxAge` ms.
+   * Disabled unless set. `interval` defaults to half of `maxAge`, clamped to between one minute and
+   * one hour. Starts in `onReady`, stops in `onClose`; sweeps never start the runtime.
+   */
+  sessionCleanup?: CopilotSessionCleanupOptions;
 }
 
 export type CopilotEventsOptions = ToSseStreamOptions;
@@ -111,6 +120,10 @@ export type CopilotEventsOptions = ToSseStreamOptions;
 declare module "fastify" {
   interface FastifyInstance {
     copilot: FastifyCopilot;
+    /** Lists, reads, and deletes persisted Copilot sessions (same as `fastify.copilot.sessions`). */
+    copilotSessions: CopilotSessions;
+    /** The session cleanup job (`sweep()` runs one now), or `null` when `sessionCleanup` is not set. */
+    copilotSessionCleanup: SessionCleanup | null;
   }
   interface FastifyRequest {
     copilot: RequestCopilot;

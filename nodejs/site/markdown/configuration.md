@@ -93,6 +93,7 @@ each agent declares what it uses.
 | `mcpServers` | none | Named MCP servers, selected per agent with `mcpServers: ["name"]`. |
 | `agents` | none | [Per-agent overrides](agents.md#per-agent-configuration-overrides) keyed by agent name. |
 | `shutdownGracePeriod` | `30000` | How long shutdown waits for in-flight turns before aborting them. |
+| `sessionCleanup` | off | `{ maxAge, interval? }` (ms): periodically delete old sessions. See [cleanup job](conversations.md#cleanup-job). |
 | `context` | `{}` | [Request context](context-and-identity.md#the-nestjs-context-interceptor) capture: `principal`, `headers`, `conversationId`, `attributes`, `abortOnDisconnect`. `false` disables the interceptor. |
 | `templatesDir` | `process.cwd()` | Base directory for relative `@UserMessageFrom()` paths. |
 | `eventEmitter` | `false` | Re-emit events on `@nestjs/event-emitter` as `copilot.<type>`; `{ prefix }` changes the prefix. See [global event listeners](streaming.md#global-event-listeners). |

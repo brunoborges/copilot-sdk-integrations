@@ -10,6 +10,8 @@ from copilot_agents import (
     CopilotInvocationError,
     CopilotReply,
     CopilotTimeout,
+    SessionCleanup,
+    SessionMessage,
     ToolCall,
     ToolContext,
     ToolError,
@@ -19,7 +21,7 @@ from copilot_agents import (
 
 from .agents import Conversation, CopilotAgent, PromptRenderError, prompt
 from .auth import UserTokenResolver
-from .copilot import Copilot
+from .copilot import Copilot, CopilotSessionStore
 from .settings import CopilotSettings
 from .tools import copilot_tool
 
@@ -35,9 +37,12 @@ __all__ = [
     "CopilotConversationNotFound",
     "CopilotInvocationError",
     "CopilotReply",
+    "CopilotSessionStore",
     "CopilotSettings",
     "CopilotTimeout",
     "PromptRenderError",
+    "SessionCleanup",
+    "SessionMessage",
     "ToolCall",
     "ToolContext",
     "ToolError",

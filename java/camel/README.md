@@ -134,6 +134,29 @@ registry under their name, and a `copilotAgents` bean creates and resumes the re
 | `agentSettings` | `CopilotAgentSettings`. Default: the single registry bean, else defaults. |
 | `agentTypes` | Comma-separated `@CopilotAgent` interface names. |
 | `maxConcurrentInvocations`, `maxOutstandingInvocations` | Execution limits shared by all agents. |
+| `sessionTimeout` | Maximum wait for each session store or cleanup call. Default: `2m`. |
+| `sessionMaxAge` | Deletes agent sessions not modified for longer than this. Default: unset (no cleanup). |
+| `sessionCleanupInterval` | Delay between cleanup sweeps. Default: half of `sessionMaxAge`, between `1m` and `1h`. |
+
+## Sessions
+
+Each conversation is persisted in a Copilot session. The started component's `sessionStore()` (also bound in
+the registry as `copilotSessionStore`) lists, reads, and deletes them:
+
+```java
+CopilotSessionStore sessions = context.getComponent("copilot", CopilotComponent.class).sessionStore();
+
+String id = sessions.sessionId(Advisor.class, conversationId); // agents listed in agentTypes
+sessions.messages(id).ifPresent(history -> history.forEach(m -> log.info(m.role() + ": " + m.content())));
+sessions.delete(id);
+```
+
+`list()` returns only agent-created (`agent-…`) sessions, newest first, including those of `copilot:agent`
+endpoints. Deleting a session waits for a turn in flight on it.
+
+Set `sessionMaxAge` (for example `camel.component.copilot.session-max-age=30d`) to delete agent sessions not
+modified for that long. Cleanup runs on a Camel-managed scheduled thread while the component is started, never
+starts the client, and skips sessions with a turn in progress.
 
 ## Headers
 

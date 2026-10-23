@@ -16,7 +16,7 @@ import type {
   ToolSet,
   ToolResultObject,
 } from "@github/copilot-sdk";
-import type { ClientFactory, ClientLike, SessionLike, StructuredSchema } from "../types.js";
+import type { ClientFactory, ClientLike, PersistedEventsPage, SessionLike, StructuredSchema } from "../types.js";
 import {
   PromptScript,
   matches,
@@ -253,6 +253,12 @@ export class CopilotTestRuntime {
   events(sessionId: string): SessionEvent[] {
     return [...(this.sessions.get(sessionId)?.events ?? [])];
   }
+  /** Overrides a session's last-modified time (e.g. to test session cleanup). Throws for an unknown session. */
+  setModifiedTime(sessionId: string, modifiedTime: Date): void {
+    const state = this.sessions.get(sessionId);
+    if (!state) throw new Error(`Session not found: ${sessionId}`);
+    state.modifiedTime = modifiedTime;
+  }
 
   // -------------------------------------------------------------------------
   // Client operations (used by TestClient)
@@ -350,6 +356,23 @@ export class CopilotTestRuntime {
       ...(state.summary === undefined ? {} : { summary: state.summary }),
       isRemote: false,
     };
+  }
+
+  /** @internal */
+  async listSessions(): Promise<TestSessionMetadata[]> {
+    const ids = [...this.sessions.keys()];
+    const result = await Promise.all(ids.map((id) => this.getSessionMetadata(id)));
+    return result.filter((m): m is TestSessionMetadata => m !== undefined);
+  }
+
+  /** @internal Pages the session's persisted (non-ephemeral) events; the cursor is an offset. */
+  async readPersistedEvents(params: { sessionId: string; cursor?: string; max?: number }): Promise<PersistedEventsPage> {
+    const state = this.sessions.get(params.sessionId);
+    if (!state) throw new Error(`Session not found: ${params.sessionId}`);
+    const persisted = state.events.filter((e) => !(e as { ephemeral?: boolean }).ephemeral);
+    const start = params.cursor === undefined ? 0 : Number(params.cursor);
+    const end = Math.min(persisted.length, start + (params.max ?? 200));
+    return { events: persisted.slice(start, end), cursor: String(end), hasMore: end < persisted.length, cursorStatus: "ok" };
   }
 
   /** @internal */
@@ -909,6 +932,14 @@ class TestClient implements ClientLike {
   getSessionMetadata(sessionId: string): Promise<TestSessionMetadata | undefined> {
     return this.runtime.getSessionMetadata(sessionId);
   }
+  listSessions(): Promise<TestSessionMetadata[]> {
+    return this.runtime.listSessions();
+  }
+  readonly rpc = {
+    sessions: {
+      readPersistedEvents: (params: { sessionId: string; cursor?: string; max?: number }) => this.runtime.readPersistedEvents(params),
+    },
+  };
   listModels(): Promise<TestModel[]> {
     return this.runtime.listModels();
   }

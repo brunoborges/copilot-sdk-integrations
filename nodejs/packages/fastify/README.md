@@ -26,6 +26,7 @@ await app.register(copilotPlugin, {
   context: { headers: ["x-tenant"] }, // copied into context.attributes.headers
   health: true,                       // GET /health/copilot
   shutdownGracePeriod: 30_000,
+  sessionCleanup: { maxAge: 7 * 24 * 3_600_000 }, // delete sessions idle for a week (default: off)
 });
 
 app.post("/ask", async (request) => request.copilot.agent("support").send({ prompt: (request.body as { q: string }).q }));
@@ -178,6 +179,7 @@ There's no runtime process, no credentials, and no paid requests.
 
 - **Startup.** With `startup: "lazy"` (default) the first turn starts the runtime. With `"eager"`, `onReady` starts it and `ready()` / `listen()` reject when it can't start.
 - **Shutdown.** `preClose` stops admission and starts draining: new turns get 503 while in-flight turns have up to `shutdownGracePeriod` to finish, then they're aborted. `onClose` waits for the drain and the runtime stop. Use `close-with-grace` or similar to call `app.close()` on signals.
+- **Sessions.** `fastify.copilotSessions` lists, reads (`getMessages`), and deletes persisted sessions without resuming them. With `sessionCleanup: { maxAge, interval? }`, `onReady` starts a timer that deletes this library's sessions (not remote, not running) idle for longer than `maxAge`, every `interval` (default `maxAge / 2`, clamped to 1 minute–1 hour); `onClose` stops it. The job is `fastify.copilotSessionCleanup` (`null` when off) and never starts the runtime.
 - **Ownership.** `stopOnClose` defaults to `true` when the plugin created the client and `false` when you passed an existing `Copilot`.
 
 ## Limitations

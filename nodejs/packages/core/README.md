@@ -75,6 +75,10 @@ for await (const event of agent.stream({ prompt: "Summarize order 42", conversat
 
 Every call accepts `signal`, `timeout`, extra `tools`, and `context`. Wrap request handling in `runWithCopilotContext({ principal })` so conversations are scoped per user and tools, policies, and hooks can read `getCopilotContext()`.
 
+## Sessions
+
+`copilot.sessions` lists, reads, and deletes persisted sessions without resuming them: `list()`, `get(id)`, `exists(id)`, `getMessages(id)`, `delete(id)`, and `sessionId(agent, conversationId)`. `createSessionCleanup(copilot.sessions, { maxAge })` periodically deletes this library's sessions (ids starting with `copilot-`) that haven't been modified for `maxAge` ms; it skips remote sessions and sessions with a turn running, and never starts the runtime. See [Conversations](../../site/markdown/conversations.md#listing-and-cleaning-up-sessions).
+
 ## Permissions
 
 Policies decide each runtime permission request (`approve`, `deny`, `ask-user`, or `abstain`):

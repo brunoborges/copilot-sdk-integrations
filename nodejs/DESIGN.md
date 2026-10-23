@@ -230,7 +230,8 @@ class itself may be abstract.
   `baseDirectory`, `logLevel`, `limits`, `responseTimeout`, `approvalWindow`
   (how long an `ask-user` permission waits), `restart` (crash recovery, §6),
   `shutdownGracePeriod`, `store`, `providers` (named BYOK providers), `mcpServers`
-  (named), and `agents` (per-agent overrides by name).
+  (named), `agents` (per-agent overrides by name), and `sessionCleanup`
+  (`{ maxAge, interval? }`, off by default; §11).
 - Core pass-throughs: `hooks`, `onEvent`, `tokenResolver`, `configureClient`,
   `clientFactory`, and `logger` (defaults to Nest's `Logger`).
 - NestJS-specific: `context` (what the interceptor captures: `principal`, `headers`,
@@ -402,6 +403,17 @@ All from the core:
   leases, plus sticky routing by conversation id or a shared runtime server (`cliUrl`).
   A packaged `redisStore()` and shared session state through a `sessionFs` adapter are
   phase 4 (roadmap).
+- **Session listing and cleanup**: `copilot.sessions` (injectable as
+  `CopilotSessionsService`) lists local sessions newest first, reads metadata, reads the
+  user and assistant messages through the runtime's `sessions.readPersistedEvents` RPC
+  without resuming the session, and deletes sessions after waiting for the conversation
+  lock and lease. `CopilotSessionCleanup` (`OnApplicationBootstrap` / `OnModuleDestroy`,
+  an `unref()`'d `setInterval`, no `@nestjs/schedule`) runs only when
+  `sessionCleanup.maxAge` is set. Each sweep deletes sessions whose id starts with
+  `copilot-`, that aren't remote, whose `modifiedTime` is older than `maxAge` (checked
+  again just before deleting), and that have no turn running; it never starts the runtime.
+  The interval defaults to `maxAge / 2`, clamped to 1 minute–1 hour. Ephemeral turns take
+  the (uncontended) conversation lock so a sweep skips them too.
 
 ---
 

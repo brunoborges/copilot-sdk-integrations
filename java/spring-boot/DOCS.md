@@ -69,7 +69,7 @@ This heading preserves the existing `DOCS.md#bound-agent-instances` entry point.
 
 The [configuration chapter](src/site/markdown/configuration.md) is the complete
 reference for `copilot.*`, `copilot.agents.<name>.*`, `copilot.mcp.servers.*`,
-`copilot.providers.*`, `copilot.execution.*`,
+`copilot.providers.*`, `copilot.execution.*`, `copilot.sessions.*`,
 `copilot.observations.enabled`, and `copilot.reactor.buffer-capacity`.
 Settings not listed there are not automatically forwarded to SDK configuration.
 

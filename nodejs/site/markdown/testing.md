@@ -87,7 +87,9 @@ runtime
 `runtime.failStart(error, times?)` makes the runtime fail to start, `runtime.crash()` simulates the
 runtime process dying (in-flight turns end, the client disconnects; see
 [runtime restarts](operations.md#runtime-restarts)), `runtime.setModels(models)`
-changes the model list, and `runtime.reset()` clears rules and recordings between tests.
+changes the model list, `runtime.setModifiedTime(sessionId, date)` backdates a session (to test the
+[cleanup job](conversations.md#cleanup-job)), and `runtime.reset()` clears rules and recordings
+between tests.
 
 ## Recordings
 

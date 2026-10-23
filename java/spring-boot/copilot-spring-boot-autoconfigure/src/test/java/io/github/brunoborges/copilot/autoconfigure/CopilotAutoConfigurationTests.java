@@ -259,6 +259,7 @@ class CopilotAutoConfigurationTests {
                     "copilot.tcp-connection-token", "copilot.agents", "copilot.mcp.servers", "copilot.providers",
                     "copilot.observations.enabled",
                     "copilot.execution.max-concurrent-invocations", "copilot.execution.max-outstanding-invocations",
+                    "copilot.sessions.timeout", "copilot.sessions.cleanup.max-age", "copilot.sessions.cleanup.interval",
                     "copilot.health.timeout", "copilot.health.start-client",
                     "copilot.health.require-authentication", "copilot.endpoint.timeout",
                     "copilot.endpoint.start-client", "copilot.endpoint.show-instructions",

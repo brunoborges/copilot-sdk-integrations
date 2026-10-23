@@ -59,6 +59,7 @@ const optionsSchema = z
       })
       .optional(),
     shutdownGracePeriod: z.number().nonnegative().optional(),
+    sessionCleanup: z.strictObject({ maxAge: ms, interval: ms.optional() }).optional(),
     store: store.optional(),
     hooks: z.record(z.string(), fn).optional(),
     onEvent: fn.optional(),

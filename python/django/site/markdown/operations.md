@@ -46,6 +46,16 @@ python manage.py copilot_check --no-runtime        # configuration only
 python manage.py copilot_check --timeout 30
 ```
 
+### `copilot_cleanup_sessions`
+
+Runs one session cleanup sweep and prints how many sessions were deleted. It uses
+`COPILOT["SESSIONS"]["MAX_AGE"]` unless `--max-age` is given, and starts the runtime if needed.
+
+```sh
+python manage.py copilot_cleanup_sessions
+python manage.py copilot_cleanup_sessions --max-age 2592000   # 30 days, in seconds
+```
+
 ## Deployment notes
 
 - **Gunicorn and uWSGI**: the runtime is started lazily in each worker and is safe across
