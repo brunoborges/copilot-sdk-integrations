@@ -11,6 +11,7 @@ import com.github.copilot.rpc.CopilotClientOptions;
 import io.github.brunoborges.copilot.agent.internal.Assert;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentExecutionLimits;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentSettings;
+import io.github.brunoborges.copilot.agent.internal.CopilotRuntimeConnections;
 
 /** Converts {@link CopilotRuntimeConfig} into validated settings and SDK options. */
 public final class CopilotConfigs {
@@ -107,6 +108,12 @@ public final class CopilotConfigs {
         }
         if (token != null) {
             options.setTcpConnectionToken(token);
+        }
+        var connection = config.connection().orElse(null);
+        if (connection == CopilotRuntimeConfig.Connection.STDIO) {
+            CopilotRuntimeConnections.useStdio(options, "micronaut.copilot.");
+        } else if (connection == CopilotRuntimeConfig.Connection.INPROCESS) {
+            CopilotRuntimeConnections.useInProcess(options, "micronaut.copilot.");
         }
         return options;
     }

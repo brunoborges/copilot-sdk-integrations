@@ -10,6 +10,8 @@ import org.springframework.util.Assert;
 
 import com.github.copilot.rpc.CopilotClientOptions;
 
+import io.github.brunoborges.copilot.agent.internal.CopilotRuntimeConnections;
+
 /**
  * @param enabled whether to auto-configure a client
  * @param eagerStart whether to connect during application startup
@@ -20,6 +22,8 @@ import com.github.copilot.rpc.CopilotClientOptions;
  * @param logLevel runtime log level; omitted values retain the SDK default
  * @param cliUrl existing server address (port, host:port, or HTTP-style URI)
  * @param tcpConnectionToken authentication token for an existing TCP server
+ * @param connection runtime transport: {@code stdio} or the experimental {@code inprocess}; omitted values keep the
+ *        SDK default (the {@code cli-url} server, {@code COPILOT_SDK_DEFAULT_CONNECTION}, or stdio)
  */
 @ConfigurationProperties("copilot")
 public record CopilotProperties(
@@ -31,7 +35,16 @@ public record CopilotProperties(
         String workingDirectory,
         String logLevel,
         String cliUrl,
-        String tcpConnectionToken) {
+        String tcpConnectionToken,
+        Connection connection) {
+
+    /** How the client reaches the Copilot runtime. */
+    public enum Connection {
+        /** Child process over stdin/stdout, regardless of {@code COPILOT_SDK_DEFAULT_CONNECTION}. */
+        STDIO,
+        /** Host the runtime inside this JVM (experimental); needs JNA and the platform runtime artifact. */
+        INPROCESS
+    }
 
     public CopilotProperties {
         Assert.notNull(startupTimeout, "copilot.startup-timeout is required");
@@ -74,19 +87,24 @@ public record CopilotProperties(
         if (tcpConnectionToken != null) {
             options.setTcpConnectionToken(tcpConnectionToken);
         }
+        if (connection == Connection.STDIO) {
+            CopilotRuntimeConnections.useStdio(options, "copilot.");
+        } else if (connection == Connection.INPROCESS) {
+            CopilotRuntimeConnections.useInProcess(options, "copilot.");
+        }
         return options;
     }
 
     CopilotClientOptions toOptions(CopilotConnectionDetails details) {
         Assert.notNull(details.cliUrl(), "CopilotConnectionDetails.cliUrl() is required");
         return new CopilotProperties(enabled, eagerStart, startupTimeout, null, List.of(), null, logLevel,
-                details.cliUrl(), details.tcpConnectionToken()).toOptions();
+                details.cliUrl(), details.tcpConnectionToken(), null).toOptions();
     }
 
     @Override
     public String toString() {
         return "CopilotProperties[enabled=" + enabled + ", eagerStart=" + eagerStart
-                + ", startupTimeout=" + startupTimeout + "]";
+                + ", startupTimeout=" + startupTimeout + ", connection=" + connection + "]";
     }
 
     private static void requireText(String value, String name) {

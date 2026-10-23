@@ -43,6 +43,21 @@ public interface CopilotRuntimeConfig {
     /** Authentication token for an existing TCP server; requires {@code cli-url}. */
     Optional<String> tcpConnectionToken();
 
+    /**
+     * Runtime transport: {@code stdio} or the experimental {@code inprocess}, which hosts the runtime in this JVM and
+     * needs JNA and the platform {@code com.github:copilot-sdk-java-runtime} artifact. Omitted values keep the SDK
+     * default (the {@code cli-url} server, {@code COPILOT_SDK_DEFAULT_CONNECTION}, or stdio).
+     */
+    Optional<Connection> connection();
+
+    /** How the client reaches the Copilot runtime. */
+    enum Connection {
+        /** Child process over stdin/stdout, regardless of {@code COPILOT_SDK_DEFAULT_CONNECTION}. */
+        STDIO,
+        /** Runtime hosted inside this JVM (experimental). */
+        INPROCESS
+    }
+
     /** Shared invocation limits. */
     Execution execution();
 
