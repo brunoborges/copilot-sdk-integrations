@@ -37,8 +37,8 @@ Goals, aligned with the [repository design goals](../../README.md#design-goals):
   `${header.ticketId}`).
 - Safe defaults: no implicit tool approval, and permission decisions routable to a Camel route
   (human in the loop).
-- Runs on all three Camel runtimes: Camel Main / JBang, Camel Spring Boot, and Camel Quarkus,
-  sharing the client with the existing Spring Boot and Quarkus integrations when present.
+- A plain Camel component with no runtime-specific wiring: it uses whatever `CopilotClient`
+  is in the registry, or creates its own.
 - Deterministic testing with the scripted in-memory runtime.
 
 Non-goals:
@@ -93,8 +93,7 @@ against the Camel registry exactly as it resolves against Spring or CDI.
 
 `CopilotComponent` owns, or borrows, one `CopilotClient`:
 
-- If the registry already contains a `CopilotClient` (Camel Spring Boot with the Copilot
-  starter, or Camel Quarkus with the Copilot extension), the component **reuses it** and does
+- If the registry already contains a `CopilotClient`, the component **reuses it** and does
   not close it.
 - Otherwise it creates one in `doStart()` and closes it in `doStop()`.
 - A `client` component option overrides both.
@@ -207,6 +206,5 @@ Planned:
   pluggable conversation repository for clustered deployments.
 - A Camel `HealthCheck`, dev console, and generated component metadata
   (`camel-package-maven-plugin`) for tooling and Kaoto.
-- Camel Spring Boot and Camel Quarkus wiring that reuses the Copilot starter or extension, and
-  Kamelets for low-code use.
+- Kamelets for low-code use.
 - Optionally publishing `copilot:tool` routes as an MCP server (`camel-copilot-mcp`).
