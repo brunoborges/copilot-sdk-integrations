@@ -86,8 +86,9 @@ lock, user authorization implementation, automatic permission approval, or
 automatic CLI installation. Advanced SDK capabilities remain available through
 native beans and customizers. Native images are untested: agent interfaces are
 registered as dynamic proxies and tool metadata classes for reflection, but the
-Copilot SDK itself may need additional native configuration. This guide does
-not claim experimental in-process runtime setup support.
+Copilot SDK itself may need additional native configuration. The experimental
+in-process runtime is covered in
+[Configuration](configuration.html#in-process-runtime-experimental) for JVM mode.
 
 Source entry points:
 
