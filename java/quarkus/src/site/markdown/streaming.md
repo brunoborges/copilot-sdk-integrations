@@ -9,10 +9,10 @@ any other unsupported return type.
 
 ```java
 import io.smallrye.mutiny.Multi;
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.CopilotAgentEvent;
-import io.github.brunoborges.copilot.agent.UserMessage;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.CopilotAgentEvent;
+import com.microsoft.copilot.integrations.core.UserMessage;
 
 @CopilotAgent(name = "streaming-advisor", instructions = "Explain Java concepts.")
 public interface StreamingAdvisor {
@@ -69,7 +69,7 @@ public Multi<String> stream(@PathParam("conversation") String conversation, Stri
 Observed SDK events are buffered per subscription, up to
 `quarkus.copilot.streaming.buffer-capacity` events (default `256`; it must be
 positive). On overflow,
-`io.github.brunoborges.copilot.quarkus.runtime.mutiny.CopilotAgentStreamOverflowException`
+`com.microsoft.copilot.integrations.quarkus.runtime.mutiny.CopilotAgentStreamOverflowException`
 is delivered after previously buffered events drain; it replaces Mutiny's
 `BackPressureFailure`. The exception extends `IllegalStateException`; its
 message includes the configured capacity.

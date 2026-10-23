@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent;
+package com.microsoft.copilot.integrations.core;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,7 +16,7 @@ import com.github.copilot.rpc.PermissionInvocation;
 import com.github.copilot.rpc.PermissionRequest;
 import com.github.copilot.rpc.PermissionRequestResult;
 import com.github.copilot.rpc.ToolDefinition;
-import io.github.brunoborges.copilot.agent.internal.Assert;
+import com.microsoft.copilot.integrations.core.internal.Assert;
 
 /**
  * Ready-made SDK {@link PermissionHandler} policies for {@link CopilotAgent#permissionHandlerRef()} beans.

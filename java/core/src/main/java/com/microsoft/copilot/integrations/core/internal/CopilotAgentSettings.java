@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
 import java.time.Duration;
 import java.util.List;
@@ -76,7 +76,7 @@ public record CopilotAgentSettings(Map<String, Agent> agents) {
                     "Agent working-directory must not be blank");
             additionalDirectories = names(additionalDirectories, "additional-directories");
             if (messageSource != null) {
-                io.github.brunoborges.copilot.agent.CopilotMessageSources.parse(messageSource);
+                com.microsoft.copilot.integrations.core.CopilotMessageSources.parse(messageSource);
             }
         }
 

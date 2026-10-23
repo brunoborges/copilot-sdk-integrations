@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime.config;
+package com.microsoft.copilot.integrations.quarkus.runtime.config;
 
 import java.time.Duration;
 import java.util.List;

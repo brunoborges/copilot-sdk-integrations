@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.processor;
+package com.microsoft.copilot.integrations.micronaut.processor;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,16 +26,16 @@ class CopilotAgentVisitorTest {
     void generatesARegistrationAndAProxyForConversationalAgents() throws IOException {
         var result = compile("demo.Helper", """
                 package demo;
-                @io.github.brunoborges.copilot.agent.CopilotAgent(name = "helper")
+                @com.microsoft.copilot.integrations.core.CopilotAgent(name = "helper")
                 public interface Helper {
-                    String ask(@io.github.brunoborges.copilot.agent.ConversationId String id,
-                            @io.github.brunoborges.copilot.agent.UserMessage String question);
+                    String ask(@com.microsoft.copilot.integrations.core.ConversationId String id,
+                            @com.microsoft.copilot.integrations.core.UserMessage String question);
                 }
                 """);
 
         assertTrue(result.success(), result.diagnostics());
         String factory = generated("demo/Helper$CopilotAgentBeans.java");
-        assertTrue(factory.contains("new io.github.brunoborges.copilot.micronaut.CopilotAgentRegistration(demo.Helper.class)"));
+        assertTrue(factory.contains("new com.microsoft.copilot.integrations.micronaut.CopilotAgentRegistration(demo.Helper.class)"));
         assertTrue(factory.contains("demo.Helper copilotAgent("));
         assertTrue(Files.exists(output.resolve("classes/demo/$Helper$CopilotAgentBeans$Definition.class")),
                 "the factory is processed into a bean definition");
@@ -45,9 +45,9 @@ class CopilotAgentVisitorTest {
     void registersBoundAgentsWithoutAProxy() throws IOException {
         var result = compile("demo.OneShot", """
                 package demo;
-                @io.github.brunoborges.copilot.agent.CopilotAgent(name = "one-shot")
+                @com.microsoft.copilot.integrations.core.CopilotAgent(name = "one-shot")
                 public interface OneShot {
-                    String ask(@io.github.brunoborges.copilot.agent.UserMessage String question);
+                    String ask(@com.microsoft.copilot.integrations.core.UserMessage String question);
                 }
                 """);
 
@@ -64,10 +64,10 @@ class CopilotAgentVisitorTest {
                 @io.micronaut.context.annotation.Requires(property = "spec.name", value = "say \\"hi\\"")
                 @io.micronaut.context.annotation.Requires(classes = java.util.List.class,
                         os = io.micronaut.context.annotation.Requires.Family.LINUX)
-                @io.github.brunoborges.copilot.agent.CopilotAgent(name = "conditional")
+                @com.microsoft.copilot.integrations.core.CopilotAgent(name = "conditional")
                 public interface Conditional {
-                    String ask(@io.github.brunoborges.copilot.agent.ConversationId String id,
-                            @io.github.brunoborges.copilot.agent.UserMessage String question);
+                    String ask(@com.microsoft.copilot.integrations.core.ConversationId String id,
+                            @com.microsoft.copilot.integrations.core.UserMessage String question);
                 }
                 """);
 
@@ -84,7 +84,7 @@ class CopilotAgentVisitorTest {
     void rejectsNonInterfaces() throws IOException {
         var result = compile("demo.Broken", """
                 package demo;
-                @io.github.brunoborges.copilot.agent.CopilotAgent(name = "broken")
+                @com.microsoft.copilot.integrations.core.CopilotAgent(name = "broken")
                 public class Broken {
                 }
                 """);

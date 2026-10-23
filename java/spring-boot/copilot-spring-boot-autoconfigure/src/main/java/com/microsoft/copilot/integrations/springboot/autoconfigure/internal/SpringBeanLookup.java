@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.autoconfigure.internal;
+package com.microsoft.copilot.integrations.springboot.autoconfigure.internal;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import com.github.copilot.tool.CopilotTool;
-import io.github.brunoborges.copilot.agent.CopilotAgentHooks;
-import io.github.brunoborges.copilot.agent.CopilotAgentHooksFor;
-import io.github.brunoborges.copilot.agent.GlobalCopilotAgentHooks;
-import io.github.brunoborges.copilot.agent.internal.BeanLookup;
+import com.microsoft.copilot.integrations.core.CopilotAgentHooks;
+import com.microsoft.copilot.integrations.core.CopilotAgentHooksFor;
+import com.microsoft.copilot.integrations.core.GlobalCopilotAgentHooks;
+import com.microsoft.copilot.integrations.core.internal.BeanLookup;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.ListableBeanFactory;

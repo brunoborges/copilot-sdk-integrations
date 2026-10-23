@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.camel.test;
+package com.microsoft.copilot.integrations.camel.test;
 
 import java.util.Map;
 

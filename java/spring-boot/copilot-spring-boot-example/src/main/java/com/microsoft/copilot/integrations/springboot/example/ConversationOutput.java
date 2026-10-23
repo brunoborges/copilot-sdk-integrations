@@ -1,9 +1,9 @@
-package io.github.brunoborges.copilot.example;
+package com.microsoft.copilot.integrations.springboot.example;
 
 import com.github.copilot.generated.AssistantMessageEvent;
 import com.github.copilot.generated.SessionEvent;
-import io.github.brunoborges.copilot.agent.CopilotAgentContext;
-import io.github.brunoborges.copilot.agent.CopilotAgentListener;
+import com.microsoft.copilot.integrations.core.CopilotAgentContext;
+import com.microsoft.copilot.integrations.core.CopilotAgentListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

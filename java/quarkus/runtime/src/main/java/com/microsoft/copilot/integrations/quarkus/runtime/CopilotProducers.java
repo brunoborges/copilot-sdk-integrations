@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime;
+package com.microsoft.copilot.integrations.quarkus.runtime;
 
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.Disposes;
@@ -9,17 +9,17 @@ import jakarta.inject.Singleton;
 import com.github.copilot.CopilotClient;
 import com.github.copilot.rpc.CopilotClientOptions;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
-import io.github.brunoborges.copilot.agent.CopilotAgents;
-import io.github.brunoborges.copilot.agent.CopilotLoops;
-import io.github.brunoborges.copilot.agent.CopilotSessionStore;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.agent.internal.CopilotSessionStorage;
-import io.github.brunoborges.copilot.agent.internal.DefaultCopilotAgents;
-import io.github.brunoborges.copilot.agent.internal.DefaultCopilotLoops;
-import io.github.brunoborges.copilot.agent.internal.DefaultCopilotSessionStore;
-import io.github.brunoborges.copilot.quarkus.runtime.config.CopilotConfigs;
-import io.github.brunoborges.copilot.quarkus.runtime.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
+import com.microsoft.copilot.integrations.core.CopilotAgents;
+import com.microsoft.copilot.integrations.core.CopilotLoops;
+import com.microsoft.copilot.integrations.core.CopilotSessionStore;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.core.internal.CopilotSessionStorage;
+import com.microsoft.copilot.integrations.core.internal.DefaultCopilotAgents;
+import com.microsoft.copilot.integrations.core.internal.DefaultCopilotLoops;
+import com.microsoft.copilot.integrations.core.internal.DefaultCopilotSessionStore;
+import com.microsoft.copilot.integrations.quarkus.runtime.config.CopilotConfigs;
+import com.microsoft.copilot.integrations.quarkus.runtime.config.CopilotRuntimeConfig;
 import io.quarkus.arc.DefaultBean;
 
 /** Default Copilot beans; applications override any of them by declaring a bean of the same type. */

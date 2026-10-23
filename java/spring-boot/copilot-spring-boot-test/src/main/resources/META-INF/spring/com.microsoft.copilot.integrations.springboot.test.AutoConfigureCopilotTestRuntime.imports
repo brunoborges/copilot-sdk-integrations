@@ -1,1 +1,1 @@
-io.github.brunoborges.copilot.test.CopilotTestRuntimeAutoConfiguration
+com.microsoft.copilot.integrations.springboot.test.CopilotTestRuntimeAutoConfiguration

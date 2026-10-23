@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.test.app;
+package com.microsoft.copilot.integrations.springboot.test.app;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -7,8 +7,8 @@ import java.util.Collections;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentInvocation;
-import io.github.brunoborges.copilot.agent.CopilotAgentReturnTypeAdapter;
+import com.microsoft.copilot.integrations.core.CopilotAgentInvocation;
+import com.microsoft.copilot.integrations.core.CopilotAgentReturnTypeAdapter;
 
 @SpringBootApplication
 public class AdvisorApplication {

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.deployment;
+package com.microsoft.copilot.integrations.quarkus.deployment;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;

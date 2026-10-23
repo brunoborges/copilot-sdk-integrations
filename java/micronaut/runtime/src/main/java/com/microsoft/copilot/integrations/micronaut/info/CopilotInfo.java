@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.info;
+package com.microsoft.copilot.integrations.micronaut.info;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,7 +15,7 @@ import com.github.copilot.rpc.UriRuntimeConnection;
 public final class CopilotInfo {
 
     public static final String UNKNOWN = "unknown";
-    private static final String EXTENSION_PROPERTIES = "META-INF/maven/io.github.brunoborges/copilot-micronaut/pom.properties";
+    private static final String EXTENSION_PROPERTIES = "META-INF/maven/com.microsoft/copilot-micronaut/pom.properties";
     private static final String SDK_PROPERTIES = "META-INF/maven/com.github/copilot-sdk-java/pom.properties";
 
     private CopilotInfo() {

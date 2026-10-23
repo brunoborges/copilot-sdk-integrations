@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.test.app;
+package com.microsoft.copilot.integrations.springboot.test.app;
 
 import java.util.List;
 

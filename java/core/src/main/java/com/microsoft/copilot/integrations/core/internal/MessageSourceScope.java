@@ -1,9 +1,9 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
 import com.github.copilot.rpc.MessageSource;
 
 /**
- * Thread-local holder behind {@link io.github.brunoborges.copilot.agent.CopilotMessageSources} scopes. The invoker
+ * Thread-local holder behind {@link com.microsoft.copilot.integrations.core.CopilotMessageSources} scopes. The invoker
  * clears it while another agent's tool handler runs so an outer caller's scope never relabels delegated calls.
  */
 public final class MessageSourceScope {

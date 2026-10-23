@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -17,11 +17,11 @@ import com.github.copilot.rpc.PermissionRequestResult;
 import com.github.copilot.rpc.ProviderConfig;
 import com.github.copilot.rpc.SystemMessageConfig;
 import com.github.copilot.rpc.ToolDefinition;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.CopilotAgentCustomizer;
-import io.github.brunoborges.copilot.agent.CopilotAgentListener;
-import io.github.brunoborges.copilot.agent.CopilotMessageSources;
-import io.github.brunoborges.copilot.agent.CopilotTokenResolver;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.CopilotAgentCustomizer;
+import com.microsoft.copilot.integrations.core.CopilotAgentListener;
+import com.microsoft.copilot.integrations.core.CopilotMessageSources;
+import com.microsoft.copilot.integrations.core.CopilotTokenResolver;
 
 public record CopilotAgentDefinition(
         String name, String typeName, String model, String reasoningEffort, Duration responseTimeout,

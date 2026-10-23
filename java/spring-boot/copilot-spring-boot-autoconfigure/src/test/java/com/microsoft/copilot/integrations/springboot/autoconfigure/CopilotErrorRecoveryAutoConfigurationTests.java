@@ -1,11 +1,11 @@
-package io.github.brunoborges.copilot.autoconfigure;
+package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
 import java.util.List;
 
 import com.github.copilot.rpc.PostToolUseFailureHookInput;
-import io.github.brunoborges.copilot.agent.CopilotAgentContext;
-import io.github.brunoborges.copilot.agent.CopilotErrorRecoveryHooks;
-import io.github.brunoborges.copilot.autoconfigure.internal.SpringBeanLookup;
+import com.microsoft.copilot.integrations.core.CopilotAgentContext;
+import com.microsoft.copilot.integrations.core.CopilotErrorRecoveryHooks;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.SpringBeanLookup;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;

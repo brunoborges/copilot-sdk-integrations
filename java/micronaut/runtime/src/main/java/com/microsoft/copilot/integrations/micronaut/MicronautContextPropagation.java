@@ -1,6 +1,6 @@
-package io.github.brunoborges.copilot.micronaut;
+package com.microsoft.copilot.integrations.micronaut;
 
-import io.github.brunoborges.copilot.agent.internal.ContextPropagation;
+import com.microsoft.copilot.integrations.core.internal.ContextPropagation;
 import io.micronaut.core.propagation.PropagatedContext;
 
 /**

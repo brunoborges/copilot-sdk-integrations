@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.config;
+package com.microsoft.copilot.integrations.micronaut.config;
 
 import java.net.URI;
 import java.util.Locale;
@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 
 import com.github.copilot.rpc.AzureOptions;
 import com.github.copilot.rpc.ProviderConfig;
-import io.github.brunoborges.copilot.agent.internal.Assert;
+import com.microsoft.copilot.integrations.core.internal.Assert;
 
 /**
  * Named BYOK (bring your own key) model providers; agents must explicitly select the provider they use.

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
@@ -22,17 +22,17 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.P;
-import io.github.brunoborges.copilot.agent.UserMessage;
-import io.github.brunoborges.copilot.agent.CopilotAgentReturnTypeAdapter;
-import io.github.brunoborges.copilot.agent.CopilotAgentInstance;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.P;
+import com.microsoft.copilot.integrations.core.UserMessage;
+import com.microsoft.copilot.integrations.core.CopilotAgentReturnTypeAdapter;
+import com.microsoft.copilot.integrations.core.CopilotAgentInstance;
 
 /**
  * Validates one {@code @CopilotAgent} interface, resolves its definition, and creates its JDK proxy. ID-less agents
  * (methods without {@code @ConversationId}) are not injectable; they are bound per conversation through
- * {@link io.github.brunoborges.copilot.agent.CopilotAgents}.
+ * {@link com.microsoft.copilot.integrations.core.CopilotAgents}.
  */
 public final class CopilotAgentFactory {
 

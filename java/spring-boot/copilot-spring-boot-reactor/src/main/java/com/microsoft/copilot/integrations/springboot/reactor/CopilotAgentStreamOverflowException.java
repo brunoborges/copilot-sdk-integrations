@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.reactor;
+package com.microsoft.copilot.integrations.springboot.reactor;
 
 public final class CopilotAgentStreamOverflowException extends IllegalStateException {
     public CopilotAgentStreamOverflowException(int capacity) {

@@ -1,6 +1,6 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentInstance;
+import com.microsoft.copilot.integrations.core.CopilotAgentInstance;
 
 public final class DefaultCopilotAgentInstance<T> implements CopilotAgentInstance<T> {
     private final T agent;

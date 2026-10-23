@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.config;
+package com.microsoft.copilot.integrations.micronaut.config;
 
 import java.time.Duration;
 import java.util.LinkedHashMap;

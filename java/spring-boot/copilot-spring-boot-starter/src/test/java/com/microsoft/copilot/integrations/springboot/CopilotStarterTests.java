@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot;
+package com.microsoft.copilot.integrations.springboot;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.autoconfigure;
+package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

@@ -1,11 +1,11 @@
-package io.github.brunoborges.copilot.quarkus.runtime;
+package com.microsoft.copilot.integrations.quarkus.runtime;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.microprofile.config.Config;
 
-import io.github.brunoborges.copilot.agent.internal.PropertyResolver;
+import com.microsoft.copilot.integrations.core.internal.PropertyResolver;
 
 /** Resolves {@code ${key}} and {@code ${key:default}} placeholders against MicroProfile Config. */
 public final class ConfigPropertyResolver implements PropertyResolver {

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.test;
+package com.microsoft.copilot.integrations.quarkus.test;
 
 import com.github.copilot.rpc.MessageOptions;
 

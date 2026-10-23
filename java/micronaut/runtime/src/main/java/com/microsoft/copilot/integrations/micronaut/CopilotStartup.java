@@ -1,10 +1,10 @@
-package io.github.brunoborges.copilot.micronaut;
+package com.microsoft.copilot.integrations.micronaut;
 
 import jakarta.inject.Singleton;
 
 import com.github.copilot.CopilotClient;
 
-import io.github.brunoborges.copilot.micronaut.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.micronaut.config.CopilotRuntimeConfig;
 import io.micronaut.context.BeanProvider;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.context.event.ApplicationEventListener;

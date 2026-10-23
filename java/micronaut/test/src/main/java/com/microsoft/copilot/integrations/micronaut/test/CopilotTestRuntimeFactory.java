@@ -1,10 +1,10 @@
-package io.github.brunoborges.copilot.micronaut.test;
+package com.microsoft.copilot.integrations.micronaut.test;
 
 import jakarta.inject.Singleton;
 
 import com.github.copilot.CopilotClient;
 
-import io.github.brunoborges.copilot.micronaut.CopilotAgentTelemetryDecorator;
+import com.microsoft.copilot.integrations.micronaut.CopilotAgentTelemetryDecorator;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Replaces;
 import io.micronaut.context.annotation.Requires;
@@ -15,7 +15,7 @@ import io.micronaut.context.annotation.Requires;
  * <p>
  * Active whenever {@code copilot-micronaut-test} is on the test class path; set
  * {@code micronaut.copilot.test-runtime.enabled=false} to talk to a real runtime instead, for example a
- * {@link io.github.brunoborges.copilot.micronaut.test.testcontainers.CopilotContainer}. The runtime is injectable,
+ * {@link com.microsoft.copilot.integrations.micronaut.test.testcontainers.CopilotContainer}. The runtime is injectable,
  * records every interaction and is {@link CopilotTestRuntime#reset() reset} after each {@code @MicronautTest}
  * method.
  *

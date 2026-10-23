@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.reactor;
+package com.microsoft.copilot.integrations.micronaut.reactor;
 
 public final class CopilotAgentStreamOverflowException extends IllegalStateException {
     public CopilotAgentStreamOverflowException(int capacity) {

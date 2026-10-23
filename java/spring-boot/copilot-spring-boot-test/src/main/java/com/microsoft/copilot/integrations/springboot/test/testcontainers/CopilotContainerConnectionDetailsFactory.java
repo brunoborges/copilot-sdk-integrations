@@ -1,9 +1,9 @@
-package io.github.brunoborges.copilot.test.testcontainers;
+package com.microsoft.copilot.integrations.springboot.test.testcontainers;
 
 import org.springframework.boot.testcontainers.service.connection.ContainerConnectionDetailsFactory;
 import org.springframework.boot.testcontainers.service.connection.ContainerConnectionSource;
 
-import io.github.brunoborges.copilot.autoconfigure.CopilotConnectionDetails;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotConnectionDetails;
 
 /**
  * Creates {@link CopilotConnectionDetails} for {@code @ServiceConnection}-annotated {@link CopilotContainer}s.

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.test;
+package com.microsoft.copilot.integrations.springboot.test;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.ObjectProvider;
@@ -10,8 +10,8 @@ import org.springframework.context.annotation.Primary;
 
 import com.github.copilot.CopilotClient;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAutoConfiguration;
+import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAutoConfiguration;
 
 /**
  * Auto-configuration imported by {@link AutoConfigureCopilotTestRuntime}: registers a {@link CopilotTestRuntime} and

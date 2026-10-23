@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent;
+package com.microsoft.copilot.integrations.core;
 
 /**
  * Resolves the GitHub token that authenticates one agent invocation, enabling per-user Copilot sessions.

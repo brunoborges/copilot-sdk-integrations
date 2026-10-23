@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime.endpoint;
+package com.microsoft.copilot.integrations.quarkus.runtime.endpoint;
 
 import java.util.Comparator;
 import java.util.List;
@@ -18,14 +18,14 @@ import com.github.copilot.CopilotClient;
 import com.github.copilot.rpc.SessionMetadata;
 import com.github.copilot.rpc.ToolDefinition;
 
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentFactory;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.quarkus.runtime.ConfigPropertyResolver;
-import io.github.brunoborges.copilot.quarkus.runtime.CopilotAgentRegistry;
-import io.github.brunoborges.copilot.quarkus.runtime.CopilotRuntimeAccess;
-import io.github.brunoborges.copilot.quarkus.runtime.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentFactory;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.quarkus.runtime.ConfigPropertyResolver;
+import com.microsoft.copilot.integrations.quarkus.runtime.CopilotAgentRegistry;
+import com.microsoft.copilot.integrations.quarkus.runtime.CopilotRuntimeAccess;
+import com.microsoft.copilot.integrations.quarkus.runtime.config.CopilotRuntimeConfig;
 
 /**
  * Read-only diagnostics served at {@code /q/copilot}: registered agents, execution capacity, and, when the client

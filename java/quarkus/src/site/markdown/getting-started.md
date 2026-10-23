@@ -36,7 +36,7 @@ Add the extension to a Quarkus application:
 
 ```xml
 <dependency>
-    <groupId>io.github.brunoborges</groupId>
+    <groupId>com.microsoft</groupId>
     <artifactId>copilot-quarkus</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 </dependency>
@@ -85,8 +85,8 @@ templates that use `@P` without an explicit name need the compiler's
 
 The extension does not ship `module-info` descriptors; Quarkus applications run
 on the class path. Implementation packages such as
-`io.github.brunoborges.copilot.agent.internal` and
-`io.github.brunoborges.copilot.quarkus.runtime` are not part of the API.
+`com.microsoft.copilot.integrations.core.internal` and
+`com.microsoft.copilot.integrations.quarkus.runtime` are not part of the API.
 
 <a id="quick-start"></a>
 
@@ -98,9 +98,9 @@ Define a public interface in the application:
 package example.agents;
 
 import java.util.concurrent.CompletableFuture;
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.UserMessage;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.UserMessage;
 
 @CopilotAgent(
         name = "quarkus-advisor",

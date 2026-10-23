@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.actuate;
+package com.microsoft.copilot.integrations.springboot.actuate;
 
 import java.time.Duration;
 import java.util.List;
@@ -13,13 +13,13 @@ import com.github.copilot.rpc.ModelInfo;
 import com.github.copilot.rpc.ModelPolicy;
 import com.github.copilot.rpc.RuntimeConnection;
 import com.github.copilot.rpc.SessionMetadata;
-import io.github.brunoborges.copilot.actuate.fixtures.InspectedAgent;
-import io.github.brunoborges.copilot.agent.tools.EchoTools;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsAutoConfiguration;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAutoConfiguration;
-import io.github.brunoborges.copilot.autoconfigure.CopilotEndpointAutoConfiguration;
-import io.github.brunoborges.copilot.autoconfigure.CopilotHealthContributorAutoConfiguration;
-import io.github.brunoborges.copilot.autoconfigure.CopilotInfoContributorAutoConfiguration;
+import com.microsoft.copilot.integrations.springboot.actuate.fixtures.InspectedAgent;
+import com.microsoft.copilot.integrations.springboot.agent.tools.EchoTools;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsAutoConfiguration;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAutoConfiguration;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotEndpointAutoConfiguration;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotHealthContributorAutoConfiguration;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotInfoContributorAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.boot.actuate.info.Info;

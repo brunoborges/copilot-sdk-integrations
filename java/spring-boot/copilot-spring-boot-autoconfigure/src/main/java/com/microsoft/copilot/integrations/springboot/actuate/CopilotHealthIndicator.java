@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.actuate;
+package com.microsoft.copilot.integrations.springboot.actuate;
 
 import java.time.Duration;
 import java.util.concurrent.ExecutionException;

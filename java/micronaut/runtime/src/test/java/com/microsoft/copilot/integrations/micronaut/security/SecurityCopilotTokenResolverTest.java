@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.security;
+package com.microsoft.copilot.integrations.micronaut.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -11,8 +11,8 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentContext;
-import io.github.brunoborges.copilot.agent.CopilotTokenResolver;
+import com.microsoft.copilot.integrations.core.CopilotAgentContext;
+import com.microsoft.copilot.integrations.core.CopilotTokenResolver;
 import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.utils.SecurityService;
 

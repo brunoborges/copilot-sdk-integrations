@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.test.testcontainers;
+package com.microsoft.copilot.integrations.quarkus.test.testcontainers;
 
 import java.time.Duration;
 import java.util.Objects;

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.test;
+package com.microsoft.copilot.integrations.springboot.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,8 +14,8 @@ import com.github.copilot.ConnectionState;
 import com.github.copilot.CopilotClient;
 import com.github.copilot.rpc.CopilotClientOptions;
 
-import io.github.brunoborges.copilot.test.app.AdvisorApplication;
-import io.github.brunoborges.copilot.test.testcontainers.CopilotContainer;
+import com.microsoft.copilot.integrations.springboot.test.app.AdvisorApplication;
+import com.microsoft.copilot.integrations.springboot.test.testcontainers.CopilotContainer;
 
 /**
  * Runs against a real headless Copilot CLI. Requires Docker, a Copilot CLI image ({@code COPILOT_TEST_IMAGE}) and a

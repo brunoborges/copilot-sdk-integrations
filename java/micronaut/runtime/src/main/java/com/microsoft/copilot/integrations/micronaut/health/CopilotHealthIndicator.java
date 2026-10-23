@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.health;
+package com.microsoft.copilot.integrations.micronaut.health;
 
 import java.time.Duration;
 import java.util.concurrent.ExecutionException;
@@ -19,9 +19,9 @@ import com.github.copilot.CopilotClient;
 import com.github.copilot.rpc.GetAuthStatusResponse;
 import com.github.copilot.rpc.GetStatusResponse;
 
-import io.github.brunoborges.copilot.micronaut.CopilotRuntimeAccess;
-import io.github.brunoborges.copilot.micronaut.config.CopilotConfigs;
-import io.github.brunoborges.copilot.micronaut.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.micronaut.CopilotRuntimeAccess;
+import com.microsoft.copilot.integrations.micronaut.config.CopilotConfigs;
+import com.microsoft.copilot.integrations.micronaut.config.CopilotRuntimeConfig;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.async.publisher.Publishers;
 import io.micronaut.health.HealthStatus;

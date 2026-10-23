@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.deployment;
+package com.microsoft.copilot.integrations.quarkus.deployment;
 
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;

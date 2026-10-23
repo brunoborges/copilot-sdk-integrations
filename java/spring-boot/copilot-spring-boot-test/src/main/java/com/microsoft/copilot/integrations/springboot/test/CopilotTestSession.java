@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.test;
+package com.microsoft.copilot.integrations.springboot.test;
 
 import java.util.List;
 import java.util.Map;

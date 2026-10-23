@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.deployment;
+package com.microsoft.copilot.integrations.quarkus.deployment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -16,14 +16,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.copilot.rpc.SessionMetadata;
 
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.CopilotSessionStore;
-import io.github.brunoborges.copilot.agent.UserMessage;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.quarkus.runtime.CopilotAgentRegistry;
-import io.github.brunoborges.copilot.quarkus.runtime.CopilotSessionCleanup;
-import io.github.brunoborges.copilot.quarkus.test.CopilotTestRuntime;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.CopilotSessionStore;
+import com.microsoft.copilot.integrations.core.UserMessage;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.quarkus.runtime.CopilotAgentRegistry;
+import com.microsoft.copilot.integrations.quarkus.runtime.CopilotSessionCleanup;
+import com.microsoft.copilot.integrations.quarkus.test.CopilotTestRuntime;
 import io.quarkus.test.QuarkusUnitTest;
 
 class CopilotSessionStoreTest {

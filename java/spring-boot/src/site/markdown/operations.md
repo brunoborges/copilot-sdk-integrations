@@ -81,10 +81,10 @@ support. The experimental in-process runtime is covered in
 
 Source entry points:
 
-- [Agent API package](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/spring-boot/copilot-spring-boot-autoconfigure/src/main/java/io/github/brunoborges/copilot/agent)
-- [Client and agent property classes](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/spring-boot/copilot-spring-boot-autoconfigure/src/main/java/io/github/brunoborges/copilot/autoconfigure)
-- [Reactor API and configuration](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/spring-boot/copilot-spring-boot-reactor/src/main/java/io/github/brunoborges/copilot/reactor)
-- [Runnable examples](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/spring-boot/copilot-spring-boot-example/src/main/java/io/github/brunoborges/copilot/example)
+- [Agent API package](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/spring-boot/copilot-spring-boot-autoconfigure/src/main/java/com/microsoft/copilot/integrations/core)
+- [Client and agent property classes](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/spring-boot/copilot-spring-boot-autoconfigure/src/main/java/com/microsoft/copilot/integrations/springboot/autoconfigure)
+- [Reactor API and configuration](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/spring-boot/copilot-spring-boot-reactor/src/main/java/com/microsoft/copilot/integrations/springboot/reactor)
+- [Runnable examples](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/spring-boot/copilot-spring-boot-example/src/main/java/com/microsoft/copilot/integrations/springboot/example)
 - [Additional configuration metadata](https://github.com/brunoborges/copilot-sdk-integrations/blob/main/java/spring-boot/copilot-spring-boot-autoconfigure/src/main/resources/META-INF/additional-spring-configuration-metadata.json)
 
 ---

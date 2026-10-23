@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.test;
+package com.microsoft.copilot.integrations.micronaut.test;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;

@@ -1,6 +1,6 @@
-package io.github.brunoborges.copilot.agent.spring;
+package com.microsoft.copilot.integrations.springboot.agent;
 
-import io.github.brunoborges.copilot.agent.*;
+import com.microsoft.copilot.integrations.core.*;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -32,13 +32,13 @@ import com.github.copilot.rpc.SessionMetadata;
 import com.github.copilot.rpc.SystemMessageConfig;
 import com.github.copilot.rpc.SystemMessageSections;
 import com.github.copilot.rpc.ToolDefinition;
-import io.github.brunoborges.copilot.agent.fixtures.TestAgent;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
-import io.github.brunoborges.copilot.autoconfigure.internal.CopilotAgentFactoryBean;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
-import io.github.brunoborges.copilot.autoconfigure.CopilotMcpProperties;
-import io.github.brunoborges.copilot.autoconfigure.CopilotProviderProperties;
+import com.microsoft.copilot.integrations.springboot.agent.fixtures.TestAgent;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.CopilotAgentFactoryBean;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsProperties;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotMcpProperties;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotProviderProperties;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;

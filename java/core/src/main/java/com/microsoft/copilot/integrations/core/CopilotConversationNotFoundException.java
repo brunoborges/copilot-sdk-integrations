@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent;
+package com.microsoft.copilot.integrations.core;
 
 /**
  * Thrown when a bound instance requires existing history, for example after

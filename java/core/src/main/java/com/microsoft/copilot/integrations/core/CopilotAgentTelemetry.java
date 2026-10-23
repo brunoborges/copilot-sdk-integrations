@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent;
+package com.microsoft.copilot.integrations.core;
 
 import com.github.copilot.generated.AssistantUsageEvent;
 

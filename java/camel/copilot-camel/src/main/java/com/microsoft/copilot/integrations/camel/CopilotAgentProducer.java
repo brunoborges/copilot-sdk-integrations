@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.camel;
+package com.microsoft.copilot.integrations.camel;
 
 import java.util.Set;
 import java.util.UUID;
@@ -14,9 +14,9 @@ import org.apache.camel.support.DefaultAsyncProducer;
 
 import com.github.copilot.rpc.MessageSource;
 
-import io.github.brunoborges.copilot.agent.CopilotMessageSources;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.core.CopilotMessageSources;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
 
 /** Sends the prompt to the agent without blocking the route thread and sets the reply as the body. */
 final class CopilotAgentProducer extends DefaultAsyncProducer {

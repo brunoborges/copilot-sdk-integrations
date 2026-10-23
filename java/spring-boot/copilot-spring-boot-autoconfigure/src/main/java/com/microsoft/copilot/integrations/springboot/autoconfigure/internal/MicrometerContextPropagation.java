@@ -1,6 +1,6 @@
-package io.github.brunoborges.copilot.autoconfigure.internal;
+package com.microsoft.copilot.integrations.springboot.autoconfigure.internal;
 
-import io.github.brunoborges.copilot.agent.internal.ContextPropagation;
+import com.microsoft.copilot.integrations.core.internal.ContextPropagation;
 import io.micrometer.context.ContextRegistry;
 import io.micrometer.context.ContextSnapshot;
 import io.micrometer.context.ContextSnapshotFactory;

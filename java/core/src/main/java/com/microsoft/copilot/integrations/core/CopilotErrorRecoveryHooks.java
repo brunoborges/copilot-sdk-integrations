@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent;
+package com.microsoft.copilot.integrations.core;
 
 import java.lang.System.Logger.Level;
 import java.util.Collection;

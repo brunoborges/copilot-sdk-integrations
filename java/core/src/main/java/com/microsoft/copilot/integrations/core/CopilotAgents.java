@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent;
+package com.microsoft.copilot.integrations.core;
 
 /** Creates conversation-bound instances of discovered ID-less agent definitions. */
 public interface CopilotAgents {

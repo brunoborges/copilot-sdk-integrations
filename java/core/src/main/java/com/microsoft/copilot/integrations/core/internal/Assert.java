@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
 import java.util.Collection;
 import java.util.function.Supplier;

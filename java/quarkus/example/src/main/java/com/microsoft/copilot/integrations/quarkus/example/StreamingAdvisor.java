@@ -1,9 +1,9 @@
-package io.github.brunoborges.copilot.quarkus.example;
+package com.microsoft.copilot.integrations.quarkus.example;
 
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.CopilotAgentEvent;
-import io.github.brunoborges.copilot.agent.UserMessage;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.CopilotAgentEvent;
+import com.microsoft.copilot.integrations.core.UserMessage;
 import io.smallrye.mutiny.Multi;
 
 /** Streams agent events as a Mutiny {@link Multi}. */

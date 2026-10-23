@@ -1,6 +1,6 @@
-package io.github.brunoborges.copilot.agent.spring;
+package com.microsoft.copilot.integrations.springboot.agent;
 
-import io.github.brunoborges.copilot.agent.*;
+import com.microsoft.copilot.integrations.core.*;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -9,8 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.copilot.rpc.ToolDefinition;
 import com.github.copilot.rpc.ToolInvocation;
 import com.github.copilot.rpc.ToolNamespace;
-import io.github.brunoborges.copilot.agent.tools.EchoOperations;
-import io.github.brunoborges.copilot.agent.tools.EchoTools;
+import com.microsoft.copilot.integrations.springboot.agent.tools.EchoOperations;
+import com.microsoft.copilot.integrations.springboot.agent.tools.EchoTools;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

@@ -1,7 +1,7 @@
-package io.github.brunoborges.copilot.security;
+package com.microsoft.copilot.integrations.springboot.security;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentContext;
-import io.github.brunoborges.copilot.agent.CopilotTokenResolver;
+import com.microsoft.copilot.integrations.core.CopilotAgentContext;
+import com.microsoft.copilot.integrations.core.CopilotTokenResolver;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

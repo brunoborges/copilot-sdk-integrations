@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.deployment;
+package com.microsoft.copilot.integrations.quarkus.deployment;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.github.brunoborges.copilot.agent.CopilotAgent;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
 import io.quarkus.test.QuarkusUnitTest;
 
 class NonInterfaceAgentTest {

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut;
+package com.microsoft.copilot.integrations.micronaut;
 
 import java.util.List;
 
@@ -7,17 +7,17 @@ import jakarta.inject.Singleton;
 import com.github.copilot.CopilotClient;
 import com.github.copilot.rpc.CopilotClientOptions;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
-import io.github.brunoborges.copilot.agent.CopilotAgents;
-import io.github.brunoborges.copilot.agent.CopilotLoops;
-import io.github.brunoborges.copilot.agent.CopilotSessionStore;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.agent.internal.CopilotSessionStorage;
-import io.github.brunoborges.copilot.agent.internal.DefaultCopilotAgents;
-import io.github.brunoborges.copilot.agent.internal.DefaultCopilotLoops;
-import io.github.brunoborges.copilot.agent.internal.DefaultCopilotSessionStore;
-import io.github.brunoborges.copilot.micronaut.config.CopilotConfigs;
-import io.github.brunoborges.copilot.micronaut.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
+import com.microsoft.copilot.integrations.core.CopilotAgents;
+import com.microsoft.copilot.integrations.core.CopilotLoops;
+import com.microsoft.copilot.integrations.core.CopilotSessionStore;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.core.internal.CopilotSessionStorage;
+import com.microsoft.copilot.integrations.core.internal.DefaultCopilotAgents;
+import com.microsoft.copilot.integrations.core.internal.DefaultCopilotLoops;
+import com.microsoft.copilot.integrations.core.internal.DefaultCopilotSessionStore;
+import com.microsoft.copilot.integrations.micronaut.config.CopilotConfigs;
+import com.microsoft.copilot.integrations.micronaut.config.CopilotRuntimeConfig;
 import io.micronaut.context.BeanProvider;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;

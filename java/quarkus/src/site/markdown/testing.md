@@ -21,7 +21,7 @@ headless CLI server.
 
 ```xml
 <dependency>
-    <groupId>io.github.brunoborges</groupId>
+    <groupId>com.microsoft</groupId>
     <artifactId>copilot-quarkus-test</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <scope>test</scope>
@@ -65,7 +65,7 @@ import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.Test;
 
-import io.github.brunoborges.copilot.quarkus.test.CopilotTestRuntime;
+import com.microsoft.copilot.integrations.quarkus.test.CopilotTestRuntime;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest
@@ -222,7 +222,7 @@ import jakarta.inject.Inject;
 
 import com.github.copilot.CopilotClient;
 
-import io.github.brunoborges.copilot.quarkus.test.testcontainers.CopilotContainerTestResource;
+import com.microsoft.copilot.integrations.quarkus.test.testcontainers.CopilotContainerTestResource;
 import io.quarkus.test.common.ResourceArg;
 import io.quarkus.test.common.WithTestResource;
 import io.quarkus.test.junit.QuarkusTest;

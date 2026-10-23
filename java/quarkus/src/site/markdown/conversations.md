@@ -52,7 +52,7 @@ The global bounds are `quarkus.copilot.execution.max-concurrent-invocations`
 
 ## Managing sessions
 
-Inject `io.github.brunoborges.copilot.agent.CopilotSessionStore` to list, read,
+Inject `com.microsoft.copilot.integrations.core.CopilotSessionStore` to list, read,
 and delete the persisted sessions behind conversations:
 
 ```java

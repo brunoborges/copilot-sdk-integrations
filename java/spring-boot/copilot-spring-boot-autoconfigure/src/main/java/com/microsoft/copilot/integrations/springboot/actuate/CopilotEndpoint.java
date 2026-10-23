@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.actuate;
+package com.microsoft.copilot.integrations.springboot.actuate;
 
 import java.util.Comparator;
 import java.util.List;
@@ -13,12 +13,12 @@ import com.github.copilot.CopilotClient;
 import com.github.copilot.rpc.ModelInfo;
 import com.github.copilot.rpc.SessionMetadata;
 import com.github.copilot.rpc.ToolDefinition;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
-import io.github.brunoborges.copilot.autoconfigure.internal.CopilotAgentFactoryBean;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
-import io.github.brunoborges.copilot.autoconfigure.CopilotEndpointProperties;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.CopilotAgentFactoryBean;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsProperties;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotEndpointProperties;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.boot.actuate.endpoint.Access;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;

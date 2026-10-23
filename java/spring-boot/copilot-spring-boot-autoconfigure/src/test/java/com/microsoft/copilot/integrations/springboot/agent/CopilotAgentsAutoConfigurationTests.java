@@ -1,16 +1,16 @@
-package io.github.brunoborges.copilot.agent.spring;
+package com.microsoft.copilot.integrations.springboot.agent;
 
-import io.github.brunoborges.copilot.agent.*;
-import io.github.brunoborges.copilot.autoconfigure.EnableCopilotAgents;
+import com.microsoft.copilot.integrations.core.*;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.EnableCopilotAgents;
 
 import java.time.Duration;
 
 import com.github.copilot.CopilotClient;
-import io.github.brunoborges.copilot.agent.fixtures.TestAgent;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsAutoConfiguration;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAutoConfiguration;
+import com.microsoft.copilot.integrations.springboot.agent.fixtures.TestAgent;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsAutoConfiguration;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsProperties;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;

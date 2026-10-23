@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime.endpoint;
+package com.microsoft.copilot.integrations.quarkus.runtime.endpoint;
 
 import io.quarkus.runtime.annotations.Recorder;
 import io.vertx.core.Handler;

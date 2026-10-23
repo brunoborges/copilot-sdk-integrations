@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.deployment;
+package com.microsoft.copilot.integrations.quarkus.deployment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -9,7 +9,7 @@ import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.github.brunoborges.copilot.quarkus.runtime.CopilotSessionCleanup;
+import com.microsoft.copilot.integrations.quarkus.runtime.CopilotSessionCleanup;
 import io.quarkus.test.QuarkusUnitTest;
 
 class CopilotSessionCleanupIntervalTest {

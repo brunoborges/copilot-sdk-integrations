@@ -1,7 +1,7 @@
-package io.github.brunoborges.copilot.reactor;
+package com.microsoft.copilot.integrations.springboot.reactor;
 
 import com.github.copilot.CopilotClient;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsAutoConfiguration;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

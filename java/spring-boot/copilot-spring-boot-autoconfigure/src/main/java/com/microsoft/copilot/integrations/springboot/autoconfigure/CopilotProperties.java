@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.autoconfigure;
+package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
 import java.net.URI;
 import java.time.Duration;
@@ -10,7 +10,7 @@ import org.springframework.util.Assert;
 
 import com.github.copilot.rpc.CopilotClientOptions;
 
-import io.github.brunoborges.copilot.agent.internal.CopilotRuntimeConnections;
+import com.microsoft.copilot.integrations.core.internal.CopilotRuntimeConnections;
 
 /**
  * @param enabled whether to auto-configure a client

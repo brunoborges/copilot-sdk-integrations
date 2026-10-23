@@ -1,11 +1,11 @@
-package io.github.brunoborges.copilot.camel;
+package com.microsoft.copilot.integrations.camel;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 
 import com.github.copilot.SystemMessageMode;
 
-import io.github.brunoborges.copilot.agent.CopilotAgent;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
 
 /** {@link CopilotAgent} attributes assembled from {@code copilot:agent} endpoint options. */
 record CopilotAgentAttributes(String name, String instructions, String instructionsResource,

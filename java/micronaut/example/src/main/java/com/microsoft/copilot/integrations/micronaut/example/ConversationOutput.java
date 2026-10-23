@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.example;
+package com.microsoft.copilot.integrations.micronaut.example;
 
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 import com.github.copilot.generated.AssistantMessageEvent;
 import com.github.copilot.generated.SessionEvent;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentContext;
-import io.github.brunoborges.copilot.agent.CopilotAgentListener;
+import com.microsoft.copilot.integrations.core.CopilotAgentContext;
+import com.microsoft.copilot.integrations.core.CopilotAgentListener;
 
 @Singleton
 @Named("conversationOutput")

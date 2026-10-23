@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
 /** Resolves {@code ${key}} and {@code ${key:default}} placeholders in annotation values. */
 @FunctionalInterface

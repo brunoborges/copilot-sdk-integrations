@@ -1,7 +1,7 @@
-package io.github.brunoborges.copilot.autoconfigure;
+package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
 import com.github.copilot.CopilotClient;
-import io.github.brunoborges.copilot.security.OAuth2CopilotTokenResolver;
+import com.microsoft.copilot.integrations.springboot.security.OAuth2CopilotTokenResolver;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

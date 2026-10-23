@@ -1,6 +1,6 @@
-package io.github.brunoborges.copilot.agent.spring;
+package com.microsoft.copilot.integrations.springboot.agent;
 
-import io.github.brunoborges.copilot.agent.*;
+import com.microsoft.copilot.integrations.core.*;
 
 import java.io.Closeable;
 import java.time.Duration;
@@ -30,13 +30,13 @@ import com.github.copilot.rpc.ResumeSessionConfig;
 import com.github.copilot.rpc.SessionConfig;
 import com.github.copilot.rpc.SessionMetadata;
 import com.github.copilot.rpc.ToolInvocation;
-import io.github.brunoborges.copilot.agent.fixtures.TestAgent;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
-import io.github.brunoborges.copilot.autoconfigure.internal.CopilotAgentFactoryBean;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.agent.tools.SecurityAwareTools;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentExecutionLimits;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
+import com.microsoft.copilot.integrations.springboot.agent.fixtures.TestAgent;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.CopilotAgentFactoryBean;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.springboot.agent.tools.SecurityAwareTools;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentExecutionLimits;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

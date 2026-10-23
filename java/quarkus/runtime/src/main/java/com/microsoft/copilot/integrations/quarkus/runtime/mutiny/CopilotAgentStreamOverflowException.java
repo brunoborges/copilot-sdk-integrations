@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime.mutiny;
+package com.microsoft.copilot.integrations.quarkus.runtime.mutiny;
 
 /** Signals that a {@code Multi<CopilotAgentEvent>} subscriber fell behind beyond the configured buffer capacity. */
 public final class CopilotAgentStreamOverflowException extends IllegalStateException {

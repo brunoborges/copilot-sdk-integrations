@@ -62,8 +62,8 @@ close the shared injected client after each request.
 | `CopilotAgentObservationAutoConfiguration` | SDK and Micrometer observation/core classes present, observation registry available, both enable flags active, and no user telemetry bean. |
 | `CopilotReactorAutoConfiguration` | Reactor module and SDK/Flux classes present, integration enabled; backs off for a user `ReactorCopilotAgentAdapter`. |
 
-The first three are under `io.github.brunoborges.copilot.autoconfigure`; the
-last is under `io.github.brunoborges.copilot.reactor`.
+The first three are under `com.microsoft.copilot.integrations.springboot.autoconfigure`; the
+last is under `com.microsoft.copilot.integrations.springboot.reactor`.
 
 The provider bean is named `copilotAgents` and backs off for an
 application-provided `CopilotAgents` implementation. Discovered ID-less

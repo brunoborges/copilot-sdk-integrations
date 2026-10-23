@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.camel;
+package com.microsoft.copilot.integrations.camel;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -16,22 +16,22 @@ import org.apache.camel.support.DefaultComponent;
 
 import com.github.copilot.CopilotClient;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
-import io.github.brunoborges.copilot.agent.CopilotAgents;
-import io.github.brunoborges.copilot.agent.CopilotLoops;
-import io.github.brunoborges.copilot.agent.CopilotSessionStore;
-import io.github.brunoborges.copilot.agent.internal.BindingContext;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentExecutionLimits;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentFactory;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentSettings;
-import io.github.brunoborges.copilot.agent.internal.CopilotSessionCleaner;
-import io.github.brunoborges.copilot.agent.internal.CopilotSessionStorage;
-import io.github.brunoborges.copilot.agent.internal.DefaultCopilotAgents;
-import io.github.brunoborges.copilot.agent.internal.DefaultCopilotLoops;
-import io.github.brunoborges.copilot.agent.internal.DefaultCopilotSessionStore;
-import io.github.brunoborges.copilot.agent.internal.ResourceLookup;
+import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
+import com.microsoft.copilot.integrations.core.CopilotAgents;
+import com.microsoft.copilot.integrations.core.CopilotLoops;
+import com.microsoft.copilot.integrations.core.CopilotSessionStore;
+import com.microsoft.copilot.integrations.core.internal.BindingContext;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentExecutionLimits;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentFactory;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentSettings;
+import com.microsoft.copilot.integrations.core.internal.CopilotSessionCleaner;
+import com.microsoft.copilot.integrations.core.internal.CopilotSessionStorage;
+import com.microsoft.copilot.integrations.core.internal.DefaultCopilotAgents;
+import com.microsoft.copilot.integrations.core.internal.DefaultCopilotLoops;
+import com.microsoft.copilot.integrations.core.internal.DefaultCopilotSessionStore;
+import com.microsoft.copilot.integrations.core.internal.ResourceLookup;
 
 /**
  * The {@code copilot:} component. It exposes four endpoint kinds:

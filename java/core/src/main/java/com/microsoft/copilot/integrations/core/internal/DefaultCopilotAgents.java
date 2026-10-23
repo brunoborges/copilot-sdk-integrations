@@ -1,11 +1,11 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
 import java.util.UUID;
 import java.util.function.Function;
 
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.CopilotAgentInstance;
-import io.github.brunoborges.copilot.agent.CopilotAgents;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.CopilotAgentInstance;
+import com.microsoft.copilot.integrations.core.CopilotAgents;
 
 public final class DefaultCopilotAgents implements CopilotAgents {
 

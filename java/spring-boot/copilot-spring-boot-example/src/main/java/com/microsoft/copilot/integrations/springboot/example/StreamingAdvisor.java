@@ -1,9 +1,9 @@
-package io.github.brunoborges.copilot.example;
+package com.microsoft.copilot.integrations.springboot.example;
 
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.CopilotAgentEvent;
-import io.github.brunoborges.copilot.agent.UserMessage;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.CopilotAgentEvent;
+import com.microsoft.copilot.integrations.core.UserMessage;
 import reactor.core.publisher.Flux;
 
 @CopilotAgent(name = "streaming-advisor", systemMessageRef = "advisorInstructions",

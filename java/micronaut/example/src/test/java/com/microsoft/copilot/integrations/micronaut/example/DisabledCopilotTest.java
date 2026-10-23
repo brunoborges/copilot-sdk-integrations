@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.example;
+package com.microsoft.copilot.integrations.micronaut.example;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 

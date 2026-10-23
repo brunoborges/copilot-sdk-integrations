@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.camel;
+package com.microsoft.copilot.integrations.camel;
 
 /** Exchange header names used by the {@code copilot} component. */
 public final class CopilotConstants {

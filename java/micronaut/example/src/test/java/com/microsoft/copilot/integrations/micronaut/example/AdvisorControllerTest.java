@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.example;
+package com.microsoft.copilot.integrations.micronaut.example;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,7 +10,7 @@ import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.Test;
 
-import io.github.brunoborges.copilot.micronaut.test.CopilotTestRuntime;
+import com.microsoft.copilot.integrations.micronaut.test.CopilotTestRuntime;
 import io.micronaut.core.type.Argument;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.MediaType;

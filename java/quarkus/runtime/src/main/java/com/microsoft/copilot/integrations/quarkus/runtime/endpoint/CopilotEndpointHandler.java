@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime.endpoint;
+package com.microsoft.copilot.integrations.quarkus.runtime.endpoint;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

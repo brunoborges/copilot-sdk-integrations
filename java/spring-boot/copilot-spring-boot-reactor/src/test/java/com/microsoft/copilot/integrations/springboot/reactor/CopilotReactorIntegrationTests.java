@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.reactor;
+package com.microsoft.copilot.integrations.springboot.reactor;
 
 import java.io.Closeable;
 import java.util.concurrent.CompletableFuture;
@@ -14,11 +14,11 @@ import com.github.copilot.generated.AssistantMessageEvent;
 import com.github.copilot.generated.SessionEvent;
 import com.github.copilot.generated.SessionIdleEvent;
 import com.github.copilot.rpc.SessionConfig;
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.CopilotAgentEvent;
-import io.github.brunoborges.copilot.agent.UserMessage;
-import io.github.brunoborges.copilot.agent.CopilotAgents;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.CopilotAgentEvent;
+import com.microsoft.copilot.integrations.core.UserMessage;
+import com.microsoft.copilot.integrations.core.CopilotAgents;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;

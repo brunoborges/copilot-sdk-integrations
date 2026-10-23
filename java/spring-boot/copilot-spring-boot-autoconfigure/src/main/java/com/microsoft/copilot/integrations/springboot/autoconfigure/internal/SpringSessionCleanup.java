@@ -1,8 +1,8 @@
-package io.github.brunoborges.copilot.autoconfigure.internal;
+package com.microsoft.copilot.integrations.springboot.autoconfigure.internal;
 
 import java.time.Duration;
 
-import io.github.brunoborges.copilot.agent.internal.CopilotSessionCleaner;
+import com.microsoft.copilot.integrations.core.internal.CopilotSessionCleaner;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 

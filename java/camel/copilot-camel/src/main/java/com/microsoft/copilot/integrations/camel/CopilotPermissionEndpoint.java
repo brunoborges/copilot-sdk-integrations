@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.camel;
+package com.microsoft.copilot.integrations.camel;
 
 import java.time.Duration;
 import java.util.Locale;

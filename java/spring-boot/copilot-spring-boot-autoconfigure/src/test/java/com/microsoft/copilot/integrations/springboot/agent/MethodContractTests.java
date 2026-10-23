@@ -1,6 +1,6 @@
-package io.github.brunoborges.copilot.agent.spring;
+package com.microsoft.copilot.integrations.springboot.agent;
 
-import io.github.brunoborges.copilot.agent.*;
+import com.microsoft.copilot.integrations.core.*;
 
 import java.io.Closeable;
 import java.time.Duration;
@@ -21,9 +21,9 @@ import com.github.copilot.generated.AssistantMessageEvent;
 import com.github.copilot.rpc.MessageOptions;
 import com.github.copilot.rpc.SessionConfig;
 import com.github.copilot.rpc.SessionMetadata;
-import io.github.brunoborges.copilot.autoconfigure.internal.CopilotAgentFactoryBean;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.CopilotAgentFactoryBean;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsProperties;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;

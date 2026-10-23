@@ -1,15 +1,15 @@
-package io.github.brunoborges.copilot.agent.spring;
+package com.microsoft.copilot.integrations.springboot.agent;
 
-import io.github.brunoborges.copilot.agent.*;
+import com.microsoft.copilot.integrations.core.*;
 
 
 import com.github.copilot.CopilotClient;
 import com.github.copilot.rpc.PreToolUseHookInput;
 import com.github.copilot.rpc.PreToolUseHookOutput;
-import io.github.brunoborges.copilot.agent.fixtures.TestAgent;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsAutoConfiguration;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAutoConfiguration;
+import com.microsoft.copilot.integrations.springboot.agent.fixtures.TestAgent;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsAutoConfiguration;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsProperties;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAutoConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages;
 import org.springframework.boot.autoconfigure.AutoConfigurations;

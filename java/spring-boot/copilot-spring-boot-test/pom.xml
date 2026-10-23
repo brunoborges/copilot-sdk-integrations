@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>io.github.brunoborges</groupId>
+        <groupId>com.microsoft</groupId>
         <artifactId>copilot-spring-boot-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -14,7 +14,7 @@
     <description>Scripted in-memory Copilot runtime and Testcontainers support for testing Copilot agents.</description>
     <dependencies>
         <dependency>
-            <groupId>io.github.brunoborges</groupId>
+            <groupId>com.microsoft</groupId>
             <artifactId>copilot-spring-boot-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -70,8 +70,8 @@
                 <configuration>
                     <!-- Tests patch fixtures into the named module; open them to the frameworks that reflect on them. -->
                     <argLine>
-                        --add-opens io.github.brunoborges.copilot.spring.boot.test/io.github.brunoborges.copilot.test=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.autoconfigure,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.spring.boot.autoconfigure,io.github.brunoborges.copilot.agent
-                        --add-opens io.github.brunoborges.copilot.spring.boot.test/io.github.brunoborges.copilot.test.app=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.autoconfigure,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.spring.boot.autoconfigure,io.github.brunoborges.copilot.agent
+                        --add-opens com.microsoft.copilot.integrations.springboot.test/com.microsoft.copilot.integrations.springboot.test=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.autoconfigure,spring.test,spring.boot.test,org.mockito,com.microsoft.copilot.integrations.springboot.autoconfigure,com.microsoft.copilot.integrations.core
+                        --add-opens com.microsoft.copilot.integrations.springboot.test/com.microsoft.copilot.integrations.springboot.test.app=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.autoconfigure,spring.test,spring.boot.test,org.mockito,com.microsoft.copilot.integrations.springboot.autoconfigure,com.microsoft.copilot.integrations.core
                     </argLine>
                 </configuration>
             </plugin>

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.example;
+package com.microsoft.copilot.integrations.springboot.example;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
@@ -12,8 +12,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import reactor.core.publisher.Flux;
-import io.github.brunoborges.copilot.agent.CopilotAgents;
-import io.github.brunoborges.copilot.agent.CopilotAgentInstance;
+import com.microsoft.copilot.integrations.core.CopilotAgents;
+import com.microsoft.copilot.integrations.core.CopilotAgentInstance;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;

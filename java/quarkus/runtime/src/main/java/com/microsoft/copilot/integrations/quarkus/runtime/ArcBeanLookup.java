@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime;
+package com.microsoft.copilot.integrations.quarkus.runtime;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -9,8 +9,8 @@ import java.util.Set;
 import jakarta.enterprise.inject.Any;
 import jakarta.enterprise.inject.spi.Bean;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentHooks;
-import io.github.brunoborges.copilot.agent.internal.BeanLookup;
+import com.microsoft.copilot.integrations.core.CopilotAgentHooks;
+import com.microsoft.copilot.integrations.core.internal.BeanLookup;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ArcContainer;
 import io.quarkus.arc.InjectableBean;

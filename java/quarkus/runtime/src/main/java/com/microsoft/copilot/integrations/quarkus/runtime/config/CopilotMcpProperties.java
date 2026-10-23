@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime.config;
+package com.microsoft.copilot.integrations.quarkus.runtime.config;
 
 import java.net.URI;
 import java.time.Duration;
@@ -9,7 +9,7 @@ import java.util.Map;
 import com.github.copilot.rpc.McpHttpServerConfig;
 import com.github.copilot.rpc.McpServerConfig;
 import com.github.copilot.rpc.McpStdioServerConfig;
-import io.github.brunoborges.copilot.agent.internal.Assert;
+import com.microsoft.copilot.integrations.core.internal.Assert;
 
 /**
  * Named MCP definitions; agents must explicitly select the servers they use.

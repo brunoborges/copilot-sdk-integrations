@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.test.testcontainers;
+package com.microsoft.copilot.integrations.springboot.test.testcontainers;
 
 import java.time.Duration;
 import java.util.Objects;

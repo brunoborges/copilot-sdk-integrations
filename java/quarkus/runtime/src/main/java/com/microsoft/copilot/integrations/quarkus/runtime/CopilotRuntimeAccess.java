@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime;
+package com.microsoft.copilot.integrations.quarkus.runtime;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
 /**
  * Captures caller context at invocation time and restores it on the threads that run SDK work,

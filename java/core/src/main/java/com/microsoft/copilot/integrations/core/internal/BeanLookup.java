@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
 import java.util.List;
 
@@ -23,10 +23,10 @@ public interface BeanLookup {
     <T> List<T> ordered(Class<T> type);
 
     /** Hook beans annotated with {@code @GlobalCopilotAgentHooks}, ordered. */
-    List<io.github.brunoborges.copilot.agent.CopilotAgentHooks> globalHooks();
+    List<com.microsoft.copilot.integrations.core.CopilotAgentHooks> globalHooks();
 
     /** Hook beans whose {@code @CopilotAgentHooksFor} lists the agent type, ordered. */
-    List<io.github.brunoborges.copilot.agent.CopilotAgentHooks> targetedHooks(Class<?> agentType);
+    List<com.microsoft.copilot.integrations.core.CopilotAgentHooks> targetedHooks(Class<?> agentType);
 
     /**
      * The types whose generated {@code @CopilotTool} metadata binds the named bean's tools. Containers that proxy

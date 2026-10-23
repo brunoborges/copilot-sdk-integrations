@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
 
 /** Resolves {@code *Ref} attribute values to beans, failing with messages that name the attribute and the expected type. */

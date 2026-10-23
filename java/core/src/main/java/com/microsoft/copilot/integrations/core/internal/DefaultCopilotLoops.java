@@ -1,10 +1,10 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
 import java.util.function.BiFunction;
 
-import io.github.brunoborges.copilot.agent.CopilotAgents;
-import io.github.brunoborges.copilot.agent.CopilotLoop;
-import io.github.brunoborges.copilot.agent.CopilotLoops;
+import com.microsoft.copilot.integrations.core.CopilotAgents;
+import com.microsoft.copilot.integrations.core.CopilotLoop;
+import com.microsoft.copilot.integrations.core.CopilotLoops;
 
 public final class DefaultCopilotLoops implements CopilotLoops {
 

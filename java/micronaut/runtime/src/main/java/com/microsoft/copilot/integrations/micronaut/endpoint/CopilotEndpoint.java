@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.endpoint;
+package com.microsoft.copilot.integrations.micronaut.endpoint;
 
 import java.util.Comparator;
 import java.util.List;
@@ -15,13 +15,13 @@ import com.github.copilot.CopilotClient;
 import com.github.copilot.rpc.SessionMetadata;
 import com.github.copilot.rpc.ToolDefinition;
 
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentFactory;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.micronaut.CopilotAgentRegistry;
-import io.github.brunoborges.copilot.micronaut.CopilotRuntimeAccess;
-import io.github.brunoborges.copilot.micronaut.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentFactory;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.micronaut.CopilotAgentRegistry;
+import com.microsoft.copilot.integrations.micronaut.CopilotRuntimeAccess;
+import com.microsoft.copilot.integrations.micronaut.config.CopilotRuntimeConfig;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.context.env.Environment;
 import io.micronaut.management.endpoint.annotation.Endpoint;

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.test;
+package com.microsoft.copilot.integrations.springboot.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -22,10 +22,10 @@ import com.github.copilot.generated.ToolExecutionCompleteEvent;
 import com.github.copilot.generated.ToolExecutionStartEvent;
 import com.github.copilot.generated.UserMessageEvent;
 
-import io.github.brunoborges.copilot.test.app.AdvisorApplication;
-import io.github.brunoborges.copilot.test.app.CodeReviewer;
-import io.github.brunoborges.copilot.test.app.Glossary;
-import io.github.brunoborges.copilot.test.app.SpringAdvisor;
+import com.microsoft.copilot.integrations.springboot.test.app.AdvisorApplication;
+import com.microsoft.copilot.integrations.springboot.test.app.CodeReviewer;
+import com.microsoft.copilot.integrations.springboot.test.app.Glossary;
+import com.microsoft.copilot.integrations.springboot.test.app.SpringAdvisor;
 
 @SpringBootTest(classes = AdvisorApplication.class)
 @AutoConfigureCopilotTestRuntime

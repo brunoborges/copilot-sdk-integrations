@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.example;
+package com.microsoft.copilot.integrations.quarkus.example;
 
 import java.util.Locale;
 

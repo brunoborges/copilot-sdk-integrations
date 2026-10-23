@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent;
+package com.microsoft.copilot.integrations.core;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;

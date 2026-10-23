@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime.config;
+package com.microsoft.copilot.integrations.quarkus.runtime.config;
 
 import java.net.URI;
 import java.time.Duration;
@@ -8,10 +8,10 @@ import java.util.Optional;
 
 import com.github.copilot.rpc.CopilotClientOptions;
 
-import io.github.brunoborges.copilot.agent.internal.Assert;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentExecutionLimits;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentSettings;
-import io.github.brunoborges.copilot.agent.internal.CopilotRuntimeConnections;
+import com.microsoft.copilot.integrations.core.internal.Assert;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentExecutionLimits;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentSettings;
+import com.microsoft.copilot.integrations.core.internal.CopilotRuntimeConnections;
 
 /** Converts {@link CopilotRuntimeConfig} into validated settings and SDK options. */
 public final class CopilotConfigs {

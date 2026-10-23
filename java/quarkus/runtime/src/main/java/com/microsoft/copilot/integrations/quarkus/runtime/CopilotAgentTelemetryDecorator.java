@@ -1,8 +1,8 @@
-package io.github.brunoborges.copilot.quarkus.runtime;
+package com.microsoft.copilot.integrations.quarkus.runtime;
 
 import java.util.function.UnaryOperator;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
+import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
 
 /** Beans of this type wrap the effective {@link CopilotAgentTelemetry}, for example to record test assertions. */
 @FunctionalInterface

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.camel;
+package com.microsoft.copilot.integrations.camel;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -21,7 +21,7 @@ import com.github.copilot.rpc.ToolDefinition;
 import com.github.copilot.rpc.ToolInvocation;
 import com.github.copilot.rpc.ToolResultObject;
 
-import io.github.brunoborges.copilot.agent.internal.StructuredResponse;
+import com.microsoft.copilot.integrations.core.internal.StructuredResponse;
 
 /**
  * {@code copilot:tool:<name>} – implements a Copilot tool as a route. The endpoint registers a {@link ToolDefinition}

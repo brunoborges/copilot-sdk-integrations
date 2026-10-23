@@ -3,10 +3,10 @@
 Status: **MVP implemented** (unreleased). Section 7 lists what is built and what is still planned;
 see [README.md](README.md) for usage.
 
-This document designs `camel-copilot`, an [Apache Camel](https://camel.apache.org/) component that
+This document designs `copilot-camel`, an [Apache Camel](https://camel.apache.org/) component that
 brings the GitHub Copilot agent runtime into Camel routes. It builds on the
 [Copilot SDK for Java](https://github.com/github/copilot-sdk) and reuses the framework-neutral
-engine in [`java/core`](../core/) (`copilot-agent-core`), the same engine behind the
+engine in [`java/core`](../core/) (`copilot-core`), the same engine behind the
 [Spring Boot starter](../spring-boot/) and the [Quarkus extension](../quarkus/).
 
 ## 1. Why Camel
@@ -44,10 +44,10 @@ Goals, aligned with the [repository design goals](../../README.md#design-goals):
 Non-goals:
 
 - A general LLM chat abstraction. Camel already has LangChain4j-based components for raw chat
-  completion. `camel-copilot` targets the *agent runtime*: sessions, built-in tools, MCP
+  completion. `copilot-camel` targets the *agent runtime*: sessions, built-in tools, MCP
   servers, permissions, and hooks.
 - Reimplementing agent governance. Permission policies, tool allow/deny lists, limits, and
-  hooks come from `copilot-agent-core`.
+  hooks come from `copilot-core`.
 
 ## 3. Architecture
 
@@ -61,7 +61,7 @@ flowchart LR
         PERM["from(copilot:permission:triage)"] --> SLACK["to(slack:...) + wait"]
         EV["from(copilot:events:triage)"] --> AUDIT["to(kafka:audit)"]
     end
-    subgraph Core["copilot-agent-core"]
+    subgraph Core["copilot-core"]
         ENG["Agent engine: definitions, governance, hooks, invocation"]
     end
     P --> ENG
@@ -73,7 +73,7 @@ flowchart LR
     RT -. session events .-> EV
 ```
 
-### 3.1 Plugging into `copilot-agent-core`
+### 3.1 Plugging into `copilot-core`
 
 The engine is container-neutral; frameworks plug in through `BindingContext`. Camel supplies:
 
@@ -200,7 +200,7 @@ Implemented:
 - Session management: the component's `sessionStore()` (also bound as `copilotSessionStore`) lists,
   reads, and deletes agent sessions; `sessionMaxAge` enables age-based cleanup on a scheduled
   executor from Camel's `ExecutorServiceManager`, shut down with the component.
-- `camel-copilot-test`: the scripted in-memory runtime, shared with the Spring Boot and Quarkus
+- `copilot-camel-test`: the scripted in-memory runtime, shared with the Spring Boot and Quarkus
   test modules.
 
 Planned:
@@ -210,4 +210,4 @@ Planned:
 - A Camel `HealthCheck`, dev console, and generated component metadata
   (`camel-package-maven-plugin`) for tooling and Kaoto.
 - Kamelets for low-code use.
-- Optionally publishing `copilot:tool` routes as an MCP server (`camel-copilot-mcp`).
+- Optionally publishing `copilot:tool` routes as an MCP server (`copilot-camel-mcp`).

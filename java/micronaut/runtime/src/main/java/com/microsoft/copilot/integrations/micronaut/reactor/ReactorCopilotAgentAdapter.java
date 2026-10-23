@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.reactor;
+package com.microsoft.copilot.integrations.micronaut.reactor;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -11,10 +11,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentEvent;
-import io.github.brunoborges.copilot.agent.CopilotAgentInvocation;
-import io.github.brunoborges.copilot.agent.CopilotAgentReturnTypeAdapter;
-import io.github.brunoborges.copilot.micronaut.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.core.CopilotAgentEvent;
+import com.microsoft.copilot.integrations.core.CopilotAgentInvocation;
+import com.microsoft.copilot.integrations.core.CopilotAgentReturnTypeAdapter;
+import com.microsoft.copilot.integrations.micronaut.config.CopilotRuntimeConfig;
 import io.micronaut.context.annotation.Requires;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;

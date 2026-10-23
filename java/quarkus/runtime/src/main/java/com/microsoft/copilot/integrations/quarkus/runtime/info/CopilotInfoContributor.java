@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime.info;
+package com.microsoft.copilot.integrations.quarkus.runtime.info;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

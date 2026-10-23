@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.example;
+package com.microsoft.copilot.integrations.quarkus.example;
 
 import java.util.concurrent.CompletionStage;
 
@@ -13,8 +13,8 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
 
 import com.github.copilot.generated.AssistantMessageEvent;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentEvent;
-import io.github.brunoborges.copilot.agent.CopilotAgents;
+import com.microsoft.copilot.integrations.core.CopilotAgentEvent;
+import com.microsoft.copilot.integrations.core.CopilotAgents;
 import io.smallrye.mutiny.Multi;
 
 @Path("/advisor")

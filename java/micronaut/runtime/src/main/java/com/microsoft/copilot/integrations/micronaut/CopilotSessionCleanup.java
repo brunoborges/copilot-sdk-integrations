@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut;
+package com.microsoft.copilot.integrations.micronaut;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -10,11 +10,11 @@ import jakarta.inject.Singleton;
 
 import com.github.copilot.CopilotClient;
 
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.agent.internal.CopilotSessionCleaner;
-import io.github.brunoborges.copilot.agent.internal.CopilotSessionStorage;
-import io.github.brunoborges.copilot.micronaut.config.CopilotConfigs;
-import io.github.brunoborges.copilot.micronaut.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.core.internal.CopilotSessionCleaner;
+import com.microsoft.copilot.integrations.core.internal.CopilotSessionStorage;
+import com.microsoft.copilot.integrations.micronaut.config.CopilotConfigs;
+import com.microsoft.copilot.integrations.micronaut.config.CopilotRuntimeConfig;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.context.event.ApplicationEventListener;
 import io.micronaut.context.event.StartupEvent;

@@ -1,1 +1,1 @@
-io.github.brunoborges.copilot.micronaut.processor.CopilotAgentVisitor
+com.microsoft.copilot.integrations.micronaut.processor.CopilotAgentVisitor

@@ -1,11 +1,11 @@
-package io.github.brunoborges.copilot.security;
+package com.microsoft.copilot.integrations.springboot.security;
 
 import java.time.Instant;
 
 import com.github.copilot.CopilotClient;
-import io.github.brunoborges.copilot.agent.CopilotAgentContext;
-import io.github.brunoborges.copilot.agent.CopilotTokenResolver;
-import io.github.brunoborges.copilot.autoconfigure.CopilotSecurityAutoConfiguration;
+import com.microsoft.copilot.integrations.core.CopilotAgentContext;
+import com.microsoft.copilot.integrations.core.CopilotTokenResolver;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotSecurityAutoConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

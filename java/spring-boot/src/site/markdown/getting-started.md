@@ -36,7 +36,7 @@ For asynchronous text agents and native SDK access:
 
 ```xml
 <dependency>
-    <groupId>io.github.brunoborges</groupId>
+    <groupId>com.microsoft</groupId>
     <artifactId>copilot-spring-boot-starter</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 </dependency>
@@ -77,14 +77,14 @@ server is another option; see [Client properties](configuration.html#client-prop
 
 Each library artifact ships a `module-info` and works on the class path or the
 module path. Only the packages listed below are exported; implementation
-packages such as `io.github.brunoborges.copilot.agent.internal` are not part of
+packages such as `com.microsoft.copilot.integrations.core.internal` are not part of
 the API, and module-path code cannot compile against them.
 
 | Artifact | Module | Exported packages |
 | --- | --- | --- |
-| `copilot-spring-boot-autoconfigure` | `io.github.brunoborges.copilot.spring.boot.autoconfigure` | `io.github.brunoborges.copilot.agent`, `.autoconfigure`, `.actuate`, `.security` |
-| `copilot-spring-boot-reactor` | `io.github.brunoborges.copilot.spring.boot.reactor` | `io.github.brunoborges.copilot.reactor` |
-| `copilot-spring-boot-test` | `io.github.brunoborges.copilot.spring.boot.test` | `io.github.brunoborges.copilot.test`, `.test.testcontainers` |
+| `copilot-spring-boot-autoconfigure` | `com.microsoft.copilot.integrations.springboot.autoconfigure` | `com.microsoft.copilot.integrations.core`, `.autoconfigure`, `.actuate`, `.security` |
+| `copilot-spring-boot-reactor` | `com.microsoft.copilot.integrations.springboot.reactor` | `com.microsoft.copilot.integrations.springboot.reactor` |
+| `copilot-spring-boot-test` | `com.microsoft.copilot.integrations.springboot.test` | `com.microsoft.copilot.integrations.springboot.test`, `.test.testcontainers` |
 
 On the module path, open packages that hold agent interfaces, tool beans, and
 `@Configuration` classes to Spring and to the starter. The starter loads the
@@ -92,10 +92,10 @@ SDK-generated `$$CopilotToolMeta` classes reflectively:
 
 ```java
 module com.example.app {
-    requires io.github.brunoborges.copilot.spring.boot.autoconfigure;
+    requires com.microsoft.copilot.integrations.springboot.autoconfigure;
 
     opens com.example.app to spring.core, spring.beans, spring.context, spring.aop,
-            io.github.brunoborges.copilot.spring.boot.autoconfigure;
+            com.microsoft.copilot.integrations.springboot.autoconfigure;
 }
 ```
 
@@ -109,9 +109,9 @@ Define a public interface under the Spring Boot application's base package:
 package example.agents;
 
 import java.util.concurrent.CompletableFuture;
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.UserMessage;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.UserMessage;
 
 @CopilotAgent(
         name = "spring-advisor",

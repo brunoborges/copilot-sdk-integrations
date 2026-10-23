@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.deployment;
+package com.microsoft.copilot.integrations.quarkus.deployment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -17,17 +17,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.CopilotAgentHooks;
-import io.github.brunoborges.copilot.agent.CopilotAgentHooksFor;
-import io.github.brunoborges.copilot.agent.CopilotAgents;
-import io.github.brunoborges.copilot.agent.CopilotLoop;
-import io.github.brunoborges.copilot.agent.CopilotLoops;
-import io.github.brunoborges.copilot.agent.GlobalCopilotAgentHooks;
-import io.github.brunoborges.copilot.agent.UserMessage;
-import io.github.brunoborges.copilot.quarkus.runtime.CopilotAgentRegistry;
-import io.github.brunoborges.copilot.quarkus.test.CopilotTestRuntime;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.CopilotAgentHooks;
+import com.microsoft.copilot.integrations.core.CopilotAgentHooksFor;
+import com.microsoft.copilot.integrations.core.CopilotAgents;
+import com.microsoft.copilot.integrations.core.CopilotLoop;
+import com.microsoft.copilot.integrations.core.CopilotLoops;
+import com.microsoft.copilot.integrations.core.GlobalCopilotAgentHooks;
+import com.microsoft.copilot.integrations.core.UserMessage;
+import com.microsoft.copilot.integrations.quarkus.runtime.CopilotAgentRegistry;
+import com.microsoft.copilot.integrations.quarkus.test.CopilotTestRuntime;
 import io.quarkus.arc.Arc;
 import io.quarkus.test.QuarkusUnitTest;
 

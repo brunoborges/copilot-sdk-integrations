@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.info;
+package com.microsoft.copilot.integrations.micronaut.info;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -10,7 +10,7 @@ import org.reactivestreams.Publisher;
 
 import com.github.copilot.rpc.CopilotClientOptions;
 
-import io.github.brunoborges.copilot.micronaut.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.micronaut.config.CopilotRuntimeConfig;
 import io.micronaut.context.BeanProvider;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.context.env.PropertySource;

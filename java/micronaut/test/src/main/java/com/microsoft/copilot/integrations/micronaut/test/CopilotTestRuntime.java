@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.test;
+package com.microsoft.copilot.integrations.micronaut.test;
 
 import java.io.Closeable;
 import java.lang.reflect.Method;
@@ -36,7 +36,7 @@ import com.github.copilot.rpc.SessionMetadata;
 import com.github.copilot.rpc.ToolDefinition;
 import com.github.copilot.rpc.ToolInvocation;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
+import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
 
 /**
  * An in-memory, scripted Copilot runtime for tests.

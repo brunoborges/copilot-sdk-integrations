@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut;
+package com.microsoft.copilot.integrations.micronaut;
 
 import java.util.Objects;
 

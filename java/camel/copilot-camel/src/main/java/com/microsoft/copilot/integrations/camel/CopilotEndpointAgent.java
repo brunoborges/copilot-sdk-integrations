@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.camel;
+package com.microsoft.copilot.integrations.camel;
 
 /**
  * Identity type of agents configured entirely through {@code copilot:agent} endpoint options. Target it with

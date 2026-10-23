@@ -11,7 +11,7 @@ title: Extension SPIs
 - [Telemetry](#telemetry)
 - [Return-type adapters](#return-type-adapters)
 
-The following interfaces are in `io.github.brunoborges.copilot.agent`.
+The following interfaces are in `com.microsoft.copilot.integrations.core`.
 Classes in `agent.internal` and auto-configuration implementation classes are
 infrastructure, not application-facing extension contracts.
 
@@ -70,7 +70,7 @@ structured-result paths (see [Agent interfaces](agents.html#return-types)).
 The Reactor module registers `ReactorCopilotAgentAdapter`, matching exactly
 `Flux<CopilotAgentEvent>`. To replace that representation with another adapter,
 replace the default adapter bean or exclude
-`io.github.brunoborges.copilot.reactor.CopilotReactorAutoConfiguration` before
+`com.microsoft.copilot.integrations.springboot.reactor.CopilotReactorAutoConfiguration` before
 registering a competing implementation. Adapters receive text-only
 invocations; structured results are only available through the built-in
 `CompletableFuture<T>` and synchronous return types.

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.test;
+package com.microsoft.copilot.integrations.micronaut.test;
 
 import java.util.Map;
 

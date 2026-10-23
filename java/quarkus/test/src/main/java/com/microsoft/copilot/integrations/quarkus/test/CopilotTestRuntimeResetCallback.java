@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.test;
+package com.microsoft.copilot.integrations.quarkus.test;
 
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.ArcContainer;

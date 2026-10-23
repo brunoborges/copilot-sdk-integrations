@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -32,12 +32,12 @@ import com.github.copilot.rpc.SessionConfig;
 import com.github.copilot.rpc.ToolDefinition;
 import com.github.copilot.generated.AssistantMessageEvent;
 import com.github.copilot.generated.AssistantUsageEvent;
-import io.github.brunoborges.copilot.agent.CopilotAgentContext;
-import io.github.brunoborges.copilot.agent.CopilotTokenResolver;
-import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
-import io.github.brunoborges.copilot.agent.CopilotAgentEvent;
-import io.github.brunoborges.copilot.agent.CopilotConversationNotFoundException;
-import io.github.brunoborges.copilot.agent.CopilotMessageSources;
+import com.microsoft.copilot.integrations.core.CopilotAgentContext;
+import com.microsoft.copilot.integrations.core.CopilotTokenResolver;
+import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
+import com.microsoft.copilot.integrations.core.CopilotAgentEvent;
+import com.microsoft.copilot.integrations.core.CopilotConversationNotFoundException;
+import com.microsoft.copilot.integrations.core.CopilotMessageSources;
 
 
 public final class CopilotAgentInvoker implements AutoCloseable {

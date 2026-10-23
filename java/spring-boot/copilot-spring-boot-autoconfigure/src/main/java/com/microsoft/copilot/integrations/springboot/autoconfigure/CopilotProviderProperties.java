@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.autoconfigure;
+package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
 import java.net.URI;
 import java.util.Locale;

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.test;
+package com.microsoft.copilot.integrations.springboot.test;
 
 import com.github.copilot.rpc.MessageOptions;
 

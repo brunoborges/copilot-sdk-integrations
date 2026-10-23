@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent;
+package com.microsoft.copilot.integrations.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -12,8 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
 
-import io.github.brunoborges.copilot.agent.CopilotLoop.StopReason;
-import io.github.brunoborges.copilot.agent.internal.DefaultCopilotLoops;
+import com.microsoft.copilot.integrations.core.CopilotLoop.StopReason;
+import com.microsoft.copilot.integrations.core.internal.DefaultCopilotLoops;
 
 class CopilotLoopTests {
 

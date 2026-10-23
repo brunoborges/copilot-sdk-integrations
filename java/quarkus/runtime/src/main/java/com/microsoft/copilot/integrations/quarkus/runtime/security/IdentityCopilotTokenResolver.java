@@ -1,13 +1,13 @@
-package io.github.brunoborges.copilot.quarkus.runtime.security;
+package com.microsoft.copilot.integrations.quarkus.runtime.security;
 
 import jakarta.enterprise.context.ContextNotActiveException;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentContext;
-import io.github.brunoborges.copilot.agent.CopilotTokenResolver;
-import io.github.brunoborges.copilot.quarkus.runtime.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.core.CopilotAgentContext;
+import com.microsoft.copilot.integrations.core.CopilotTokenResolver;
+import com.microsoft.copilot.integrations.quarkus.runtime.config.CopilotRuntimeConfig;
 import io.quarkus.security.credential.TokenCredential;
 import io.quarkus.security.identity.SecurityIdentity;
 

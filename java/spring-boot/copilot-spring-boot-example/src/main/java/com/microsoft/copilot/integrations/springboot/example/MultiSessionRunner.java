@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.example;
+package com.microsoft.copilot.integrations.springboot.example;
 
 import java.util.List;
 import java.util.UUID;
@@ -12,7 +12,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
-import io.github.brunoborges.copilot.agent.CopilotAgents;
+import com.microsoft.copilot.integrations.core.CopilotAgents;
 
 @Component
 public class MultiSessionRunner implements ApplicationRunner {

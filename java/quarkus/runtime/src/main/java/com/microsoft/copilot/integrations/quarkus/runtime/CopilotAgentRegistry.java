@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime;
+package com.microsoft.copilot.integrations.quarkus.runtime;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,12 +14,12 @@ import org.eclipse.microprofile.config.ConfigProvider;
 
 import com.github.copilot.CopilotClient;
 
-import io.github.brunoborges.copilot.agent.internal.BindingContext;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentFactory;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.agent.internal.ResourceLookup;
-import io.github.brunoborges.copilot.quarkus.runtime.config.CopilotConfigs;
-import io.github.brunoborges.copilot.quarkus.runtime.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.core.internal.BindingContext;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentFactory;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.core.internal.ResourceLookup;
+import com.microsoft.copilot.integrations.quarkus.runtime.config.CopilotConfigs;
+import com.microsoft.copilot.integrations.quarkus.runtime.config.CopilotRuntimeConfig;
 import io.quarkus.runtime.StartupEvent;
 
 /**

@@ -1,16 +1,16 @@
-package io.github.brunoborges.copilot.autoconfigure.internal;
+package com.microsoft.copilot.integrations.springboot.autoconfigure.internal;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import io.github.brunoborges.copilot.agent.internal.BindingContext;
-import io.github.brunoborges.copilot.agent.internal.ContextPropagation;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentExecutionLimits;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentSettings;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentExecutionProperties;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
-import io.github.brunoborges.copilot.autoconfigure.CopilotMcpProperties;
-import io.github.brunoborges.copilot.autoconfigure.CopilotProviderProperties;
+import com.microsoft.copilot.integrations.core.internal.BindingContext;
+import com.microsoft.copilot.integrations.core.internal.ContextPropagation;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentExecutionLimits;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentSettings;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentExecutionProperties;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsProperties;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotMcpProperties;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotProviderProperties;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.DefaultResourceLoader;

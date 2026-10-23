@@ -1,10 +1,10 @@
-package io.github.brunoborges.copilot.agent;
+package com.microsoft.copilot.integrations.core;
 
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import com.github.copilot.rpc.MessageSource;
-import io.github.brunoborges.copilot.agent.internal.MessageSourceScope;
+import com.microsoft.copilot.integrations.core.internal.MessageSourceScope;
 
 /**
  * Labels the provenance of the prompts that {@link CopilotAgent} methods send, using the SDK {@link MessageSource}

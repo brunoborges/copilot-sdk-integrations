@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.processor;
+package com.microsoft.copilot.integrations.micronaut.processor;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -27,8 +27,8 @@ import io.micronaut.inject.visitor.VisitorContext;
  */
 public final class CopilotAgentVisitor implements TypeElementVisitor<Object, Object> {
 
-    static final String COPILOT_AGENT = "io.github.brunoborges.copilot.agent.CopilotAgent";
-    static final String CONVERSATION_ID = "io.github.brunoborges.copilot.agent.ConversationId";
+    static final String COPILOT_AGENT = "com.microsoft.copilot.integrations.core.CopilotAgent";
+    static final String CONVERSATION_ID = "com.microsoft.copilot.integrations.core.ConversationId";
     static final String SUFFIX = "$CopilotAgentBeans";
 
     private static final Set<String> CLASS_MEMBERS = Set.of("condition", "classes", "entities", "beans", "missing",
@@ -148,15 +148,15 @@ public final class CopilotAgentVisitor implements TypeElementVisitor<Object, Obj
 
                     @jakarta.inject.Singleton
                     @jakarta.inject.Named("%2$s")
-                    io.github.brunoborges.copilot.micronaut.CopilotAgentRegistration copilotAgentRegistration() {
-                        return new io.github.brunoborges.copilot.micronaut.CopilotAgentRegistration(%2$s.class);
+                    com.microsoft.copilot.integrations.micronaut.CopilotAgentRegistration copilotAgentRegistration() {
+                        return new com.microsoft.copilot.integrations.micronaut.CopilotAgentRegistration(%2$s.class);
                     }
                 """.formatted(simpleName, agentType));
         if (!bound) {
             source.append("""
 
                         @jakarta.inject.Singleton
-                        %1$s copilotAgent(io.github.brunoborges.copilot.micronaut.CopilotAgentRegistry registry) {
+                        %1$s copilotAgent(com.microsoft.copilot.integrations.micronaut.CopilotAgentRegistry registry) {
                             return registry.proxy(%1$s.class);
                         }
                     """.formatted(agentType));

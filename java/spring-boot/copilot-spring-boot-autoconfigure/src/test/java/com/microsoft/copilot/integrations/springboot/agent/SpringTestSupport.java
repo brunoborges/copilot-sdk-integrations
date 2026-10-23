@@ -1,17 +1,17 @@
-package io.github.brunoborges.copilot.agent.spring;
+package com.microsoft.copilot.integrations.springboot.agent;
 
 import java.util.List;
 
 import com.github.copilot.rpc.ToolDefinition;
 import com.github.copilot.CopilotClient;
-import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentExecutionLimits;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.agent.internal.ToolBindings;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
-import io.github.brunoborges.copilot.autoconfigure.internal.SpringAgentBinding;
-import io.github.brunoborges.copilot.autoconfigure.internal.SpringBeanLookup;
+import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentExecutionLimits;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.core.internal.ToolBindings;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsProperties;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.SpringAgentBinding;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.SpringBeanLookup;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime;
+package com.microsoft.copilot.integrations.quarkus.runtime;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -13,11 +13,11 @@ import jakarta.inject.Singleton;
 
 import com.github.copilot.CopilotClient;
 
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.agent.internal.CopilotSessionCleaner;
-import io.github.brunoborges.copilot.agent.internal.CopilotSessionStorage;
-import io.github.brunoborges.copilot.quarkus.runtime.config.CopilotConfigs;
-import io.github.brunoborges.copilot.quarkus.runtime.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.core.internal.CopilotSessionCleaner;
+import com.microsoft.copilot.integrations.core.internal.CopilotSessionStorage;
+import com.microsoft.copilot.integrations.quarkus.runtime.config.CopilotConfigs;
+import com.microsoft.copilot.integrations.quarkus.runtime.config.CopilotRuntimeConfig;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.example;
+package com.microsoft.copilot.integrations.springboot.example;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.test;
+package com.microsoft.copilot.integrations.micronaut.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -18,18 +18,18 @@ import org.junit.jupiter.api.Test;
 
 import com.github.copilot.CopilotClient;
 
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.CopilotAgentHooks;
-import io.github.brunoborges.copilot.agent.CopilotAgentHooksFor;
-import io.github.brunoborges.copilot.agent.CopilotAgents;
-import io.github.brunoborges.copilot.agent.CopilotLoop;
-import io.github.brunoborges.copilot.agent.CopilotLoops;
-import io.github.brunoborges.copilot.agent.GlobalCopilotAgentHooks;
-import io.github.brunoborges.copilot.agent.UserMessage;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentSettings;
-import io.github.brunoborges.copilot.micronaut.CopilotAgentRegistry;
-import io.github.brunoborges.copilot.micronaut.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.CopilotAgentHooks;
+import com.microsoft.copilot.integrations.core.CopilotAgentHooksFor;
+import com.microsoft.copilot.integrations.core.CopilotAgents;
+import com.microsoft.copilot.integrations.core.CopilotLoop;
+import com.microsoft.copilot.integrations.core.CopilotLoops;
+import com.microsoft.copilot.integrations.core.GlobalCopilotAgentHooks;
+import com.microsoft.copilot.integrations.core.UserMessage;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentSettings;
+import com.microsoft.copilot.integrations.micronaut.CopilotAgentRegistry;
+import com.microsoft.copilot.integrations.micronaut.config.CopilotRuntimeConfig;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.annotation.Property;
 import io.micronaut.context.annotation.Requires;

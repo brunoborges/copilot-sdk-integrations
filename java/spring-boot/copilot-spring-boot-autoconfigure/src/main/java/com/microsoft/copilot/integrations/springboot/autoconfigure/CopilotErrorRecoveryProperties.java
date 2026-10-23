@@ -1,8 +1,8 @@
-package io.github.brunoborges.copilot.autoconfigure;
+package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
 import java.util.List;
 
-import io.github.brunoborges.copilot.agent.CopilotErrorRecoveryHooks;
+import com.microsoft.copilot.integrations.core.CopilotErrorRecoveryHooks;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.util.Assert;

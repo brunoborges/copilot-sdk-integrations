@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.example;
+package com.microsoft.copilot.integrations.springboot.example;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import io.github.brunoborges.copilot.test.AutoConfigureCopilotTestRuntime;
-import io.github.brunoborges.copilot.test.CopilotTestRuntime;
+import com.microsoft.copilot.integrations.springboot.test.AutoConfigureCopilotTestRuntime;
+import com.microsoft.copilot.integrations.springboot.test.CopilotTestRuntime;
 
 @SpringBootTest(args = "--help")
 @AutoConfigureCopilotTestRuntime

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.autoconfigure;
+package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
 import java.time.Duration;
 import java.util.List;
@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.bind.ConstructorBinding;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.util.Assert;
 
-import io.github.brunoborges.copilot.agent.CopilotMessageSources;
+import com.microsoft.copilot.integrations.core.CopilotMessageSources;
 
 /** @param agents execution settings keyed by Copilot agent name */
 @ConfigurationProperties("copilot")

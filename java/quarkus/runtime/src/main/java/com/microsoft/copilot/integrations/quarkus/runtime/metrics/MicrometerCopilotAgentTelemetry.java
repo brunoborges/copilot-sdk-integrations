@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime.metrics;
+package com.microsoft.copilot.integrations.quarkus.runtime.metrics;
 
 import java.util.Set;
 import java.util.UUID;
@@ -15,7 +15,7 @@ import jakarta.inject.Singleton;
 
 import com.github.copilot.generated.AssistantUsageEvent;
 
-import io.github.brunoborges.copilot.quarkus.runtime.CopilotMetricsTelemetry;
+import com.microsoft.copilot.integrations.quarkus.runtime.CopilotMetricsTelemetry;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 

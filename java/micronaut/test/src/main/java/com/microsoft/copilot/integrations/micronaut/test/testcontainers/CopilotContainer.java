@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.test.testcontainers;
+package com.microsoft.copilot.integrations.micronaut.test.testcontainers;
 
 import java.time.Duration;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime.mutiny;
+package com.microsoft.copilot.integrations.quarkus.runtime.mutiny;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -9,10 +9,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentEvent;
-import io.github.brunoborges.copilot.agent.CopilotAgentInvocation;
-import io.github.brunoborges.copilot.agent.CopilotAgentReturnTypeAdapter;
-import io.github.brunoborges.copilot.quarkus.runtime.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.core.CopilotAgentEvent;
+import com.microsoft.copilot.integrations.core.CopilotAgentInvocation;
+import com.microsoft.copilot.integrations.core.CopilotAgentReturnTypeAdapter;
+import com.microsoft.copilot.integrations.quarkus.runtime.config.CopilotRuntimeConfig;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.subscription.BackPressureFailure;
 import io.smallrye.mutiny.subscription.MultiEmitter;

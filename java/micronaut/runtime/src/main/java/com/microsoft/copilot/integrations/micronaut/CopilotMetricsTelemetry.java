@@ -1,6 +1,6 @@
-package io.github.brunoborges.copilot.micronaut;
+package com.microsoft.copilot.integrations.micronaut;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
+import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
 
 /** Telemetry contributed by a metrics integration; used when the application declares no telemetry bean. */
 public interface CopilotMetricsTelemetry extends CopilotAgentTelemetry {

@@ -3,17 +3,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>io.github.brunoborges</groupId>
-        <artifactId>camel-copilot-parent</artifactId>
+        <groupId>com.microsoft</groupId>
+        <artifactId>copilot-camel-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>camel-copilot-test</artifactId>
+    <artifactId>copilot-camel-test</artifactId>
     <name>Camel Copilot - Test</name>
     <description>Scripted, in-memory Copilot runtime for testing Camel routes that use the copilot component</description>
     <dependencies>
         <dependency>
-            <groupId>io.github.brunoborges</groupId>
-            <artifactId>copilot-agent-core</artifactId>
+            <groupId>com.microsoft</groupId>
+            <artifactId>copilot-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>

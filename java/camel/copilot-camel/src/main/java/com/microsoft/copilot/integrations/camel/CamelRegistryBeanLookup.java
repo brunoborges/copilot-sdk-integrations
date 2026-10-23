@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.camel;
+package com.microsoft.copilot.integrations.camel;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -9,10 +9,10 @@ import java.util.function.Predicate;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Ordered;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentHooks;
-import io.github.brunoborges.copilot.agent.CopilotAgentHooksFor;
-import io.github.brunoborges.copilot.agent.GlobalCopilotAgentHooks;
-import io.github.brunoborges.copilot.agent.internal.BeanLookup;
+import com.microsoft.copilot.integrations.core.CopilotAgentHooks;
+import com.microsoft.copilot.integrations.core.CopilotAgentHooksFor;
+import com.microsoft.copilot.integrations.core.GlobalCopilotAgentHooks;
+import com.microsoft.copilot.integrations.core.internal.BeanLookup;
 
 /** Resolves {@code *Ref} attributes against the Camel {@link org.apache.camel.spi.Registry}. */
 final class CamelRegistryBeanLookup implements BeanLookup {

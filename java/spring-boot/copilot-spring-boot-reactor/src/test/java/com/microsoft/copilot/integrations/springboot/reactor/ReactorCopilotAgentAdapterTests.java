@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.reactor;
+package com.microsoft.copilot.integrations.springboot.reactor;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -6,8 +6,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import com.github.copilot.generated.SessionIdleEvent;
-import io.github.brunoborges.copilot.agent.CopilotAgentContext;
-import io.github.brunoborges.copilot.agent.CopilotAgentEvent;
+import com.microsoft.copilot.integrations.core.CopilotAgentContext;
+import com.microsoft.copilot.integrations.core.CopilotAgentEvent;
 import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.autoconfigure.internal;
+package com.microsoft.copilot.integrations.springboot.autoconfigure.internal;
 
 import java.util.Set;
 import java.util.UUID;
@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 import com.github.copilot.generated.AssistantUsageEvent;
-import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
+import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;

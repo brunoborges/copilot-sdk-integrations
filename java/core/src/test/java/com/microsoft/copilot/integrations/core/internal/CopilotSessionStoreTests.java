@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -18,7 +18,7 @@ import com.github.copilot.generated.AssistantMessageEvent;
 import com.github.copilot.generated.SessionEvent;
 import com.github.copilot.generated.UserMessageEvent;
 import com.github.copilot.rpc.SessionMetadata;
-import io.github.brunoborges.copilot.agent.CopilotSessionMessage;
+import com.microsoft.copilot.integrations.core.CopilotSessionMessage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent;
+package com.microsoft.copilot.integrations.core;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.github.copilot.rpc.PostToolUseFailureHookInput;
 import com.github.copilot.rpc.PostToolUseHookInput;
 import com.github.copilot.rpc.SessionEndHookInput;
-import io.github.brunoborges.copilot.agent.CopilotErrorRecoveryHooks.Category;
+import com.microsoft.copilot.integrations.core.CopilotErrorRecoveryHooks.Category;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

@@ -26,7 +26,7 @@ Configuration uses ordinary Quarkus config sources: `application.properties`,
 profiles (`%dev.`, `%test.`, `%prod.`), system properties, environment
 variables, and any additional MicroProfile Config source. All keys live under
 `quarkus.copilot`. Runtime keys are mapped by
-`io.github.brunoborges.copilot.quarkus.runtime.config.CopilotRuntimeConfig`;
+`com.microsoft.copilot.integrations.quarkus.runtime.config.CopilotRuntimeConfig`;
 build-time switches by `CopilotBuildTimeConfig` in the deployment module.
 
 Only the extension-owned keys below are mapped automatically. Arbitrary
@@ -55,7 +55,7 @@ except where this page notes a difference.
 
 These are fixed when the application is built; changing them requires a
 rebuild (dev mode re-augments automatically). The binding type is
-`io.github.brunoborges.copilot.quarkus.deployment.CopilotBuildTimeConfig`.
+`com.microsoft.copilot.integrations.quarkus.deployment.CopilotBuildTimeConfig`.
 
 | Property | Type | Default | Meaning and validation |
 | --- | --- | --- | --- |

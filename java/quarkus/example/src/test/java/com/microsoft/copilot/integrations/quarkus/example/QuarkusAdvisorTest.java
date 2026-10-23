@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.example;
+package com.microsoft.copilot.integrations.quarkus.example;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,7 +10,7 @@ import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.Test;
 
-import io.github.brunoborges.copilot.quarkus.test.CopilotTestRuntime;
+import com.microsoft.copilot.integrations.quarkus.test.CopilotTestRuntime;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest

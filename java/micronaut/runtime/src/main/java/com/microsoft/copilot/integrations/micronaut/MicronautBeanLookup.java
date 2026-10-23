@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut;
+package com.microsoft.copilot.integrations.micronaut;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6,10 +6,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentHooks;
-import io.github.brunoborges.copilot.agent.CopilotAgentHooksFor;
-import io.github.brunoborges.copilot.agent.GlobalCopilotAgentHooks;
-import io.github.brunoborges.copilot.agent.internal.BeanLookup;
+import com.microsoft.copilot.integrations.core.CopilotAgentHooks;
+import com.microsoft.copilot.integrations.core.CopilotAgentHooksFor;
+import com.microsoft.copilot.integrations.core.GlobalCopilotAgentHooks;
+import com.microsoft.copilot.integrations.core.internal.BeanLookup;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.BeanRegistration;
 import io.micronaut.context.exceptions.NonUniqueBeanException;

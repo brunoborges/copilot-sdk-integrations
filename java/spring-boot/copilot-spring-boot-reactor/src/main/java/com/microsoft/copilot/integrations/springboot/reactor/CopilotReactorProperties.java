@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.reactor;
+package com.microsoft.copilot.integrations.springboot.reactor;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;

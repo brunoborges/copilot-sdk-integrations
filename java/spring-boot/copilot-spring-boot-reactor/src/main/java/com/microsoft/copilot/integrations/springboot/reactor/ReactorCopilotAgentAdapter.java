@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.reactor;
+package com.microsoft.copilot.integrations.springboot.reactor;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -8,9 +8,9 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentEvent;
-import io.github.brunoborges.copilot.agent.CopilotAgentInvocation;
-import io.github.brunoborges.copilot.agent.CopilotAgentReturnTypeAdapter;
+import com.microsoft.copilot.integrations.core.CopilotAgentEvent;
+import com.microsoft.copilot.integrations.core.CopilotAgentInvocation;
+import com.microsoft.copilot.integrations.core.CopilotAgentReturnTypeAdapter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 

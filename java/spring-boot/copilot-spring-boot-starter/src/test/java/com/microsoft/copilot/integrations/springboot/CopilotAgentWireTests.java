@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot;
+package com.microsoft.copilot.integrations.springboot;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -23,9 +23,9 @@ import com.github.copilot.rpc.SystemMessageConfig;
 import com.github.copilot.rpc.SystemMessageSections;
 import example.agentwire.WireAgent;
 import example.agentwire.BoundWireAgent;
-import io.github.brunoborges.copilot.autoconfigure.EnableCopilotAgents;
-import io.github.brunoborges.copilot.agent.CopilotAgents;
-import io.github.brunoborges.copilot.agent.CopilotConversationNotFoundException;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.EnableCopilotAgents;
+import com.microsoft.copilot.integrations.core.CopilotAgents;
+import com.microsoft.copilot.integrations.core.CopilotConversationNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;

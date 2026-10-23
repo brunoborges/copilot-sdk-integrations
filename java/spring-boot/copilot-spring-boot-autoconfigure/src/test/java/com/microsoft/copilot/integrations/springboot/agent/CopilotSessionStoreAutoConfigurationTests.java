@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent.spring;
+package com.microsoft.copilot.integrations.springboot.agent;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -7,13 +7,13 @@ import java.util.concurrent.CompletableFuture;
 
 import com.github.copilot.CopilotClient;
 import com.github.copilot.rpc.SessionMetadata;
-import io.github.brunoborges.copilot.agent.CopilotSessionStore;
-import io.github.brunoborges.copilot.agent.fixtures.TestAgent;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsAutoConfiguration;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAutoConfiguration;
-import io.github.brunoborges.copilot.autoconfigure.internal.CopilotAgentFactoryBean;
-import io.github.brunoborges.copilot.autoconfigure.internal.SpringSessionCleanup;
+import com.microsoft.copilot.integrations.core.CopilotSessionStore;
+import com.microsoft.copilot.integrations.springboot.agent.fixtures.TestAgent;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsAutoConfiguration;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAutoConfiguration;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.CopilotAgentFactoryBean;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.SpringSessionCleanup;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackages;

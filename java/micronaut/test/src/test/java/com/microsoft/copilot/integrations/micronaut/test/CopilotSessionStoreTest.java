@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.test;
+package com.microsoft.copilot.integrations.micronaut.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -14,13 +14,13 @@ import org.junit.jupiter.api.Test;
 
 import com.github.copilot.rpc.SessionMetadata;
 
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.CopilotSessionStore;
-import io.github.brunoborges.copilot.agent.UserMessage;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.micronaut.CopilotAgentRegistry;
-import io.github.brunoborges.copilot.micronaut.CopilotSessionCleanup;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.CopilotSessionStore;
+import com.microsoft.copilot.integrations.core.UserMessage;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.micronaut.CopilotAgentRegistry;
+import com.microsoft.copilot.integrations.micronaut.CopilotSessionCleanup;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.annotation.Requires;
 

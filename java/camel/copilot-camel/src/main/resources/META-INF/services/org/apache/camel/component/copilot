@@ -1,1 +1,1 @@
-class=io.github.brunoborges.copilot.camel.CopilotComponent
+class=com.microsoft.copilot.integrations.camel.CopilotComponent

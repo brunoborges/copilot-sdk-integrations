@@ -1,6 +1,6 @@
-package io.github.brunoborges.copilot.micronaut;
+package com.microsoft.copilot.integrations.micronaut;
 
-import io.github.brunoborges.copilot.agent.internal.PropertyResolver;
+import com.microsoft.copilot.integrations.core.internal.PropertyResolver;
 import io.micronaut.context.env.Environment;
 
 /** Resolves {@code ${key}} and {@code ${key:default}} placeholders against the Micronaut environment. */

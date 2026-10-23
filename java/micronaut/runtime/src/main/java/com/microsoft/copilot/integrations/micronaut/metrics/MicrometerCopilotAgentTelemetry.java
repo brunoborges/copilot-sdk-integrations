@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.metrics;
+package com.microsoft.copilot.integrations.micronaut.metrics;
 
 import java.util.Set;
 import java.util.UUID;
@@ -14,8 +14,8 @@ import jakarta.inject.Singleton;
 
 import com.github.copilot.generated.AssistantUsageEvent;
 
-import io.github.brunoborges.copilot.micronaut.CopilotMetricsTelemetry;
-import io.github.brunoborges.copilot.micronaut.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.micronaut.CopilotMetricsTelemetry;
+import com.microsoft.copilot.integrations.micronaut.config.CopilotRuntimeConfig;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.micronaut.context.annotation.Bean;

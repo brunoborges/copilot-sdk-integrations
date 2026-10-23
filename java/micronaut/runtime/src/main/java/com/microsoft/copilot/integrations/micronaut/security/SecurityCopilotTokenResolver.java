@@ -1,13 +1,13 @@
-package io.github.brunoborges.copilot.micronaut.security;
+package com.microsoft.copilot.integrations.micronaut.security;
 
 import java.util.Optional;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentContext;
-import io.github.brunoborges.copilot.agent.CopilotTokenResolver;
-import io.github.brunoborges.copilot.micronaut.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.core.CopilotAgentContext;
+import com.microsoft.copilot.integrations.core.CopilotTokenResolver;
+import com.microsoft.copilot.integrations.micronaut.config.CopilotRuntimeConfig;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.security.authentication.Authentication;
 import io.micronaut.security.utils.SecurityService;

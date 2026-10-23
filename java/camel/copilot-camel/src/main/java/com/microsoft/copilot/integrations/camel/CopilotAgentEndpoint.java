@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.camel;
+package com.microsoft.copilot.integrations.camel;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -15,9 +15,9 @@ import org.apache.camel.support.DefaultEndpoint;
 
 import com.github.copilot.SystemMessageMode;
 
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentSettings;
-import io.github.brunoborges.copilot.agent.internal.StructuredResponse;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentSettings;
+import com.microsoft.copilot.integrations.core.internal.StructuredResponse;
 
 /**
  * {@code copilot:agent:<name>} – sends the message to a Copilot agent and replaces the body with its reply.

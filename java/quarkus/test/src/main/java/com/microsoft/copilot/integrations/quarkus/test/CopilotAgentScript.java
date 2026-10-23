@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.test;
+package com.microsoft.copilot.integrations.quarkus.test;
 
 import java.time.Duration;
 import java.util.ArrayDeque;

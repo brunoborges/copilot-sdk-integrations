@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.camel;
+package com.microsoft.copilot.integrations.camel;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,8 +20,8 @@ import org.apache.camel.support.DefaultEndpoint;
 
 import com.github.copilot.generated.SessionEvent;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentContext;
-import io.github.brunoborges.copilot.agent.CopilotAgentListener;
+import com.microsoft.copilot.integrations.core.CopilotAgentContext;
+import com.microsoft.copilot.integrations.core.CopilotAgentListener;
 
 /**
  * {@code copilot:events:<name>} – receives the session events of every agent that lists {@code <name>} in

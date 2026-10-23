@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.example;
+package com.microsoft.copilot.integrations.quarkus.example;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Named;
@@ -8,8 +8,8 @@ import org.jboss.logging.Logger;
 import com.github.copilot.generated.AssistantMessageEvent;
 import com.github.copilot.generated.SessionEvent;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentContext;
-import io.github.brunoborges.copilot.agent.CopilotAgentListener;
+import com.microsoft.copilot.integrations.core.CopilotAgentContext;
+import com.microsoft.copilot.integrations.core.CopilotAgentListener;
 
 @ApplicationScoped
 @Named("conversationOutput")

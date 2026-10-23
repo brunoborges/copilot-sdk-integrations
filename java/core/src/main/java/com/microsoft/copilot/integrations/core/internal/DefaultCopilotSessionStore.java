@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -20,8 +20,8 @@ import com.github.copilot.generated.AssistantMessageEvent;
 import com.github.copilot.generated.SessionEvent;
 import com.github.copilot.generated.UserMessageEvent;
 import com.github.copilot.rpc.SessionMetadata;
-import io.github.brunoborges.copilot.agent.CopilotSessionMessage;
-import io.github.brunoborges.copilot.agent.CopilotSessionStore;
+import com.microsoft.copilot.integrations.core.CopilotSessionMessage;
+import com.microsoft.copilot.integrations.core.CopilotSessionStore;
 
 /** Default {@link CopilotSessionStore} over the shared client and the invoker's per-session turn queue. */
 public final class DefaultCopilotSessionStore implements CopilotSessionStore {

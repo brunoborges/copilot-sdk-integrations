@@ -1,11 +1,11 @@
-package io.github.brunoborges.copilot.quarkus.test;
+package com.microsoft.copilot.integrations.quarkus.test;
 
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 
 import com.github.copilot.CopilotClient;
 
-import io.github.brunoborges.copilot.quarkus.runtime.CopilotAgentTelemetryDecorator;
+import com.microsoft.copilot.integrations.quarkus.runtime.CopilotAgentTelemetryDecorator;
 import io.quarkus.arc.properties.UnlessBuildProperty;
 
 /**
@@ -14,7 +14,7 @@ import io.quarkus.arc.properties.UnlessBuildProperty;
  * <p>
  * Active whenever {@code copilot-quarkus-test} is on the test class path; set
  * {@code quarkus.copilot.test-runtime.enabled=false} (a build-time property) to talk to a real runtime instead, for
- * example a {@link io.github.brunoborges.copilot.quarkus.test.testcontainers.CopilotContainer}. The runtime is
+ * example a {@link com.microsoft.copilot.integrations.quarkus.test.testcontainers.CopilotContainer}. The runtime is
  * injectable, records every interaction and is {@link CopilotTestRuntime#reset() reset} after each
  * {@code @QuarkusTest} method.
  *

@@ -72,8 +72,8 @@ integrations are registered.
 | `CopilotAgentTelemetry` | `CopilotProducers`, `@DefaultBean`; Micrometer-backed when that integration is active, otherwise a no-op | Declare your own `CopilotAgentTelemetry` bean. |
 | `CopilotAgentInvoker` (internal) | `CopilotProducers` | Not replaceable; wrap telemetry with a `CopilotAgentTelemetryDecorator` bean instead. |
 
-All of these live in the `io.github.brunoborges.copilot.quarkus.runtime`
-package, except the API types in `io.github.brunoborges.copilot.agent`. A
+All of these live in the `com.microsoft.copilot.integrations.quarkus.runtime`
+package, except the API types in `com.microsoft.copilot.integrations.core`. A
 `@DefaultBean` is used only when the application declares no other bean of the
 same type, so overriding needs no extra annotation. Explicit-ID agent
 interfaces become `@Singleton` synthetic beans; ID-less (bound) definitions are

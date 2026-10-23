@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.test;
+package com.microsoft.copilot.integrations.springboot.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -19,7 +19,7 @@ import com.github.copilot.rpc.ResumeSessionConfig;
 import com.github.copilot.rpc.SessionConfig;
 import com.github.copilot.rpc.ToolDefinition;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
+import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
 
 class CopilotTestRuntimeTests {
 

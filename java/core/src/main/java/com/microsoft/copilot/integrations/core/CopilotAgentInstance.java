@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent;
+package com.microsoft.copilot.integrations.core;
 
 /**
  * Owns a logical conversation binding, not the shared SDK client. Closing neither closes the client nor

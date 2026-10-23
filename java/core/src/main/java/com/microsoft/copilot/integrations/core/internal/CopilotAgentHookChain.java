@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.agent.internal;
+package com.microsoft.copilot.integrations.core.internal;
 
 import java.util.List;
 import java.util.Map;
@@ -19,8 +19,8 @@ import com.github.copilot.rpc.SubagentStartHookOutput;
 import com.github.copilot.rpc.SubagentStopHookOutput;
 import com.github.copilot.rpc.UserPromptSubmittedHookInput;
 import com.github.copilot.rpc.UserPromptSubmittedHookOutput;
-import io.github.brunoborges.copilot.agent.CopilotAgentContext;
-import io.github.brunoborges.copilot.agent.CopilotAgentHooks;
+import com.microsoft.copilot.integrations.core.CopilotAgentContext;
+import com.microsoft.copilot.integrations.core.CopilotAgentHooks;
 
 /** Adapts ordered {@link CopilotAgentHooks} beans to one SDK {@link SessionHooks} configuration. */
 final class CopilotAgentHookChain {

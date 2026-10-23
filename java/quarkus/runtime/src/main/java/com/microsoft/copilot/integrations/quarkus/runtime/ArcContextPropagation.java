@@ -1,6 +1,6 @@
-package io.github.brunoborges.copilot.quarkus.runtime;
+package com.microsoft.copilot.integrations.quarkus.runtime;
 
-import io.github.brunoborges.copilot.agent.internal.ContextPropagation;
+import com.microsoft.copilot.integrations.core.internal.ContextPropagation;
 import io.quarkus.arc.Arc;
 import io.quarkus.arc.InjectableContext;
 import io.quarkus.arc.ManagedContext;

@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.deployment;
+package com.microsoft.copilot.integrations.quarkus.deployment;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -19,22 +19,22 @@ import org.jboss.jandex.MethodInfo;
 
 import com.github.copilot.tool.CopilotToolMetadataProvider;
 
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.CopilotAgentHooks;
-import io.github.brunoborges.copilot.agent.CopilotAgentHooksFor;
-import io.github.brunoborges.copilot.agent.CopilotAgentReturnTypeAdapter;
-import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
-import io.github.brunoborges.copilot.agent.CopilotTokenResolver;
-import io.github.brunoborges.copilot.agent.GlobalCopilotAgentHooks;
-import io.github.brunoborges.copilot.quarkus.runtime.CopilotAgentRegistry;
-import io.github.brunoborges.copilot.quarkus.runtime.CopilotAgentTelemetryDecorator;
-import io.github.brunoborges.copilot.quarkus.runtime.CopilotProducers;
-import io.github.brunoborges.copilot.quarkus.runtime.CopilotRecorder;
-import io.github.brunoborges.copilot.quarkus.runtime.CopilotSessionCleanup;
-import io.github.brunoborges.copilot.quarkus.runtime.HookRegistration;
-import io.github.brunoborges.copilot.quarkus.runtime.endpoint.CopilotEndpoint;
-import io.github.brunoborges.copilot.quarkus.runtime.endpoint.CopilotEndpointRecorder;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.CopilotAgentHooks;
+import com.microsoft.copilot.integrations.core.CopilotAgentHooksFor;
+import com.microsoft.copilot.integrations.core.CopilotAgentReturnTypeAdapter;
+import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
+import com.microsoft.copilot.integrations.core.CopilotTokenResolver;
+import com.microsoft.copilot.integrations.core.GlobalCopilotAgentHooks;
+import com.microsoft.copilot.integrations.quarkus.runtime.CopilotAgentRegistry;
+import com.microsoft.copilot.integrations.quarkus.runtime.CopilotAgentTelemetryDecorator;
+import com.microsoft.copilot.integrations.quarkus.runtime.CopilotProducers;
+import com.microsoft.copilot.integrations.quarkus.runtime.CopilotRecorder;
+import com.microsoft.copilot.integrations.quarkus.runtime.CopilotSessionCleanup;
+import com.microsoft.copilot.integrations.quarkus.runtime.HookRegistration;
+import com.microsoft.copilot.integrations.quarkus.runtime.endpoint.CopilotEndpoint;
+import com.microsoft.copilot.integrations.quarkus.runtime.endpoint.CopilotEndpointRecorder;
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.SynthesisFinishedBuildItem;
 import io.quarkus.arc.deployment.SyntheticBeanBuildItem;
@@ -89,23 +89,23 @@ class CopilotProcessor {
 
         List<String> integrations = new ArrayList<>();
         if (config.health().enabled() && capabilities.isPresent(Capability.SMALLRYE_HEALTH)) {
-            integrations.add("io.github.brunoborges.copilot.quarkus.runtime.health.CopilotHealthCheck");
+            integrations.add("com.microsoft.copilot.integrations.quarkus.runtime.health.CopilotHealthCheck");
         }
         if (config.metrics().enabled() && capabilities.isPresent(MICROMETER)) {
-            integrations.add("io.github.brunoborges.copilot.quarkus.runtime.metrics.MicrometerCopilotAgentTelemetry");
+            integrations.add("com.microsoft.copilot.integrations.quarkus.runtime.metrics.MicrometerCopilotAgentTelemetry");
         }
         if (config.info().enabled() && capabilities.isPresent(INFO)) {
-            integrations.add("io.github.brunoborges.copilot.quarkus.runtime.info.CopilotInfoContributor");
+            integrations.add("com.microsoft.copilot.integrations.quarkus.runtime.info.CopilotInfoContributor");
         }
         if (config.security().identityTokenResolver().enabled()) {
             if (!capabilities.isPresent(Capability.SECURITY)) {
                 throw new ConfigurationException("quarkus.copilot.security.identity-token-resolver.enabled requires "
                         + "a Quarkus Security extension");
             }
-            integrations.add("io.github.brunoborges.copilot.quarkus.runtime.security.IdentityCopilotTokenResolver");
+            integrations.add("com.microsoft.copilot.integrations.quarkus.runtime.security.IdentityCopilotTokenResolver");
         }
         if (QuarkusClassLoader.isClassPresentAtRuntime("io.smallrye.mutiny.Multi")) {
-            integrations.add("io.github.brunoborges.copilot.quarkus.runtime.mutiny.MutinyCopilotAgentAdapter");
+            integrations.add("com.microsoft.copilot.integrations.quarkus.runtime.mutiny.MutinyCopilotAgentAdapter");
         }
         if (config.endpoint().enabled()) {
             if (!capabilities.isPresent(Capability.VERTX_HTTP)) {

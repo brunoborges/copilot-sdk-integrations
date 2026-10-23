@@ -2,8 +2,8 @@
  * Test support for applications that use Copilot agents.
  */
 @SuppressWarnings({ "requires-transitive-automatic", "requires-automatic" })
-module io.github.brunoborges.copilot.spring.boot.test {
-    requires transitive io.github.brunoborges.copilot.spring.boot.autoconfigure;
+module com.microsoft.copilot.integrations.springboot.test {
+    requires transitive com.microsoft.copilot.integrations.springboot.autoconfigure;
     requires transitive spring.test;
     requires transitive org.mockito;
     requires com.fasterxml.jackson.core;
@@ -13,11 +13,11 @@ module io.github.brunoborges.copilot.spring.boot.test {
     requires static spring.boot.testcontainers;
     requires static testcontainers;
 
-    exports io.github.brunoborges.copilot.test;
-    exports io.github.brunoborges.copilot.test.testcontainers;
+    exports com.microsoft.copilot.integrations.springboot.test;
+    exports com.microsoft.copilot.integrations.springboot.test.testcontainers;
 
-    opens io.github.brunoborges.copilot.test to com.fasterxml.jackson.databind, spring.beans, spring.boot,
+    opens com.microsoft.copilot.integrations.springboot.test to com.fasterxml.jackson.databind, spring.beans, spring.boot,
             spring.context, spring.core, spring.test;
-    opens io.github.brunoborges.copilot.test.testcontainers to spring.beans, spring.boot, spring.boot.testcontainers,
+    opens com.microsoft.copilot.integrations.springboot.test.testcontainers to spring.beans, spring.boot, spring.boot.testcontainers,
             spring.context, spring.core;
 }

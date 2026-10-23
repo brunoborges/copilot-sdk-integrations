@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut;
+package com.microsoft.copilot.integrations.micronaut;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -8,12 +8,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.inject.Singleton;
 
-import io.github.brunoborges.copilot.agent.internal.BindingContext;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentFactory;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.agent.internal.ResourceLookup;
-import io.github.brunoborges.copilot.micronaut.config.CopilotConfigs;
-import io.github.brunoborges.copilot.micronaut.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.core.internal.BindingContext;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentFactory;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.core.internal.ResourceLookup;
+import com.microsoft.copilot.integrations.micronaut.config.CopilotConfigs;
+import com.microsoft.copilot.integrations.micronaut.config.CopilotRuntimeConfig;
 import io.micronaut.context.BeanContext;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.context.env.Environment;

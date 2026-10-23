@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.example;
+package com.microsoft.copilot.integrations.quarkus.example;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
@@ -9,7 +9,7 @@ import jakarta.inject.Inject;
 
 import org.junit.jupiter.api.Test;
 
-import io.github.brunoborges.copilot.quarkus.test.CopilotTestRuntime;
+import com.microsoft.copilot.integrations.quarkus.test.CopilotTestRuntime;
 import io.quarkus.test.junit.QuarkusTest;
 
 @QuarkusTest

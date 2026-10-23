@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.quarkus.runtime.health;
+package com.microsoft.copilot.integrations.quarkus.runtime.health;
 
 import java.time.Duration;
 import java.util.concurrent.ExecutionException;
@@ -16,9 +16,9 @@ import com.github.copilot.CopilotClient;
 import com.github.copilot.rpc.GetAuthStatusResponse;
 import com.github.copilot.rpc.GetStatusResponse;
 
-import io.github.brunoborges.copilot.quarkus.runtime.CopilotRuntimeAccess;
-import io.github.brunoborges.copilot.quarkus.runtime.config.CopilotConfigs;
-import io.github.brunoborges.copilot.quarkus.runtime.config.CopilotRuntimeConfig;
+import com.microsoft.copilot.integrations.quarkus.runtime.CopilotRuntimeAccess;
+import com.microsoft.copilot.integrations.quarkus.runtime.config.CopilotConfigs;
+import com.microsoft.copilot.integrations.quarkus.runtime.config.CopilotRuntimeConfig;
 
 /**
  * Readiness check reporting Copilot runtime connectivity, version, and authentication status.

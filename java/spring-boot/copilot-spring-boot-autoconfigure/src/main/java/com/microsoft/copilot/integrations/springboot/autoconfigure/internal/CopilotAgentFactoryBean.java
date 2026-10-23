@@ -1,10 +1,10 @@
-package io.github.brunoborges.copilot.autoconfigure.internal;
+package com.microsoft.copilot.integrations.springboot.autoconfigure.internal;
 
-import io.github.brunoborges.copilot.agent.CopilotAgentInstance;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentFactory;
-import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
-import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
+import com.microsoft.copilot.integrations.core.CopilotAgentInstance;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentFactory;
+import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsProperties;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
@@ -14,7 +14,7 @@ import org.springframework.core.io.ResourceLoader;
 /**
  * Registers one {@code @CopilotAgent} interface as a Spring bean. Agents with {@code @ConversationId} methods expose
  * their JDK proxy; ID-less agents expose their {@link CopilotAgentDefinition}, bound per conversation through
- * {@link io.github.brunoborges.copilot.agent.CopilotAgents}.
+ * {@link com.microsoft.copilot.integrations.core.CopilotAgents}.
  */
 public final class CopilotAgentFactoryBean implements FactoryBean<Object>, InitializingBean {
 

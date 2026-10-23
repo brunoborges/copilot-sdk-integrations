@@ -1,4 +1,4 @@
-package io.github.brunoborges.copilot.micronaut.test;
+package com.microsoft.copilot.integrations.micronaut.test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -11,10 +11,10 @@ import org.junit.jupiter.api.Test;
 
 import com.github.copilot.CopilotClient;
 
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.UserMessage;
-import io.github.brunoborges.copilot.micronaut.CopilotAgentRegistry;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.UserMessage;
+import com.microsoft.copilot.integrations.micronaut.CopilotAgentRegistry;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.annotation.Requires;
 

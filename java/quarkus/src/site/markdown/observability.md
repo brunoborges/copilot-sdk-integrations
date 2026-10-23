@@ -47,9 +47,9 @@ bean is the Micrometer implementation when available, otherwise a no-op.
 
 - Declare your own `CopilotAgentTelemetry` bean to replace it. The default is a
   `@DefaultBean`, so yours wins; inject
-  `io.github.brunoborges.copilot.quarkus.runtime.CopilotMetricsTelemetry` if you
+  `com.microsoft.copilot.integrations.quarkus.runtime.CopilotMetricsTelemetry` if you
   want to delegate to the Micrometer implementation.
-- Declare `io.github.brunoborges.copilot.quarkus.runtime.CopilotAgentTelemetryDecorator`
+- Declare `com.microsoft.copilot.integrations.quarkus.runtime.CopilotAgentTelemetryDecorator`
   beans (a `UnaryOperator<CopilotAgentTelemetry>`) to wrap the effective
   telemetry instead of replacing it. The scripted test runtime uses this hook to
   attribute requests to agents.

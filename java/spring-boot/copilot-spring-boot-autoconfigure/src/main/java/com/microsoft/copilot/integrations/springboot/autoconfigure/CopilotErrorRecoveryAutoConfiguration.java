@@ -1,7 +1,7 @@
-package io.github.brunoborges.copilot.autoconfigure;
+package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
-import io.github.brunoborges.copilot.agent.CopilotErrorRecoveryHooks;
-import io.github.brunoborges.copilot.agent.GlobalCopilotAgentHooks;
+import com.microsoft.copilot.integrations.core.CopilotErrorRecoveryHooks;
+import com.microsoft.copilot.integrations.core.GlobalCopilotAgentHooks;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
