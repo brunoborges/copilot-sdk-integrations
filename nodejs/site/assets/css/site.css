@@ -55,6 +55,9 @@ a.externalLink { background-image: none; padding-right: 0; }
   font-size: 0.8125rem;
 }
 #breadcrumbs a { color: var(--cp-text-muted); }
+.breadcrumb-trail { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+#breadcrumbs a.landing-link { color: var(--cp-text); font-weight: 600; text-decoration: none; }
+#breadcrumbs a.landing-link:hover, #breadcrumbs a.landing-link:focus-visible { text-decoration: underline; }
 .project-links { display: flex; gap: 1rem; }
 .docs-layout { max-width: 92rem; margin: 0 auto; }
 #leftColumn {
