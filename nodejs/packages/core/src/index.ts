@@ -16,6 +16,12 @@ export {
   validateToolFilters,
   buildToolFilterConfig,
   ALL_BUILT_IN_TOOLS,
+  errorRecoveryHooks,
+  classifyToolResult,
+  classifySdkError,
+  type ErrorRecoveryOptions,
+  type ToolResultCategory,
+  type SdkErrorCategory,
 } from "./governance/index.js";
 export { copilotErrorToHttp, copilotErrorCode, CLIENT_CLOSED_REQUEST, type CopilotHttpError } from "./http.js";
 export { describeAgent, type CopilotAgentInfo, type CopilotInfo, type DescribeAgentOptions } from "./info.js";

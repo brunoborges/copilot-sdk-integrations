@@ -118,6 +118,10 @@ COPILOT = {
 }
 ```
 
+To have agents keep going after failed tool calls and retry transient errors, add the opt-in
+[`ErrorRecoveryHooks`](../core/README.md#error-recovery):
+`"HOOKS": ["copilot_agents.ErrorRecoveryHooks"]`, or an instance for custom settings.
+
 ## Testing
 
 ```python

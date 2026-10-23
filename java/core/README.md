@@ -17,3 +17,13 @@ reactor module (`<module>../core</module>`):
 ```
 cd spring-boot && ./mvnw verify   # or: cd quarkus (or micronaut) && ./mvnw verify
 ```
+
+## Error-recovery hooks
+
+`CopilotErrorRecoveryHooks` is an opt-in `CopilotAgentHooks` implementation based on the Copilot SDK
+cookbook's [error-recovery recipe](https://github.com/github/awesome-copilot/blob/main/cookbook/copilot-sdk/python/error-recovery-hooks.md).
+It sorts tool failures by phrase lists (permission denied, shell error, tool failure), adds a
+"keep going" note as `additionalContext`, and stops after a configurable number of consecutive
+failures of the same tool. Build it with `CopilotErrorRecoveryHooks.builder()` and register it like any
+hooks bean; Spring Boot also offers `copilot.error-recovery.enabled=true`. The Java SDK has no
+error-occurred hook, so transient model/runtime errors cannot be retried from Java.

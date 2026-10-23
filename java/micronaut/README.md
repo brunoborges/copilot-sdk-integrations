@@ -161,6 +161,26 @@ Beans looked up by type (hooks, return-type adapters, telemetry decorators) are 
 The integration's default beans (`CopilotClient`, `CopilotClientOptions`, `CopilotAgents`, telemetry) are
 `@Secondary`, so an application bean of the same type wins; use `@Replaces` to remove a default entirely.
 
+### Error-recovery hooks
+
+`CopilotErrorRecoveryHooks` (from copilot-agent-core) is an opt-in hook based on the Copilot SDK cookbook's
+[error-recovery recipe](https://github.com/github/awesome-copilot/blob/main/cookbook/copilot-sdk/python/error-recovery-hooks.md).
+When a tool fails it adds a note telling the model to keep going, and it stops after `maxConsecutiveFailures`
+consecutive failures of the same tool. Register it from a factory:
+
+```java
+@Factory
+class RecoveryFactory {
+    @Singleton
+    @GlobalCopilotAgentHooks
+    CopilotErrorRecoveryHooks errorRecovery() {
+        return CopilotErrorRecoveryHooks.builder().maxConsecutiveFailures(3).build();
+    }
+}
+```
+
+The Java SDK has no error-occurred hook, so transient model or runtime errors are not retried.
+
 ## Configuration
 
 All settings live under `micronaut.copilot`. The keys and defaults match the Spring Boot starter's

@@ -13,6 +13,7 @@ from .errors import (
 from .hooks import CopilotAgentHooks
 from .invoker import AgentInvoker, CopilotReply, ToolCall
 from .policies import PermissionPolicy
+from .recovery import ErrorRecoveryHooks, SdkErrorCategory, ToolResultCategory
 from .runtime import CopilotRuntime
 from .session_ids import SHARED, derive_session_id
 from .tokens import CallerIdentity, CopilotTokenResolver, StaticTokenResolver
@@ -35,11 +36,14 @@ __all__ = [
     "CopilotTimeout",
     "CopilotTokenResolver",
     "CopilotTool",
+    "ErrorRecoveryHooks",
     "PermissionPolicy",
+    "SdkErrorCategory",
     "StaticTokenResolver",
     "ToolCall",
     "ToolContext",
     "ToolError",
+    "ToolResultCategory",
     "current_invocation",
     "derive_session_id",
     "policies",

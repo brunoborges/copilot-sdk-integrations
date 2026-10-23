@@ -254,6 +254,37 @@ that are not modelled here, such as the pre-MCP-tool-call hook, remain
 available through a `CopilotAgentCustomizer` that sets SDK `SessionHooks`
 directly; note that doing so replaces the hooks set by this extension.
 
+<a id="error-recovery"></a>
+
+## Error-recovery hooks
+
+`CopilotErrorRecoveryHooks` (from copilot-agent-core) is a ready-made hook based
+on the Copilot SDK cookbook's [error-recovery recipe](https://github.com/github/awesome-copilot/blob/main/cookbook/copilot-sdk/python/error-recovery-hooks.md).
+It is not registered by default; produce it as a bean to opt in:
+
+```java
+@Produces
+@Singleton
+@GlobalCopilotAgentHooks
+CopilotErrorRecoveryHooks errorRecovery() {
+    return CopilotErrorRecoveryHooks.builder().maxConsecutiveFailures(3).build();
+}
+```
+
+- After a tool call it classifies the output, by case-insensitive phrase lists,
+  as permission denied, shell error, or (for failed calls) a generic tool failure.
+- On a failure it adds a `[SYSTEM NOTE: ...]` as `additionalContext` telling the
+  model not to stop and to try another approach. The tool result is unchanged.
+- After `maxConsecutiveFailures` (default 3, `0` = unlimited) failures of the
+  same tool in a session, the note stops, so the model is not nudged into a
+  loop. A successful call resets the count.
+
+Use `@CopilotAgentHooksFor` instead of `@GlobalCopilotAgentHooks` to limit it to
+some agents. The builder also sets the phrase lists and notes.
+The Java SDK has no error-occurred hook (`SessionHooks` has no `onErrorOccurred`), so
+unlike the Python and Node.js versions this hook cannot retry transient model or runtime
+errors. It only handles tool failures.
+
 <a id="security-notes"></a>
 
 ## Security notes
