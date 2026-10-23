@@ -93,7 +93,7 @@ See [How it works](how-it-works.md).
 | AppHost resources (`AddCopilot`, `AddModel`, `WithMcpServer`, `WithProvider`, …) | C# | `CopilotSdk.Aspire.Hosting` |
 | .NET service client (`AddCopilotClient`) | C# | `CopilotSdk.Aspire` (optional, .NET only) |
 | Java service | Java | [Spring Boot starter](https://brunoborges.github.io/copilot-sdk-integrations/spring-boot/) or [Quarkus extension](https://brunoborges.github.io/copilot-sdk-integrations/quarkus/) |
-| Node.js service | TypeScript / JavaScript | [Node.js integration](https://brunoborges.github.io/copilot-sdk-integrations/nodejs/) or `@github/copilot-sdk` |
+| Node.js service | TypeScript / JavaScript | [NestJS](https://brunoborges.github.io/copilot-sdk-integrations/nestjs/) or [Fastify](https://brunoborges.github.io/copilot-sdk-integrations/fastify/) integration, or `@github/copilot-sdk` |
 | Python service | Python | `github-copilot-sdk` |
 
 Only the AppHost needs .NET. The `CopilotSdk.Aspire` client package is a convenience for .NET
@@ -139,6 +139,7 @@ that the Aspire packages use.
   `IChatClient` integration that `CopilotSdk.Aspire` builds on.
 - [Copilot Agents for Spring Boot](https://brunoborges.github.io/copilot-sdk-integrations/spring-boot/)
 - [Copilot Agents for Quarkus](https://brunoborges.github.io/copilot-sdk-integrations/quarkus/)
-- [Copilot Agents for Node.js](https://brunoborges.github.io/copilot-sdk-integrations/nodejs/)
+- [Copilot Agents for NestJS](https://brunoborges.github.io/copilot-sdk-integrations/nestjs/)
+- [Copilot Agents for Fastify](https://brunoborges.github.io/copilot-sdk-integrations/fastify/)
 - [GitHub Copilot SDK](https://github.com/github/copilot-sdk)
 - [Aspire documentation](https://aspire.dev/)

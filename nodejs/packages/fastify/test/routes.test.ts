@@ -1,5 +1,5 @@
 import underPressure from "@fastify/under-pressure";
-import { defineAgent, defineCopilotTool } from "@copilot-sdk-integrations/core";
+import { defineAgent, defineCopilotTool } from "@copilot-sdk-integrations/agent-core";
 import { describe, expect, it, vi } from "vitest";
 import { copilotHealthCheck, copilotPlugin } from "../src/index.js";
 import { app, setup, testCopilot } from "./helpers.js";

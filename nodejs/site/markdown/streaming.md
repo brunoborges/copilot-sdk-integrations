@@ -12,9 +12,13 @@ power chat UIs, Server-Sent Events, interactive tool approvals, and the
 
 - [Event model](#event-model)
 - [Streaming in core](#streaming-in-core)
+<!-- only:nestjs -->
 - [Server-Sent Events with NestJS](#server-sent-events-with-nestjs)
+<!-- /only -->
 - [Server-Sent Events with Express](#server-sent-events-with-express)
+<!-- only:fastify -->
 - [Server-Sent Events with Fastify](#server-sent-events-with-fastify)
+<!-- /only -->
 - [Global event listeners](#global-event-listeners)
 - [useChat](#usechat)
 
@@ -56,6 +60,7 @@ for await (const event of agent.stream({ prompt: "Summarize order 42", conversat
 Breaking out of the loop aborts the turn. A bound conversation streams with
 `conversation.stream(prompt, options?)`.
 
+<!-- only:nestjs -->
 ## Server-Sent Events with NestJS
 
 Declare the method's return type as `Observable<CopilotAgentEvent>` (import `Observable` as a
@@ -65,7 +70,7 @@ value so the return type is in the decorator metadata, or set
 ```ts
 import { Sse } from "@nestjs/common";
 import { Observable } from "rxjs";
-import type { CopilotAgentEvent } from "@copilot-sdk-integrations/core";
+import type { CopilotAgentEvent } from "@copilot-sdk-integrations/agent-core";
 import { toSseEvents } from "@copilot-sdk-integrations/nestjs";
 
 @CopilotAgent({ name: "support" })
@@ -94,6 +99,7 @@ export class SupportController {
   on unsubscribe; `fromAsyncIterable(iterable)` wraps an existing iterable, such as a core
   `agent.stream(...)`.
 - For an `AsyncIterable` return type, set `@UserMessage({ stream: "async-iterable" })`.
+<!-- /only -->
 
 ## Server-Sent Events with Express
 
@@ -111,6 +117,7 @@ app.get("/chat", async (req, res) => {
 });
 ```
 
+<!-- only:fastify -->
 ## Server-Sent Events with Fastify
 
 The [Fastify plugin](fastify.md#streaming) adds `reply.copilotEvents()`, which does the above
@@ -122,6 +129,7 @@ app.get<{ Querystring: { q: string } }>("/chat", async (request, reply) =>
   reply.copilotEvents(request.copilot.agent("support").stream({ prompt: request.query.q })),
 );
 ```
+<!-- /only -->
 
 ## Global event listeners
 
@@ -135,6 +143,12 @@ const copilot = createCopilot({
     if (event.type === "usage") metrics.record(context.principal, event.inputTokens, event.outputTokens);
   },
 });
+<!-- only:fastify -->
+
+// Fastify: the same option, in the plugin's client options
+await app.register(copilotPlugin, { client: { onEvent: (event, context) => { /* ... */ } } });
+<!-- /only -->
+<!-- only:nestjs -->
 
 // NestJS
 @Injectable()
@@ -145,15 +159,18 @@ export class UsageListener {
   @OnCopilotEvent("*")
   onAny(event: CopilotAgentEvent) { /* ... */ }
 }
+<!-- /only -->
 ```
 
 Listeners see events from both streaming and non-streaming calls. A failing listener is logged
 and never breaks a turn.
 
+<!-- only:nestjs -->
 With `eventEmitter: true` (or `{ prefix: "ai" }`) in `CopilotModule.forRoot()` and
 `EventEmitterModule.forRoot()` imported, every event is also re-emitted on `@nestjs/event-emitter`'s
 `EventEmitter2` as `copilot.<type>` with `(event, context)`, so `@OnEvent("copilot.done")` works.
 Bootstrap fails if the option is set but `EventEmitterModule` isn't imported.
+<!-- /only -->
 
 ## useChat
 

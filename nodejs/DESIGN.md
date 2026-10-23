@@ -77,7 +77,7 @@ flowchart TB
 
 | Package (working name) | Contents | Depends on |
 | --- | --- | --- |
-| `@copilot-sdk-integrations/core` | Client manager, agent definitions and execution, tool adapters, governance, conversation manager, session store interface, event model, test runtime | `@github/copilot-sdk`, `zod` |
+| `@copilot-sdk-integrations/agent-core` | Client manager, agent definitions and execution, tool adapters, governance, conversation manager, session store interface, event model, test runtime | `@github/copilot-sdk`, `zod` |
 | `@copilot-sdk-integrations/ai` | `copilot()` AI SDK provider, AI SDK `Agent` adapter, Copilot event to UI message stream mapping | core, `ai` |
 | `@copilot-sdk-integrations/nestjs` | `CopilotModule`, decorators, discovery, CLS context, Terminus indicator, testing module | core, `@nestjs/common`, `@nestjs/core`; optional `ai`, `@nestjs/terminus`, `rxjs` |
 | `@copilot-sdk-integrations/fastify` | `copilotPlugin`, decorators, context hook, error handler, SSE, health and info routes; `./ai` `useChat` routes; `./testing` ([DESIGN-FASTIFY.md](DESIGN-FASTIFY.md)) | core, `fastify-plugin`; peer `fastify ^5`; optional `ai` |
@@ -96,7 +96,7 @@ CommonJS apps load them through `require(esm)`, which that Node.js floor support
 The core is a plain TypeScript library; any Node.js app can use it without NestJS.
 
 ```ts
-import { createCopilot, defineAgent, permissions } from "@copilot-sdk-integrations/core";
+import { createCopilot, defineAgent, permissions } from "@copilot-sdk-integrations/agent-core";
 
 const copilot = createCopilot({ cliPath: process.env.COPILOT_CLI_PATH });
 
@@ -476,7 +476,7 @@ expect(moduleRef.get(CopilotTestRuntime).prompts).toEqual(["Where is order 42?"]
 - `CopilotTestingModule` swaps the client for the core's scripted runtime: replies,
   streaming, tool calls into real `@CopilotTool` providers, permission requests,
   failures, recorded prompts. No runtime process, credentials, or paid requests.
-- Without NestJS, `createTestCopilot({ script })` from `@copilot-sdk-integrations/core/testing`
+- Without NestJS, `createTestCopilot({ script })` from `@copilot-sdk-integrations/agent-core/testing`
   returns `{ copilot, runtime, stop }` (async-disposable) with test-friendly defaults (silent
   logger, throwaway `baseDirectory`, short timeouts).
 - An optional `CopilotContainer` (Testcontainers for Node.js) runs a real runtime in

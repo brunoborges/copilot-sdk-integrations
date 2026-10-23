@@ -13,15 +13,17 @@ request context into them, and turns failures into tool results instead of crash
 - [Tool definitions](#tool-definitions)
 - [Accepted tool inputs](#accepted-tool-inputs)
 - [Results and failures](#results-and-failures)
+<!-- only:nestjs -->
 - [NestJS tool providers](#nestjs-tool-providers)
 - [Tool interceptors](#tool-interceptors)
+<!-- /only -->
 - [Tool filters](#tool-filters)
 
 ## Tool definitions
 
 ```ts
 import { z } from "zod";
-import { defineCopilotTool } from "@copilot-sdk-integrations/core";
+import { defineCopilotTool } from "@copilot-sdk-integrations/agent-core";
 
 export const lookupOrder = defineCopilotTool({
   name: "lookupOrder",
@@ -85,6 +87,7 @@ Handlers never crash a turn: invalid input and thrown errors become a tool resul
 `resultType: "failure"`, so the model can recover. The run is visible as a `tool-end` event
 with `success: false`.
 
+<!-- only:nestjs -->
 ## NestJS tool providers
 
 In NestJS, tools are methods of providers decorated with `@CopilotTool`:
@@ -141,6 +144,7 @@ export class OrdersTools { /* ... */ }
 context has `toolName`, `input`, `invocation`, `instance`, `methodName`, and `providerClass`.
 Interceptor classes are resolved from DI when registered, otherwise instantiated with `new`.
 
+<!-- /only -->
 ## Tool filters
 
 Filters decide which tools the runtime exposes, using the SDK's ToolSet syntax:

@@ -1,4 +1,4 @@
-import { copilotErrorToHttp, CopilotIntegrationError, getCopilotContext, type Copilot } from "@copilot-sdk-integrations/core";
+import { copilotErrorToHttp, CopilotIntegrationError, getCopilotContext, type Copilot } from "@copilot-sdk-integrations/agent-core";
 import { createApprovalStore, pipeCopilotChatToResponse, pipeCopilotEventsToResponse, type CopilotApprovalStore } from "@copilot-sdk-integrations/ai";
 import type { UIMessage } from "ai";
 import express, { type NextFunction, type Request, type Response } from "express";

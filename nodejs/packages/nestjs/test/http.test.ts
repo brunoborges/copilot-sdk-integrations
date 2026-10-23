@@ -15,7 +15,7 @@ import {
   permissions,
   type CopilotAgentEvent,
   type CopilotContext,
-} from "@copilot-sdk-integrations/core";
+} from "@copilot-sdk-integrations/agent-core";
 import { Observable } from "rxjs";
 import request from "supertest";
 import { afterEach, describe, expect, it } from "vitest";

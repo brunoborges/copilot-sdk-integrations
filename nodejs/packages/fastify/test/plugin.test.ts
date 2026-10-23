@@ -2,8 +2,8 @@ import {
   CopilotConfigurationError,
   createCopilot,
   defineAgent,
-} from "@copilot-sdk-integrations/core";
-import { silentLogger } from "@copilot-sdk-integrations/core/testing";
+} from "@copilot-sdk-integrations/agent-core";
+import { silentLogger } from "@copilot-sdk-integrations/agent-core/testing";
 import { describe, expect, it, vi } from "vitest";
 import { copilotPlugin } from "../src/index.js";
 import { app, setup, testCopilot, waitFor } from "./helpers.js";

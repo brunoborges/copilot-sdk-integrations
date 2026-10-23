@@ -9,7 +9,7 @@ import {
   type CopilotAgentDefinition,
   type CopilotAgentEvent,
   type CopilotOptions,
-} from "@copilot-sdk-integrations/core";
+} from "@copilot-sdk-integrations/agent-core";
 import type { FastifyInstance, FastifyPluginAsync, FastifyReply } from "fastify";
 import fp from "fastify-plugin";
 import { addContextHook, decorateRequestCopilot } from "./context.js";

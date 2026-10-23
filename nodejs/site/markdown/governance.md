@@ -13,7 +13,9 @@ around prompts and tool calls.
 - [Deny by default](#deny-by-default)
 - [Permission policies](#permission-policies)
 - [Writing a policy](#writing-a-policy)
+<!-- only:nestjs -->
 - [Policies in NestJS](#policies-in-nestjs)
+<!-- /only -->
 - [Ask-user approvals](#ask-user-approvals)
 - [Hooks](#hooks)
 - [Hook composition](#hook-composition)
@@ -68,7 +70,7 @@ Request kinds are `shell`, `write`, `read`, `mcp`, `custom-tool`, `url`, `memory
 ## Writing a policy
 
 ```ts
-import type { PermissionPolicy } from "@copilot-sdk-integrations/core";
+import type { PermissionPolicy } from "@copilot-sdk-integrations/agent-core";
 
 const tenantOnly: PermissionPolicy = (request, { context }) => {
   if (request.kind !== "custom-tool") return "abstain";
@@ -81,6 +83,7 @@ defineAgent({ name: "support", permissions: permissions.anyOf(tenantOnly, permis
 `evaluatePermission(policy, request, ctx)` runs a policy with the fail-closed rules applied
 and is useful in unit tests.
 
+<!-- only:nestjs -->
 ## Policies in NestJS
 
 `@CopilotAgent({ permissions })` accepts a `permissions.*` function, an instance with
@@ -103,6 +106,7 @@ export abstract class SupportAgent { /* ... */ }
 
 The class must be registered as a provider. An app-wide default for agents without their
 own policy can be provided under the `COPILOT_PERMISSION_POLICY` token.
+<!-- /only -->
 
 ## Ask-user approvals
 
@@ -121,12 +125,19 @@ for await (const event of agent.stream({ prompt, conversationId })) {
 }
 ```
 
+<!-- only:nestjs -->
 In NestJS, answer a request from a different HTTP call with
 `CopilotAgents.respondToPermission(conversationId, requestId, true | { approved, feedback }, { principal? })`.
 Only the principal that started the turn can answer: the caller is `options.principal`, or the
 current context's principal (set per request by the context interceptor). It returns `false`
 when no such request is pending: already resolved, expired, or started by another
 conversation or principal.
+<!-- /only -->
+<!-- only:fastify -->
+In Fastify, `reply.copilotChat()` answers requests from a later `useChat` call through
+`fastify.copilotApprovals`; only the principal that started the turn, in the same conversation,
+can answer. See [useChat and approvals](fastify.md#usechat-and-approvals).
+<!-- /only -->
 With the AI SDK, approvals become `useChat` tool approvals; see
 [Vercel AI SDK](ai-sdk.md#tool-approvals).
 
@@ -149,6 +160,7 @@ defineAgent({
 });
 ```
 
+<!-- only:nestjs -->
 Global hooks go in the client options (`createCopilot({ hooks })` or the module `hooks`).
 In NestJS, provider methods can be hooks:
 
@@ -164,11 +176,22 @@ export class PromptGuard {
 
 The hook type is the SDK key without `on`, lower-camel-cased. `agents` (classes or names)
 limits a hook to some agents; without it the hook applies to all.
+<!-- /only -->
+<!-- only:fastify -->
+Global hooks go in the client options (`createCopilot({ hooks })`, or the plugin's
+`client: { hooks }`).
+<!-- /only -->
 
 ## Hook composition
 
+<!-- only:nestjs -->
 `composeHooks(...hooks)` merges hook sets. Global hooks run first, then NestJS-discovered hooks
 (unscoped before agent-scoped), then the agent's own `hooks`. Handlers run sequentially:
+<!-- /only -->
+<!-- only:fastify -->
+`composeHooks(...hooks)` merges hook sets. Global hooks run first, then the agent's own `hooks`.
+Handlers run sequentially:
+<!-- /only -->
 
 | Hook | Composition |
 | --- | --- |

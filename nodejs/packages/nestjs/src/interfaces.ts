@@ -11,7 +11,7 @@ import type {
   PermissionRequest,
   ToolCallInfo,
   ToolInput,
-} from "@copilot-sdk-integrations/core";
+} from "@copilot-sdk-integrations/agent-core";
 
 // SDK types, derived from core so this package needs no direct `@github/copilot-sdk` dependency.
 export type SessionConfig = Parameters<NonNullable<CopilotAgentDefinition["configureSession"]>>[0];

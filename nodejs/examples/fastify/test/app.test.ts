@@ -1,5 +1,5 @@
 import { createApprovalStore } from "@copilot-sdk-integrations/ai";
-import type { CopilotTestRuntime } from "@copilot-sdk-integrations/core/testing";
+import type { CopilotTestRuntime } from "@copilot-sdk-integrations/agent-core/testing";
 import { buildCopilotTestApp, parseSse } from "@copilot-sdk-integrations/fastify/testing";
 import type { UIMessage } from "ai";
 import type { FastifyInstance } from "fastify";

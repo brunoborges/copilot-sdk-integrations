@@ -1,12 +1,18 @@
 ---
-title: Core without a framework
+title: Agent Core without a framework
 ---
 
-# Core without a framework
+# Agent Core without a framework
 
-`@copilot-sdk-integrations/core` is the framework-agnostic layer. It works from Express,
-Hono, a queue worker, or a script. The NestJS, Fastify, and AI SDK packages are built on it;
-Fastify apps use the [Fastify plugin](fastify.md) instead of wiring the core by hand.
+`@copilot-sdk-integrations/agent-core` (Agent Core) is the framework-agnostic agent layer on top
+of the Copilot SDK. It works from Express, Hono, a queue worker, or a script. The NestJS, Fastify,
+and AI SDK packages are built on it.
+<!-- only:nestjs -->
+NestJS apps use the [`CopilotModule`](nestjs.md) instead of wiring Agent Core by hand.
+<!-- /only -->
+<!-- only:fastify -->
+Fastify apps use the [Fastify plugin](fastify.md) instead of wiring Agent Core by hand.
+<!-- /only -->
 
 **In this chapter**
 
@@ -21,7 +27,7 @@ Fastify apps use the [Fastify plugin](fastify.md) instead of wiring the core by 
 ## Install
 
 ```sh
-npm install @copilot-sdk-integrations/core zod
+npm install @copilot-sdk-integrations/agent-core zod
 ```
 
 ## Create the client
@@ -30,7 +36,7 @@ npm install @copilot-sdk-integrations/core zod
 Create one per application and share it.
 
 ```ts
-import { createCopilot } from "@copilot-sdk-integrations/core";
+import { createCopilot } from "@copilot-sdk-integrations/agent-core";
 
 const copilot = createCopilot({
   limits: { maxConcurrentTurns: 8 },
@@ -48,7 +54,7 @@ The runtime starts on the first turn. All options are listed under
 
 ```ts
 import { z } from "zod";
-import { defineAgent, permissions } from "@copilot-sdk-integrations/core";
+import { defineAgent, permissions } from "@copilot-sdk-integrations/agent-core";
 
 const lookupOrder = {
   name: "lookupOrder",
@@ -121,7 +127,13 @@ Errors arrive as a final `error` event instead of being thrown.
 | `copilot.health()` | `{ state, version, capacity }` without starting a lazy runtime. Detects a lost runtime connection (state `failed`). |
 
 `startup: "eager"` has no effect on its own in core: nothing starts until you call `start()` (or
-run a turn). The NestJS module calls `start()` at bootstrap for you.
+run a turn).
+<!-- only:nestjs -->
+The NestJS module calls `start()` at bootstrap for you.
+<!-- /only -->
+<!-- only:fastify -->
+The Fastify plugin calls `start()` in `onReady` for you.
+<!-- /only -->
 
 If the runtime process dies or disconnects, the client goes to `failed` and the next turn starts
 a fresh runtime, with backoff between repeated failures. See
@@ -141,7 +153,7 @@ process.on("SIGTERM", async () => {
 
 ```ts
 import express from "express";
-import { CopilotIntegrationError, runWithCopilotContext } from "@copilot-sdk-integrations/core";
+import { CopilotIntegrationError, runWithCopilotContext } from "@copilot-sdk-integrations/agent-core";
 
 const app = express();
 app.use(express.json());
@@ -162,7 +174,7 @@ app.post("/support/:conversationId", async (req, res, next) => {
 
 `runWithCopilotContext` sets the principal for session-id derivation and makes it visible to
 tools, policies, and hooks. For an AI SDK `useChat` front end, see
-[Vercel AI SDK](ai-sdk.md#express-and-nestjs).
+[Vercel AI SDK](ai-sdk.md#express).
 
 ## Exported API
 
@@ -178,4 +190,4 @@ tools, policies, and hooks. For an AI SDK `useChat` front end, see
 | Context | `getCopilotContext`, `runWithCopilotContext`, `bindCopilotContext`, `CopilotContext` |
 | Events | `mapSessionEvent`, `CopilotAgentEvent` |
 | Errors | `CopilotIntegrationError` and subclasses (see [Operations](operations.md#errors)) |
-| Testing | `@copilot-sdk-integrations/core/testing` (see [Testing](testing.md)) |
+| Testing | `@copilot-sdk-integrations/agent-core/testing` (see [Testing](testing.md)) |

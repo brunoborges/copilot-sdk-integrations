@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { describe, expect, it } from "vitest";
 import { jsonSchema, readUIMessageStream, tool, type UIMessage, type UIMessageChunk } from "ai";
-import { defineAgent, permissions } from "@copilot-sdk-integrations/core";
+import { defineAgent, permissions } from "@copilot-sdk-integrations/agent-core";
 import {
   pipeCopilotEventsToResponse,
   toUIMessageStream,

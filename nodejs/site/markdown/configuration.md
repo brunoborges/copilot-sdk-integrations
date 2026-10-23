@@ -4,17 +4,27 @@ title: Configuration
 
 # Configuration
 
+<!-- only:nestjs -->
 Core is configured with `createCopilot(options)`; NestJS with `CopilotModule.forRoot(options)`
 or `forRootAsync(...)`, which accept the same `CopilotOptions` plus NestJS-specific settings.
+<!-- /only -->
+<!-- only:fastify -->
+Core is configured with `createCopilot(options)`. The Fastify plugin takes the same
+`CopilotOptions` as its `client` option, next to its own [plugin options](fastify.md#register-the-plugin).
+<!-- /only -->
 
 **In this chapter**
 
 - [`CopilotOptions`](#copilotoptions)
 - [Runtime connection and authentication](#runtime-connection-and-authentication)
+<!-- only:nestjs -->
 - [NestJS module options](#nestjs-module-options)
 - [Async configuration](#async-configuration)
+<!-- /only -->
 - [Validation](#validation)
+<!-- only:nestjs -->
 - [Injection tokens](#injection-tokens)
+<!-- /only -->
 
 ## `CopilotOptions`
 
@@ -22,7 +32,12 @@ or `forRootAsync(...)`, which accept the same `CopilotOptions` plus NestJS-speci
 | --- | --- | --- |
 | `cliPath` | `COPILOT_CLI_PATH`, then the SDK's bundled runtime | Path to the Copilot runtime to spawn. |
 | `cliUrl` | none | Connect to an existing runtime server instead of spawning one. Exclusive with `cliPath`. |
+<!-- only:nestjs -->
 | `startup` | `"lazy"` | `lazy` starts the runtime on the first turn. `eager`: NestJS starts it at bootstrap, and bootstrap fails if it can't start; in core, call `copilot.start()` yourself. |
+<!-- /only -->
+<!-- only:fastify -->
+| `startup` | `"lazy"` | `lazy` starts the runtime on the first turn. `eager`: the plugin starts it in `onReady` (set `startup` as a plugin option), and `ready()` fails if it can't start; in core, call `copilot.start()` yourself. |
+<!-- /only -->
 | `githubToken` | none | Service GitHub token. With `cliUrl`, a per-session fallback token; see [token precedence](context-and-identity.md#token-precedence). |
 | `useLoggedInUser` | `true` when no token is configured | Use the user logged in to the Copilot CLI. Setting it together with `cliUrl` is an error: an external runtime manages its own authentication. |
 | `baseDirectory` | `COPILOT_HOME`, then `~/.copilot` | Runtime state directory. |
@@ -39,7 +54,12 @@ or `forRootAsync(...)`, which accept the same `CopilotOptions` plus NestJS-speci
 | `tokenResolver` | none | Per-user [GitHub token](context-and-identity.md#per-user-github-tokens) resolver. |
 | `configureClient` | none | `(options) => options`: adjust the raw SDK `CopilotClientOptions`. |
 | `clientFactory` | SDK `CopilotClient` | Replace the SDK client (the test runtime uses this). |
+<!-- only:nestjs -->
 | `logger` | console, `[copilot]` prefix, debug dropped | A `CopilotLogger` (`debug`, `info`, `warn`, `error`). NestJS uses its `Logger`. |
+<!-- /only -->
+<!-- only:fastify -->
+| `logger` | console, `[copilot]` prefix, debug dropped | A `CopilotLogger` (`debug`, `info`, `warn`, `error`). The Fastify plugin uses `fastify.log`. |
+<!-- /only -->
 
 The SDK client always runs in its `empty` mode: no default tools or instructions leak in;
 each agent declares what it uses.
@@ -50,10 +70,21 @@ each agent declares what it uses.
 | --- | --- |
 | Local development | Nothing: the bundled runtime runs as the user logged in to the Copilot CLI. |
 | Service account | `githubToken: process.env.COPILOT_GITHUB_TOKEN` (a GitHub token whose user has Copilot access). |
+<!-- only:nestjs -->
 | Per-user billing | A `tokenResolver` or `CopilotTokenResolver`; see [context and identity](context-and-identity.md). |
+<!-- /only -->
+<!-- only:fastify -->
+| Per-user billing | A `tokenResolver`; see [context and identity](context-and-identity.md). |
+<!-- /only -->
 | Shared runtime server | `cliUrl: "localhost:4321"`, for several replicas that resume each other's conversations. |
+<!-- only:nestjs -->
 | BYOK | A `provider` per agent, or named `providers` in NestJS; see [BYOK providers](agents.md#byok-providers). |
+<!-- /only -->
+<!-- only:fastify -->
+| BYOK | A `provider` per agent; see [BYOK providers](agents.md#byok-providers). |
+<!-- /only -->
 
+<!-- only:nestjs -->
 ## NestJS module options
 
 | Option | Default | Description |
@@ -91,8 +122,14 @@ CopilotModule.forRootAsync({
 `useClass` and `useExisting` (a class implementing `create()`) also work, as with any Nest
 configurable module.
 
+<!-- /only -->
 ## Validation
 
+<!-- only:fastify -->
+The plugin validates its options when it is registered. An unknown key or a wrong type fails
+`register` with a `CopilotConfigurationError` that names the key.
+<!-- /only -->
+<!-- only:nestjs -->
 NestJS validates the options at bootstrap with a strict schema. Unknown keys, wrong types,
 `cliUrl` together with `cliPath`, and `availableTools` together with `excludedTools` in an
 agent override fail fast with a `CopilotConfigurationError`:
@@ -101,10 +138,13 @@ agent override fail fast with a `CopilotConfigurationError`:
 Invalid CopilotModule options: cliUrl: cliUrl and cliPath are mutually exclusive
 ```
 
-`validateModuleOptions(options)` runs the same validation. Core checks its own invariants
+`validateModuleOptions(options)` runs the same validation.
+<!-- /only -->
+Core checks its own invariants
 when an agent is created or the runtime starts (for example, `useLoggedInUser` with `cliUrl`,
 or both tool filters on one agent).
 
+<!-- only:nestjs -->
 ## Injection tokens
 
 | Token | Value |
@@ -117,3 +157,4 @@ or both tool filters on one agent).
 | `COPILOT_CONTEXT_BRIDGE` | A [context bridge](context-and-identity.md#nestjs-cls-and-other-context-stores) (or array). |
 | `COPILOT_MODULE_OPTIONS` | The validated module options. |
 | `getAgentToken(name)` (`@InjectAgent(name)`) | A functional agent's `AgentHandle`. |
+<!-- /only -->

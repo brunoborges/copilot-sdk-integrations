@@ -1,4 +1,4 @@
-import { CopilotConfigurationError } from "@copilot-sdk-integrations/core";
+import { CopilotConfigurationError } from "@copilot-sdk-integrations/agent-core";
 import { z } from "zod";
 import type { CopilotModuleOptions } from "./interfaces.js";
 

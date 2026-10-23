@@ -1,5 +1,5 @@
 {
-  "name": "@copilot-sdk-integrations/core",
+  "name": "@copilot-sdk-integrations/agent-core",
   "version": "0.1.0",
   "description": "Framework-agnostic integration layer for the GitHub Copilot SDK for Node.js",
   "license": "MIT",

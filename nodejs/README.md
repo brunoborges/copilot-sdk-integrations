@@ -1,11 +1,13 @@
 # Copilot Agents for Node.js
 
-Status: **in development, not published**.
+Status: **in development, not published**. Docs:
+[Copilot Agents for NestJS](https://brunoborges.github.io/copilot-sdk-integrations/nestjs/) and
+[Copilot Agents for Fastify](https://brunoborges.github.io/copilot-sdk-integrations/fastify/).
 
 Integrations for the
 [Copilot SDK for Node.js/TypeScript](https://github.com/github/copilot-sdk/tree/main/nodejs):
 
-- **core**: a framework-agnostic layer for client lifecycle, typed agents, tools,
+- **agent-core**: a framework-agnostic layer on top of the SDK for client lifecycle, typed agents, tools,
   governance (deny-by-default permissions), conversations, and a scripted test runtime.
   Usable from Express, Hono, or plain Node.js.
 - **nestjs**: a `CopilotModule` modeled on the [Spring Boot starter](../java/spring-boot/),
@@ -34,7 +36,7 @@ The packages are ESM-only; CommonJS apps load them with `require()` through Node
 
 | Package | Purpose |
 | --- | --- |
-| [`@copilot-sdk-integrations/core`](packages/core/) | Client lifecycle, typed agents, tools, governance, conversations, and the scripted test runtime |
+| [`@copilot-sdk-integrations/agent-core`](packages/core/) | Client lifecycle, typed agents, tools, governance, conversations, and the scripted test runtime |
 | [`@copilot-sdk-integrations/ai`](packages/ai/) | AI SDK provider and UI message stream adapter |
 | [`@copilot-sdk-integrations/nestjs`](packages/nestjs/) | `CopilotModule`, decorators, Terminus health indicator, and testing module |
 | [`@copilot-sdk-integrations/fastify`](packages/fastify/) | Fastify plugin: decorators, context hook, error handler, SSE, `useChat` routes (`./ai`), and `buildCopilotTestApp` (`./testing`) |

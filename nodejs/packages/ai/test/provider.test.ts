@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { generateText, jsonSchema, Output, streamText, tool, type ModelMessage } from "ai";
-import { defineAgent, permissions } from "@copilot-sdk-integrations/core";
+import { defineAgent, permissions } from "@copilot-sdk-integrations/agent-core";
 import { copilot as copilotProvider, createCopilotAgent, createCopilotProvider, toCopilotPrompt } from "../src/index.js";
 import { setup } from "./helpers.js";
 

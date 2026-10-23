@@ -1,9 +1,9 @@
 # @copilot-sdk-integrations/fastify
 
-Fastify plugin for the GitHub Copilot SDK. It provides `fastify.copilot` and request-bound agent handles, request-context propagation to tools and policies, HTTP error mapping, SSE streaming, AI SDK `useChat` support, health and info routes, and a scripted testing helper. It's built on [`@copilot-sdk-integrations/core`](../core); see [`DESIGN-FASTIFY.md`](../../DESIGN-FASTIFY.md) for the full design.
+Fastify plugin for the GitHub Copilot SDK. It provides `fastify.copilot` and request-bound agent handles, request-context propagation to tools and policies, HTTP error mapping, SSE streaming, AI SDK `useChat` support, health and info routes, and a scripted testing helper. It's built on [`@copilot-sdk-integrations/agent-core`](../core); see [`DESIGN-FASTIFY.md`](../../DESIGN-FASTIFY.md) for the full design.
 
 ```sh
-npm install @copilot-sdk-integrations/fastify @copilot-sdk-integrations/core fastify zod
+npm install @copilot-sdk-integrations/fastify @copilot-sdk-integrations/agent-core fastify zod
 ```
 
 Requires Fastify 5 and Node.js 20.19+ or 22.12+. The package is ESM-only.
@@ -12,7 +12,7 @@ Requires Fastify 5 and Node.js 20.19+ or 22.12+. The package is ESM-only.
 
 ```ts
 import Fastify from "fastify";
-import { defineAgent } from "@copilot-sdk-integrations/core";
+import { defineAgent } from "@copilot-sdk-integrations/agent-core";
 import { copilotPlugin } from "@copilot-sdk-integrations/fastify";
 
 const support = defineAgent({ name: "support", model: "gpt-5", instructions: "You help customers." });
@@ -97,7 +97,7 @@ The plugin sets an error handler that maps Copilot errors to HTTP with a Fastify
 Other errors (validation errors, your own errors) go to Fastify's default handler unchanged. If the app has its own error handler, pass `errorHandler: false` and delegate:
 
 ```ts
-import { CopilotIntegrationError } from "@copilot-sdk-integrations/core";
+import { CopilotIntegrationError } from "@copilot-sdk-integrations/agent-core";
 import { copilotErrorHandler } from "@copilot-sdk-integrations/fastify";
 
 app.setErrorHandler((error, request, reply) => {
@@ -189,5 +189,5 @@ There's no runtime process, no credentials, and no paid requests.
 
 - [`DESIGN-FASTIFY.md`](../../DESIGN-FASTIFY.md): the Fastify integration design.
 - [`examples/fastify`](../../examples/fastify): a runnable Fastify app using the plugin, with `app.inject()` tests.
-- [`@copilot-sdk-integrations/core`](../core): agents, tools, permissions, conversations, and the scripted runtime.
+- [`@copilot-sdk-integrations/agent-core`](../core): agents, tools, permissions, conversations, and the scripted runtime.
 - [`@copilot-sdk-integrations/ai`](../ai): AI SDK provider and `useChat` streaming.

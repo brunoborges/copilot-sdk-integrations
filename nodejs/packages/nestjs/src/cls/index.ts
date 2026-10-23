@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import type { CopilotContext } from "@copilot-sdk-integrations/core";
+import type { CopilotContext } from "@copilot-sdk-integrations/agent-core";
 import { Module, type DynamicModule } from "@nestjs/common";
 import { ClsService } from "nestjs-cls";
 import { COPILOT_CONTEXT_BRIDGE } from "../constants.js";

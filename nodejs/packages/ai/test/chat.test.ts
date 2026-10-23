@@ -8,7 +8,7 @@ import {
   type UIMessage,
   type UIMessageChunk,
 } from "ai";
-import { defineAgent, permissions, runWithCopilotContext } from "@copilot-sdk-integrations/core";
+import { defineAgent, permissions, runWithCopilotContext } from "@copilot-sdk-integrations/agent-core";
 import { createApprovalStore, createCopilotChatResponse, fromUIMessages, streamCopilotChat } from "../src/index.js";
 import { collect, setup, types } from "./helpers.js";
 

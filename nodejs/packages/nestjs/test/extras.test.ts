@@ -14,7 +14,7 @@ import {
 } from "@nestjs/common";
 import { EventEmitterModule, OnEvent } from "@nestjs/event-emitter";
 import { Test, type TestingModule } from "@nestjs/testing";
-import { CopilotConfigurationError, getCopilotContext, permissions, runWithCopilotContext, type CopilotAgentEvent, type CopilotContext } from "@copilot-sdk-integrations/core";
+import { CopilotConfigurationError, getCopilotContext, permissions, runWithCopilotContext, type CopilotAgentEvent, type CopilotContext } from "@copilot-sdk-integrations/agent-core";
 import { ClsModule, ClsService } from "nestjs-cls";
 import { Observable, lastValueFrom, tap, toArray } from "rxjs";
 import request from "supertest";

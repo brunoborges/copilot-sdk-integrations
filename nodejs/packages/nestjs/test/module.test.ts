@@ -1,8 +1,8 @@
 import "reflect-metadata";
 import { Inject, Injectable, Module } from "@nestjs/common";
 import { Test, type TestingModule } from "@nestjs/testing";
-import { CopilotConfigurationError, CopilotShuttingDownError, type Copilot, type CopilotOptions } from "@copilot-sdk-integrations/core";
-import { createTestCopilot } from "@copilot-sdk-integrations/core/testing";
+import { CopilotConfigurationError, CopilotShuttingDownError, type Copilot, type CopilotOptions } from "@copilot-sdk-integrations/agent-core";
+import { createTestCopilot } from "@copilot-sdk-integrations/agent-core/testing";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   COPILOT_CLIENT_CUSTOMIZER,
