@@ -97,6 +97,7 @@ class AgentOverrides(BaseModel):
     hooks: list[str] | None = None
     token_resolver: str | None = None
     timeout: PositiveFloat | None = None
+    message_source: str | None = None
 
     def values(self) -> Mapping[str, Any]:
         """The fields explicitly set."""

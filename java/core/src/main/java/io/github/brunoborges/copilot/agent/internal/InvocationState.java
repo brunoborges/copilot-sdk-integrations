@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.github.copilot.CopilotSession;
+import com.github.copilot.rpc.MessageSource;
 
 /**
  * Per-invocation state captured on the caller thread and the cancellation handshake between the caller and
@@ -24,13 +25,24 @@ final class InvocationState {
 
     private final String gitHubToken;
     private final ContextPropagation.Snapshot context;
+    private final MessageSource messageSource;
     private final Object lock = new Object();
     private boolean cancelled;
     private CompletableFuture<?> waiting;
 
     InvocationState(String gitHubToken, ContextPropagation.Snapshot context) {
+        this(gitHubToken, context, null);
+    }
+
+    InvocationState(String gitHubToken, ContextPropagation.Snapshot context, MessageSource messageSource) {
         this.gitHubToken = gitHubToken;
         this.context = context;
+        this.messageSource = messageSource;
+    }
+
+    /** The prompt's provenance, or {@code null} to omit it. */
+    MessageSource messageSource() {
+        return messageSource;
     }
 
     String gitHubToken() {

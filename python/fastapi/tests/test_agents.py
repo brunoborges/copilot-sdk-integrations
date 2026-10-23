@@ -53,6 +53,20 @@ def test_settings_override_class_attributes(tmp_path):
     assert docs.mcp_servers["docs"]["url"] == "https://example.com/mcp"
 
 
+def test_message_source_from_class_attribute_and_settings():
+    from copilot import AgentMessageSource
+
+    class NightlyAgent(CopilotAgent):
+        message_source = "system"
+
+    copilot = Copilot(CopilotSettings(agents={"support": {"message_source": "agent-ops"}}), agents=[SupportAgent, NightlyAgent])
+    assert copilot.definition(NightlyAgent).message_source == "system"
+    assert copilot.definition(SupportAgent).message_source == AgentMessageSource("ops")
+    bad = Copilot(CopilotSettings(agents={"support": {"message_source": "root"}}), agents=[SupportAgent])
+    with pytest.raises(CopilotConfigurationError, match="message_source"):
+        bad.definition(SupportAgent)
+
+
 def test_default_policy_denies(copilot, fake):
     fake.agent("locked").calls_tool("lookup_order", {"order_id": 1}).replies("no")
     assert copilot.get(LockedAgent).ask("x") == "no"

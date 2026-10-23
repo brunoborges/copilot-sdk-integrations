@@ -58,6 +58,7 @@ Environment variables follow the usual .NET convention, for example
 | `Model` | runtime default | The model, for example `gpt-5.4`. |
 | `Instructions` | none | Appended to the agent's system message (on new and resumed sessions). |
 | `ReasoningEffort` | none | For models that support it, for example `low`, `medium`, `high`. |
+| `MessageSource` | none (runtime default `user`) | `user`, `system`, or `agent-<id>` provenance label for prompts. Not an authenticated identity; see [Message source](chat-clients.html#message-source). |
 | `ResponseTimeout` | `00:02:00` | Maximum time for a turn. The turn is aborted and `TimeoutException` is thrown when it elapses. |
 | `MaxConcurrentTurns` | none | Optional cap on concurrent turns across the app. Extra turns wait in a queue of up to 8× the limit. *Client-level.* |
 | `EagerStart` | `false` | Start the client with the host instead of on first use. *Client-level.* |

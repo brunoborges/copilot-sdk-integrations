@@ -271,7 +271,7 @@ export class CopilotAgents implements OnModuleInit {
     }
 
     const definition: CopilotAgentDefinition = { ...rest, name: entry.name, tools };
-    for (const key of ["description", "instructions", "model", "reasoningEffort", "builtInTools", "toolSearch"] as const) {
+    for (const key of ["description", "instructions", "model", "reasoningEffort", "builtInTools", "toolSearch", "messageSource"] as const) {
       if (overrides[key] !== undefined) (definition as unknown as Record<string, unknown>)[key] = overrides[key];
     }
     if (overrides.availableTools !== undefined || overrides.excludedTools !== undefined) {

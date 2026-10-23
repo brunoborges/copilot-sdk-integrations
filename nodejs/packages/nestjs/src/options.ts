@@ -40,6 +40,7 @@ const agentOverrides = z.strictObject({
       path: ["deferThreshold"],
     })
     .optional(),
+  messageSource: z.string().optional(),
 });
 
 const optionsSchema = z

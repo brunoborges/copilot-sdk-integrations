@@ -1,8 +1,10 @@
 package io.github.brunoborges.copilot.camel;
 
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -10,6 +12,9 @@ import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.support.DefaultAsyncProducer;
 
+import com.github.copilot.rpc.MessageSource;
+
+import io.github.brunoborges.copilot.agent.CopilotMessageSources;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
 
@@ -17,6 +22,8 @@ import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
 final class CopilotAgentProducer extends DefaultAsyncProducer {
 
     private static final Logger log = Logger.getLogger(CopilotAgentProducer.class.getName());
+
+    private static final Set<String> SCHEDULING_SCHEMES = Set.of("timer", "scheduler", "quartz", "cron");
 
     private final CopilotAgentEndpoint endpoint;
 
@@ -41,9 +48,11 @@ final class CopilotAgentProducer extends DefaultAsyncProducer {
             }
             var invoker = endpoint.getComponent().invoker();
             var structured = endpoint.structured();
-            reply = structured == null ? invoker.invoke(definition, conversationId, prompt)
-                    : structured.convert(invoker.invokeStructured(definition, conversationId, prompt,
-                            structured.schema(), null));
+            String id = conversationId;
+            Supplier<CompletableFuture<?>> send = () -> structured == null ? invoker.invoke(definition, id, prompt)
+                    : structured.convert(invoker.invokeStructured(definition, id, prompt, structured.schema(), null));
+            reply = scheduled(exchange, definition) ? CopilotMessageSources.callAs(MessageSource.SYSTEM, send)
+                    : send.get();
         } catch (RuntimeException ex) {
             exchange.setException(ex);
             callback.done(true);
@@ -73,6 +82,23 @@ final class CopilotAgentProducer extends DefaultAsyncProducer {
             }
         });
         return false;
+    }
+
+    /**
+     * Whether the exchange was started by a scheduling consumer and the agent declares no source of its own, in
+     * which case the prompt is application-generated rather than user input.
+     */
+    private static boolean scheduled(Exchange exchange, CopilotAgentDefinition definition) {
+        if (definition.messageSource() != null || CopilotMessageSources.current() != null) {
+            return false;
+        }
+        var from = exchange.getFromEndpoint();
+        if (from == null) {
+            return false;
+        }
+        String uri = from.getEndpointUri();
+        int colon = uri.indexOf(':');
+        return colon > 0 && SCHEDULING_SCHEMES.contains(uri.substring(0, colon));
     }
 
     /** One-shot conversations cannot be continued, so their sessions are deleted rather than left behind. */

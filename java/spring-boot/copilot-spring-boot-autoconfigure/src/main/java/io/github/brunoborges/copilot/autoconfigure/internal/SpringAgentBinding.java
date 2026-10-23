@@ -61,7 +61,8 @@ public final class SpringAgentBinding {
                                     permissions.allowMcpServers(), permissions.allowAgentTools(),
                                     permissions.allowReadOnly()),
                     agent.toolSearch() == null ? null : new CopilotAgentSettings.ToolSearch(
-                            agent.toolSearch().enabled(), agent.toolSearch().deferThreshold())));
+                            agent.toolSearch().enabled(), agent.toolSearch().deferThreshold()),
+                    agent.messageSource()));
         });
         return new CopilotAgentSettings(agents);
     }

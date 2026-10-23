@@ -51,6 +51,15 @@ internal sealed class CopilotOptionsValidator : IValidateOptions<CopilotOptions>
             ValidateEndpoint(options, clientPrefix, failures);
         }
 
+        try
+        {
+            CopilotMessageSources.Parse(options.MessageSource);
+        }
+        catch (ArgumentException)
+        {
+            failures.Add($"{prefix}{nameof(CopilotOptions.MessageSource)} must be 'user', 'system', or 'agent-<id>' where <id> matches {CopilotMessageSources.AgentIdPattern}.");
+        }
+
         if (options.Provider is { } provider && string.IsNullOrWhiteSpace(provider.BaseUrl))
         {
             failures.Add($"{prefix}{nameof(CopilotOptions.Provider)}:{nameof(provider.BaseUrl)} is required when {prefix}{nameof(CopilotOptions.Provider)} is set.");

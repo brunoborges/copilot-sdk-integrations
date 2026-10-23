@@ -553,7 +553,7 @@ class GovernanceTests {
     private static CopilotAgentsProperties toolSearchSettings(String name, Boolean enabled, Integer threshold) {
         return new CopilotAgentsProperties(Map.of(name, new CopilotAgentsProperties.Agent(null, null,
                 Duration.ofSeconds(60), null, null, null, null, null, null, null, null, null,
-                new CopilotAgentsProperties.ToolSearch(enabled, threshold))));
+                new CopilotAgentsProperties.ToolSearch(enabled, threshold), null)));
     }
 
     private static boolean approved(PermissionHandler handler, PermissionRequest request) {

@@ -19,6 +19,7 @@ import type {
   SessionHooks,
   SystemMessageConfig,
   Tool as SdkTool,
+  MessageSource,
   ToolSearchConfig,
 } from "@github/copilot-sdk";
 
@@ -29,8 +30,8 @@ import type {
 /** The subset of `CopilotSession` the core depends on. */
 export interface SessionLike {
   readonly sessionId: string;
-  send(options: { prompt: string; mode?: "enqueue" | "immediate" }): Promise<string>;
-  sendAndWait(options: { prompt: string }, responseSchema: StructuredSchema<unknown>, timeout?: number): Promise<unknown>;
+  send(options: { prompt: string; mode?: "enqueue" | "immediate"; source?: MessageSource }): Promise<string>;
+  sendAndWait(options: { prompt: string; source?: MessageSource }, responseSchema: StructuredSchema<unknown>, timeout?: number): Promise<unknown>;
   on(handler: (event: SessionEvent) => void): () => void;
   abort(): Promise<void>;
   disconnect(): Promise<void>;
@@ -228,6 +229,12 @@ export interface CopilotAgentDefinition {
   hooks?: SessionHooks;
   customAgents?: CustomAgentConfig[];
   infiniteSessions?: boolean;
+  /**
+   * Provenance label sent with each prompt: `"user"`, `"system"` (an automated caller), or
+   * `"agent-<id>"`. Omitted: the runtime default (`user`). Caller-supplied provenance, not an
+   * authenticated identity. A `withMessageSource` scope and calls from another agent's tool take precedence.
+   */
+  messageSource?: MessageSource;
   /** Escape hatch: adjust the final SDK session config. */
   configureSession?: (config: SessionConfig, context: CopilotContext) => SessionConfig;
 }

@@ -57,6 +57,7 @@ public class CopilotAgentEndpoint extends DefaultEndpoint {
     private String additionalDirectories;
     private String hookRefs;
     private String tokenResolverRef;
+    private String messageSource;
     private Duration responseTimeout;
     private String allow;
     private String allowTools;
@@ -156,7 +157,7 @@ public class CopilotAgentEndpoint extends DefaultEndpoint {
                 names(excludedBuiltInAgents), builtInTools != null ? builtInTools : availableTools != null,
                 toolSearch == null ? "" : toolSearch.toString(),
                 toolSearchDeferThreshold == null ? 0 : toolSearchDeferThreshold, text(workingDirectory),
-                names(additionalDirectories), names(hookRefs), text(tokenResolverRef));
+                names(additionalDirectories), names(hookRefs), text(tokenResolverRef), text(messageSource));
         return CopilotAgentDefinition.create(CopilotEndpointAgent.class, attributes, component.binding(settings()));
     }
 
@@ -181,7 +182,8 @@ public class CopilotAgentEndpoint extends DefaultEndpoint {
                         responseTimeout != null ? responseTimeout : current.responseTimeout(), current.mcpServers(),
                         current.provider(), current.availableTools(), current.excludedTools(),
                         current.excludedBuiltInAgents(), current.builtInTools(), current.workingDirectory(),
-                        current.additionalDirectories(), policy, current.toolSearch()));
+                        current.additionalDirectories(), policy, current.toolSearch(),
+                        current.messageSource()));
         return new CopilotAgentSettings(agents);
     }
 
@@ -189,7 +191,8 @@ public class CopilotAgentEndpoint extends DefaultEndpoint {
         return Stream.of(instructions, instructionsResource, instructionsMode, systemMessageRef, model, reasoningEffort,
                 permissionHandlerRef, toolRefs, mcpServers, provider, listenerRefs, customizerRefs, availableTools,
                 excludedTools, excludedBuiltInAgents, builtInTools, toolSearch, toolSearchDeferThreshold, workingDirectory,
-                additionalDirectories, hookRefs, tokenResolverRef, responseTimeout, allow, allowTools, allowMcpServers, allowAgentTools, allowReadOnly)
+                additionalDirectories, hookRefs, tokenResolverRef, messageSource, responseTimeout, allow, allowTools,
+                allowMcpServers, allowAgentTools, allowReadOnly)
                 .anyMatch(value -> value != null);
     }
 
@@ -420,6 +423,20 @@ public class CopilotAgentEndpoint extends DefaultEndpoint {
 
     public void setTokenResolverRef(String tokenResolverRef) {
         this.tokenResolverRef = tokenResolverRef;
+    }
+
+    public String getMessageSource() {
+        return messageSource;
+    }
+
+    /**
+     * Prompt provenance: {@code user}, {@code system}, or {@code agent-<id>}. When unset, exchanges started by a
+     * {@code timer}, {@code scheduler}, {@code quartz}, or {@code cron} consumer are labeled {@code system}; other
+     * prompts omit the source (user input). Exchange headers never select the source, since they may carry
+     * untrusted input.
+     */
+    public void setMessageSource(String messageSource) {
+        this.messageSource = messageSource;
     }
 
     public Duration getResponseTimeout() {

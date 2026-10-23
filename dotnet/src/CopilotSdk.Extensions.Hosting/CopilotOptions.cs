@@ -36,6 +36,14 @@ public sealed class CopilotOptions
     /// <summary>Reasoning effort for models that support it (for example <c>low</c>, <c>medium</c>, <c>high</c>).</summary>
     public string? ReasoningEffort { get; set; }
 
+    /// <summary>
+    /// Provenance label for this agent's prompts: <c>user</c>, <c>system</c>, or <c>agent-&lt;id&gt;</c>. When
+    /// <see langword="null"/> or empty, the field is omitted and the runtime treats prompts as user input. A
+    /// <see cref="CopilotMessageSources.BeginScope(MessageSource)"/> scope or agent-to-agent delegation takes precedence.
+    /// The source is not an authenticated identity; see <see cref="CopilotMessageSources"/>.
+    /// </summary>
+    public string? MessageSource { get; set; }
+
     /// <summary>Maximum time to wait for a turn to complete. The turn is aborted when it elapses. Defaults to two minutes.</summary>
     public TimeSpan ResponseTimeout { get; set; } = TimeSpan.FromMinutes(2);
 

@@ -156,6 +156,7 @@ into `CopilotAgentsProperties.Agent` records in the `runtime.config` package.
 | --- | --- | --- | --- |
 | `quarkus.copilot.agents.<name>.model` | String | Annotation value, then runtime default | Override of `model`. |
 | `quarkus.copilot.agents.<name>.reasoning-effort` | String | Annotation value, then runtime default | Override of `reasoningEffort`; support depends on the selected model. |
+| `quarkus.copilot.agents.<name>.message-source` | String | Annotation value, then runtime default (`user`) | `user`, `system`, or `agent-<id>` provenance label for prompts; `none` clears the annotation value. Invalid values fail startup. Not an authenticated identity; see [Message source](agents.html#message-source). |
 | `quarkus.copilot.agents.<name>.response-timeout` | Duration | `60s` | At least `1ms`, representable in signed 64-bit nanoseconds. Bounds SDK response waiting; synchronous agent methods also wait at most this long in total. |
 | `quarkus.copilot.agents.<name>.mcp-servers` | List of strings | Annotation selection | Replace the agent's selected property server / SDK bean names. Omitted retains annotation; `none` selects none. Duplicate, missing, or ambiguous references fail initialization. |
 | `quarkus.copilot.agents.<name>.provider` | String | Annotation selection | Replace the agent's BYOK provider (property or `@Named` SDK `ProviderConfig` bean name). Omitted retains annotation; `none` selects none. Missing or ambiguous references, or a provider without a model, fail initialization. |

@@ -1,5 +1,6 @@
 import { CopilotConfigurationError } from "./errors.js";
 import { validateToolFilters } from "./governance/index.js";
+import { parseMessageSource } from "./message-source.js";
 import { toSdkTools } from "./tools/index.js";
 import type { CopilotAgentDefinition } from "./types.js";
 
@@ -47,6 +48,11 @@ export function defineAgent(def: CopilotAgentDefinition): CopilotAgentDefinition
   if (def.mcpServers !== undefined && (def.mcpServers === null || typeof def.mcpServers !== "object")) {
     throw new CopilotConfigurationError(`${where}: mcpServers must be an object keyed by server name`);
   }
+  try {
+    parseMessageSource(def.messageSource);
+  } catch (error) {
+    throw new CopilotConfigurationError(`${where}: messageSource: ${messageOf(error)}`, { cause: error });
+  }
   if (def.availableTools !== undefined && def.excludedTools !== undefined) {
     throw new CopilotConfigurationError(`${where}: availableTools and excludedTools are mutually exclusive`);
   }
@@ -64,6 +70,7 @@ export function defineAgent(def: CopilotAgentDefinition): CopilotAgentDefinition
   validateToolFilters(def, { customToolNames });
 
   const copy: CopilotAgentDefinition = { ...def };
+  if (def.messageSource === ("" as unknown)) delete copy.messageSource;
   if (def.tools) copy.tools = Object.freeze([...def.tools]) as CopilotAgentDefinition["tools"];
   if (def.availableTools) copy.availableTools = Object.freeze([...def.availableTools]) as string[];
   if (def.excludedTools) copy.excludedTools = Object.freeze([...def.excludedTools]) as string[];
@@ -107,4 +114,8 @@ function validateInstructions(where: string, instructions: unknown): void {
   if (mode === "replace" && (typeof content !== "string" || content.trim() === "")) {
     throw new CopilotConfigurationError(`${where}: instructions with mode "replace" require non-blank content`);
   }
+}
+
+function messageOf(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

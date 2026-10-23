@@ -32,6 +32,21 @@ def test_settings_override_class_attributes():
     assert SupportAgent.definition().model is None
 
 
+def test_message_source_from_class_attribute_and_settings(isolated_registry):
+    from copilot import AgentMessageSource
+
+    class NightlyAgent(CopilotAgent):
+        message_source = "system"
+
+    assert NightlyAgent.definition().message_source == "system"
+    assert SupportAgent.definition().message_source is None
+    with override_settings(COPILOT={"AGENTS": {"support": {"MESSAGE_SOURCE": "agent-ops"}}, "MCP_SERVERS": {"docs": {"type": "http", "url": "https://x"}}}):
+        assert SupportAgent.definition().message_source == AgentMessageSource("ops")
+    with override_settings(COPILOT={"AGENTS": {"support": {"MESSAGE_SOURCE": "root"}}, "MCP_SERVERS": {"docs": {"type": "http", "url": "https://x"}}}):
+        with pytest.raises(CopilotConfigurationError, match="message_source"):
+            SupportAgent.definition()
+
+
 def test_default_policy_denies(copilot_runtime):
     copilot_runtime.agent("locked").calls_tool("lookup_order", {"order_id": 1}).replies("no")
     assert LockedAgent(user=None).ask("x") == "no"

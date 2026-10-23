@@ -58,6 +58,8 @@ export interface CopilotAgentOverrides {
   excludedTools?: string[];
   builtInTools?: boolean;
   toolSearch?: CopilotAgentDefinition["toolSearch"];
+  /** `"user"`, `"system"`, or `"agent-<id>"` provenance label (not an identity); `""` clears the decorator value. */
+  messageSource?: CopilotAgentDefinition["messageSource"] | "";
 }
 
 /** How the request context (`CopilotContext`) is captured from HTTP requests. */

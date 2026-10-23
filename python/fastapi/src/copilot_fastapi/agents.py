@@ -78,6 +78,8 @@ class CopilotAgent:
     customizers: ClassVar[list[Any] | None] = None
     token_resolver: ClassVar[Any] = None
     timeout: ClassVar[float | None] = None
+    message_source: ClassVar[Any] = None
+    """``"user"``, ``"system"`` or ``"agent-<id>"`` provenance label (not an identity)."""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
@@ -550,6 +552,7 @@ class _Builder:
             "customizers": self.callables("customizers", "customizer"),
             "token_resolver": self.token_resolver(),
             "timeout": self.pick("timeout", self.settings.runtime.request_timeout),
+            "message_source": self.pick("message_source"),
             "expose_tool_errors": self.copilot.expose_tool_errors,
         }
         if self.issues:

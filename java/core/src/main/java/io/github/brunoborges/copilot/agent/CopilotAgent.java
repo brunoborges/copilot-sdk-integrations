@@ -171,4 +171,13 @@ public @interface CopilotAgent {
      * the client's ambient authentication.
      */
     String tokenResolverRef() default "";
+
+    /**
+     * Default provenance label of this agent's prompts: {@code user}, {@code system}, or {@code agent-<id>}
+     * (SDK {@code MessageSource}). Empty omits the field, so the runtime treats prompts as user input. A
+     * {@link CopilotMessageSources} scope or agent-to-agent delegation takes precedence. The label is not an
+     * authenticated identity; see {@link CopilotMessageSources} before relying on it.
+     * Overridden by {@code copilot.agents.<name>.message-source}.
+     */
+    String messageSource() default "";
 }

@@ -64,7 +64,8 @@ public record CopilotRuntimeConfig(
             Optional<String> workingDirectory,
             Optional<List<String>> additionalDirectories,
             Permissions permissions,
-            ToolSearch toolSearch) {
+            ToolSearch toolSearch,
+            Optional<String> messageSource) {
     }
 
     public record ToolSearch(Optional<Boolean> enabled, OptionalInt deferThreshold) {
@@ -188,7 +189,8 @@ public record CopilotRuntimeConfig(
                             bool(prefix + ".permissions.allow-agent-tools", false),
                             bool(prefix + ".permissions.allow-read-only", false)),
                     new ToolSearch(properties.getProperty(prefix + ".tool-search.enabled", Boolean.class),
-                            optionalInt(prefix + ".tool-search.defer-threshold")));
+                            optionalInt(prefix + ".tool-search.defer-threshold")),
+                    text(prefix + ".message-source"));
         }
 
         McpServer mcpServer(String prefix) {

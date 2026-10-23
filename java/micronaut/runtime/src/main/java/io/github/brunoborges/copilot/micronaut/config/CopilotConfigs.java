@@ -46,7 +46,8 @@ public final class CopilotConfigs {
                             permissions.allowMcpServers().orElse(List.of()),
                             permissions.allowAgentTools(),
                             permissions.allowReadOnly()),
-                    toolSearch(agent.toolSearch())));
+                    toolSearch(agent.toolSearch()),
+                    agent.messageSource().map(value -> "none".equals(value) ? "" : value).orElse(null)));
         });
         return new CopilotAgentSettings(agents);
     }

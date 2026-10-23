@@ -211,6 +211,9 @@ micronaut.copilot.agents.micronaut-advisor.mcp-servers=github
 # Defer MCP tool definitions behind tool search once the agent has 20+ tools
 micronaut.copilot.agents.micronaut-advisor.tool-search.defer-threshold=20
 micronaut.copilot.agents.micronaut-advisor.provider=foundry
+# Prompt provenance: user, system, or agent-<id> (none clears @CopilotAgent(messageSource)).
+# Caller-supplied, not an authenticated identity; never authorize from it.
+micronaut.copilot.agents.micronaut-advisor.message-source=system
 
 # MCP servers
 micronaut.copilot.mcp.servers.github.type=http

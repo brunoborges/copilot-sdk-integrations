@@ -134,6 +134,12 @@ public interface CopilotRuntimeConfig {
         /** Declarative permission policy used when the agent has no permission handler bean. */
         Permissions permissions();
 
+        /**
+         * Default prompt provenance: {@code user}, {@code system}, or {@code agent-<id>}; {@code none} omits it.
+         * Overrides the annotation. Not an authenticated identity.
+         */
+        Optional<String> messageSource();
+
         /** Runtime tool search, deferring MCP and external tool definitions once the agent has many tools. */
         ToolSearch toolSearch();
     }
