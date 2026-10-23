@@ -80,16 +80,17 @@ jobs:
           npm --prefix examples run typecheck
           npm --prefix examples run test
       - name: Test Node browser capture and interactive HTML
+        working-directory: examples/node-common
         env:
           # Chromium's Linux singleton socket must fit within 108 bytes.
-          TMPDIR: examples/.browser-scratch
+          TMPDIR: .browser-scratch
           PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/examples/.browsers
           PLAYWRIGHT_SKIP_BROWSER_GC: '1'
           RUN_BROWSER_TESTS: '1'
         run: |
           mkdir -p "$TMPDIR"
-          npm --prefix examples exec --workspace @workshop/node-common -- playwright install --with-deps chromium
-          npm --prefix examples run test --workspace @workshop/node-common
+          npm exec -- playwright install --with-deps chromium
+          npm test
 
   python:
     runs-on: ubuntu-latest
