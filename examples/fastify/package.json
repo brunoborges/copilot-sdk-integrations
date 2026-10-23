@@ -1,0 +1,20 @@
+{
+  "name": "@workshop/fastify",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": { "node": "^22.12.0" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test dist/test/*.test.js",
+    "start": "node --env-file-if-exists=.env dist/src/main.js"
+  },
+  "dependencies": {
+    "@copilot-sdk-integrations/agent-core": "0.1.0",
+    "@copilot-sdk-integrations/fastify": "0.1.0",
+    "@workshop/node-common": "1.0.0",
+    "fastify": "^5.12.0"
+  },
+  "devDependencies": { "@types/node": "^22.0.0", "typescript": "^5.9.0" }
+}

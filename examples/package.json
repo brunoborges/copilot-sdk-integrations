@@ -1,0 +1,17 @@
+{
+  "name": "copilot-workshop-node-examples",
+  "private": true,
+  "type": "module",
+  "workspaces": ["node-common", "nestjs", "fastify"],
+  "scripts": {
+    "build": "npm run build --workspace @workshop/node-common --workspace @workshop/nestjs --workspace @workshop/fastify",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm run test --workspaces"
+  },
+  "dependencies": {
+    "@copilot-sdk-integrations/agent-core": "file:../nodejs/packages/core",
+    "@copilot-sdk-integrations/nestjs": "file:../nodejs/packages/nestjs",
+    "@copilot-sdk-integrations/fastify": "file:../nodejs/packages/fastify"
+  },
+  "engines": { "node": "^22.12.0" }
+}

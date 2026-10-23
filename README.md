@@ -82,8 +82,19 @@ documentation landing page) live at the root.
 ├── aspire/        # Aspire integration (.NET) (preview)
 ├── python/        # Python core (copilot-agent-core), Django and FastAPI integrations (preview)
 ├── nodejs/        # Node.js Agent Core, NestJS module, Fastify plugin, and AI SDK adapter (TypeScript; in development)
+├── examples/      # Museum Exhibit and Web Accessibility workshop agents in eight frameworks
 └── .github/       # CI workflows and documentation landing page
 ```
+
+## Workshop examples
+
+[`examples/`](examples/README.md) contains runnable **Museum Exhibit** and **Web
+Accessibility** agents based on the
+[Copilot SDK workshop](https://github.github.com/copilot-sdk-workshop/), using
+the Spring Boot, Quarkus, Micronaut, NestJS, FastAPI, Fastify, Django, and .NET integrations.
+Each example includes local build/run instructions and offline tests. The agents
+demonstrate bounded source tools, explicit permissions, framework-managed runtime
+lifecycle, and deterministic output validation.
 
 ## Contributing
 
