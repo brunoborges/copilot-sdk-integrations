@@ -17,7 +17,7 @@ if (!sdkVersion) throw new Error("No github-copilot-sdk dependency in python/cor
 const version = "Preview";
 
 const site = {
-  name: "Copilot SDK for FastAPI",
+  name: "Copilot for FastAPI",
   description: "Guides and reference for using the GitHub Copilot SDK for Python with FastAPI: injectable agents, typed prompts, tools, permissions, and testing.",
   links: [
     { name: "GitHub", href: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/python/fastapi" },

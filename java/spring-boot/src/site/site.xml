@@ -2,7 +2,7 @@
 <site xmlns="http://maven.apache.org/SITE/2.1.0"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://maven.apache.org/SITE/2.1.0 https://maven.apache.org/xsd/site-2.1.0.xsd"
-      name="Copilot Spring Boot" combine.self="override">
+      name="Copilot for Spring Boot" combine.self="override">
     <skin>
         <groupId>io.github.brunoborges</groupId>
         <artifactId>copilot-spring-boot-site-skin</artifactId>
@@ -130,7 +130,7 @@ html[data-theme="dark"] {
             <item name="Security and troubleshooting" href="operations.html"/>
         </menu>
         <footer><![CDATA[
-<p>Copilot Spring Boot &middot; Java 21 &middot; Spring Boot 4.1.1 &middot; Copilot SDK 1.0.24</p>
+<p>Copilot for Spring Boot &middot; Java 21 &middot; Spring Boot 4.1.1 &middot; Copilot SDK 1.0.24</p>
         ]]></footer>
     </body>
 </site>

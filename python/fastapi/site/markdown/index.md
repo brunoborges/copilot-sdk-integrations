@@ -2,7 +2,7 @@
 title: Documentation
 ---
 
-# Copilot SDK for FastAPI
+# Copilot for FastAPI
 
 `copilot-fastapi` connects the
 [GitHub Copilot SDK for Python](https://github.com/github/copilot-sdk/tree/main/python) to

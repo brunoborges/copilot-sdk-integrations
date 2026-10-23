@@ -1,10 +1,10 @@
 ---
-title: Copilot Spring Boot
+title: Copilot for Spring Boot
 ---
 
 <a id="copilot-spring-boot"></a>
 
-# Copilot Spring Boot
+# Copilot for Spring Boot
 
 Use the Copilot Java SDK through Spring-managed clients, typed agents, and
 conversation-bound instances. The runtime owns the agent loop and persisted

@@ -2,7 +2,7 @@
 title: Documentation
 ---
 
-# Copilot SDK for Aspire
+# Copilot for Aspire
 
 This integration runs the GitHub Copilot runtime as a resource in an
 [Aspire](https://aspire.dev/) AppHost. The AppHost starts the runtime, secures it with a
@@ -135,10 +135,10 @@ that the Aspire packages use.
 
 ## Related documentation
 
-- [Copilot SDK for .NET](https://brunoborges.github.io/copilot-sdk-integrations/dotnet/): the
+- [Copilot for .NET](https://brunoborges.github.io/copilot-sdk-integrations/dotnet/): the
   `IChatClient` integration that `CopilotSdk.Aspire` builds on.
-- [Copilot SDK for Spring Boot](https://brunoborges.github.io/copilot-sdk-integrations/spring-boot/)
-- [Copilot SDK for Quarkus](https://brunoborges.github.io/copilot-sdk-integrations/quarkus/)
-- [Copilot SDK for Node.js](https://brunoborges.github.io/copilot-sdk-integrations/nodejs/)
+- [Copilot for Spring Boot](https://brunoborges.github.io/copilot-sdk-integrations/spring-boot/)
+- [Copilot for Quarkus](https://brunoborges.github.io/copilot-sdk-integrations/quarkus/)
+- [Copilot for Node.js](https://brunoborges.github.io/copilot-sdk-integrations/nodejs/)
 - [GitHub Copilot SDK](https://github.com/github/copilot-sdk)
 - [Aspire documentation](https://aspire.dev/)
