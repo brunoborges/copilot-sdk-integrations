@@ -1,7 +1,7 @@
 # copilot-micronaut
 
 Micronaut integration for the [Copilot SDK for Java](https://github.com/github/copilot-sdk/tree/main/java),
-targeting **Micronaut 5.2** (platform 5.2.3), **Java 21**, and Copilot SDK **1.0.24**.
+targeting **Micronaut 5.2** (platform 5.2.3), **Java 25**, and Copilot SDK **1.0.24**.
 
 It offers the same programming model as the [Spring Boot starter](../spring-boot/) and the
 [Quarkus extension](../quarkus/): the `io.github.brunoborges.copilot.agent` API (`@CopilotAgent`,

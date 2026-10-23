@@ -34,7 +34,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
  * assistant reply back into that type. Schemas follow strict structured-output rules: every object property is
  * required and closed, and non-object results are wrapped in a {@code {"value": ...}} object.
  */
-final class StructuredResponse {
+public final class StructuredResponse {
 
     private static final ObjectMapper MAPPER = JsonMapper.builder().addModule(new JavaTimeModule())
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
@@ -63,7 +63,7 @@ final class StructuredResponse {
      *
      * @throws IllegalArgumentException if the type is unsupported
      */
-    static StructuredResponse of(Type type) {
+    public static StructuredResponse of(Type type) {
         var javaType = MAPPER.constructType(type);
         var schema = schema(javaType, new HashSet<>());
         boolean wrapped = !"object".equals(schema.get("type"));
@@ -73,12 +73,12 @@ final class StructuredResponse {
         return new StructuredResponse(javaType, schema, wrapped);
     }
 
-    Map<String, Object> schema() {
+    public Map<String, Object> schema() {
         return schema;
     }
 
     /** Converts the text future into a typed one; cancelling the result cancels the underlying invocation. */
-    CompletableFuture<Object> convert(CompletableFuture<String> response) {
+    public CompletableFuture<Object> convert(CompletableFuture<String> response) {
         var converted = response.thenApply(this::read);
         converted.whenComplete((value, error) -> {
             if (converted.isCancelled()) {
@@ -88,7 +88,7 @@ final class StructuredResponse {
         return converted;
     }
 
-    Object read(String content) {
+    public Object read(String content) {
         try {
             JsonNode tree = MAPPER.readTree(content);
             if (wrapped && tree != null && tree.isObject() && tree.has("value")) {
