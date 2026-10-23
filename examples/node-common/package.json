@@ -1,0 +1,21 @@
+{
+  "name": "@workshop/node-common",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": { "node": "^22.12.0" },
+  "exports": { ".": "./dist/src/index.js", "./testing": "./dist/src/testing.js" },
+  "types": "./dist/src/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-resources.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test dist/test/*.test.js"
+  },
+  "files": ["dist"],
+  "dependencies": {
+    "@copilot-sdk-integrations/agent-core": "0.1.0",
+    "playwright": "1.56.1",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": { "@types/node": "^22.0.0", "typescript": "^5.9.0" }
+}

@@ -1,0 +1,136 @@
+name: Workshop examples
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'examples/**'
+      - 'java/**'
+      - 'nodejs/**'
+      - 'python/**'
+      - 'dotnet/**'
+      - '.github/workflows/examples.yml'
+  pull_request:
+    paths:
+      - 'examples/**'
+      - 'java/**'
+      - 'nodejs/**'
+      - 'python/**'
+      - 'dotnet/**'
+      - '.github/workflows/examples.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  java:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Install Java integrations from source
+        run: |
+          ./java/spring-boot/mvnw -q -f java/spring-boot/pom.xml -pl copilot-spring-boot-starter,copilot-spring-boot-test -am install -DskipTests
+          ./java/quarkus/mvnw -q -f java/quarkus/pom.xml -pl deployment,test -am install -DskipTests
+          ./java/micronaut/mvnw -q -f java/micronaut/pom.xml -pl runtime,processor,test -am install -DskipTests
+      - name: Build and test Java workshop agents
+        run: |
+          ./java/spring-boot/mvnw -q -f examples/java-common/pom.xml install
+          ./java/spring-boot/mvnw -q -f examples/spring-boot/pom.xml verify
+          ./java/quarkus/mvnw -q -f examples/quarkus/pom.xml verify
+          ./java/micronaut/mvnw -q -f examples/micronaut/pom.xml verify
+      - name: Install Chromium for local browser smoke tests
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_GC: '1'
+        run: |
+          ./java/spring-boot/mvnw -q -f examples/java-common/pom.xml exec:java \
+            -Dexec.mainClass=com.microsoft.playwright.CLI \
+            -Dexec.args="install --with-deps chromium"
+      - name: Test Java browser capture and interactive HTML
+        run: ./java/spring-boot/mvnw -q -f examples/java-common/pom.xml test -Dworkshop.browserTest=true
+
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            nodejs/package-lock.json
+            examples/package-lock.json
+      - name: Build integrations from source
+        run: |
+          npm --prefix nodejs ci
+          npm --prefix nodejs run build \
+            --workspace @copilot-sdk-integrations/agent-core \
+            --workspace @copilot-sdk-integrations/ai \
+            --workspace @copilot-sdk-integrations/nestjs \
+            --workspace @copilot-sdk-integrations/fastify
+      - name: Build and test Node workshop agents
+        run: |
+          npm --prefix examples ci
+          npm --prefix examples run build
+          npm --prefix examples run typecheck
+          npm --prefix examples run test
+      - name: Test Node browser capture and interactive HTML
+        env:
+          TMPDIR: ${{ github.workspace }}/examples/.browser-scratch
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/examples/.browsers
+          PLAYWRIGHT_SKIP_BROWSER_GC: '1'
+          RUN_BROWSER_TESTS: '1'
+        run: |
+          mkdir -p "$TMPDIR"
+          npm --prefix examples exec --workspace @workshop/node-common -- playwright install --with-deps chromium
+          npm --prefix examples run test --workspace @workshop/node-common
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Install integrations and examples
+        run: |
+          uv venv examples/.venv
+          uv pip install --python examples/.venv/bin/python \
+            -e python/core -e python/fastapi -e python/django \
+            examples/python-common examples/fastapi examples/django \
+            pytest pytest-asyncio httpx
+      - name: Test Python workshop agents without a runtime
+        run: examples/.venv/bin/python -m pytest examples/python-common/tests examples/fastapi/tests examples/django/tests
+      - name: Check CLI entry points
+        run: |
+          examples/.venv/bin/python -m workshop_fastapi --help
+          examples/.venv/bin/python examples/django/manage.py workshop --help
+      - name: Test real MCP browser snapshot contract without a model
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_GC: '1'
+          WORKSHOP_MCP_TESTS: '1'
+        run: |
+          npx --yes @playwright/mcp@0.0.78 install-browser --with-deps chromium
+          examples/.venv/bin/python -m pytest examples/python-common/tests/test_browser_mcp.py
+
+  dotnet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build .NET workshop agents
+        run: dotnet build examples/dotnet/Workshop.csproj --nologo
+      - name: Test .NET workshop contracts and application flows
+        run: dotnet run --project examples/dotnet/tests/Workshop.Tests.csproj
+      - name: Check CLI entry point
+        run: dotnet run --no-build --project examples/dotnet -- --help

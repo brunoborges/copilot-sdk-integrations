@@ -1,0 +1,4 @@
+bin/
+obj/
+TestResults/
+appsettings.Local.json
