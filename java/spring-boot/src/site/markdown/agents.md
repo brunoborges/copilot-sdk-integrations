@@ -57,6 +57,8 @@ Attribute values fall into three kinds, and the name tells you which:
 | `excludedTools` | `String[]` | `{}` | SDK tool deny-list. Mutually exclusive with `availableTools`. |
 | `excludedBuiltInAgents` | `String[]` | `{}` | Runtime built-in sub-agents to hide. |
 | `builtInTools` | `boolean` | `true` | `false` hides every built-in tool (`builtin:*`). Cannot be combined with `availableTools`. |
+| `toolSearch` | `String` | `""` | `"true"` or `"false"` toggles runtime tool search, which defers MCP and external tool definitions when the agent has many tools; empty keeps the runtime default. |
+| `toolSearchDeferThreshold` | `int` | `0` | Total tool count at which tool search defers tools; `0` keeps the runtime default (30). |
 | `workingDirectory` | `String` | `""` | Session working directory for runtime tool operations. Empty uses the runtime default. |
 | `additionalDirectories` | `String[]` | `{}` | Extra directories the session may access. |
 | `hookRefs` | `String[]` | `{}` | Bean names of `CopilotAgentHooks` beans, run after global and targeted hooks in listed order. See [hooks](governance.html#session-hooks-as-spring-beans). |

@@ -36,6 +36,7 @@ import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
 import io.github.brunoborges.copilot.autoconfigure.internal.CopilotAgentFactoryBean;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentGovernance;
+import io.github.brunoborges.copilot.agent.internal.CopilotAgentSettings;
 import io.github.brunoborges.copilot.autoconfigure.CopilotAgentsProperties;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -137,6 +138,52 @@ class GovernanceTests {
         var both = agentSettings("allowListOnlyAgent", null, List.of("bash"), null, null, null, null);
         assertThatThrownBy(() -> definition(AllowListOnlyAgent.class, both))
                 .hasMessageContaining("mutually exclusive");
+    }
+
+    @Test
+    void toolSearchIsUnsetByDefault() throws Exception {
+        assertThat(definition(HooklessAgent.class, none).governance().toolSearch()).isNull();
+        var configs = run(HooklessAgent.class, none);
+        assertThat(((SessionConfig) configs.get(0)).getToolSearch()).isNull();
+        assertThat(((ResumeSessionConfig) configs.get(1)).getToolSearch()).isNull();
+    }
+
+    @Test
+    void toolSearchReachesCreateAndResume() throws Exception {
+        var configs = run(ToolSearchAgent.class, none);
+        for (var search : List.of(((SessionConfig) configs.get(0)).getToolSearch(),
+                ((ResumeSessionConfig) configs.get(1)).getToolSearch())) {
+            assertThat(search.getEnabled()).isTrue();
+            assertThat(search.getDeferThreshold()).isEqualTo(20);
+        }
+    }
+
+    @Test
+    void toolSearchPropertiesOverrideTheAnnotationPerValue() {
+        var threshold = toolSearchSettings("toolSearchAgent", null, 5);
+        assertThat(definition(ToolSearchAgent.class, threshold).governance().toolSearch())
+                .isEqualTo(new CopilotAgentSettings.ToolSearch(true, 5));
+        var disabled = toolSearchSettings("hooklessAgent", false, null);
+        assertThat(definition(HooklessAgent.class, disabled).governance().toolSearch())
+                .isEqualTo(new CopilotAgentSettings.ToolSearch(false, null));
+        environment.getSystemProperties().put("search.enabled", "false");
+        try {
+            assertThat(definition(PlaceholderToolSearchAgent.class, none).governance().toolSearch())
+                    .isEqualTo(new CopilotAgentSettings.ToolSearch(false, null));
+        } finally {
+            environment.getSystemProperties().remove("search.enabled");
+        }
+    }
+
+    @Test
+    void invalidToolSearchSettingsFailStartup() {
+        var disabled = toolSearchSettings("toolSearchAgent", false, null);
+        assertThatThrownBy(() -> definition(ToolSearchAgent.class, disabled))
+                .hasMessageContaining("defer-threshold has no effect when tool search is disabled");
+        assertThatThrownBy(() -> definition(InvalidToolSearchAgent.class, none))
+                .hasMessageContaining("toolSearch must be \"true\", \"false\", or empty");
+        assertThatThrownBy(() -> new CopilotAgentsProperties.ToolSearch(null, 0))
+                .hasMessageContaining("tool-search.defer-threshold must be at least 1");
     }
 
     @Test
@@ -503,6 +550,12 @@ class GovernanceTests {
                 null)));
     }
 
+    private static CopilotAgentsProperties toolSearchSettings(String name, Boolean enabled, Integer threshold) {
+        return new CopilotAgentsProperties(Map.of(name, new CopilotAgentsProperties.Agent(null, null,
+                Duration.ofSeconds(60), null, null, null, null, null, null, null, null, null,
+                new CopilotAgentsProperties.ToolSearch(enabled, threshold))));
+    }
+
     private static boolean approved(PermissionHandler handler, PermissionRequest request) {
         return CopilotPermissionPolicies.isApproval(handler.handle(request, null).join());
     }
@@ -595,6 +648,21 @@ class GovernanceTests {
 
     @CopilotAgent(hookRefs = {"audit", "guard", "early"})
     public interface HookedAgent {
+        CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
+    }
+
+    @CopilotAgent(toolSearch = "true", toolSearchDeferThreshold = 20)
+    public interface ToolSearchAgent {
+        CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
+    }
+
+    @CopilotAgent(toolSearch = "${search.enabled}")
+    public interface PlaceholderToolSearchAgent {
+        CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
+    }
+
+    @CopilotAgent(toolSearch = "yes")
+    public interface InvalidToolSearchAgent {
         CompletableFuture<String> answer(@ConversationId String id, @UserMessage String message);
     }
 

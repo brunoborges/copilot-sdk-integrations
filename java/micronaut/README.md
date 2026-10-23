@@ -178,6 +178,8 @@ micronaut.copilot.agents.micronaut-advisor.response-timeout=2m
 micronaut.copilot.agents.micronaut-advisor.excluded-tools=shell
 micronaut.copilot.agents.micronaut-advisor.permissions.allow=read
 micronaut.copilot.agents.micronaut-advisor.mcp-servers=github
+# Defer MCP tool definitions behind tool search once the agent has 20+ tools
+micronaut.copilot.agents.micronaut-advisor.tool-search.defer-threshold=20
 micronaut.copilot.agents.micronaut-advisor.provider=foundry
 
 # MCP servers

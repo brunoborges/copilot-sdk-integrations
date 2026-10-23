@@ -57,6 +57,7 @@ export interface CopilotAgentOverrides {
   availableTools?: string[];
   excludedTools?: string[];
   builtInTools?: boolean;
+  toolSearch?: CopilotAgentDefinition["toolSearch"];
 }
 
 /** How the request context (`CopilotContext`) is captured from HTTP requests. */

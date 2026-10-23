@@ -36,6 +36,25 @@ def test_byok_requires_model_and_duplicates_detected():
     assert kinds(timeout=0) == {"invalid"}
 
 
+def test_tool_search_validation():
+    assert AgentDefinition(name="a").tool_search is None
+    config = {"enabled": True, "defer_threshold": 10}
+    definition = AgentDefinition(name="a", tool_search=config)
+    assert definition.tool_search == config and definition.tool_search is not config
+    AgentDefinition(name="a", tool_search={"enabled": False})
+    AgentDefinition(name="a", tool_search={"defer_threshold": 1})
+    for bad in (
+        "on",
+        {"enabled": "yes"},
+        {"defer_threshold": 0},
+        {"defer_threshold": True},
+        {"defer_threshold": "30"},
+        {"enabled": False, "defer_threshold": 10},
+        {"threshold": 10},
+    ):
+        assert kinds(tool_search=bad) == {"invalid"}, bad
+
+
 def test_tool_schema_from_signature():
     assert lookup.name == "lookup"
     assert lookup.parameters["properties"]["order_id"]["type"] == "integer"

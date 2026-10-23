@@ -84,6 +84,8 @@ The binding type is `CopilotAgentsProperties`, whose `agents()` map contains
 | `copilot.agents.<name>.available-tools` | List of strings | Annotation `availableTools` | SDK tool allow-list (`name`, `builtin:`, `custom:`, `mcp:` patterns). Empty list clears the annotation value. Must include `custom:`/`mcp:` entries when the agent declares tools/MCP servers; never widened. |
 | `copilot.agents.<name>.excluded-tools` | List of strings | Annotation `excludedTools` | SDK tool deny-list. Combining it with `available-tools` fails initialization. |
 | `copilot.agents.<name>.built-in-tools` | Boolean | Annotation `builtInTools` (`true`) | `false` excludes `builtin:*`; cannot be combined with `available-tools`. |
+| `copilot.agents.<name>.tool-search.enabled` | Boolean | Annotation `toolSearch` (runtime default) | Whether MCP and external tool definitions are deferred behind the runtime's tool-search tool. |
+| `copilot.agents.<name>.tool-search.defer-threshold` | Integer | Annotation `toolSearchDeferThreshold` (runtime default, 30) | Total tool count at which tools are deferred; at least 1; cannot be combined with `tool-search.enabled=false`. |
 | `copilot.agents.<name>.excluded-built-in-agents` | List of strings | Annotation value | Runtime built-in sub-agents to hide. |
 | `copilot.agents.<name>.working-directory` | String | Annotation value, then runtime default | Session working directory for runtime tools. Empty restores the runtime default; whitespace-only fails. |
 | `copilot.agents.<name>.additional-directories` | List of strings | Annotation value | Extra directories the session may access. |

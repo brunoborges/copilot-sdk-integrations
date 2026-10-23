@@ -118,6 +118,18 @@ public interface CopilotRuntimeConfig {
 
         /** Declarative permission policy used when the agent has no permission handler bean. */
         Permissions permissions();
+
+        /** Runtime tool search, deferring MCP and external tool definitions once the agent has many tools. */
+        ToolSearch toolSearch();
+    }
+
+    /** Tool-search overrides; omitted values retain the annotation or runtime default. */
+    interface ToolSearch {
+        /** Whether tool search is enabled. */
+        Optional<Boolean> enabled();
+
+        /** Total tool count at which MCP and external tools are deferred; at least 1. */
+        OptionalInt deferThreshold();
     }
 
     /** Declarative permission policy; a request is approved when any rule matches. */

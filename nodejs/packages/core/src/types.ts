@@ -19,6 +19,7 @@ import type {
   SessionHooks,
   SystemMessageConfig,
   Tool as SdkTool,
+  ToolSearchConfig,
 } from "@github/copilot-sdk";
 
 // ---------------------------------------------------------------------------
@@ -217,6 +218,11 @@ export interface CopilotAgentDefinition {
   excludedTools?: string[];
   /** When false, no built-in runtime tools are available. Default: false. */
   builtInTools?: boolean;
+  /**
+   * Tool search: defers MCP/external tool definitions behind the built-in `tool_search_tool` once
+   * the tool count reaches `deferThreshold`. Unset: runtime default (enabled, threshold 30).
+   */
+  toolSearch?: ToolSearchConfig;
   /** Default: `permissions.denyAll()`. */
   permissions?: PermissionPolicy;
   hooks?: SessionHooks;

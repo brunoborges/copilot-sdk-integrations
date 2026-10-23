@@ -44,9 +44,16 @@ public final class CopilotConfigs {
                             permissions.allowTools().orElse(List.of()),
                             permissions.allowMcpServers().orElse(List.of()),
                             permissions.allowAgentTools(),
-                            permissions.allowReadOnly())));
+                            permissions.allowReadOnly()),
+                    toolSearch(agent.toolSearch())));
         });
         return new CopilotAgentSettings(agents);
+    }
+
+    private static CopilotAgentSettings.ToolSearch toolSearch(CopilotRuntimeConfig.ToolSearch toolSearch) {
+        Integer threshold = toolSearch.deferThreshold().isPresent() ? toolSearch.deferThreshold().getAsInt() : null;
+        return toolSearch.enabled().isEmpty() && threshold == null ? null
+                : new CopilotAgentSettings.ToolSearch(toolSearch.enabled().orElse(null), threshold);
     }
 
     public static CopilotMcpProperties mcp(CopilotRuntimeConfig config) {

@@ -128,4 +128,23 @@ public sealed class ValidationTests
         AssertFails(Validate(o => o.SessionRetention = TimeSpan.Zero), "Copilot:SessionRetention must be positive");
         Assert.True(Validate(o => o.SessionRetention = TimeSpan.FromDays(1)).Succeeded);
     }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void ToolSearch_DeferThreshold_MustBeAtLeastOne(int threshold)
+    {
+        AssertFails(Validate(o => o.ToolSearch.DeferThreshold = threshold), "Copilot:ToolSearch:DeferThreshold must be at least 1");
+        AssertFails(Validate(o => o.ToolSearch.DeferThreshold = threshold, "triage"), "Copilot:Agents:triage:ToolSearch:DeferThreshold");
+    }
+
+    [Fact]
+    public void ToolSearch_DeferThreshold_CannotBeCombinedWithDisabled()
+    {
+        AssertFails(
+            Validate(o => o.ToolSearch = new() { Enabled = false, DeferThreshold = 10 }),
+            "Copilot:ToolSearch:DeferThreshold has no effect when Copilot:ToolSearch:Enabled is false");
+        Assert.True(Validate(o => o.ToolSearch = new() { Enabled = false }).Succeeded);
+        Assert.True(Validate(o => o.ToolSearch = new() { Enabled = true, DeferThreshold = 1 }).Succeeded);
+    }
 }

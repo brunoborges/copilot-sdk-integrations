@@ -24,6 +24,7 @@ import io.github.brunoborges.copilot.agent.CopilotAgentHooksFor;
 import io.github.brunoborges.copilot.agent.CopilotAgents;
 import io.github.brunoborges.copilot.agent.GlobalCopilotAgentHooks;
 import io.github.brunoborges.copilot.agent.UserMessage;
+import io.github.brunoborges.copilot.agent.internal.CopilotAgentSettings;
 import io.github.brunoborges.copilot.micronaut.CopilotAgentRegistry;
 import io.github.brunoborges.copilot.micronaut.config.CopilotRuntimeConfig;
 import io.micronaut.context.ApplicationContext;
@@ -36,6 +37,8 @@ import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 @Property(name = "micronaut.copilot.agents.helper.model", value = "gpt-test")
 @Property(name = "micronaut.copilot.agents.helper.response-timeout", value = "PT5S")
 @Property(name = "micronaut.copilot.agents.helper.available-tools", value = "custom:*,view")
+@Property(name = "micronaut.copilot.agents.helper.tool-search.enabled", value = "true")
+@Property(name = "micronaut.copilot.agents.helper.tool-search.defer-threshold", value = "20")
 @Property(name = "micronaut.copilot.mcp.servers.docs.type", value = "http")
 @Property(name = "micronaut.copilot.mcp.servers.docs.url", value = "https://example.com/mcp")
 @Property(name = "micronaut.copilot.mcp.servers.docs.headers.X-Api-Key", value = "secret")
@@ -105,6 +108,7 @@ class CopilotAgentIntegrationTest {
         assertEquals("DI means something", helper.ask("c-1", "What is DI?").join());
         assertEquals("Answer briefly.", copilot.sessionConfig("helper").getSystemMessage().getContent());
         assertEquals("gpt-test", copilot.sessionConfig("helper").getModel());
+        assertEquals(20, copilot.sessionConfig("helper").getToolSearch().getDeferThreshold());
         assertTrue(copilot.toolCalls("helper").get(0).succeeded());
     }
 
@@ -140,6 +144,7 @@ class CopilotAgentIntegrationTest {
         assertEquals(Duration.ofSeconds(5), definition.responseTimeout());
         assertEquals(List.of("define"), definition.tools().stream().map(tool -> tool.name()).toList());
         assertEquals(List.of("custom:*", "view"), config.agents().get("helper").availableTools().orElseThrow());
+        assertEquals(new CopilotAgentSettings.ToolSearch(true, 20), definition.governance().toolSearch());
     }
 
     @Test

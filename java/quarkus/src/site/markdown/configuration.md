@@ -126,6 +126,8 @@ into `CopilotAgentsProperties.Agent` records in the `runtime.config` package.
 | `quarkus.copilot.agents.<name>.available-tools` | List of strings | Annotation `availableTools` | SDK tool allow-list (`name`, `builtin:`, `custom:`, `mcp:` patterns). `none` clears the annotation value. Must include `custom:`/`mcp:` entries when the agent declares tools/MCP servers; never widened. |
 | `quarkus.copilot.agents.<name>.excluded-tools` | List of strings | Annotation `excludedTools` | SDK tool deny-list; `none` clears it. Combining it with `available-tools` fails initialization. |
 | `quarkus.copilot.agents.<name>.built-in-tools` | Boolean | Annotation `builtInTools` (`true`) | `false` excludes `builtin:*`; cannot be combined with `available-tools`. |
+| `quarkus.copilot.agents.<name>.tool-search.enabled` | Boolean | Annotation `toolSearch` (runtime default) | Whether MCP and external tool definitions are deferred behind the runtime's tool-search tool. |
+| `quarkus.copilot.agents.<name>.tool-search.defer-threshold` | Integer | Annotation `toolSearchDeferThreshold` (runtime default, 30) | Total tool count at which tools are deferred; at least 1; cannot be combined with `tool-search.enabled=false`. |
 | `quarkus.copilot.agents.<name>.excluded-built-in-agents` | List of strings | Annotation value | Runtime built-in sub-agents to hide; `none` clears it. |
 | `quarkus.copilot.agents.<name>.working-directory` | String | Annotation value, then runtime default | Session working directory for runtime tools. An empty value is unset, so it cannot restore the runtime default over an annotation value. |
 | `quarkus.copilot.agents.<name>.additional-directories` | List of strings | Annotation value | Extra directories the session may access; `none` clears it. |
