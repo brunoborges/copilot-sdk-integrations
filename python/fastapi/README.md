@@ -155,6 +155,10 @@ COPILOT_AGENTS='{"support": {"model": "claude-sonnet-4.5", "timeout": 60}}'
 COPILOT_HOOKS='["app.hooks.AuditHooks"]'
 ```
 
+To have agents keep going after failed tool calls and retry transient errors, add the opt-in
+[`ErrorRecoveryHooks`](../core/README.md#error-recovery):
+`COPILOT_HOOKS='["copilot_agents.ErrorRecoveryHooks"]'`, or pass an instance with `Copilot(hooks=[ErrorRecoveryHooks(...)])`.
+
 Unknown keys in agent overrides are rejected. Secrets are `SecretStr` values and never
 appear in `repr` or in logs. To download the runtime at image build time, run
 `python -m copilot download-runtime`.

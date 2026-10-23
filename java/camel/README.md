@@ -131,6 +131,21 @@ from("direct:advice").to("copilot:agent:advisor");
 Declarative agents are configured on the interface only. Explicit-ID agents are also bound in the
 registry under their name, and a `copilotAgents` bean creates and resumes the rest.
 
+## Error-recovery hooks
+
+`CopilotErrorRecoveryHooks` (from copilot-agent-core) is an opt-in hook based on the Copilot SDK cookbook's
+[error-recovery recipe](https://github.com/github/awesome-copilot/blob/main/cookbook/copilot-sdk/python/error-recovery-hooks.md).
+When a tool fails it adds a note telling the model to keep going, and it stops after `maxConsecutiveFailures`
+consecutive failures of the same tool. Bind it in the registry and reference it with `hookRefs`:
+
+```java
+context.getRegistry().bind("errorRecovery", CopilotErrorRecoveryHooks.builder().build());
+from("direct:ops").to("copilot:agent:ops?hookRefs=errorRecovery");
+```
+
+To apply it to every agent, subclass it with `@GlobalCopilotAgentHooks` on the class and bind the subclass.
+The Java SDK has no error-occurred hook, so transient model or runtime errors are not retried.
+
 ## Component options
 
 | Option | Description |

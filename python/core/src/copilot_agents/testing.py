@@ -238,10 +238,17 @@ class _FakeSession:
             )
             result = await _maybe_await(tool.handler(invocation))
             ok = result.result_type == "success"
-            key = "on_post_tool_use" if ok else "on_post_tool_use_failure"
-            if key in hooks:
+            if ok and "on_post_tool_use" in hooks:
                 await _maybe_await(
-                    hooks[key]({**hook_input, "toolResult": result.text_result_for_llm}, {"session_id": self.session_id})
+                    hooks["on_post_tool_use"](
+                        {**hook_input, "toolResult": result.text_result_for_llm}, {"session_id": self.session_id}
+                    )
+                )
+            elif not ok and "on_post_tool_use_failure" in hooks:
+                await _maybe_await(
+                    hooks["on_post_tool_use_failure"](
+                        {**hook_input, "error": result.text_result_for_llm}, {"session_id": self.session_id}
+                    )
                 )
         else:
             ok = False

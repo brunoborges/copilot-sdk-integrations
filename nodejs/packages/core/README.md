@@ -93,6 +93,32 @@ permissions.allOf(permissions.allowCustomTools(), (request, { context }) => (con
 
 `ask-user` decisions surface as `permission-request` events when streaming, or go to `onPermissionRequest` in `send()`.
 
+## Error recovery
+
+`errorRecoveryHooks()` is an opt-in set of `SessionHooks` based on the Copilot SDK cookbook's
+[error-recovery recipe](https://github.com/github/awesome-copilot/blob/main/cookbook/copilot-sdk/python/error-recovery-hooks.md).
+Pass it as global `hooks` (or an agent's `hooks`); it composes with other hooks.
+
+```ts
+import { createCopilot, errorRecoveryHooks } from "@copilot-sdk-integrations/agent-core";
+
+const copilot = createCopilot({
+  hooks: errorRecoveryHooks({ maxConsecutiveFailures: 3, retryCount: 2, onFailure: (e) => log.debug(e) }),
+});
+```
+
+- `onPostToolUse` / `onPostToolUseFailure` classify the tool output as permission denied, shell error, or
+  generic tool failure by case-insensitive phrase lists (`permissionPhrases`, `shellErrorPhrases`) and add a
+  `[SYSTEM NOTE: ...]` as `additionalContext` telling the model not to stop. The tool result is unchanged.
+- After `maxConsecutiveFailures` (default 3, `0` = unlimited) failures of the same tool in a session the note
+  stops, so the model is not nudged into a loop. A successful call resets the count.
+- `onErrorOccurred` retries transient errors (timeouts, 429, 5xx, connection resets, or errors the SDK marks
+  `recoverable`) `retryCount` times. Other errors get `unrecoverableHandling` (`"skip"` by default, `"abort"`,
+  or `null` for the SDK default).
+
+In NestJS pass it as `CopilotModule.forRoot({ hooks: errorRecoveryHooks() })`; in Fastify as
+`client: { hooks: errorRecoveryHooks() }`.
+
 ## Testing
 
 `@copilot-sdk-integrations/agent-core/testing` replaces the runtime with a scripted, in-process one: no CLI, no network.
