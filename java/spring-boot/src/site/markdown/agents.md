@@ -198,6 +198,31 @@ proxy `equals`, `hashCode`, and `toString` do not contact the SDK.
 
 <a id="enablecopilotagents"></a>
 
+## Message source
+
+Each prompt can carry a provenance label: `user`, `system` (an automated caller such as a
+scheduler), or `agent-<id>` (another agent). For each call, the first match wins:
+
+1. A `CopilotMessageSources.runAs(...)` / `callAs(...)` scope on the calling thread. Inside a tool
+   handler, only a scope the handler opens itself counts; the outer caller's scope is suspended.
+2. `agent-<name>` when an agent's tool handler calls another agent on the handler's thread.
+3. The `copilot.agents.<name>.message-source` property (an empty value clears the annotation value).
+4. `@CopilotAgent(messageSource = "system")` (placeholders are resolved).
+5. Nothing: the runtime applies its default, `user`.
+
+```java
+CopilotMessageSources.runAs(MessageSource.SYSTEM, () -> digest.summarize(report));
+```
+
+Agent ids must match `[A-Za-z0-9][A-Za-z0-9._-]{0,127}`; invalid values fail at startup (or when a
+scope opens). Automatic inference never produces `user`.
+
+> The source is caller-supplied provenance, not an authenticated identity: never authorize from it.
+> It can still influence runtime behavior (auto-approval classification, queueing, steering), and
+> non-user sources persist in session history, so validate identifiers that cross trust boundaries
+> and never put secrets in them. `system` labels an automated caller; it does not create a
+> system-role message.
+
 ## EnableCopilotAgents
 
 Boot applications automatically discover directly annotated interfaces in

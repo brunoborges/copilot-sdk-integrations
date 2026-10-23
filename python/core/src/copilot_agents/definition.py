@@ -9,6 +9,7 @@ from typing import Any, Literal
 from .context import AgentContext
 from .errors import CopilotConfigurationError
 from .hooks import CopilotAgentHooks
+from .message_sources import parse as parse_message_source
 from .policies import PermissionPolicy, as_policy
 from .tokens import CopilotTokenResolver
 from .tools import CopilotTool, as_tool
@@ -66,6 +67,8 @@ class AgentDefinition:
     token_resolver: CopilotTokenResolver | None = None
     timeout: float = 300.0
     expose_tool_errors: bool = False
+    message_source: Any = None
+    """``user``, ``system`` or ``agent-<id>`` label for prompts (provenance, not identity)."""
 
     def __post_init__(self) -> None:
         set_ = object.__setattr__
@@ -85,6 +88,7 @@ class AgentDefinition:
         errors = self.validate()
         if errors:
             raise CopilotConfigurationError("; ".join(map(str, errors)), errors)
+        set_(self, "message_source", parse_message_source(self.message_source))
         set_(self, "permissions", as_policy(self.permissions).bind(self))
 
     def validate(self) -> list[ConfigIssue]:
@@ -127,6 +131,10 @@ class AgentDefinition:
             errors.append(ConfigIssue("duplicate", f"{prefix}: duplicate tool names {duplicates}"))
         if self.timeout <= 0:
             errors.append(ConfigIssue("invalid", f"{prefix}: timeout must be positive"))
+        try:
+            parse_message_source(self.message_source)
+        except ValueError as exc:
+            errors.append(ConfigIssue("invalid", f"{prefix}: message_source: {exc}"))
         return errors
 
     @property

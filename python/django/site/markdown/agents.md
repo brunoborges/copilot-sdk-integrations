@@ -46,6 +46,7 @@ Two agents with the same name are reported as `copilot.E005`.
 | `hooks` | `CopilotAgentHooks` instances, classes, or dotted paths. Global `COPILOT["HOOKS"]` run first. |
 | `token_resolver` | A [token resolver](conversations.md#per-user-tokens) for this agent. |
 | `timeout` | Seconds per call. Default: `RUNTIME["REQUEST_TIMEOUT"]`. |
+| `message_source` | `"user"`, `"system"` or `"agent-<id>"` provenance label for prompts (see [Message source](#message-source)). |
 
 Any attribute can be overridden per environment in `COPILOT["AGENTS"][name]` with upper-case
 keys (for example `"MODEL"`, `"TOOLS"`, `"PERMISSIONS"`).
@@ -79,6 +80,33 @@ the `a`-prefixed methods there.
 | `CopilotInvocationError` | The runtime reported an error, or a typed result could not be parsed. |
 
 All of them derive from `CopilotAgentError`.
+
+## Message source
+
+Each prompt can carry a provenance label: `"user"`, `"system"` (an automated caller such as a
+scheduled task), or `"agent-<id>"` (another agent). For each call, the first match wins:
+
+1. A `message_source(...)` context manager around the call (sync or async). Inside a tool, only a
+   scope the tool opens itself counts; the caller's scope does not flow into tools.
+2. `agent-<name>` when an agent's tool calls another agent.
+3. The `message_source` attribute, or its override `"MESSAGE_SOURCE"`.
+4. Nothing: the runtime applies its default, `"user"`.
+
+```python
+from copilot_django import message_source
+
+with message_source("system"):                # for example in a management command
+    DigestAgent(user=None).ask("Summarize last night's alerts")
+```
+
+Agent ids must match `[A-Za-z0-9][A-Za-z0-9._-]{0,127}`; invalid values fail when the agent is
+built. Automatic inference never produces `"user"`.
+
+> The source is caller-supplied provenance, not an authenticated identity: never authorize from it.
+> It can still influence runtime behavior (auto-approval classification, queueing, steering), and
+> non-user sources persist in session history, so validate identifiers that cross trust boundaries
+> and never put secrets in them. `system` labels an automated caller; it does not create a
+> system-role message.
 
 ## Working directories
 

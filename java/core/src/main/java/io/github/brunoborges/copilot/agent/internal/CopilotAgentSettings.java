@@ -36,6 +36,8 @@ public record CopilotAgentSettings(Map<String, Agent> agents) {
      * @param workingDirectory session working directory; null retains the annotation, empty selects the runtime default
      * @param additionalDirectories directories accessible beyond the working directory; null retains the annotation
      * @param permissions declarative permission policy used when the agent has no permission handler bean
+     * @param messageSource default prompt provenance ({@code user}, {@code system}, or {@code agent-<id>}); null
+     *                      retains the annotation, empty omits the source
      */
     public record Agent(
             String model,
@@ -49,7 +51,8 @@ public record CopilotAgentSettings(Map<String, Agent> agents) {
             Boolean builtInTools,
             String workingDirectory,
             List<String> additionalDirectories,
-            Permissions permissions) {
+            Permissions permissions,
+            String messageSource) {
 
         public Agent {
             Assert.isTrue(model == null || !model.isBlank(), "Agent model must not be blank");
@@ -70,11 +73,22 @@ public record CopilotAgentSettings(Map<String, Agent> agents) {
             Assert.isTrue(workingDirectory == null || workingDirectory.isEmpty() || !workingDirectory.isBlank(),
                     "Agent working-directory must not be blank");
             additionalDirectories = names(additionalDirectories, "additional-directories");
+            if (messageSource != null) {
+                io.github.brunoborges.copilot.agent.CopilotMessageSources.parse(messageSource);
+            }
+        }
+
+        public Agent(String model, String reasoningEffort, Duration responseTimeout, List<String> mcpServers,
+                String provider, List<String> availableTools, List<String> excludedTools,
+                List<String> excludedBuiltInAgents, Boolean builtInTools, String workingDirectory,
+                List<String> additionalDirectories, Permissions permissions) {
+            this(model, reasoningEffort, responseTimeout, mcpServers, provider, availableTools, excludedTools,
+                    excludedBuiltInAgents, builtInTools, workingDirectory, additionalDirectories, permissions, null);
         }
 
         public Agent(String model, String reasoningEffort, Duration responseTimeout, List<String> mcpServers,
                 String provider) {
-            this(model, reasoningEffort, responseTimeout, mcpServers, provider, null, null, null, null, null, null, null);
+            this(model, reasoningEffort, responseTimeout, mcpServers, provider, null, null, null, null, null, null, null, null);
         }
 
         public Agent(String model, String reasoningEffort, Duration responseTimeout) {

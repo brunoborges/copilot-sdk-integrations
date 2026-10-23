@@ -47,6 +47,7 @@ const advisor = defineAgent({
 | `instructions` | System instructions; see below. |
 | `model` | Model id. Default: the runtime's default model. |
 | `reasoningEffort` | `low`, `medium`, `high`, or `xhigh`. |
+| `messageSource` | `user`, `system`, or `agent-<id>` provenance label for prompts (see [Message source](#message-source)). |
 | `provider` | A BYOK [`ProviderConfig`](#byok-providers). |
 | `tools` | [Tools](tools.md) the agent can call. |
 | `mcpServers` | [MCP servers](#mcp-servers), keyed by name. |
@@ -83,6 +84,32 @@ In NestJS, override them per environment with
 In Fastify, override them per environment with
 [`agentOverrides`](#per-agent-configuration-overrides) instead of editing definitions.
 <!-- /only -->
+
+## Message source
+
+Each prompt can carry a provenance label: `user`, `system` (an automated caller such as a cron
+job), or `agent-<id>` (another agent). For each turn, the first match wins:
+
+1. A `withMessageSource(source, fn)` scope around the call (it follows `await`). Inside a tool, only
+   a scope the tool opens itself counts; the caller's scope does not flow into tools.
+2. `agent-<name>` when an agent's tool calls another agent.
+3. The definition's `messageSource` (or a per-agent override).
+4. Nothing: the runtime applies its default, `user`.
+
+```ts
+import { withMessageSource } from "@copilot-sdk-integrations/agent-core";
+
+await withMessageSource("system", () => copilot.agent(digest).send({ prompt: "Summarize last night's alerts" }));
+```
+
+Agent ids must match `[A-Za-z0-9][A-Za-z0-9._-]{0,127}`; `defineAgent` rejects invalid values.
+Automatic inference never produces `user`.
+
+> The source is caller-supplied provenance, not an authenticated identity: never authorize from it.
+> It can still influence runtime behavior (auto-approval classification, queueing, steering), and
+> non-user sources persist in session history, so validate identifiers that cross trust boundaries
+> and never put secrets in them. `system` labels an automated caller; it does not create a
+> system-role message.
 
 ## BYOK providers
 
@@ -283,7 +310,8 @@ The injection token is `getAgentToken("triage")`.
 <!-- only:nestjs -->
 The module option `agents.<name>` overrides decorator values per environment. It accepts
 `description`, `instructions`, `model`, `reasoningEffort`, `provider` (name or inline),
-`mcpServers` (names or inline), `availableTools`, `excludedTools`, and `builtInTools`.
+`mcpServers` (names or inline), `availableTools`, `excludedTools`, `builtInTools`, and
+`messageSource` (`""` clears the decorator value).
 
 ```ts
 CopilotModule.forRoot({

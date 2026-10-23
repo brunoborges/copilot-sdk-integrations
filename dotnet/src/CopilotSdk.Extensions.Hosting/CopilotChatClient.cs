@@ -42,6 +42,7 @@ internal sealed class CopilotChatClient : IChatClient
 
     private static readonly TimeSpan s_abortTimeout = TimeSpan.FromSeconds(10);
     private static readonly AsyncLocal<ActiveSession?> s_activeSession = new();
+    private static readonly AsyncLocal<string?> s_callingAgent = new();
 
     private readonly ICopilotClientProvider _clientProvider;
     private readonly ICopilotSessionGateway _gateway;
@@ -229,6 +230,7 @@ internal sealed class CopilotChatClient : IChatClient
     {
         var request = ChatRequest.Parse(messages, options);
         var agentOptions = _options.Get(AgentName);
+        var source = ResolveMessageSource(agentOptions);
         var callerContext = ExecutionContext.Capture();
         var toolContext = new ToolContextHolder();
 
@@ -267,7 +269,13 @@ internal sealed class CopilotChatClient : IChatClient
                 Log.Created(_logger, AgentName, session.SessionId);
             }
 
-            return new Turn(this, session, request.ToMessageOptions(options), cts, cancellationToken, agentOptions.ResponseTimeout,
+            var message = request.ToMessageOptions(options);
+            if (source is not null)
+            {
+                message.Source = source;
+            }
+
+            return new Turn(this, session, message, cts, cancellationToken, agentOptions.ResponseTimeout,
                 config.Model, toolContext, conversationLock, slot);
         }
         catch (Exception ex)
@@ -336,6 +344,31 @@ internal sealed class CopilotChatClient : IChatClient
         {
             AppendSystemMessage(config, systemText);
         }
+    }
+
+    /// <summary>
+    /// The source for a turn: a <see cref="CopilotMessageSources.BeginScope"/> scope, else <c>agent-&lt;caller&gt;</c>
+    /// when called from a tool of another agent's turn, else the configured <see cref="CopilotOptions.MessageSource"/>.
+    /// Inference never yields <c>user</c>.
+    /// </summary>
+    private static MessageSource? ResolveMessageSource(CopilotOptions agentOptions)
+    {
+        if (CopilotMessageSources.Current is { } scoped)
+        {
+            return scoped;
+        }
+
+        // Tools run in the ExecutionContext captured by Turn.Activate, which records the calling agent.
+        if (s_callingAgent.Value is { } callingAgent)
+        {
+            var caller = callingAgent.Length == 0 ? "default" : callingAgent;
+            if (CopilotMessageSources.IsValidAgentId(caller))
+            {
+                return MessageSource.Agent(caller);
+            }
+        }
+
+        return CopilotMessageSources.Parse(agentOptions.MessageSource);
     }
 
     internal static void AppendSystemMessage(SessionConfigBase config, string text)
@@ -601,6 +634,8 @@ internal sealed class CopilotChatClient : IChatClient
         public void Activate(CopilotChatClient client)
         {
             s_activeSession.Value = Session.Session is { } sdkSession ? new ActiveSession(client, sdkSession) : null;
+            s_callingAgent.Value = client.AgentName;
+            CopilotMessageSources.Suspend();
             var context = ExecutionContext.Capture();
             toolContext.ExecutionContext = context;
             owner._turnContexts.Set(Session.SessionId, new TurnContext(context, owner._services, owner.AgentName, Token));

@@ -179,6 +179,9 @@ micronaut.copilot.agents.micronaut-advisor.excluded-tools=shell
 micronaut.copilot.agents.micronaut-advisor.permissions.allow=read
 micronaut.copilot.agents.micronaut-advisor.mcp-servers=github
 micronaut.copilot.agents.micronaut-advisor.provider=foundry
+# Prompt provenance: user, system, or agent-<id> (none clears @CopilotAgent(messageSource)).
+# Caller-supplied, not an authenticated identity; never authorize from it.
+micronaut.copilot.agents.micronaut-advisor.message-source=system
 
 # MCP servers
 micronaut.copilot.mcp.servers.github.type=http

@@ -54,7 +54,8 @@ public record CopilotRuntimeConfig(
             Optional<Boolean> builtInTools,
             Optional<String> workingDirectory,
             Optional<List<String>> additionalDirectories,
-            Permissions permissions) {
+            Permissions permissions,
+            Optional<String> messageSource) {
     }
 
     public record Permissions(
@@ -162,7 +163,8 @@ public record CopilotRuntimeConfig(
                     new Permissions(list(prefix + ".permissions.allow"), list(prefix + ".permissions.allow-tools"),
                             list(prefix + ".permissions.allow-mcp-servers"),
                             bool(prefix + ".permissions.allow-agent-tools", false),
-                            bool(prefix + ".permissions.allow-read-only", false)));
+                            bool(prefix + ".permissions.allow-read-only", false)),
+                    text(prefix + ".message-source"));
         }
 
         McpServer mcpServer(String prefix) {

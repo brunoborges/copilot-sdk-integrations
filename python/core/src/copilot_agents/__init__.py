@@ -11,6 +11,8 @@ from .errors import (
     CopilotTimeout,
 )
 from .hooks import CopilotAgentHooks
+from . import message_sources
+from .message_sources import current_message_source, message_source
 from .invoker import AgentInvoker, CopilotReply, ToolCall
 from .policies import PermissionPolicy
 from .runtime import CopilotRuntime
@@ -41,7 +43,10 @@ __all__ = [
     "ToolContext",
     "ToolError",
     "current_invocation",
+    "current_message_source",
     "derive_session_id",
+    "message_source",
+    "message_sources",
     "policies",
     "tool",
 ]

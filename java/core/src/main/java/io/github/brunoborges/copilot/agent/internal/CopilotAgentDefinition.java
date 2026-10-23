@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 
 import com.github.copilot.SystemMessageMode;
 import com.github.copilot.rpc.McpServerConfig;
+import com.github.copilot.rpc.MessageSource;
 import com.github.copilot.rpc.PermissionHandler;
 import com.github.copilot.rpc.PermissionRequestResult;
 import com.github.copilot.rpc.ProviderConfig;
@@ -19,6 +20,7 @@ import com.github.copilot.rpc.ToolDefinition;
 import io.github.brunoborges.copilot.agent.CopilotAgent;
 import io.github.brunoborges.copilot.agent.CopilotAgentCustomizer;
 import io.github.brunoborges.copilot.agent.CopilotAgentListener;
+import io.github.brunoborges.copilot.agent.CopilotMessageSources;
 import io.github.brunoborges.copilot.agent.CopilotTokenResolver;
 
 public record CopilotAgentDefinition(
@@ -26,7 +28,7 @@ public record CopilotAgentDefinition(
         SystemMessageConfig systemMessage, PermissionHandler permissions, List<ToolDefinition> tools,
         Map<String, McpServerConfig> mcpServers, ProviderConfig provider,
         List<CopilotAgentListener> listeners, List<CopilotAgentCustomizer> customizers,
-        CopilotAgentGovernance governance, CopilotTokenResolver tokenResolver) {
+        CopilotAgentGovernance governance, CopilotTokenResolver tokenResolver, MessageSource messageSource) {
 
     private static final Logger log = Logger.getLogger(CopilotAgentDefinition.class.getName());
     private static final PermissionHandler DENY = (request, invocation) -> {
@@ -117,7 +119,19 @@ public record CopilotAgentDefinition(
                 beans(name, "listenerRefs", annotation.listenerRefs(), CopilotAgentListener.class, beans, environment),
                 beans(name, "customizerRefs", annotation.customizerRefs(), CopilotAgentCustomizer.class, beans, environment),
                 CopilotAgentGovernance.create(name, type, annotation, settings, tools, mcpServers, beans, environment),
-                tokenResolver(name, annotation, beans, environment));
+                tokenResolver(name, annotation, beans, environment),
+                messageSource(name, annotation, settings, environment));
+    }
+
+    private static MessageSource messageSource(String agent, CopilotAgent annotation, CopilotAgentSettings.Agent settings,
+            PropertyResolver environment) {
+        String value = settings != null && settings.messageSource() != null
+                ? settings.messageSource() : resolve(annotation.messageSource(), environment);
+        try {
+            return CopilotMessageSources.parse(value);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Copilot agent " + agent + ": " + ex.getMessage(), ex);
+        }
     }
 
     private static CopilotTokenResolver tokenResolver(String agent, CopilotAgent annotation, BeanLookup beans,

@@ -30,6 +30,7 @@ const agentOverrides = z.strictObject({
   availableTools: stringList.optional(),
   excludedTools: stringList.optional(),
   builtInTools: z.boolean().optional(),
+  messageSource: z.string().optional(),
 });
 
 const optionsSchema = z

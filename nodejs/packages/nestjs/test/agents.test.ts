@@ -188,6 +188,19 @@ describe("declarative agents", () => {
     await ref.get(SupportAgent).answer("c1", "hi");
     expect(ref.get(CopilotTestRuntime).createdSessions[0].model).toBe("gpt-test");
   });
+
+  it("labels prompts with the configured message source", async () => {
+    const ref = await compile(
+      [
+        CopilotTestingModule.forRoot((rt) => rt.onPrompt(/.*/).reply("ok"), { agents: { support: { messageSource: "system" } } }),
+        CopilotModule.forFeature([SupportAgent]),
+      ],
+      [OrdersService, OrdersTools],
+    );
+    await ref.get(SupportAgent).answer("c1", "hi");
+    expect(ref.get(CopilotTestRuntime).receivedPrompts.map((p) => p.source)).toEqual(["system"]);
+    expect(ref.get(CopilotAgents).definition(SupportAgent).messageSource).toBe("system");
+  });
 });
 
 describe("tools and permissions", () => {
