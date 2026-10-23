@@ -190,6 +190,37 @@ describe("declarative agents", () => {
   });
 });
 
+describe("toolSearch", () => {
+  @CopilotAgent({ name: "searcher", toolSearch: { deferThreshold: 10 } })
+  abstract class SearcherAgent {
+    @UserMessage()
+    ask(@Message() q: string): Promise<string> {
+      return implementedByCopilot();
+    }
+  }
+
+  it("applies the decorator value and lets configuration overrides win", async () => {
+    const plain = await compile([CopilotTestingModule.forRoot((rt) => rt.onPrompt(/.*/).reply("ok")), CopilotModule.forFeature([SearcherAgent])]);
+    await plain.get(SearcherAgent).ask("hi");
+    expect(plain.get(CopilotTestRuntime).createdSessions[0].toolSearch).toEqual({ deferThreshold: 10 });
+
+    const overridden = await compile([
+      CopilotTestingModule.forRoot((rt) => rt.onPrompt(/.*/).reply("ok"), { agents: { searcher: { toolSearch: { enabled: false } } } }),
+      CopilotModule.forFeature([SearcherAgent]),
+    ]);
+    await overridden.get(SearcherAgent).ask("hi");
+    expect(overridden.get(CopilotTestRuntime).createdSessions[0].toolSearch).toEqual({ enabled: false });
+  });
+
+  it("rejects invalid toolSearch overrides at bootstrap", async () => {
+    for (const toolSearch of [{ deferThreshold: 0 }, { enabled: false, deferThreshold: 5 }, { extra: true }]) {
+      await expect(
+        compile([CopilotModule.forRoot({ agents: { searcher: { toolSearch } } } as never), CopilotModule.forFeature([SearcherAgent])]),
+      ).rejects.toThrow(/agents\.searcher\.toolSearch/);
+    }
+  });
+});
+
 describe("tools and permissions", () => {
   @CopilotAgent({ name: "locked", tools: [OrdersTools] })
   abstract class LockedAgent {

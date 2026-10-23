@@ -364,6 +364,7 @@ async function executeTurn(
   if (def.mcpServers !== undefined) config.mcpServers = await raceAbort(resolveMcpServers(def.mcpServers, context), signal);
   if (def.customAgents !== undefined) config.customAgents = def.customAgents;
   if (def.infiniteSessions !== undefined) config.infiniteSessions = { enabled: def.infiniteSessions };
+  if (def.toolSearch !== undefined) config.toolSearch = { ...def.toolSearch };
   const hooks = bindHooks(composeHooks(runtime.options.hooks, def.hooks));
   if (hooks !== undefined) config.hooks = hooks;
   if (req.streaming) config.streaming = true;

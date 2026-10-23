@@ -141,6 +141,41 @@ describe("send()", () => {
     await expect(agent.send({ prompt: "x" })).rejects.toThrow(/MCP server "remote": resolving headers failed: no token/);
   });
 
+  it("leaves toolSearch unset by default and applies a fresh copy when configured", async () => {
+    const { fake, copilot } = setup();
+    await copilot.agent(bot).send({ prompt: "x" });
+    expect(fake.created[0]!).not.toHaveProperty("toolSearch");
+    const toolSearch = { enabled: true, deferThreshold: 10 };
+    const agent = copilot.agent({ name: "ts", toolSearch });
+    await agent.send({ prompt: "1", conversationId: "c" });
+    await agent.send({ prompt: "2", conversationId: "c" });
+    expect(fake.created[1]!.toolSearch).toEqual({ enabled: true, deferThreshold: 10 });
+    expect(fake.created[1]!.toolSearch).not.toBe(toolSearch);
+    expect(fake.resumedConfigs[0]!.config.toolSearch).toEqual({ enabled: true, deferThreshold: 10 });
+    expect(fake.resumedConfigs[0]!.config.toolSearch).not.toBe(fake.created[1]!.toolSearch);
+  });
+
+  it("rejects invalid toolSearch settings", () => {
+    const { copilot } = setup();
+    const invalid: unknown[] = [
+      null,
+      "on",
+      { enabled: "yes" },
+      { deferThreshold: 0 },
+      { deferThreshold: 2.5 },
+      { deferThreshold: "10" },
+      { enabled: false, deferThreshold: 10 },
+    ];
+    for (const toolSearch of invalid) {
+      expect(() => copilot.agent({ name: "bad", toolSearch } as CopilotAgentDefinition)).toThrow(CopilotConfigurationError);
+    }
+    expect(() => copilot.agent({ name: "bad", toolSearch: { enabled: false, deferThreshold: 10 } })).toThrow(
+      /deferThreshold has no effect when toolSearch.enabled is false/,
+    );
+    expect(() => copilot.agent({ name: "ok", toolSearch: { enabled: false } })).not.toThrow();
+    expect(() => copilot.agent({ name: "ok2", toolSearch: { deferThreshold: 1 } })).not.toThrow();
+  });
+
   it("keeps explicit availableTools and enables built-ins when asked", async () => {
     const { fake, copilot } = setup();
     await copilot.agent({ name: "a1", availableTools: ["custom:*", "builtin:view"], builtInTools: true }).send({ prompt: "x" });

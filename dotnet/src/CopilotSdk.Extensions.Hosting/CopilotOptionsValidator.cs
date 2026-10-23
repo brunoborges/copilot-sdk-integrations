@@ -56,6 +56,20 @@ internal sealed class CopilotOptionsValidator : IValidateOptions<CopilotOptions>
             failures.Add($"{prefix}{nameof(CopilotOptions.Provider)}:{nameof(provider.BaseUrl)} is required when {prefix}{nameof(CopilotOptions.Provider)} is set.");
         }
 
+        if (options.ToolSearch is { } toolSearch)
+        {
+            var toolSearchKey = prefix + nameof(CopilotOptions.ToolSearch);
+            if (toolSearch.DeferThreshold is < 1)
+            {
+                failures.Add($"{toolSearchKey}:{nameof(CopilotToolSearchOptions.DeferThreshold)} must be at least 1 when set.");
+            }
+
+            if (toolSearch.Enabled == false && toolSearch.DeferThreshold is not null)
+            {
+                failures.Add($"{toolSearchKey}:{nameof(CopilotToolSearchOptions.DeferThreshold)} has no effect when {toolSearchKey}:{nameof(CopilotToolSearchOptions.Enabled)} is false. Remove one of them.");
+            }
+        }
+
         foreach (var (serverName, server) in options.McpServers)
         {
             ValidateMcpServer($"{prefix}{nameof(CopilotOptions.McpServers)}:{serverName}", server, failures);

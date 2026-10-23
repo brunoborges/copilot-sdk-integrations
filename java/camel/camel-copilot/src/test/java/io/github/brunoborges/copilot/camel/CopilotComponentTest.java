@@ -90,6 +90,28 @@ class CopilotComponentTest {
         assertThat(config.getModel()).isEqualTo("gpt-5");
         assertThat(config.getSystemMessage().getContent()).isEqualTo("Answer briefly.");
         assertThat(config.getExcludedTools()).as("endpoint agents run without built-in tools by default").isNotEmpty();
+        assertThat(config.getToolSearch()).isNull();
+    }
+
+    @Test
+    void toolSearchOptionsReachTheSession() throws Exception {
+        start(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:ask").to("copilot:agent:support?toolSearch=true&toolSearchDeferThreshold=20");
+            }
+        });
+        runtime.agent("support").replies("ok");
+
+        Exchange reply = template.request("direct:ask", exchange -> {
+            exchange.getMessage().setBody("hi");
+            exchange.getMessage().setHeader(CopilotConstants.CONVERSATION_ID, "c-1");
+        });
+
+        assertThat(reply.getException()).isNull();
+        var search = runtime.sessionConfig("support").getToolSearch();
+        assertThat(search.getEnabled()).isTrue();
+        assertThat(search.getDeferThreshold()).isEqualTo(20);
     }
 
     @Test

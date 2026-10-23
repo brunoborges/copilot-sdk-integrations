@@ -173,6 +173,24 @@ def test_session_options_reflect_definition(fake, runtime):
     assert options["system_message"]["content"] == "Be brief."
 
 
+def test_tool_search_not_passed_by_default(fake, runtime):
+    fake.agent("support").replies("ok")
+    make(runtime).invoke("x")
+    assert "tool_search" not in fake.last_session_options("support")
+
+
+def test_tool_search_passed_to_create_and_resume(fake, runtime):
+    fake.agent("support").replies("one", "two")
+    invoker = make(runtime, tool_search={"enabled": True, "defer_threshold": 5})
+    invoker.invoke("a", conversation_id="c1")
+    created = fake.last_session_options("support")["tool_search"]
+    invoker.invoke("b", conversation_id="c1")
+    resumed = fake.last_session_options("support")["tool_search"]
+    assert fake.resumed == [invoker.session_id("c1")]
+    assert created == resumed == {"enabled": True, "defer_threshold": 5}
+    assert created is not resumed and created is not invoker.definition.tool_search
+
+
 def test_sync_invoke_rejects_running_loop(fake, runtime):
     async def main():
         make(runtime).invoke("x")

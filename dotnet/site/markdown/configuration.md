@@ -39,6 +39,7 @@ Configuration overrides code, so operators can change a model or a timeout witho
 
     "McpServers": { "docs": { "Type": "http", "Url": "https://docs.internal/mcp", "Tools": [ "search" ] } },
     "Provider": null,                    // BYOK, the SDK's ProviderConfig shape
+    "ToolSearch": { "Enabled": null, "DeferThreshold": null }, // null = runtime default (enabled, 30)
 
     "Agents": {
       "triage": { "Model": "gpt-5.4-mini", "Instructions": "You triage support tickets." }
@@ -68,6 +69,8 @@ Environment variables follow the usual .NET convention, for example
 | `ConnectionName` | `copilot` | The connection string (`ConnectionStrings:{name}`) to read. |
 | `McpServers` | empty | MCP servers keyed by name. See [MCP servers](mcp-servers.md). |
 | `Provider` | none | Bring-your-own-key model provider, the SDK's `ProviderConfig`. See [BYOK providers](#byok-providers). |
+| `ToolSearch:Enabled` | runtime default (enabled) | Enables or disables tool search, which defers MCP and external tool definitions behind a built-in `tool_search_tool` once the agent has many tools. Useful for large MCP servers such as GitHub or Playwright. |
+| `ToolSearch:DeferThreshold` | runtime default (`30`) | Tool count above which MCP and external tools are deferred. Must be at least 1, and cannot be set when `ToolSearch:Enabled` is `false`. |
 | `GitHubTokenProvider` | none | Code only. Supplies a per-user GitHub token at the start of each turn. See [Runtime and identity](identity.md#per-user-identity). |
 | `OnApproval` | none | Code only. Decides calls to `[RequiresApproval]` tools. See [Approvals and permissions](permissions.md). |
 | `ConfigureClient(...)` | — | Code only. Configures the SDK's `CopilotClientOptions`. *Client-level.* |
@@ -161,6 +164,7 @@ key to fix:
 - `GitHubToken` cannot be combined with `Endpoint` (a shared runtime manages its own sign-in);
 - `InProcess` cannot be combined with `Endpoint`;
 - `Provider` requires `BaseUrl`;
+- `ToolSearch:DeferThreshold` must be at least 1, and cannot be combined with `ToolSearch:Enabled` set to `false`;
 - an HTTP MCP server needs an absolute http(s) `Url`, a stdio server needs a `Command`, and
   unknown `Type` values are rejected;
 - `ResponseTimeout`, `MaxConcurrentTurns`, `SessionRetention`, and MCP `Timeout` must be positive.

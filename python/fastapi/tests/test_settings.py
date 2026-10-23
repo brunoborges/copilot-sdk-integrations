@@ -33,3 +33,13 @@ def test_uri_requires_url():
 def test_unknown_override_keys_are_rejected():
     with pytest.raises(ValidationError):
         CopilotSettings(agents={"support": {"modle": "gpt-5"}})
+
+
+def test_tool_search_override(monkeypatch):
+    monkeypatch.setenv("COPILOT_AGENTS", '{"support": {"tool_search": {"defer_threshold": "10"}}}')
+    assert CopilotSettings().agent_overrides("support") == {"tool_search": {"defer_threshold": 10}}
+    settings = CopilotSettings(agents={"support": {"tool_search": {"enabled": False, "defer_threshold": None}}})
+    assert settings.agent_overrides("support") == {"tool_search": {"enabled": False}}
+    for bad in ({"threshold": 5}, {"defer_threshold": 0}, {"defer_threshold": True}, {"enabled": "maybe"}):
+        with pytest.raises(ValidationError):
+            CopilotSettings(agents={"support": {"tool_search": bad}})
