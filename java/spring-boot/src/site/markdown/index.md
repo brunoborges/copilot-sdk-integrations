@@ -16,7 +16,7 @@ optional observations and streaming.
 | Java | 21 |
 | Spring Boot | 4.1.1 |
 | Copilot Java SDK | 1.0.24 |
-| Integration | `io.github.brunoborges`, `0.1.0-SNAPSHOT` |
+| Integration | `com.microsoft`, `0.1.0-SNAPSHOT` |
 
 <a id="choose-your-integration"></a>
 

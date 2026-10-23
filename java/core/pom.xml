@@ -3,8 +3,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.github.brunoborges</groupId>
-    <artifactId>copilot-agent-core</artifactId>
+    <groupId>com.microsoft</groupId>
+    <artifactId>copilot-core</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <name>Copilot Agent Core</name>
     <description>Framework-neutral declarative agent API and engine for the GitHub Copilot SDK for Java, shared by the

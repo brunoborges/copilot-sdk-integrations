@@ -111,7 +111,7 @@ retain their SDK settings and are the application's validation responsibility.
 `@Named` beans are never removed by ArC as unused.
 
 When building native sessions, inject the runtime configuration mapping and
-convert it with `io.github.brunoborges.copilot.quarkus.runtime.config.CopilotConfigs`:
+convert it with `com.microsoft.copilot.integrations.quarkus.runtime.config.CopilotConfigs`:
 
 ```java
 @Inject

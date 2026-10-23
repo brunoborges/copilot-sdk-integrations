@@ -1,14 +1,14 @@
-# copilot-agent-core
+# copilot-core
 
 Framework-neutral agent API and engine shared by the Java integrations in this
 repository. Applications do not depend on it directly; it arrives transitively through
 the [Spring Boot starter](../spring-boot/), the [Quarkus extension](../quarkus/), or the
 [Micronaut integration](../micronaut/).
 
-- `io.github.brunoborges.copilot.agent`: the public API (`@CopilotAgent`, `CopilotAgents`,
+- `com.microsoft.copilot.integrations.core`: the public API (`@CopilotAgent`, `CopilotAgents`,
   `AgentConversation`, hooks, telemetry, and related types), plus `CopilotSessionStore` for
   listing, reading, and deleting the agents' persisted sessions.
-- `io.github.brunoborges.copilot.agent.internal`: the shared engine (agent definitions,
+- `com.microsoft.copilot.integrations.core.internal`: the shared engine (agent definitions,
   proxies, invocation, governance, tool/MCP/provider binding). Frameworks plug in through
   `BindingContext` and `BeanLookup`. `DefaultCopilotSessionStore` and
   `CopilotSessionCleaner` implement the session store and the opt-in age-based cleanup

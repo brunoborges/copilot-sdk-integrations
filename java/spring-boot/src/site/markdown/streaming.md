@@ -6,15 +6,15 @@ title: Reactive streaming
 
 # Reactive streaming
 
-Add `io.github.brunoborges:copilot-spring-boot-reactor:0.1.0-SNAPSHOT`.
+Add `com.microsoft:copilot-spring-boot-reactor:0.1.0-SNAPSHOT`.
 The basic starter does not include Reactor or a web framework.
 
 ```java
 import reactor.core.publisher.Flux;
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.CopilotAgentEvent;
-import io.github.brunoborges.copilot.agent.UserMessage;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.CopilotAgentEvent;
+import com.microsoft.copilot.integrations.core.UserMessage;
 
 @CopilotAgent(name = "streaming-advisor", instructions = "Explain Java concepts.")
 public interface StreamingAdvisor {
@@ -51,7 +51,7 @@ SSE endpoint, authorization policy, or global Reactor hooks.
 ## Buffering and cancellation
 
 Observed SDK events are serialized into a bounded per-subscription queue.
-On overflow, `io.github.brunoborges.copilot.reactor.CopilotAgentStreamOverflowException`
+On overflow, `com.microsoft.copilot.integrations.springboot.reactor.CopilotAgentStreamOverflowException`
 is delivered after previously buffered events drain. The exception extends
 `IllegalStateException`; its message includes the configured capacity.
 

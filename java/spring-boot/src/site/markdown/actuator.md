@@ -25,9 +25,9 @@ actuator classes are present, `copilot.enabled` is not `false`, and a
 
 | Contribution | Type | Enabled by default | Disable or tune with |
 | --- | --- | --- | --- |
-| `copilot` health indicator | `io.github.brunoborges.copilot.actuate.CopilotHealthIndicator` | Yes | `management.health.copilot.enabled=false`, [`copilot.health.*`](configuration.html#actuator-properties) |
-| `copilot` endpoint | `io.github.brunoborges.copilot.actuate.CopilotEndpoint` | Only when exposed | `management.endpoints.web.exposure.include`, `management.endpoint.copilot.access`, [`copilot.endpoint.*`](configuration.html#actuator-properties) |
-| `copilot` info section | `io.github.brunoborges.copilot.actuate.CopilotInfoContributor` | Yes | `management.info.copilot.enabled=false` |
+| `copilot` health indicator | `com.microsoft.copilot.integrations.springboot.actuate.CopilotHealthIndicator` | Yes | `management.health.copilot.enabled=false`, [`copilot.health.*`](configuration.html#actuator-properties) |
+| `copilot` endpoint | `com.microsoft.copilot.integrations.springboot.actuate.CopilotEndpoint` | Only when exposed | `management.endpoints.web.exposure.include`, `management.endpoint.copilot.access`, [`copilot.endpoint.*`](configuration.html#actuator-properties) |
+| `copilot` info section | `com.microsoft.copilot.integrations.springboot.actuate.CopilotInfoContributor` | Yes | `management.info.copilot.enabled=false` |
 
 Define a bean named `copilotHealthIndicator`, or a bean of type
 `CopilotEndpoint` or `CopilotInfoContributor`, to replace a contribution.

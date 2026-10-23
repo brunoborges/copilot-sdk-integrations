@@ -1,6 +1,6 @@
 # Copilot for Apache Camel
 
-`camel-copilot` is an [Apache Camel](https://camel.apache.org/) component that runs GitHub Copilot
+`copilot-camel` is an [Apache Camel](https://camel.apache.org/) component that runs GitHub Copilot
 agents from routes and exposes routes to agents as tools, permission handlers, and event sinks.
 It is built on the [Copilot SDK for Java](https://github.com/github/copilot-sdk) and the shared
 engine in [`java/core`](../core/), so agents behave exactly like the
@@ -23,8 +23,8 @@ GitHub credentials).
 
 ```xml
 <dependency>
-  <groupId>io.github.brunoborges</groupId>
-  <artifactId>camel-copilot</artifactId>
+  <groupId>com.microsoft</groupId>
+  <artifactId>copilot-camel</artifactId>
   <version>0.1.0-SNAPSHOT</version>
 </dependency>
 ```
@@ -133,7 +133,7 @@ registry under their name, and a `copilotAgents` bean creates and resumes the re
 
 ## Error-recovery hooks
 
-`CopilotErrorRecoveryHooks` (from copilot-agent-core) is an opt-in hook based on the Copilot SDK cookbook's
+`CopilotErrorRecoveryHooks` (from copilot-core) is an opt-in hook based on the Copilot SDK cookbook's
 [error-recovery recipe](https://github.com/github/awesome-copilot/blob/main/cookbook/copilot-sdk/python/error-recovery-hooks.md).
 When a tool fails it adds a note telling the model to keep going, and it stops after `maxConsecutiveFailures`
 consecutive failures of the same tool. Bind it in the registry and reference it with `hookRefs`:
@@ -192,7 +192,7 @@ starts the client, and skips sessions with a turn in progress.
 
 ## Testing
 
-`camel-copilot-test` provides a scripted in-memory runtime, with no CLI or network:
+`copilot-camel-test` provides a scripted in-memory runtime, with no CLI or network:
 
 ```java
 CopilotTestRuntime runtime = new CopilotTestRuntime();

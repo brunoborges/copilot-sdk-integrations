@@ -28,7 +28,7 @@ headless CLI server.
 
 ```xml
 <dependency>
-    <groupId>io.github.brunoborges</groupId>
+    <groupId>com.microsoft</groupId>
     <artifactId>copilot-spring-boot-test</artifactId>
     <version>${copilot-spring-boot.version}</version>
     <scope>test</scope>
@@ -269,7 +269,7 @@ control.
 
 ## Connection details
 
-`io.github.brunoborges.copilot.autoconfigure.CopilotConnectionDetails` follows
+`com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotConnectionDetails` follows
 Spring Boot's `ConnectionDetails` pattern. It has one method, `cliUrl()`, plus an
 optional `tcpConnectionToken()`.
 

@@ -26,7 +26,7 @@ from a `CopilotTokenResolver`.
 
 ## Token resolvers
 
-`io.github.brunoborges.copilot.agent.CopilotTokenResolver` is a functional
+`com.microsoft.copilot.integrations.core.CopilotTokenResolver` is a functional
 interface:
 
 ```java
@@ -107,7 +107,7 @@ interface Reviewer { /* ... */ }
 
 With `spring-security-oauth2-client` on the classpath and a registration ID
 configured, an `OAuth2CopilotTokenResolver` bean
-(`io.github.brunoborges.copilot.security`) uses the current user's authorized
+(`com.microsoft.copilot.integrations.springboot.security`) uses the current user's authorized
 client access token:
 
 ```yaml

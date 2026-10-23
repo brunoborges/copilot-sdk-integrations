@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>io.github.brunoborges</groupId>
+        <groupId>com.microsoft</groupId>
         <artifactId>copilot-micronaut-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
     </parent>
@@ -14,7 +14,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.github.brunoborges</groupId>
+            <groupId>com.microsoft</groupId>
             <artifactId>copilot-micronaut</artifactId>
         </dependency>
         <dependency>
@@ -33,7 +33,7 @@
         </dependency>
 
         <dependency>
-            <groupId>io.github.brunoborges</groupId>
+            <groupId>com.microsoft</groupId>
             <artifactId>copilot-micronaut-processor</artifactId>
             <scope>test</scope>
         </dependency>
@@ -62,7 +62,7 @@
                             <version>${micronaut.core.version}</version>
                         </path>
                         <path>
-                            <groupId>io.github.brunoborges</groupId>
+                            <groupId>com.microsoft</groupId>
                             <artifactId>copilot-micronaut-processor</artifactId>
                             <version>${project.version}</version>
                         </path>

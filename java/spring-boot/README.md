@@ -50,7 +50,7 @@ starter never approves tool use implicitly. No artifacts have been published yet
 | Module | Purpose |
 | --- | --- |
 | `copilot-spring-boot-starter` | Dependency-only starter: SDK, auto-configuration, and Spring Boot starter. |
-| `copilot-agent-core` | Shared with the Quarkus extension (built from [`../core`](../core)): the `@CopilotAgent` API and the framework-neutral agent engine. |
+| `copilot-core` | Shared with the Quarkus extension (built from [`../core`](../core)): the `@CopilotAgent` API and the framework-neutral agent engine. |
 | `copilot-spring-boot-autoconfigure` | Client configuration, Spring agent discovery and bean binding, optional observations, and Actuator support. |
 | `copilot-spring-boot-reactor` | Optional Reactor return-type adapter for streaming agent methods. |
 | `copilot-spring-boot-test` | Test support: scripted in-memory `CopilotClient`, `@AutoConfigureCopilotTestRuntime`, and Testcontainers `CopilotContainer` with `@ServiceConnection`. |
@@ -69,7 +69,7 @@ Add the starter to a Java 21 / Spring Boot 4.1.1 application:
 
 ```xml
 <dependency>
-    <groupId>io.github.brunoborges</groupId>
+    <groupId>com.microsoft</groupId>
     <artifactId>copilot-spring-boot-starter</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 </dependency>
@@ -88,9 +88,9 @@ copilot:
 Declare an agent interface in your application's base package (or a subpackage):
 
 ```java
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.UserMessage;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.UserMessage;
 import java.util.concurrent.CompletableFuture;
 
 @CopilotAgent(name = "spring-advisor",

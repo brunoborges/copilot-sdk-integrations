@@ -26,7 +26,7 @@ from a `CopilotTokenResolver`.
 
 ## Token resolvers
 
-`io.github.brunoborges.copilot.agent.CopilotTokenResolver` is a functional
+`com.microsoft.copilot.integrations.core.CopilotTokenResolver` is a functional
 interface. Implement it as a CDI bean:
 
 ```java
@@ -113,7 +113,7 @@ interface Reviewer { /* ... */ }
 ## Quarkus Security identity
 
 The extension includes
-`io.github.brunoborges.copilot.quarkus.runtime.security.IdentityCopilotTokenResolver`,
+`com.microsoft.copilot.integrations.quarkus.runtime.security.IdentityCopilotTokenResolver`,
 which uses the bearer access token of the current Quarkus `SecurityIdentity`.
 It replaces the Spring starter's OAuth2 client resolver. Enable it with a
 build-time switch; the build fails if no Quarkus Security extension is present:

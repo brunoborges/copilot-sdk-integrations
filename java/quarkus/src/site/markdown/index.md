@@ -16,9 +16,9 @@ lifecycle, tool binding, and optional health, metrics, and streaming.
 | Java | 21 |
 | Quarkus | 3.40.1 |
 | Copilot Java SDK | 1.0.24 |
-| Extension | `io.github.brunoborges:copilot-quarkus`, `0.1.0-SNAPSHOT` |
+| Extension | `com.microsoft:copilot-quarkus`, `0.1.0-SNAPSHOT` |
 
-The agent API (`io.github.brunoborges.copilot.agent`) is the same one the
+The agent API (`com.microsoft.copilot.integrations.core`) is the same one the
 [Spring Boot starter](../spring-boot/) uses, so agent interfaces, hooks, listeners,
 and customizers move between the two frameworks unchanged. See
 [Coming from Spring Boot](spring-boot.html) for the differences in wiring.

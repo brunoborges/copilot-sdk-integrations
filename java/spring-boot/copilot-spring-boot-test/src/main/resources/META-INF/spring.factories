@@ -1,4 +1,4 @@
 org.springframework.test.context.TestExecutionListener=\
-io.github.brunoborges.copilot.test.CopilotTestRuntimeTestExecutionListener
+com.microsoft.copilot.integrations.springboot.test.CopilotTestRuntimeTestExecutionListener
 org.springframework.boot.autoconfigure.service.connection.ConnectionDetailsFactory=\
-io.github.brunoborges.copilot.test.testcontainers.CopilotContainerConnectionDetailsFactory
+com.microsoft.copilot.integrations.springboot.test.testcontainers.CopilotContainerConnectionDetailsFactory

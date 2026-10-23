@@ -4,7 +4,7 @@
       xsi:schemaLocation="http://maven.apache.org/SITE/2.1.0 https://maven.apache.org/xsd/site-2.1.0.xsd"
       name="Copilot Agents for Spring Boot" combine.self="override">
     <skin>
-        <groupId>io.github.brunoborges</groupId>
+        <groupId>com.microsoft</groupId>
         <artifactId>copilot-spring-boot-site-skin</artifactId>
         <version>${project.version}</version>
     </skin>

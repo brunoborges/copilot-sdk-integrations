@@ -7,7 +7,7 @@ targeting **Quarkus 3.40**, **Java 21**, and Copilot SDK **1.0.24**.
 ([chapter sources](src/site/markdown/)).
 
 It offers the same programming model as the [Spring Boot starter](../spring-boot/):
-the `io.github.brunoborges.copilot.agent` API (`@CopilotAgent`, `@ConversationId`,
+the `com.microsoft.copilot.integrations.core` API (`@CopilotAgent`, `@ConversationId`,
 `@UserMessage`, `CopilotAgents`, hooks, listeners, customizers, token resolvers) is
 identical, so agent interfaces can move between the two frameworks unchanged. Wiring
 is done at build time by ArC (Quarkus CDI) instead of Spring auto-configuration.
@@ -54,7 +54,7 @@ been published yet.
 
 | Module | Artifact | Purpose |
 | --- | --- | --- |
-| `../core` | `copilot-agent-core` | Shared with the Spring Boot starter: the `@CopilotAgent` API and the framework-neutral agent engine. |
+| `../core` | `copilot-core` | Shared with the Spring Boot starter: the `@CopilotAgent` API and the framework-neutral agent engine. |
 | `runtime` | `copilot-quarkus` | The extension: configuration, CDI bean binding, and optional integrations. |
 | `deployment` | `copilot-quarkus-deployment` | Build steps: agent discovery and validation, synthetic agent beans, hook catalog, endpoint routes. |
 | `test` | `copilot-quarkus-test` | Scripted `CopilotTestRuntime` and the `CopilotContainerTestResource` for Testcontainers. |
@@ -73,7 +73,7 @@ Add the extension to a Quarkus 3.40 application:
 
 ```xml
 <dependency>
-    <groupId>io.github.brunoborges</groupId>
+    <groupId>com.microsoft</groupId>
     <artifactId>copilot-quarkus</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 </dependency>
@@ -221,7 +221,7 @@ Add the test module:
 
 ```xml
 <dependency>
-    <groupId>io.github.brunoborges</groupId>
+    <groupId>com.microsoft</groupId>
     <artifactId>copilot-quarkus-test</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <scope>test</scope>

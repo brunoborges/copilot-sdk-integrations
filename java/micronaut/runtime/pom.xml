@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>io.github.brunoborges</groupId>
+        <groupId>com.microsoft</groupId>
         <artifactId>copilot-micronaut-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
     </parent>
@@ -15,8 +15,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.github.brunoborges</groupId>
-            <artifactId>copilot-agent-core</artifactId>
+            <groupId>com.microsoft</groupId>
+            <artifactId>copilot-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github</groupId>

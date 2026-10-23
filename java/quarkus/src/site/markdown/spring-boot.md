@@ -3,7 +3,7 @@
 # Coming from Spring Boot
 
 The Quarkus extension and the [Spring Boot starter](../spring-boot/) share the
-same agent API in `io.github.brunoborges.copilot.agent`. `@CopilotAgent`,
+same agent API in `com.microsoft.copilot.integrations.core`. `@CopilotAgent`,
 `@ConversationId`, `@UserMessage`, `@P`, `CopilotAgents`, `CopilotAgentInstance`,
 listeners, customizers, hooks, permission policies, and token resolvers are the
 same types. An agent interface written for one framework compiles unchanged in the

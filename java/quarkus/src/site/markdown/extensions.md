@@ -11,9 +11,9 @@ title: Extension SPIs
 - [Telemetry](#telemetry)
 - [Return-type adapters](#return-type-adapters)
 
-The following interfaces are in `io.github.brunoborges.copilot.agent`, except
+The following interfaces are in `com.microsoft.copilot.integrations.core`, except
 `CopilotAgentTelemetryDecorator`, which is in
-`io.github.brunoborges.copilot.quarkus.runtime`. Classes in `agent.internal`
+`com.microsoft.copilot.integrations.quarkus.runtime`. Classes in `agent.internal`
 and the extension's other runtime and deployment classes are infrastructure,
 not application-facing extension contracts. Implementations are CDI beans; the
 extension marks beans of these types unremovable, so they need no injection
@@ -100,7 +100,7 @@ adapter, `CompletableFuture<T>` and synchronous `T` use the built-in text and
 structured-result paths (see [Agent interfaces](agents.html#return-types)).
 
 When Mutiny is on the class path, the extension registers
-`io.github.brunoborges.copilot.quarkus.runtime.mutiny.MutinyCopilotAgentAdapter`,
+`com.microsoft.copilot.integrations.quarkus.runtime.mutiny.MutinyCopilotAgentAdapter`,
 matching exactly `Multi<CopilotAgentEvent>` (see [Mutiny streaming](streaming.html)).
 It has no switch and is not a `@DefaultBean`, so an application adapter that
 also matches `Multi<CopilotAgentEvent>` fails initialization; adapters for other

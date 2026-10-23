@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.github.brunoborges</groupId>
+        <groupId>com.microsoft</groupId>
         <artifactId>copilot-spring-boot-parent</artifactId>
         <version>0.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -17,8 +17,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.github.brunoborges</groupId>
-            <artifactId>copilot-agent-core</artifactId>
+            <groupId>com.microsoft</groupId>
+            <artifactId>copilot-core</artifactId>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -130,20 +130,20 @@
                 <configuration>
                     <!-- Tests patch fixtures into the named module; open them to the frameworks that reflect on them. -->
                     <argLine>
-                        --add-opens io.github.brunoborges.copilot.agent/io.github.brunoborges.copilot.agent=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
-                        --add-opens io.github.brunoborges.copilot.agent/io.github.brunoborges.copilot.agent.internal=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
-                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.agent.spring=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.agent,com.fasterxml.jackson.databind
-                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.agent.tools=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.agent,com.fasterxml.jackson.databind
-                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.agent.fixtures=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.agent,com.fasterxml.jackson.databind
-                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.autoconfigure.internal=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.agent,com.fasterxml.jackson.databind
-                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.bound=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.agent,com.fasterxml.jackson.databind
-                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.bound.callbacks=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.agent,com.fasterxml.jackson.databind
-                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.bound.fixtures=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.agent,com.fasterxml.jackson.databind
-                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.actuate=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.agent,com.fasterxml.jackson.databind
-                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.actuate.fixtures=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.agent,com.fasterxml.jackson.databind
-                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.autoconfigure=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.agent,com.fasterxml.jackson.databind
-                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.observation=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.agent,com.fasterxml.jackson.databind
-                        --add-opens io.github.brunoborges.copilot.spring.boot.autoconfigure/io.github.brunoborges.copilot.security=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,io.github.brunoborges.copilot.agent,com.fasterxml.jackson.databind
+                        --add-opens com.microsoft.copilot.integrations.core/com.microsoft.copilot.integrations.core=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
+                        --add-opens com.microsoft.copilot.integrations.core/com.microsoft.copilot.integrations.core.internal=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito
+                        --add-opens com.microsoft.copilot.integrations.springboot.autoconfigure/com.microsoft.copilot.integrations.springboot.agent=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,com.microsoft.copilot.integrations.core,com.fasterxml.jackson.databind
+                        --add-opens com.microsoft.copilot.integrations.springboot.autoconfigure/com.microsoft.copilot.integrations.springboot.agent.tools=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,com.microsoft.copilot.integrations.core,com.fasterxml.jackson.databind
+                        --add-opens com.microsoft.copilot.integrations.springboot.autoconfigure/com.microsoft.copilot.integrations.springboot.agent.fixtures=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,com.microsoft.copilot.integrations.core,com.fasterxml.jackson.databind
+                        --add-opens com.microsoft.copilot.integrations.springboot.autoconfigure/com.microsoft.copilot.integrations.springboot.autoconfigure.internal=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,com.microsoft.copilot.integrations.core,com.fasterxml.jackson.databind
+                        --add-opens com.microsoft.copilot.integrations.springboot.autoconfigure/com.microsoft.copilot.integrations.springboot.bound=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,com.microsoft.copilot.integrations.core,com.fasterxml.jackson.databind
+                        --add-opens com.microsoft.copilot.integrations.springboot.autoconfigure/com.microsoft.copilot.integrations.springboot.bound.callbacks=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,com.microsoft.copilot.integrations.core,com.fasterxml.jackson.databind
+                        --add-opens com.microsoft.copilot.integrations.springboot.autoconfigure/com.microsoft.copilot.integrations.springboot.bound.fixtures=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,com.microsoft.copilot.integrations.core,com.fasterxml.jackson.databind
+                        --add-opens com.microsoft.copilot.integrations.springboot.autoconfigure/com.microsoft.copilot.integrations.springboot.actuate=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,com.microsoft.copilot.integrations.core,com.fasterxml.jackson.databind
+                        --add-opens com.microsoft.copilot.integrations.springboot.autoconfigure/com.microsoft.copilot.integrations.springboot.actuate.fixtures=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,com.microsoft.copilot.integrations.core,com.fasterxml.jackson.databind
+                        --add-opens com.microsoft.copilot.integrations.springboot.autoconfigure/com.microsoft.copilot.integrations.springboot.autoconfigure=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,com.microsoft.copilot.integrations.core,com.fasterxml.jackson.databind
+                        --add-opens com.microsoft.copilot.integrations.springboot.autoconfigure/com.microsoft.copilot.integrations.springboot.observation=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,com.microsoft.copilot.integrations.core,com.fasterxml.jackson.databind
+                        --add-opens com.microsoft.copilot.integrations.springboot.autoconfigure/com.microsoft.copilot.integrations.springboot.security=spring.core,spring.beans,spring.context,spring.aop,spring.boot,spring.boot.actuator,spring.test,spring.boot.test,org.mockito,com.microsoft.copilot.integrations.core,com.fasterxml.jackson.databind
                     </argLine>
                 </configuration>
             </plugin>

@@ -15,7 +15,7 @@ title: Events and customizers
 
 ## Listeners and event types
 
-These contracts are in `io.github.brunoborges.copilot.agent`:
+These contracts are in `com.microsoft.copilot.integrations.core`:
 
 | Type | Members |
 | --- | --- |
@@ -28,8 +28,8 @@ Bind listener bean names with `@CopilotAgent(listenerRefs = "agentMessages")`:
 ```java
 import com.github.copilot.generated.AssistantMessageEvent;
 import com.github.copilot.generated.SessionEvent;
-import io.github.brunoborges.copilot.agent.CopilotAgentContext;
-import io.github.brunoborges.copilot.agent.CopilotAgentListener;
+import com.microsoft.copilot.integrations.core.CopilotAgentContext;
+import com.microsoft.copilot.integrations.core.CopilotAgentListener;
 import org.springframework.stereotype.Component;
 
 @Component("agentMessages")

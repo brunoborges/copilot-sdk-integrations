@@ -1,8 +1,8 @@
 package example.agentwire;
 
 import java.util.concurrent.CompletableFuture;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.UserMessage;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.UserMessage;
 
 @CopilotAgent(name = "bound-wire", systemMessageRef = "wireInstructions")
 public interface BoundWireAgent {

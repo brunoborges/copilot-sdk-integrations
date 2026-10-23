@@ -15,7 +15,7 @@ title: Agent interfaces
 - [Agent discovery](#agent-discovery)
 
 The application-facing annotations are in
-`io.github.brunoborges.copilot.agent`. They are the same types as in the Spring
+`com.microsoft.copilot.integrations.core`. They are the same types as in the Spring
 Boot starter, so agent interfaces move between the two frameworks unchanged.
 
 <a id="copilotagent"></a>

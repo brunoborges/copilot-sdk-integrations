@@ -267,7 +267,7 @@ directly; note that doing so replaces the hooks set by this extension.
 
 ## Error-recovery hooks
 
-`CopilotErrorRecoveryHooks` (from copilot-agent-core) is a ready-made hook based
+`CopilotErrorRecoveryHooks` (from copilot-core) is a ready-made hook based
 on the Copilot SDK cookbook's [error-recovery recipe](https://github.com/github/awesome-copilot/blob/main/cookbook/copilot-sdk/python/error-recovery-hooks.md).
 It is not registered by default; produce it as a bean to opt in:
 

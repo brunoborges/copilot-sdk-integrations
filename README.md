@@ -73,7 +73,7 @@ documentation landing page) live at the root.
 ```
 .
 ├── java/
-│   ├── core/        # Shared Java agent API and engine (copilot-agent-core)
+│   ├── core/        # Shared Java agent API and engine (copilot-core)
 │   ├── spring-boot/ # Spring Boot starter (Java, Maven)
 │   ├── quarkus/     # Quarkus extension (Java, Maven)
 │   ├── micronaut/   # Micronaut integration (Java, Maven)

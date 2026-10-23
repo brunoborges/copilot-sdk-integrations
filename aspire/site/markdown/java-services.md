@@ -53,7 +53,7 @@ Add the starter:
 
 ```xml
 <dependency>
-    <groupId>io.github.brunoborges</groupId>
+    <groupId>com.microsoft</groupId>
     <artifactId>copilot-spring-boot-starter</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 </dependency>
@@ -72,9 +72,9 @@ Spring Boot resolves environment variables in `${...}` placeholders. `support` i
 
 ```java
 import java.util.concurrent.CompletableFuture;
-import io.github.brunoborges.copilot.agent.ConversationId;
-import io.github.brunoborges.copilot.agent.CopilotAgent;
-import io.github.brunoborges.copilot.agent.UserMessage;
+import com.microsoft.copilot.integrations.core.ConversationId;
+import com.microsoft.copilot.integrations.core.CopilotAgent;
+import com.microsoft.copilot.integrations.core.UserMessage;
 
 @CopilotAgent(name = "support", instructions = "You help customers with orders.")
 public interface SupportAgent {
@@ -96,7 +96,7 @@ bean. When one is present, it takes precedence over `copilot.cli-url` and
 `copilot.tcp-connection-token`:
 
 ```java
-import io.github.brunoborges.copilot.autoconfigure.CopilotConnectionDetails;
+import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotConnectionDetails;
 
 @Bean
 CopilotConnectionDetails copilotConnectionDetails(Environment env) {
@@ -117,7 +117,7 @@ Add the extension:
 
 ```xml
 <dependency>
-    <groupId>io.github.brunoborges</groupId>
+    <groupId>com.microsoft</groupId>
     <artifactId>copilot-quarkus</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 </dependency>

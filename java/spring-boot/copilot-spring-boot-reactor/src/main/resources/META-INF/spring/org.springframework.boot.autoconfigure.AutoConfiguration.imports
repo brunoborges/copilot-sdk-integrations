@@ -1,1 +1,1 @@
-io.github.brunoborges.copilot.reactor.CopilotReactorAutoConfiguration
+com.microsoft.copilot.integrations.springboot.reactor.CopilotReactorAutoConfiguration

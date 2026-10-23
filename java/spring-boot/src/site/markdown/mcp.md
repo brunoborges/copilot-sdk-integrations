@@ -114,7 +114,7 @@ selected name; ambiguity is an error, not an implicit override. Native beans
 retain their SDK settings and are the application's validation responsibility.
 
 With starter auto-configuration active, inject
-`io.github.brunoborges.copilot.autoconfigure.CopilotMcpProperties` when building
+`com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotMcpProperties` when building
 native sessions:
 
 ```java

@@ -12,7 +12,7 @@ title: Bound instances
 - [Closing and asynchronous work](#closing-and-asynchronous-work)
 
 `CopilotAgents` and `CopilotAgentInstance<T>` are application-facing APIs in
-`io.github.brunoborges.copilot.agent`. Inject the `CopilotAgents` CDI bean:
+`com.microsoft.copilot.integrations.core`. Inject the `CopilotAgents` CDI bean:
 
 ```java
 @CopilotAgent(name = "advisor", instructions = "Explain Quarkus concisely.")

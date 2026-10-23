@@ -1,1 +1,1 @@
-io.github.brunoborges.copilot.quarkus.test.CopilotTestRuntimeResetCallback
+com.microsoft.copilot.integrations.quarkus.test.CopilotTestRuntimeResetCallback

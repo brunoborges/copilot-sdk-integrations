@@ -15,7 +15,7 @@ title: Agent interfaces
 - [EnableCopilotAgents](#enablecopilotagents)
 
 The application-facing annotations are in
-`io.github.brunoborges.copilot.agent`.
+`com.microsoft.copilot.integrations.core`.
 
 <a id="copilotagent"></a>
 

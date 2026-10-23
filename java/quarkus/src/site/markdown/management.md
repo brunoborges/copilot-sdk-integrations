@@ -20,9 +20,9 @@ extension and is decided at build time. A contribution is registered only when
 
 | Contribution | Type | Requires | Enabled by default | Build-time switch |
 | --- | --- | --- | --- | --- |
-| `copilot` readiness check | `io.github.brunoborges.copilot.quarkus.runtime.health.CopilotHealthCheck` | `quarkus-smallrye-health` | Yes | `quarkus.copilot.health.enabled` |
-| `/q/copilot` endpoint | `io.github.brunoborges.copilot.quarkus.runtime.endpoint.CopilotEndpoint` | `quarkus-vertx-http` (build fails without it) | No | `quarkus.copilot.endpoint.enabled` |
-| `copilot` info section | `io.github.brunoborges.copilot.quarkus.runtime.info.CopilotInfoContributor` | `quarkus-info` | Yes | `quarkus.copilot.info.enabled` |
+| `copilot` readiness check | `com.microsoft.copilot.integrations.quarkus.runtime.health.CopilotHealthCheck` | `quarkus-smallrye-health` | Yes | `quarkus.copilot.health.enabled` |
+| `/q/copilot` endpoint | `com.microsoft.copilot.integrations.quarkus.runtime.endpoint.CopilotEndpoint` | `quarkus-vertx-http` (build fails without it) | No | `quarkus.copilot.endpoint.enabled` |
+| `copilot` info section | `com.microsoft.copilot.integrations.quarkus.runtime.info.CopilotInfoContributor` | `quarkus-info` | Yes | `quarkus.copilot.info.enabled` |
 
 Runtime tuning lives under `quarkus.copilot.health.*` and
 `quarkus.copilot.endpoint.*`; see the [configuration reference](configuration.html).

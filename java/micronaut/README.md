@@ -4,7 +4,7 @@ Micronaut integration for the [Copilot SDK for Java](https://github.com/github/c
 targeting **Micronaut 5.2** (platform 5.2.3), **Java 25**, and Copilot SDK **1.0.24**.
 
 It offers the same programming model as the [Spring Boot starter](../spring-boot/) and the
-[Quarkus extension](../quarkus/): the `io.github.brunoborges.copilot.agent` API (`@CopilotAgent`,
+[Quarkus extension](../quarkus/): the `com.microsoft.copilot.integrations.core` API (`@CopilotAgent`,
 `@ConversationId`, `@UserMessage`, `CopilotAgents`, hooks, listeners, customizers, token resolvers) is
 identical, so agent interfaces move between frameworks unchanged. Agents are registered at compile time by an
 annotation processor, in keeping with Micronaut's reflection-free dependency injection.
@@ -48,7 +48,7 @@ integration never approves tool use implicitly. No artifacts have been published
 
 | Module | Artifact | Purpose |
 | --- | --- | --- |
-| `../core` | `copilot-agent-core` | Shared with the other Java integrations: the `@CopilotAgent` API and the framework-neutral agent engine. |
+| `../core` | `copilot-core` | Shared with the other Java integrations: the `@CopilotAgent` API and the framework-neutral agent engine. |
 | `runtime` | `copilot-micronaut` | Configuration, bean binding, and optional integrations. |
 | `processor` | `copilot-micronaut-processor` | Compile-time visitor that registers each `@CopilotAgent` interface as Micronaut beans. |
 | `test` | `copilot-micronaut-test` | Scripted `CopilotTestRuntime` and a Testcontainers `CopilotContainer`. |
@@ -66,7 +66,7 @@ Add the runtime to a Micronaut 5 application, and the processor next to Micronau
 
 ```xml
 <dependency>
-    <groupId>io.github.brunoborges</groupId>
+    <groupId>com.microsoft</groupId>
     <artifactId>copilot-micronaut</artifactId>
     <version>0.1.0-SNAPSHOT</version>
 </dependency>
@@ -80,7 +80,7 @@ Add the runtime to a Micronaut 5 application, and the processor next to Micronau
         <version>${micronaut.core.version}</version>
     </path>
     <path>
-        <groupId>io.github.brunoborges</groupId>
+        <groupId>com.microsoft</groupId>
         <artifactId>copilot-micronaut-processor</artifactId>
         <version>0.1.0-SNAPSHOT</version>
     </path>
@@ -193,7 +193,7 @@ The integration's default beans (`CopilotClient`, `CopilotClientOptions`, `Copil
 
 ### Error-recovery hooks
 
-`CopilotErrorRecoveryHooks` (from copilot-agent-core) is an opt-in hook based on the Copilot SDK cookbook's
+`CopilotErrorRecoveryHooks` (from copilot-core) is an opt-in hook based on the Copilot SDK cookbook's
 [error-recovery recipe](https://github.com/github/awesome-copilot/blob/main/cookbook/copilot-sdk/python/error-recovery-hooks.md).
 When a tool fails it adds a note telling the model to keep going, and it stops after `maxConsecutiveFailures`
 consecutive failures of the same tool. Register it from a factory:
@@ -298,7 +298,7 @@ Add the test module:
 
 ```xml
 <dependency>
-    <groupId>io.github.brunoborges</groupId>
+    <groupId>com.microsoft</groupId>
     <artifactId>copilot-micronaut-test</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <scope>test</scope>

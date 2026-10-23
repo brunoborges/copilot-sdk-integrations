@@ -33,7 +33,7 @@ Use SDK beans/customizers for settings not listed here.
 ## Client properties
 
 These configure the starter-owned client, not individual conversations.
-The binding type is `io.github.brunoborges.copilot.autoconfigure.CopilotProperties`.
+The binding type is `com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotProperties`.
 
 | Property | Type | Default | Meaning and validation |
 | --- | --- | --- | --- |
@@ -294,7 +294,7 @@ Active only when `spring-security-oauth2-client` is on the classpath. See
 ## Reactor properties
 
 These apply only when the optional Reactor module is present.
-The binding type is `io.github.brunoborges.copilot.reactor.CopilotReactorProperties`.
+The binding type is `com.microsoft.copilot.integrations.springboot.reactor.CopilotReactorProperties`.
 
 | Property | Type | Default | Meaning and validation |
 | --- | --- | --- | --- |
