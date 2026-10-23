@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "copilot-fastapi"
+version = "0.1.0.dev0"
+description = "FastAPI integration for the GitHub Copilot SDK: declarative agents injected with Depends, typed prompts, tools, and permission policies."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [{ name = "Bruno Borges" }]
+dependencies = [
+    "copilot-agent-core==0.1.0.dev0",
+    "fastapi>=0.115",
+    "pydantic-settings>=2.6,<3",
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Framework :: FastAPI",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Repository = "https://github.com/brunoborges/copilot-sdk-integrations"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/copilot_fastapi"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

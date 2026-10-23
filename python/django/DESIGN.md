@@ -41,8 +41,8 @@ Supported versions: Python 3.11+ (SDK minimum), Django 5.2 LTS and 6.x.
 | `copilot-django` | `copilot_django` | Django app: settings binding, system checks, autodiscovery, request-context middleware, ORM-aware tool execution, signals, management commands, test helpers. |
 | extras `[allauth]`, `[channels]`, `[conversations]`, `[health]` | `copilot_django.contrib.*` | Optional integrations (§9–§12). |
 
-The split keeps a future FastAPI integration cheap: it reuses `copilot_agents` and only
-adds lifespan, dependency injection, and request context.
+The split keeps the FastAPI integration ([`copilot-fastapi`](../fastapi/DESIGN.md)) cheap:
+it reuses `copilot_agents` and only adds lifespan, dependency injection, and request context.
 
 Repository layout:
 

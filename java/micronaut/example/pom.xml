@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.github.brunoborges</groupId>
+        <artifactId>copilot-micronaut-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>copilot-micronaut-example</artifactId>
+    <name>Copilot Micronaut - Example</name>
+    <description>Example Micronaut application using declarative Copilot agents</description>
+
+    <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.install.skip>true</maven.install.skip>
+        <exec.mainClass>io.github.brunoborges.copilot.micronaut.example.Application</exec.mainClass>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.brunoborges</groupId>
+            <artifactId>copilot-micronaut</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut</groupId>
+            <artifactId>micronaut-http-server-netty</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut.serde</groupId>
+            <artifactId>micronaut-serde-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut</groupId>
+            <artifactId>micronaut-management</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut.reactor</groupId>
+            <artifactId>micronaut-reactor</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Orders the reactor so the annotation processor is built before this application. -->
+        <dependency>
+            <groupId>io.github.brunoborges</groupId>
+            <artifactId>copilot-micronaut-processor</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.github.brunoborges</groupId>
+            <artifactId>copilot-micronaut-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut.test</groupId>
+            <artifactId>micronaut-test-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut</groupId>
+            <artifactId>micronaut-http-client</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>io.micronaut</groupId>
+                            <artifactId>micronaut-inject-java</artifactId>
+                            <version>${micronaut.core.version}</version>
+                        </path>
+                        <path>
+                            <groupId>io.micronaut.serde</groupId>
+                            <artifactId>micronaut-serde-processor</artifactId>
+                            <version>${micronaut.serialization.version}</version>
+                        </path>
+                        <path>
+                            <groupId>io.github.brunoborges</groupId>
+                            <artifactId>copilot-micronaut-processor</artifactId>
+                            <version>${project.version}</version>
+                        </path>
+                        <path>
+                            <groupId>com.github</groupId>
+                            <artifactId>copilot-sdk-java</artifactId>
+                            <version>${copilot-sdk.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                    <!-- Micronaut's processors plus the SDK's tool processor; the SDK's experimental-API checker is
+                         left out, as in the Quarkus example. -->
+                    <annotationProcessors>
+                        <annotationProcessor>io.micronaut.annotation.processing.MixinVisitorProcessor</annotationProcessor>
+                        <annotationProcessor>io.micronaut.annotation.processing.PackageElementVisitorProcessor</annotationProcessor>
+                        <annotationProcessor>io.micronaut.annotation.processing.TypeElementVisitorProcessor</annotationProcessor>
+                        <annotationProcessor>io.micronaut.annotation.processing.AggregatingTypeElementVisitorProcessor</annotationProcessor>
+                        <annotationProcessor>io.micronaut.annotation.processing.BeanDefinitionInjectProcessor</annotationProcessor>
+                        <annotationProcessor>com.github.copilot.tool.CopilotToolProcessor</annotationProcessor>
+                    </annotationProcessors>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

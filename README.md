@@ -15,11 +15,12 @@ injection, lifecycle management, security context, observability, and testing.
 | --- | --- | --- | --- |
 | Java | [Spring Boot](https://spring.io/projects/spring-boot) | [`java/spring-boot/`](java/spring-boot/) | Available (unreleased) |
 | Java | [Quarkus](https://quarkus.io/) | [`java/quarkus/`](java/quarkus/) | Available (unreleased) |
+| Java | [Micronaut](https://micronaut.io/) | [`java/micronaut/`](java/micronaut/) | Available (unreleased) |
 | Java | [Apache Camel](https://camel.apache.org/) | [`java/camel/`](java/camel/) | Available (unreleased) |
 | .NET | Generic Host / ASP.NET Core ([Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`) | [`dotnet/`](dotnet/) | Preview, not yet on NuGet ([docs](https://brunoborges.github.io/copilot-sdk-integrations/dotnet/), [design](dotnet/docs/design.md)) |
 | Polyglot (C# AppHost; .NET, Java, Node.js, Python services) | [Aspire](https://aspire.dev/) (AppHost runtime resource + .NET client integration, builds on `dotnet`) | [`aspire/`](aspire/) | Preview, not yet on NuGet ([docs](https://brunoborges.github.io/copilot-sdk-integrations/aspire/), [design](aspire/docs/design.md)) |
 | Python | [Django](https://www.djangoproject.com/) | [`python/django/`](python/django/) | Preview, not yet on PyPI ([docs](https://brunoborges.github.io/copilot-sdk-integrations/django/), [design](python/django/DESIGN.md)) |
-| Python | [FastAPI](https://fastapi.tiangolo.com/) | `python/` | Under consideration |
+| Python | [FastAPI](https://fastapi.tiangolo.com/) | [`python/fastapi/`](python/fastapi/) | Preview, not yet on PyPI ([docs](https://brunoborges.github.io/copilot-sdk-integrations/fastapi/), [design](python/fastapi/DESIGN.md)) |
 | Node.js / TypeScript | [NestJS](https://nestjs.com/), [Fastify](https://fastify.dev/), framework-agnostic core, [AI SDK](https://ai-sdk.dev/) adapter | [`nodejs/`](nodejs/) | In development ([DESIGN.md](nodejs/DESIGN.md)) |
 
 ## Design goals
@@ -48,7 +49,7 @@ framework's idioms:
 Each integration is a self-contained project in its own directory, with its own build,
 README, and documentation. Java integrations live under [`java/`](java/) and share the
 framework-neutral agent API and engine in [`java/core/`](java/core/), which every Java Maven build
-include as a reactor module. Shared repository files (license, CI workflows, and the
+includes as a reactor module. Shared repository files (license, CI workflows, and the
 documentation landing page) live at the root.
 
 ```
@@ -57,9 +58,11 @@ documentation landing page) live at the root.
 │   ├── core/        # Shared Java agent API and engine (copilot-agent-core)
 │   ├── spring-boot/ # Spring Boot starter (Java, Maven)
 │   ├── quarkus/     # Quarkus extension (Java, Maven)
+│   ├── micronaut/   # Micronaut integration (Java, Maven)
 │   └── camel/       # Apache Camel component (Java, Maven)
 ├── dotnet/        # .NET integration for business apps (preview)
 ├── aspire/        # Aspire integration (.NET) (preview)
+├── python/        # Python core (copilot-agent-core), Django and FastAPI integrations (preview)
 ├── nodejs/        # Node.js core, NestJS module, Fastify plugin, and AI SDK adapter (TypeScript; in development)
 └── .github/       # CI workflows and documentation landing page
 ```
