@@ -1,4 +1,4 @@
-# Copilot for Node.js: shared core and NestJS module
+# Copilot Agents for Node.js: shared core and NestJS module
 
 Status: **approved; phases 1–3 implemented, phase 4 (scale-out) and OpenTelemetry on the
 roadmap** (see §17 and §19). API and package names are working names.

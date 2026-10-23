@@ -1,10 +1,10 @@
 ---
-title: Copilot for Quarkus
+title: Copilot Agents for Quarkus
 ---
 
 <a id="copilot-quarkus"></a>
 
-# Copilot for Quarkus
+# Copilot Agents for Quarkus
 
 Use the Copilot Java SDK in Quarkus through a CDI-managed client, typed agents,
 and conversation-bound instances. The runtime owns the agent loop and persisted

@@ -23,7 +23,7 @@ const sdkVersion = packageVersion(dotnetPackages, "GitHub.Copilot.SDK");
 const aspireVersion = packageVersion(aspirePackages, "Aspire.Hosting");
 
 const site = {
-  name: "Copilot for Aspire",
+  name: "Copilot Agents for Aspire",
   description: "Run the GitHub Copilot runtime as an Aspire resource and connect services written in .NET, Java, Node.js, or Python to it.",
   links: [
     { name: "GitHub", href: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/aspire" },

@@ -2,7 +2,7 @@
 title: Documentation
 ---
 
-# Copilot for Django
+# Copilot Agents for Django
 
 `copilot-django` connects the
 [GitHub Copilot SDK for Python](https://github.com/github/copilot-sdk/tree/main/python) to

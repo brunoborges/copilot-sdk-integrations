@@ -2,7 +2,7 @@
 title: Documentation
 ---
 
-# Copilot for Node.js
+# Copilot Agents for Node.js
 
 These packages connect the
 [GitHub Copilot SDK for Node.js/TypeScript](https://github.com/github/copilot-sdk/tree/main/nodejs)

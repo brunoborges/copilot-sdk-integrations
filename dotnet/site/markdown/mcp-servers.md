@@ -96,7 +96,7 @@ or under `Copilot:Agents:{name}:McpServers`. See [Named agents](chat-clients.md#
 
 With Aspire, MCP servers declared in the AppHost reach your service as `Copilot__McpServers__*`
 settings; see the
-[Copilot for Aspire](https://brunoborges.github.io/copilot-sdk-integrations/aspire/)
+[Copilot Agents for Aspire](https://brunoborges.github.io/copilot-sdk-integrations/aspire/)
 documentation.
 
 ## Validation

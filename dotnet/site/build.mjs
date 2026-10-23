@@ -24,7 +24,7 @@ const meaiVersion = packageVersion(dotnetPackages, "Microsoft.Extensions.AI");
 const aspireVersion = packageVersion(aspirePackages, "Aspire.Hosting");
 
 const site = {
-  name: "Copilot for .NET",
+  name: "Copilot Agents for .NET",
   description: "Guides and reference for using the GitHub Copilot SDK with the .NET Generic Host, ASP.NET Core, Microsoft.Extensions.AI, and Aspire.",
   links: [
     { name: "GitHub", href: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/dotnet" },

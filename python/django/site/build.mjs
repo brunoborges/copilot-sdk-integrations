@@ -17,7 +17,7 @@ if (!sdkVersion) throw new Error("No github-copilot-sdk dependency in python/cor
 const version = "Preview";
 
 const site = {
-  name: "Copilot for Django",
+  name: "Copilot Agents for Django",
   description: "Guides and reference for using the GitHub Copilot SDK for Python with Django: agents, ORM-aware tools, typed prompts, permissions, and testing.",
   links: [
     { name: "GitHub", href: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/python/django" },

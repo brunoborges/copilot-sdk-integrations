@@ -15,7 +15,7 @@ const version = JSON.parse(readFileSync(join(here, "..", "packages", "core", "pa
 const sdkVersion = JSON.parse(readFileSync(join(here, "..", "packages", "core", "package.json"), "utf8")).dependencies["@github/copilot-sdk"].replace(/^\^/, "");
 
 const site = {
-  name: "Copilot for Node.js",
+  name: "Copilot Agents for Node.js",
   description: "Guides and API reference for using the GitHub Copilot SDK with NestJS, Fastify, the Vercel AI SDK, and plain Node.js.",
   links: [
     { name: "GitHub", href: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/nodejs" },
