@@ -1,5 +1,23 @@
 # Copilot SDK Agentic Integrations
 
+[![License: MIT](https://img.shields.io/github/license/brunoborges/copilot-sdk-integrations)](LICENSE)
+[![Docs](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/pages.yml/badge.svg)](https://brunoborges.github.io/copilot-sdk-integrations/)
+[![GitHub stars](https://img.shields.io/github/stars/brunoborges/copilot-sdk-integrations?style=flat)](https://github.com/brunoborges/copilot-sdk-integrations/stargazers)
+[![Last commit](https://img.shields.io/github/last-commit/brunoborges/copilot-sdk-integrations)](https://github.com/brunoborges/copilot-sdk-integrations/commits/main)
+
+[![Java](https://img.shields.io/badge/Java-21%2B-ED8B00?logo=openjdk&logoColor=white)](java/)
+[![.NET](https://img.shields.io/badge/.NET-512BD4?logo=dotnet&logoColor=white)](dotnet/)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](python/)
+[![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=nodedotjs&logoColor=white)](nodejs/)
+
+[![Spring Boot](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/build.yml/badge.svg)](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/build.yml)
+[![Quarkus](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/quarkus.yml/badge.svg)](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/quarkus.yml)
+[![Micronaut](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/micronaut.yml/badge.svg)](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/micronaut.yml)
+[![Camel](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/camel.yml/badge.svg)](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/camel.yml)
+[![.NET CI](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/dotnet.yml/badge.svg)](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/dotnet.yml)
+[![Python CI](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/python.yml/badge.svg)](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/python.yml)
+[![Node.js CI](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/nodejs.yml/badge.svg)](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/nodejs.yml)
+
 Framework integrations for the [GitHub Copilot SDKs](https://github.com/github/copilot-sdk).
 
 The Copilot SDKs give you a low-level client for the Copilot runtime. This repository
