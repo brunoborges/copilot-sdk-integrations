@@ -26,6 +26,7 @@ import com.github.copilot.rpc.ToolDefinition;
 
 import io.github.brunoborges.copilot.agent.ConversationId;
 import io.github.brunoborges.copilot.agent.CopilotAgent;
+import io.github.brunoborges.copilot.agent.CopilotLoops;
 import io.github.brunoborges.copilot.agent.CopilotPermissionPolicies;
 import io.github.brunoborges.copilot.agent.UserMessage;
 import io.github.brunoborges.copilot.camel.test.CopilotTestRuntime;
@@ -315,6 +316,7 @@ class CopilotComponentTest {
         assertThat(runtime.sessions("advisor")).hasSize(1);
         assertThat(runtime.sessionConfig("advisor").getSystemMessage().getContent())
                 .isEqualTo("You advise on Camel routes.");
+        assertThat(context.getRegistry().lookupByNameAndType("copilotLoops", CopilotLoops.class)).isNotNull();
     }
 
     @Test

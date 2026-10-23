@@ -12,6 +12,7 @@ from .errors import (
 )
 from .hooks import CopilotAgentHooks
 from .invoker import AgentInvoker, CopilotReply, ToolCall
+from .loop import LoopIteration, LoopResult, StopReason, arun_loop, run_loop
 from .policies import PermissionPolicy
 from .runtime import CopilotRuntime
 from .session_ids import SHARED, derive_session_id
@@ -35,13 +36,18 @@ __all__ = [
     "CopilotTimeout",
     "CopilotTokenResolver",
     "CopilotTool",
+    "LoopIteration",
+    "LoopResult",
     "PermissionPolicy",
     "StaticTokenResolver",
+    "StopReason",
     "ToolCall",
     "ToolContext",
     "ToolError",
+    "arun_loop",
     "current_invocation",
     "derive_session_id",
     "policies",
+    "run_loop",
     "tool",
 ]

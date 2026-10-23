@@ -116,6 +116,42 @@ public sealed class TicketService([FromKeyedServices("triage")] IChatClient tria
 }
 ```
 
+## Fresh-session loops (Ralph loop)
+
+`AddCopilot` also registers a `CopilotLoopRunner` for the agent (keyed by name for named
+agents). It sends the same prompt repeatedly, each iteration in a new session (a
+`GetResponseAsync` call without a conversation ID). State lives on disk (for example
+`IMPLEMENTATION_PLAN.md` in the agent's working directory), and builds or tests are the
+quality gate.
+
+```csharp
+public sealed class BuildLoop([FromKeyedServices("builder")] CopilotLoopRunner loop) : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        var result = await loop.RunAsync(new CopilotLoopOptions
+        {
+            PromptProvider = (_, ct) => new(File.ReadAllTextAsync("PROMPT_build.md", ct)), // re-read every iteration
+            MaxIterations = 20,
+            IterationTimeout = TimeSpan.FromMinutes(15),
+            Check = async (_, ct) => (await RunTestsAsync(ct)) == 0,
+            StopWhen = it => it.Text?.Contains("ALL TASKS DONE") == true,
+            OnIteration = it => Console.WriteLine($"iteration {it.Number}: {it.Duration}"),
+        }, stoppingToken);
+    }
+}
+```
+
+The loop stops at the first of `StopWhen` (after a successful iteration), `Check` returning
+`false` (only between iterations), a failed or timed-out iteration (unless
+`ContinueOnFailure`), cancellation, or `MaxIterations`; `CopilotLoopResult.StopReason` says
+which. `CopilotLoopRunner.RunAsync(step, options)` runs a custom step that opens its own fresh
+session.
+
+Each iteration uses the agent's permission policy; nothing is approved implicitly. Run loops
+against a disposable checkout inside a container or VM, observe tool use through the existing
+telemetry, and host them in a `BackgroundService`, Hangfire, or Quartz.NET job.
+
 ## The CopilotClient escape hatch
 
 `CopilotClient` is registered as a singleton, so any part of the SDK is one injection away:

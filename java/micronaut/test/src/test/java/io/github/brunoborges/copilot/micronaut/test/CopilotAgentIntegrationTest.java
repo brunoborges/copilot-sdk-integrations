@@ -2,6 +2,7 @@ package io.github.brunoborges.copilot.micronaut.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -22,6 +23,8 @@ import io.github.brunoborges.copilot.agent.CopilotAgent;
 import io.github.brunoborges.copilot.agent.CopilotAgentHooks;
 import io.github.brunoborges.copilot.agent.CopilotAgentHooksFor;
 import io.github.brunoborges.copilot.agent.CopilotAgents;
+import io.github.brunoborges.copilot.agent.CopilotLoop;
+import io.github.brunoborges.copilot.agent.CopilotLoops;
 import io.github.brunoborges.copilot.agent.GlobalCopilotAgentHooks;
 import io.github.brunoborges.copilot.agent.UserMessage;
 import io.github.brunoborges.copilot.micronaut.CopilotAgentRegistry;
@@ -83,6 +86,9 @@ class CopilotAgentIntegrationTest {
     CopilotAgents agents;
 
     @Inject
+    CopilotLoops loops;
+
+    @Inject
     CopilotTestRuntime copilot;
 
     @Inject
@@ -121,6 +127,20 @@ class CopilotAgentIntegrationTest {
         try (var instance = agents.create(OneShot.class)) {
             assertEquals("done", instance.agent().ask("go").join());
         }
+    }
+
+    @Test
+    void loopsRunEachIterationInAFreshSession() {
+        copilot.agent("one-shot").repliesWith(prompt -> "did " + prompt);
+
+        var loop = CopilotLoop.builder().prompt("next task").maxIterations(2).build();
+        var result = loops.run(loop, OneShot.class, (agent, prompt) -> agent.ask(prompt).join());
+
+        assertEquals(CopilotLoop.StopReason.MAX_ITERATIONS, result.stopReason());
+        assertEquals("did next task", result.last().output());
+        var sessions = copilot.sessions("one-shot");
+        assertEquals(2, sessions.size());
+        assertNotEquals(sessions.get(0).sessionId(), sessions.get(1).sessionId());
     }
 
     @Test

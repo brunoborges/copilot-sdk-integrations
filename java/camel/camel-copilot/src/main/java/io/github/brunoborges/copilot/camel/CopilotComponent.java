@@ -14,6 +14,7 @@ import com.github.copilot.CopilotClient;
 
 import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
 import io.github.brunoborges.copilot.agent.CopilotAgents;
+import io.github.brunoborges.copilot.agent.CopilotLoops;
 import io.github.brunoborges.copilot.agent.internal.BindingContext;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentExecutionLimits;
@@ -21,6 +22,7 @@ import io.github.brunoborges.copilot.agent.internal.CopilotAgentFactory;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentSettings;
 import io.github.brunoborges.copilot.agent.internal.DefaultCopilotAgents;
+import io.github.brunoborges.copilot.agent.internal.DefaultCopilotLoops;
 import io.github.brunoborges.copilot.agent.internal.ResourceLookup;
 
 /**
@@ -128,7 +130,9 @@ public class CopilotComponent extends DefaultComponent {
             }
         }
         var registry = getCamelContext().getRegistry();
-        registry.bind("copilotAgents", CopilotAgents.class, new DefaultCopilotAgents(this::factory));
+        var agents = new DefaultCopilotAgents(this::factory);
+        registry.bind("copilotAgents", CopilotAgents.class, agents);
+        registry.bind("copilotLoops", CopilotLoops.class, new DefaultCopilotLoops(agents));
         // Agents resolve toolRefs to copilot:tool routes, so bind proxies only once every route has been created.
         getCamelContext().addStartupListener(new ExtendedStartupListener() {
             @Override

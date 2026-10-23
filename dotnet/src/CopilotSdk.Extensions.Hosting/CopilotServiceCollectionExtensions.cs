@@ -14,7 +14,7 @@ public static class CopilotServiceCollectionExtensions
 {
     /// <summary>
     /// Registers the default Copilot agent as <see cref="IChatClient"/>, plus the shared <see cref="CopilotClient"/>,
-    /// its lifecycle, and the default permission handler. Settings bind from the <c>Copilot</c> configuration section.
+    /// its lifecycle, the default permission handler, and a <see cref="CopilotLoopRunner"/> for the agent. Settings bind from the <c>Copilot</c> configuration section.
     /// Calling it again is safe and adds to the existing registration.
     /// </summary>
     /// <param name="services">The service collection.</param>
@@ -26,12 +26,14 @@ public static class CopilotServiceCollectionExtensions
 
         AddCopilotCore(services, Options.Options.DefaultName, configure);
         services.TryAddSingleton<IChatClient>(sp => CopilotChatClientFactory.Create(sp, Options.Options.DefaultName));
+        services.TryAddSingleton(static sp => new CopilotLoopRunner(sp.GetRequiredService<IChatClient>()));
 
         return new CopilotBuilder(services, name: null);
     }
 
     /// <summary>
-    /// Registers a named Copilot agent as a keyed <see cref="IChatClient"/> with key <paramref name="name"/>.
+    /// Registers a named Copilot agent as a keyed <see cref="IChatClient"/> (and keyed <see cref="CopilotLoopRunner"/>)
+    /// with key <paramref name="name"/>.
     /// Named agents start from the default agent's settings and override what they set; they bind from
     /// <c>Copilot:Agents:{name}</c>. Every agent shares one <see cref="CopilotClient"/>.
     /// </summary>
@@ -46,6 +48,7 @@ public static class CopilotServiceCollectionExtensions
 
         AddCopilotCore(services, name, configure);
         services.TryAddKeyedSingleton<IChatClient>(name, static (sp, key) => CopilotChatClientFactory.Create(sp, (string)key!));
+        services.TryAddKeyedSingleton(name, static (sp, key) => new CopilotLoopRunner(sp.GetRequiredKeyedService<IChatClient>(key)));
 
         return new CopilotBuilder(services, name);
     }

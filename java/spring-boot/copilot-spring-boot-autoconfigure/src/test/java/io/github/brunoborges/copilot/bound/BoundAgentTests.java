@@ -24,6 +24,7 @@ import com.github.copilot.rpc.SessionMetadata;
 import io.github.brunoborges.copilot.agent.CopilotAgentInstance;
 import io.github.brunoborges.copilot.agent.CopilotAgentListener;
 import io.github.brunoborges.copilot.agent.CopilotAgents;
+import io.github.brunoborges.copilot.agent.CopilotLoops;
 import io.github.brunoborges.copilot.agent.CopilotConversationNotFoundException;
 import io.github.brunoborges.copilot.bound.callbacks.CallbackAdvisor;
 import io.github.brunoborges.copilot.bound.fixtures.BoundAdvisor;
@@ -55,7 +56,8 @@ class BoundAgentTests {
     void distinctInstancesAreLazyAndUseIndependentConversations() {
         var runtime = new RuntimeStub();
         runner(runtime, BoundAdvisor.class).run(context -> {
-            assertThat(context).hasNotFailed().doesNotHaveBean(BoundAdvisor.class).hasSingleBean(CopilotAgents.class);
+            assertThat(context).hasNotFailed().doesNotHaveBean(BoundAdvisor.class).hasSingleBean(CopilotAgents.class)
+                    .hasSingleBean(CopilotLoops.class);
             var agents = context.getBean(CopilotAgents.class);
             try (var first = agents.create(BoundAdvisor.class); var second = agents.create(BoundAdvisor.class)) {
                 assertThat(first.agent()).isNotSameAs(second.agent());

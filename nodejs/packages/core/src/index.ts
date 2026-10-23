@@ -6,6 +6,14 @@ export { defineAgent } from "./define-agent.js";
 export { deriveSessionId } from "./conversation.js";
 export { resolveMcpServers } from "./agent.js";
 export { memoryStore } from "./stores/index.js";
+export {
+  runCopilotLoop,
+  type CopilotLoopIteration,
+  type CopilotLoopOptions,
+  type CopilotLoopResult,
+  type CopilotLoopStep,
+  type CopilotLoopStopReason,
+} from "./loop.js";
 export { mapSessionEvent } from "./events.js";
 export { toSdkTools, toJsonSchema, defineCopilotTool } from "./tools/index.js";
 export {

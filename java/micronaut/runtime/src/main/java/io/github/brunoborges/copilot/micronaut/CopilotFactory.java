@@ -9,8 +9,10 @@ import com.github.copilot.rpc.CopilotClientOptions;
 
 import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
 import io.github.brunoborges.copilot.agent.CopilotAgents;
+import io.github.brunoborges.copilot.agent.CopilotLoops;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
 import io.github.brunoborges.copilot.agent.internal.DefaultCopilotAgents;
+import io.github.brunoborges.copilot.agent.internal.DefaultCopilotLoops;
 import io.github.brunoborges.copilot.micronaut.config.CopilotConfigs;
 import io.github.brunoborges.copilot.micronaut.config.CopilotRuntimeConfig;
 import io.micronaut.context.BeanProvider;
@@ -68,5 +70,11 @@ public class CopilotFactory {
     @Secondary
     CopilotAgents copilotAgents(CopilotAgentRegistry registry) {
         return new DefaultCopilotAgents(registry::factory);
+    }
+
+    @Singleton
+    @Secondary
+    CopilotLoops copilotLoops(CopilotAgents agents) {
+        return new DefaultCopilotLoops(agents);
     }
 }

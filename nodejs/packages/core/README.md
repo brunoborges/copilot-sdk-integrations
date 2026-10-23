@@ -93,6 +93,31 @@ permissions.allOf(permissions.allowCustomTools(), (request, { context }) => (con
 
 `ask-user` decisions surface as `permission-request` events when streaming, or go to `onPermissionRequest` in `send()`.
 
+## Fresh-session loops (Ralph loop)
+
+`runCopilotLoop` sends the same prompt repeatedly, each iteration in a new ephemeral session (a `send()` without a `conversationId`). State lives on disk (for example `IMPLEMENTATION_PLAN.md` in the agent's `workingDirectory`), and builds or tests are the quality gate.
+
+```ts
+import { readFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { runCopilotLoop } from "@copilot-sdk-integrations/agent-core";
+
+const result = await runCopilotLoop(copilot.agent(builder), {
+  prompt: () => readFile("PROMPT_build.md", "utf8"), // re-read every iteration
+  maxIterations: 20,
+  iterationTimeout: 15 * 60_000,
+  check: () => spawnSync("npm", ["test"], { stdio: "inherit" }).status === 0,
+  stopWhen: (it) => it.output?.includes("ALL TASKS DONE") ?? false,
+  onIteration: (it) => console.log(`iteration ${it.number}: ${it.durationMs} ms`),
+  signal: AbortSignal.timeout(4 * 60 * 60_000),
+});
+console.log(result.stopReason); // "stop-condition" | "check" | "max-iterations" | "failed" | "cancelled"
+```
+
+The loop stops at the first of `stopWhen` (after a successful iteration), `check` returning `false` (only between iterations), a failed or timed-out iteration (unless `continueOnFailure`), `signal` aborting, or `maxIterations`. Pass a function `({ iteration, prompt, signal, timeout }) => output` instead of an agent to run a custom step; it must open a fresh session itself.
+
+Each iteration uses the agent's permission policy; nothing is approved implicitly. Run loops against a disposable checkout inside a container or VM, observe tool use with the agent's hooks, and schedule them with any job runner (BullMQ, node-cron, a CI job).
+
 ## Testing
 
 `@copilot-sdk-integrations/agent-core/testing` replaces the runtime with a scripted, in-process one: no CLI, no network.
