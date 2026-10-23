@@ -33,11 +33,12 @@ internal sealed class CopilotConnectionInfo
     /// <summary>
     /// Fills values on <paramref name="options"/> that are not already set. <see cref="CopilotOptions.Endpoint"/> and
     /// <see cref="CopilotOptions.ConnectionToken"/> are applied together, and only when no endpoint is set, so an
-    /// explicit endpoint is never paired with another runtime's token.
+    /// explicit endpoint is never paired with another runtime's token. Neither is applied when
+    /// <see cref="CopilotOptions.InProcess"/> is set.
     /// </summary>
     public void ApplyTo(CopilotOptions options)
     {
-        if (options.Endpoint is null && Endpoint is not null)
+        if (options.Endpoint is null && !options.InProcess && Endpoint is not null)
         {
             options.Endpoint = Endpoint;
             options.ConnectionToken ??= ConnectionToken;

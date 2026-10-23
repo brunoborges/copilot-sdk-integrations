@@ -143,6 +143,8 @@ Named agents inherit the default agent's code delegates, MCP servers, and
     "ResponseTimeout": "00:02:00",
     "MaxConcurrentTurns": null,          // optional cap across the app
     "EagerStart": false,                 // start with the host instead of on first use
+    "InProcess": false,                  // host the runtime in this process (experimental)
+    "SessionRetention": null,            // delete sessions idle this long, for example "7.00:00:00"
 
     "GitHubToken": null,                 // service identity for the SDK-managed runtime; use a secret store
     "Endpoint": null,                    // shared runtime; null = SDK-managed runtime
@@ -164,7 +166,8 @@ section, then (for a named agent) its own delegates and `Copilot:Agents:{name}`,
 then the connection string. Code sets defaults and configuration overrides them,
 so operators can change a model without a rebuild. Client-level settings
 (`Endpoint`, `ConnectionToken`, `GitHubToken`, `EagerStart`,
-`MaxConcurrentTurns`, `ConfigureClient`) are read from the default agent only.
+`MaxConcurrentTurns`, `InProcess`, `SessionRetention`, `ConfigureClient`) are
+read from the default agent only.
 
 - **`Endpoint`** accepts `tcp://host:port`, `http(s)://host:port`, `host:port`,
   or a loopback port number.
@@ -186,10 +189,12 @@ Options are validated at startup, with messages that name the key to fix:
 - a non-loopback `Endpoint` requires `ConnectionToken`;
 - `GitHubToken` cannot be combined with `Endpoint` (a shared runtime manages its
   own sign-in);
+- `InProcess` cannot be combined with `Endpoint`;
 - `Provider` requires `BaseUrl`;
 - an HTTP MCP server needs an absolute http(s) `Url`, a stdio server needs a
   `Command`, and unknown `Type` values are rejected;
-- `ResponseTimeout`, `MaxConcurrentTurns`, and MCP `Timeout` must be positive.
+- `ResponseTimeout`, `MaxConcurrentTurns`, `SessionRetention`, and MCP
+  `Timeout` must be positive.
 
 ### 3.5 Escape hatches
 
@@ -241,6 +246,14 @@ Application code is the same in all three.
   conversation id from one user and resume it for another.
 - Sessions are disconnected after each call and resumed on the next; history
   stays in the runtime.
+- **`ICopilotSessionStore`** lists, reads, and deletes those sessions.
+  `GetMessagesAsync` maps the persisted journal to `ChatMessage`s without
+  resuming (resuming would bump the modified time and re-apply configuration).
+  `DeleteAsync` takes the conversation lock, so it never deletes mid-turn.
+- **`SessionRetention`** turns on a background sweep that deletes sessions not
+  modified within the period. It never starts the runtime, and it skips
+  conversations whose lock is held. Off by default: deleting history is the
+  app's decision.
 
 ---
 
@@ -377,8 +390,10 @@ with interactive CLI sessions. The signed-in user still works locally.
 
 - **Lifecycle**: the client starts on first use (or at host start with
   `EagerStart`) and stops with the host, force-stopping if shutdown times out.
-- **Connection**: with no `Endpoint`, the SDK starts its bundled runtime; with an
-  `Endpoint`, the client connects to it.
+- **Connection**: with no `Endpoint`, the SDK starts its bundled runtime as a
+  child process, or hosts it in-process with `InProcess` (experimental in the
+  SDK; runtime OpenTelemetry export is skipped because the SDK rejects it
+  in-process); with an `Endpoint`, the client connects to it.
 - **Concurrency**: when `MaxConcurrentTurns` is set, extra turns wait in a
   queue of up to 8× the limit; beyond that the call throws
   `InvalidOperationException`.
@@ -459,7 +474,7 @@ writing the same code without it.
 | Source-generated typed agent interfaces | `GetResponseAsync<T>()` already returns typed results in one line. |
 | `AIAgent` registration package | `Microsoft.Agents.AI.GitHub.Copilot` already provides it. |
 | ASP.NET Core package (user tokens, endpoints) | `GitHubTokenProvider` is one line; .NET 10 has built-in server-sent events. |
-| Approval queue, conversation store, diagnostics endpoint | App-specific. |
+| Approval queue, app-side conversation index, diagnostics endpoint | App-specific. `ICopilotSessionStore` covers what the runtime already keeps. |
 | Warm-session caching | Sessions are resumed per call; revisit if latency matters. |
 | Option to enable built-in runtime tools | Possible through `ConfigureClient` and `ConfigureSession`. |
 | Scripted fake runtime | Faking `IChatClient` covers application tests. |

@@ -164,4 +164,18 @@ public sealed class ConnectionStringTests
         var ex = Assert.Throws<InvalidOperationException>(() => sp.GetOptions());
         Assert.Contains("ConnectionStrings:copilot", ex.Message);
     }
+
+    [Fact]
+    public void ConnectionString_EndpointIgnored_WhenInProcess()
+    {
+        using var sp = TestHost.Build(
+            s => s.AddCopilot(o => o.InProcess = true),
+            new() { ["ConnectionStrings:copilot"] = "Endpoint=tcp://runtime:5000;ConnectionToken=secret;Model=gpt-5.4" });
+
+        var o = sp.GetOptions();
+
+        Assert.Null(o.Endpoint);
+        Assert.Null(o.ConnectionToken);
+        Assert.Equal("gpt-5.4", o.Model);
+    }
 }

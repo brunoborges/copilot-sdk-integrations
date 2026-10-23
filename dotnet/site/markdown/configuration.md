@@ -29,6 +29,8 @@ Configuration overrides code, so operators can change a model or a timeout witho
     "ResponseTimeout": "00:02:00",
     "MaxConcurrentTurns": null,          // optional cap across the app
     "EagerStart": false,                 // start with the host instead of on first use
+    "InProcess": false,                  // host the runtime in this process (experimental)
+    "SessionRetention": null,            // delete sessions idle this long, for example "7.00:00:00"
 
     "GitHubToken": null,                 // service identity for the SDK-managed runtime; use a secret store
     "Endpoint": null,                    // shared runtime; null = SDK-managed runtime
@@ -58,6 +60,8 @@ Environment variables follow the usual .NET convention, for example
 | `ResponseTimeout` | `00:02:00` | Maximum time for a turn. The turn is aborted and `TimeoutException` is thrown when it elapses. |
 | `MaxConcurrentTurns` | none | Optional cap on concurrent turns across the app. Extra turns wait in a queue of up to 8× the limit. *Client-level.* |
 | `EagerStart` | `false` | Start the client with the host instead of on first use. *Client-level.* |
+| `InProcess` | `false` | Host the runtime in this process instead of a child process. Experimental in the SDK (`GHCP001`). Runtime OpenTelemetry export is not available in-process. Cannot be combined with `Endpoint`. *Client-level.* |
+| `SessionRetention` | none | Delete sessions not modified for this long. See [Conversations](conversations.md#session-lifetime). *Client-level.* |
 | `GitHubToken` | none | Service identity for the SDK-managed runtime. Cannot be combined with `Endpoint`. *Client-level.* |
 | `Endpoint` | none | A shared, running runtime: `tcp://host:port`, `http(s)://host:port`, `host:port`, or a loopback port number. When unset, the SDK starts its bundled runtime. *Client-level.* |
 | `ConnectionToken` | none | Shared secret for `Endpoint`; required when the endpoint is not loopback. *Client-level.* |
@@ -155,10 +159,11 @@ key to fix:
 - a non-loopback `Endpoint` requires `ConnectionToken`;
 - `Endpoint` must be `tcp://host:port`, `http(s)://host:port`, `host:port`, or a port number;
 - `GitHubToken` cannot be combined with `Endpoint` (a shared runtime manages its own sign-in);
+- `InProcess` cannot be combined with `Endpoint`;
 - `Provider` requires `BaseUrl`;
 - an HTTP MCP server needs an absolute http(s) `Url`, a stdio server needs a `Command`, and
   unknown `Type` values are rejected;
-- `ResponseTimeout`, `MaxConcurrentTurns`, and MCP `Timeout` must be positive.
+- `ResponseTimeout`, `MaxConcurrentTurns`, `SessionRetention`, and MCP `Timeout` must be positive.
 
 For a named agent, messages use the `Copilot:Agents:{name}:` prefix.
 
