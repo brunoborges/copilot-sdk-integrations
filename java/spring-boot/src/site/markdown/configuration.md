@@ -45,6 +45,7 @@ The binding type is `io.github.brunoborges.copilot.autoconfigure.CopilotProperti
 | `copilot.log-level` | String | SDK default, `info` | Non-blank, forwarded to SDK/CLI without an integration-specific level enum. |
 | `copilot.cli-url` | String | Unset | Existing raw-TCP server address; switches the default options away from stdio. |
 | `copilot.tcp-connection-token` | String | Unset | Non-blank external-server token; requires `cli-url`. |
+| `copilot.connection` | `stdio`, `inprocess` | Unset | Runtime transport; `inprocess` (experimental) hosts the runtime in the JVM. Unset keeps the SDK default. |
 
 `cli-url` cannot be combined with `cli-path`, non-empty `cli-args`, or
 `working-directory`. Supported address forms include `4321`, `localhost:4321`,
@@ -60,6 +61,41 @@ A `CopilotConnectionDetails` bean takes precedence over `cli-url` and
 `tcp-connection-token`. Testcontainers `@ServiceConnection` registers one, for example.
 When that bean is present, `cli-path`, `cli-args`, and `working-directory` are
 ignored; see [Testing](testing.html#connection-details).
+
+### In-process runtime (experimental)
+
+Set `copilot.connection=inprocess` to host the Copilot runtime inside the JVM
+instead of starting a CLI child process. Add JNA and the native runtime for
+each platform you deploy to:
+
+```xml
+<dependency>
+  <groupId>net.java.dev.jna</groupId>
+  <artifactId>jna</artifactId>
+  <version>5.19.1</version>
+</dependency>
+<dependency>
+  <groupId>com.github</groupId>
+  <artifactId>copilot-sdk-java-runtime</artifactId>
+  <version>${copilot-sdk.version}</version>
+  <classifier>darwin-arm64</classifier>
+</dependency>
+```
+
+Classifiers are `linux-x64`, `linux-arm64`, `linuxmusl-x64`, `linuxmusl-arm64`,
+`win32-x64`, `win32-arm64`, `darwin-x64`, and `darwin-arm64`. A `runtime.node`
+next to the CLI named by `COPILOT_CLI_PATH`, or next to `copilot` on `PATH`,
+also works. Startup fails with the missing dependency and the classifier for the
+current platform when JNA or the runtime cannot be found.
+
+In-process mode cannot be combined with `cli-path`, `cli-args`,
+`working-directory`, `cli-url`, or `tcp-connection-token`; startup names every
+conflicting setting. A JVM loads only one native runtime library.
+On JDK 24 and later, add `--enable-native-access=ALL-UNNAMED` to avoid native
+access warnings. `copilot.connection=stdio` pins the child-process transport even
+when `COPILOT_SDK_DEFAULT_CONNECTION=inprocess` is set.
+
+A `CopilotConnectionDetails` bean takes precedence and ignores `copilot.connection`.
 
 There is no integration property for a GitHub credential. Local authentication
 follows SDK/CLI rules; external secrets should use supported environment or
