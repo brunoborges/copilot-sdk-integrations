@@ -1,6 +1,6 @@
 # Apache Camel integration: design
 
-Status: **proposal**. Nothing in this document is implemented yet.
+Status: **proposal, next Java integration**. Nothing in this document is implemented yet.
 
 This document designs `camel-copilot`, an [Apache Camel](https://camel.apache.org/) component that
 brings the GitHub Copilot agent runtime into Camel routes. It builds on the

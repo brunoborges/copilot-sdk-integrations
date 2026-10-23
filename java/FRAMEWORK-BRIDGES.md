@@ -4,8 +4,10 @@ Status: **proposal**. This document evaluates which Java frameworks would benefi
 Copilot integration built on the [Copilot SDK for Java](https://github.com/github/copilot-sdk)
 and the shared engine in [`core/`](core/) (`copilot-agent-core`).
 
-Available today: [Spring Boot](spring-boot/) and [Quarkus](quarkus/). Designed:
-[Apache Camel](camel/DESIGN.md).
+Available today: [Spring Boot](spring-boot/) and [Quarkus](quarkus/).
+
+**Decision:** [Apache Camel](camel/DESIGN.md) is the next Java integration. Every other bridge in
+this document is a nice-to-have, kept here for reference and not scheduled.
 
 ## How a bridge is built
 
@@ -24,9 +26,9 @@ provides:
 Anything that requires changes in `copilot-agent-core` (for example a shared conversation
 repository) should land there first, so every bridge benefits.
 
-## Tier 0: plain Java bootstrap (prerequisite)
+## Plain Java bootstrap: nice to have
 
-Before adding more frameworks, add a **container-less bootstrap** to `copilot-agent-core`: a
+A **container-less bootstrap** could be added to `copilot-agent-core`: a
 builder that accepts tools, hooks, and listeners as objects (backed by a map-based
 `BeanLookup`) and a `Properties`/environment-based `PropertyResolver`.
 
@@ -39,12 +41,13 @@ CopilotAgents agents = CopilotAgentsBuilder.create()
     .build();
 ```
 
-This unlocks every framework without a DI container (Javalin, Helidon SE, Vert.x, Dropwizard,
-Jenkins plugins, CLIs built with JBang/picocli) and makes the remaining bridges smaller.
+This would unlock frameworks without a DI container (Javalin, Helidon SE, Vert.x, Dropwizard,
+Jenkins plugins, CLIs built with JBang/picocli). Camel does not need it: its `Registry` already
+backs a `BeanLookup`.
 
-## Candidate frameworks
+## Nice-to-have frameworks
 
-### 1. Spring AI and LangChain4j adapters: high priority
+### 1. Spring AI and LangChain4j adapters
 
 **What:** implement the abstractions those libraries already standardize on, backed by the
 Copilot runtime:
@@ -65,7 +68,7 @@ call or per memory ID, runtime built-in tools disabled, tool execution delegated
 host library) and should expose the full agent runtime only through the native
 `@CopilotAgent` API.
 
-### 2. Jakarta EE / MicroProfile (portable CDI extension): high priority
+### 2. Jakarta EE / MicroProfile (portable CDI extension)
 
 **What:** a portable CDI extension (`copilot-cdi`) with MicroProfile Config, Health, Telemetry,
 and Fault Tolerance integration.
@@ -80,7 +83,7 @@ runtime discovery (`ProcessAnnotatedType`, `AfterBeanDiscovery`) instead of Quar
 agent methods, `SecurityContext`/JWT principal feeding `CopilotTokenResolver`, and
 `ManagedExecutorService` for async invocations.
 
-### 3. Micronaut: high priority
+### 3. Micronaut
 
 **What:** a Micronaut module using compile-time bean definitions.
 
@@ -93,7 +96,7 @@ interfaces. `BeanLookup` maps onto `BeanContext` with `@Named` qualifiers and `@
 Micrometer metrics, Micronaut Tracing, `@MicronautTest` with the scripted runtime, and
 Micronaut Security's authenticated principal for per-user tokens.
 
-### 4. Durable workflow engines (Temporal, Spring Batch): medium-high priority
+### 4. Durable workflow engines (Temporal, Spring Batch)
 
 **What:**
 
@@ -110,7 +113,7 @@ approvals naturally.
 **Caveat:** agent calls must stay inside activities or processors, never in deterministic
 workflow code.
 
-### 5. Reactive and messaging: medium priority
+### 5. Reactive and messaging
 
 - **Vert.x:** a `Future`-based client and an event-bus service (`copilot.agent.<name>`
   addresses) so verticles call agents without blocking the event loop; streaming deltas map to
@@ -121,7 +124,7 @@ workflow code.
   outbound gateway. Spring Integration overlaps with Camel's EIP model and can reuse much of the
   Camel design (tool channels, permission channels).
 
-### 6. Stream processing (Apache Flink, Kafka Streams): low-medium priority
+### 6. Stream processing (Apache Flink, Kafka Streams)
 
 **What:** a Flink `AsyncFunction` (async I/O operator) and a Kafka Streams processor that
 enrich records with agent output.
@@ -131,7 +134,7 @@ summaries). Latency, cost, and quota make it a poor fit for high-volume streams,
 must ship with rate limiting, sampling, and capacity bounds, and be documented as an
 enrichment step, not a per-event default.
 
-### 7. Developer tooling hosts: opportunistic
+### 7. Developer tooling hosts
 
 - **Jenkins:** a pipeline step (`copilotAgent(prompt: ..., tools: [...])`) for build triage
   and release notes, using Jenkins credentials for the GitHub token. Builds on the tier-0
@@ -143,15 +146,15 @@ enrichment step, not a per-event default.
 
 | Bridge | Reach | Effort (on top of core) | Distinct value | Priority |
 | --- | --- | --- | --- | --- |
-| Plain Java bootstrap | All non-DI apps | Low | Prerequisite for many bridges | **Do first** |
-| Spring AI / LangChain4j adapters | Very high | Medium | Drop-in for existing AI apps | High |
-| Jakarta EE / MicroProfile CDI | High (enterprise) | Medium (reuse Quarkus CDI mapping) | Covers many app servers at once | High |
-| Apache Camel | High (integration) | Medium | Routes as tools, EIPs around agents | High ([design](camel/DESIGN.md)) |
-| Micronaut | Medium | Medium (reuse Quarkus build-time ideas) | Native image, compile-time DI | High |
-| Temporal / Spring Batch | Medium | Low-medium | Durable, human-in-the-loop agent work | Medium-high |
-| Vert.x / Reactive Messaging / Spring Integration | Medium | Low-medium | Non-blocking and messaging pipelines | Medium |
-| Flink / Kafka Streams | Niche | Medium | Agent enrichment in streams | Low-medium |
-| Jenkins / JUnit | Niche to broad | Low | Tooling and shared tests | Opportunistic |
+| Apache Camel | High (integration) | Medium | Routes as tools, EIPs around agents | **Next** ([design](camel/DESIGN.md)) |
+| Spring AI / LangChain4j adapters | Very high | Medium | Drop-in for existing AI apps | Nice to have |
+| Jakarta EE / MicroProfile CDI | High (enterprise) | Medium (reuse Quarkus CDI mapping) | Covers many app servers at once | Nice to have |
+| Micronaut | Medium | Medium (reuse Quarkus build-time ideas) | Native image, compile-time DI | Nice to have |
+| Plain Java bootstrap | All non-DI apps | Low | Enables container-less bridges | Nice to have |
+| Temporal / Spring Batch | Medium | Low-medium | Durable, human-in-the-loop agent work | Nice to have |
+| Vert.x / Reactive Messaging / Spring Integration | Medium | Low-medium | Non-blocking and messaging pipelines | Nice to have |
+| Flink / Kafka Streams | Niche | Medium | Agent enrichment in streams | Nice to have |
+| Jenkins / JUnit | Niche to broad | Low | Tooling and shared tests | Nice to have |
 
 Frameworks considered and not recommended as separate bridges: Helidon MP (covered by the CDI
 extension), Dropwizard and Javalin (covered by the plain Java bootstrap), and Jakarta Batch
@@ -159,13 +162,12 @@ extension), Dropwizard and Javalin (covered by the plain Java bootstrap), and Ja
 
 ## Cross-cutting work in `copilot-agent-core`
 
-Several bridges need the same capabilities; implementing them once in core keeps bridges thin:
+Needed for Camel, and reusable by any later bridge:
 
-1. Container-less bootstrap (tier 0).
-2. A `CopilotConversationRepository` SPI for clustered conversation mappings (Camel, Temporal,
-   messaging).
-3. Async-first invocation (`CompletionStage` return types on agent methods) for Camel, Vert.x,
-   and Reactive Messaging.
-4. A standalone scripted-runtime test artifact.
-5. A tool-definition SPI that accepts externally described tools (Camel routes, Spring AI
-   `ToolCallback`s, LangChain4j tools) in addition to SDK `@CopilotTool` methods.
+1. A tool-definition SPI that accepts externally described tools (Camel routes first; later
+   Spring AI `ToolCallback`s or LangChain4j tools) in addition to SDK `@CopilotTool` methods.
+2. Async-first invocation (`CompletionStage`) so the Camel producer can be an `AsyncProcessor`.
+3. A `CopilotConversationRepository` SPI for clustered conversation mappings.
+4. A scripted-runtime test artifact usable outside the Spring Boot and Quarkus test modules.
+
+Only for nice-to-have bridges: the container-less bootstrap.
