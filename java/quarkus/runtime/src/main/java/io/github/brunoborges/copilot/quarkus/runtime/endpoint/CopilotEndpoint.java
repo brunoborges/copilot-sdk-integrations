@@ -38,7 +38,7 @@ import io.github.brunoborges.copilot.quarkus.runtime.config.CopilotRuntimeConfig
 @Singleton
 public class CopilotEndpoint {
 
-    static final String MANAGED_SESSION_PREFIX = "agent-";
+    static final String MANAGED_SESSION_PREFIX = CopilotAgentInvoker.MANAGED_SESSION_PREFIX;
 
     private final CopilotClient client;
     private final CopilotRuntimeConfig.Endpoint properties;

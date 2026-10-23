@@ -29,6 +29,8 @@ COPILOT_MCP_SERVERS='{"docs": {"type": "http", "url": "https://example.com/mcp"}
 COPILOT_PROVIDERS='{"azure": {"type": "azure", "base_url": "https://contoso.openai.azure.com"}}'
 COPILOT_AGENTS='{"support": {"model": "claude-sonnet-4.5", "timeout": 60}}'
 COPILOT_HOOKS='["app.hooks.AuditHooks"]'
+COPILOT_SESSIONS__MAX_AGE=P30D             # seconds or ISO 8601; unset: no cleanup
+COPILOT_SESSIONS__CLEANUP_INTERVAL=3600    # default: MAX_AGE / 2, between 1 minute and 1 hour
 COPILOT_VALIDATE_ON_STARTUP=true
 ```
 
@@ -82,3 +84,23 @@ COPILOT_AGENTS='{"github_triage": {"tool_search": {"enabled": true, "defer_thres
 
 Precedence is `agents` overrides, then class attributes, then `defaults`. Overrides for agents
 that are not registered produce a startup warning.
+
+## Session cleanup
+
+Session cleanup is opt-in because deleting sessions is destructive. With
+`sessions.max_age` set, `copilot.lifespan` starts an asyncio task that sweeps every
+`sessions.cleanup_interval` and cancels it on shutdown. A sweep deletes only sessions that
+are not remote, whose ID starts with `agent-`, and whose last modification is older than
+`max_age`. It re-reads the metadata right before deleting, skips sessions with a turn in
+flight, and does nothing until the runtime has been started. Errors are logged and retried
+on the next sweep.
+
+```python
+from datetime import timedelta
+
+copilot = Copilot(CopilotSettings(sessions={"max_age": timedelta(days=30)}), agents=[SupportAgent])
+await copilot.session_cleanup().asweep()   # one sweep on demand; returns the number deleted
+```
+
+With several workers, every worker runs its own sweep. That is safe, but you can also enable
+it in a single worker or call `asweep()` from your own scheduler instead.

@@ -36,7 +36,8 @@ public record CopilotRuntimeConfig(
         Health health,
         Endpoint endpoint,
         Security security,
-        Streaming streaming) {
+        Streaming streaming,
+        Sessions sessions) {
 
     public static final String PREFIX = "micronaut.copilot";
 
@@ -122,6 +123,21 @@ public record CopilotRuntimeConfig(
     public record Streaming(int bufferCapacity) {
     }
 
+    /**
+     * @param timeout maximum time a {@code CopilotSessionStore} or cleanup call waits for the Copilot runtime,
+     *        including how long a deletion waits for a turn in flight on the session
+     * @param cleanup age-based deletion of agent sessions; disabled unless {@code max-age} is set
+     */
+    public record Sessions(Duration timeout, Cleanup cleanup) {
+
+        /**
+         * @param maxAge deletes agent sessions not modified for longer than this; empty disables cleanup
+         * @param interval time between sweeps; defaults to half of {@code max-age}, between one minute and one hour
+         */
+        public record Cleanup(Optional<Duration> maxAge, Optional<Duration> interval) {
+        }
+    }
+
     private static Connection connection(String value) {
         String normalized = value.trim().replace("-", "").replace("_", "").toUpperCase(Locale.ROOT);
         for (Connection connection : Connection.values()) {
@@ -160,7 +176,10 @@ public record CopilotRuntimeConfig(
                         reader.bool(PREFIX + ".endpoint.show-session-summaries", false)),
                 new Security(new Security.Identity(reader.bool(PREFIX + ".security.identity.ambient-fallback", false),
                         reader.text(PREFIX + ".security.identity.token-attribute").orElse("accessToken"))),
-                new Streaming(reader.integer(PREFIX + ".streaming.buffer-capacity", 256)));
+                new Streaming(reader.integer(PREFIX + ".streaming.buffer-capacity", 256)),
+                new Sessions(reader.duration(PREFIX + ".sessions.timeout", Duration.ofMinutes(2)),
+                        new Sessions.Cleanup(properties.getProperty(PREFIX + ".sessions.cleanup.max-age", Duration.class),
+                                properties.getProperty(PREFIX + ".sessions.cleanup.interval", Duration.class))));
     }
 
     private record Reader(PropertyResolver properties) {

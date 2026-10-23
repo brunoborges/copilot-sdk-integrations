@@ -3,6 +3,7 @@ package io.github.brunoborges.copilot.camel;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -14,6 +15,7 @@ import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.support.PropertyBindingSupport;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +30,9 @@ import com.github.copilot.rpc.ToolDefinition;
 import io.github.brunoborges.copilot.agent.ConversationId;
 import io.github.brunoborges.copilot.agent.CopilotAgent;
 import io.github.brunoborges.copilot.agent.CopilotPermissionPolicies;
+import io.github.brunoborges.copilot.agent.CopilotSessionStore;
 import io.github.brunoborges.copilot.agent.UserMessage;
+import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
 import io.github.brunoborges.copilot.camel.test.CopilotTestPrompt;
 import io.github.brunoborges.copilot.camel.test.CopilotTestRuntime;
 
@@ -382,6 +386,72 @@ class CopilotComponentTest {
         assertThat(runtime.sessions("advisor")).hasSize(1);
         assertThat(runtime.sessionConfig("advisor").getSystemMessage().getContent())
                 .isEqualTo("You advise on Camel routes.");
+    }
+
+    @Test
+    void sessionStoreListsMapsAndDeletesAgentSessions() throws Exception {
+        var component = new CopilotComponent();
+        component.setAgentTypes(Advisor.class.getName());
+        context.addComponent("copilot", component);
+        start(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:ask").to("copilot:agent:advisor");
+            }
+        });
+        runtime.agent("advisor").replies("Use split/aggregate.");
+        template.requestBodyAndHeader("direct:ask", "How do I batch?", CopilotConstants.CONVERSATION_ID, "c-9");
+
+        CopilotSessionStore store = component.sessionStore();
+        String sessionId = store.sessionId(Advisor.class, "c-9");
+
+        assertThat(context.getRegistry().lookupByNameAndType("copilotSessionStore", CopilotSessionStore.class))
+                .isSameAs(store);
+        assertThat(sessionId).isEqualTo(CopilotAgentInvoker.sessionId(component.factory(Advisor.class).definition(), "c-9"))
+                .startsWith(CopilotAgentInvoker.MANAGED_SESSION_PREFIX);
+        assertThat(store.list()).extracting(session -> session.getSessionId()).containsExactly(sessionId);
+        assertThat(store.delete(sessionId)).isTrue();
+        assertThat(store.exists(sessionId)).isFalse();
+        assertThatThrownBy(() -> store.sessionId(String.class, "c-9")).isInstanceOf(IllegalArgumentException.class);
+        assertThat(component.activeCleanupInterval()).as("cleanup is disabled by default").isNull();
+    }
+
+    @Test
+    void sessionCleanupRunsWhenAMaxAgeIsSet() throws Exception {
+        var component = new CopilotComponent();
+        PropertyBindingSupport.build().bind(context, component, new java.util.HashMap<>(Map.of("sessionMaxAge", "1h")));
+        context.addComponent("copilot", component);
+        start(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:ask").to("copilot:agent:support");
+            }
+        });
+
+        assertThat(component.getSessionMaxAge()).isEqualTo(Duration.ofHours(1));
+        assertThat(component.activeCleanupInterval()).isEqualTo(Duration.ofMinutes(30));
+
+        context.stop();
+        assertThat(component.activeCleanupInterval()).isNull();
+        assertThatThrownBy(component::sessionStore).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void sessionCleanupUsesTheConfiguredInterval() throws Exception {
+        var component = new CopilotComponent();
+        component.setSessionMaxAge(Duration.ofDays(7));
+        component.setSessionCleanupInterval(Duration.ofMinutes(5));
+        context.addComponent("copilot", component);
+        start(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:ask").to("copilot:agent:support");
+            }
+        });
+
+        assertThat(component.activeCleanupInterval()).isEqualTo(Duration.ofMinutes(5));
+        assertThatThrownBy(() -> component.setSessionMaxAge(Duration.ZERO))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

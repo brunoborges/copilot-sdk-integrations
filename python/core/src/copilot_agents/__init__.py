@@ -18,6 +18,7 @@ from .policies import PermissionPolicy
 from .recovery import ErrorRecoveryHooks, SdkErrorCategory, ToolResultCategory
 from .runtime import CopilotRuntime
 from .session_ids import SHARED, derive_session_id
+from .sessions import SessionCleanup, SessionMessage, SessionStore
 from .tokens import CallerIdentity, CopilotTokenResolver, StaticTokenResolver
 from .tools import CopilotTool, ToolContext, ToolError, tool
 
@@ -41,6 +42,9 @@ __all__ = [
     "ErrorRecoveryHooks",
     "PermissionPolicy",
     "SdkErrorCategory",
+    "SessionCleanup",
+    "SessionMessage",
+    "SessionStore",
     "StaticTokenResolver",
     "ToolCall",
     "ToolContext",

@@ -75,6 +75,7 @@ default, and validation:
 | `copilot.reactor.buffer-capacity` | `quarkus.copilot.streaming.buffer-capacity` |
 | `copilot.observations.enabled` | `quarkus.copilot.metrics.enabled` (build time) |
 | `copilot.endpoint.*` | `quarkus.copilot.endpoint.*` |
+| `copilot.sessions.*` | `quarkus.copilot.sessions.*` |
 | Exposing the `copilot` Actuator endpoint (`management.endpoints.web.exposure.include`) | `quarkus.copilot.endpoint.enabled=true` (build time) |
 
 Integrations that change the bean graph are fixed at **build time**:

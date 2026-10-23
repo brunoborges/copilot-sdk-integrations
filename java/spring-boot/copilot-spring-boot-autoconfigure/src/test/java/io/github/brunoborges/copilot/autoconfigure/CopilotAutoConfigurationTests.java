@@ -300,6 +300,7 @@ class CopilotAutoConfigurationTests {
                     "copilot.error-recovery.shell-error-phrases", "copilot.error-recovery.permission-note",
                     "copilot.error-recovery.error-note", "copilot.error-recovery.max-consecutive-failures",
                     "copilot.execution.max-concurrent-invocations", "copilot.execution.max-outstanding-invocations",
+                    "copilot.sessions.timeout", "copilot.sessions.cleanup.max-age", "copilot.sessions.cleanup.interval",
                     "copilot.health.timeout", "copilot.health.start-client",
                     "copilot.health.require-authentication", "copilot.endpoint.timeout",
                     "copilot.endpoint.start-client", "copilot.endpoint.show-instructions",

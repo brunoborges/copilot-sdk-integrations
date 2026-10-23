@@ -20,6 +20,7 @@ npm install @copilot-sdk-integrations/nestjs @copilot-sdk-integrations/agent-cor
         providers: { foundry: { type: "azure", baseUrl: config.get("FOUNDRY_URL")!, apiKey: config.get("FOUNDRY_KEY") } },
         agents: { support: { model: config.get("SUPPORT_MODEL") } }, // per-agent overrides beat decorators
         context: { headers: ["x-tenant"] },     // copied into CopilotContext.attributes.headers
+        sessionCleanup: { maxAge: 7 * 24 * 3_600_000 }, // delete sessions idle for a week (default: off)
       }),
     }),
     SupportModule,
@@ -34,6 +35,8 @@ export class AppModule {}
 - `COPILOT_CLIENT`, an accessor `() => Promise<client>` that starts a lazy runtime, injected with `@InjectCopilotClient()`.
 - `CopilotAgents`.
 - `CopilotHealthIndicator`.
+- `CopilotSessionsService`, which lists, reads (`getMessages`), and deletes persisted sessions without resuming them.
+- `CopilotSessionCleanup`, which deletes old sessions every `sessionCleanup.interval` (default `maxAge / 2`, clamped to 1 minute–1 hour) when `sessionCleanup.maxAge` is set. It only touches sessions created by this library that aren't remote or running, and never starts the runtime.
 - A global `CopilotContextInterceptor` (disable it with `context: false`).
 - A global `CopilotExceptionFilter` (disable it with `exceptionFilter: false`).
 

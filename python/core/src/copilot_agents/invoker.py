@@ -182,7 +182,7 @@ class AgentInvoker:
         executor = CallerThreadExecutor()
         binding = _Binding(call.context, CallerThreadDispatcher(executor, self.fallback))
         timeout = self.definition.timeout if timeout is None else timeout
-        coro = self._run(call, binding, prompt, result, require_existing, timeout)
+        coro = self._tracked(call, self._run(call, binding, prompt, result, require_existing, timeout))
         return self._wait_sync(executor, self.runtime.submit(coro), timeout)
 
     def delete(self, conversation_id: str, *, user: Any = None, request: Any = None) -> None:
@@ -215,7 +215,9 @@ class AgentInvoker:
         resolved = await dispatcher.sync_runner(lambda: self._resolve(identity))
         call = self._prepare(conversation_id, user, request, attributes, resolved)
         timeout = self.definition.timeout if timeout is None else timeout
-        coro = self._run(call, _Binding(call.context, dispatcher), prompt, result, require_existing, timeout)
+        coro = self._tracked(
+            call, self._run(call, _Binding(call.context, dispatcher), prompt, result, require_existing, timeout)
+        )
         try:
             return await asyncio.wait_for(
                 self.runtime.run_async(coro), timeout + OUTER_TIMEOUT_MARGIN
@@ -253,11 +255,15 @@ class AgentInvoker:
                 f"Copilot agent {self.definition.name!r} did not reply within {timeout} seconds"
             ) from None
 
+    async def _tracked(self, call: _Call, turn: Any) -> Any:
+        return await self.runtime.activity.track(call.context.session_id, turn)
+
     async def _delete(self, ctx: AgentContext) -> None:
         client = await self.runtime.client()
-        if await client.get_session_metadata(ctx.session_id) is not None:
-            await client.delete_session(ctx.session_id)
-        await self._release(ctx)
+        async with self.runtime.activity.exclusive(ctx.session_id):
+            if await client.get_session_metadata(ctx.session_id) is not None:
+                await client.delete_session(ctx.session_id)
+            await self._release(ctx)
 
     async def _release(self, ctx: AgentContext) -> None:
         release = self.definition.release_working_directory

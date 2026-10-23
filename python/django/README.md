@@ -91,11 +91,16 @@ async def chat(request, pk):
 - **Working directories** default to an isolated directory per session under
   `COPILOT["RUNTIME"]["BASE_DIRECTORY"]`, removed when an ephemeral session ends or a
   conversation is deleted.
+- **Sessions** — `get_session_store()` lists, reads (without resuming), checks and deletes
+  sessions; `store.session_id_for(SupportAgent, "ticket-7", user=request.user)` maps a
+  conversation to its session ID. Set `COPILOT["SESSIONS"]["MAX_AGE"]` to delete this
+  integration's sessions that have not been modified for that long (off by default).
 - **System checks** — `copilot.E001`–`E005` (invalid settings, unknown references, tool-filter
   conflicts, BYOK misconfiguration, duplicate names), `W001` (runtime not downloaded), `W002`
   (`allow_all`), `W003` (many stdio workers).
 - **Commands** — `copilot_download_runtime [--force] [--runtime-version V]` (run at image build
-  time) and `copilot_check` (prints the redacted effective configuration and probes the runtime).
+  time), `copilot_check` (prints the redacted effective configuration and probes the runtime)
+  and `copilot_cleanup_sessions [--max-age SECONDS]` (one cleanup sweep, for cron).
 
 ## Settings
 
@@ -114,6 +119,11 @@ COPILOT = {
     "PROVIDERS": {},     # name -> BYOK provider config
     "AGENTS": {},        # agent name -> attribute overrides (upper-case keys)
     "HOOKS": [],         # dotted paths to CopilotAgentHooks applied to every agent
+    "SESSIONS": {
+        "MAX_AGE": None,              # seconds or timedelta; None disables cleanup
+        "CLEANUP_INTERVAL": None,     # default: MAX_AGE / 2, between 1 minute and 1 hour
+        "BACKGROUND_CLEANUP": True,   # sweep in a daemon thread per process when MAX_AGE is set
+    },
     "TELEMETRY": None,
 }
 ```

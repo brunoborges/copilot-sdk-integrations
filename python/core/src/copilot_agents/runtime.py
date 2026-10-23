@@ -22,6 +22,7 @@ import weakref
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any, TypeVar
 
+from .activity import SessionActivity
 from .errors import CopilotTimeout
 
 log = logging.getLogger("copilot_agents.runtime")
@@ -59,6 +60,8 @@ class CopilotRuntime:
         self._status = "stopped"
         self._failure: str | None = None
         self._pid = os.getpid()
+        self.activity = SessionActivity()
+        """Sessions with a turn in flight (used on the Copilot loop thread)."""
 
     # -- status -----------------------------------------------------------------------
 

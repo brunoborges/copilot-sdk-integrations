@@ -19,6 +19,7 @@ title: Configuration reference
 - [Endpoint properties](#endpoint-properties)
 - [Security properties](#security-properties)
 - [Streaming properties](#streaming-properties)
+- [Session properties](#session-properties)
 - [Configuration examples and precedence](#configuration-examples-and-precedence)
 
 Configuration uses ordinary Quarkus config sources: `application.properties`,
@@ -320,6 +321,26 @@ These apply only when Mutiny is on the class path.
 
 This is not a bound on buffers introduced by downstream Mutiny operators.
 Spring Boot's equivalent is `copilot.reactor.buffer-capacity`.
+
+<a id="session-properties"></a>
+
+## Session properties
+
+These configure the injectable `CopilotSessionStore` and age-based session
+cleanup. See [Conversations and lifecycle](conversations.html#managing-sessions).
+
+| Property | Type | Default | Meaning and validation |
+| --- | --- | --- | --- |
+| `quarkus.copilot.sessions.timeout` | Duration | `2m` | Positive maximum wait for each `CopilotSessionStore` or cleanup call, including how long a deletion waits for a turn in flight on the session. |
+| `quarkus.copilot.sessions.cleanup.max-age` | Duration | unset | Positive age after which agent sessions not modified are deleted. Unset disables cleanup. |
+| `quarkus.copilot.sessions.cleanup.interval` | Duration | half of `max-age`, clamped to `1m`–`1h` | Positive delay between cleanup sweeps. |
+
+Cleanup runs on a dedicated daemon thread only while the application runs. It
+only deletes local sessions with the extension's `agent-` prefix, skips a sweep
+while the client is not connected (it never starts the client), skips sessions
+with a turn queued or running, and re-reads each session's metadata just before
+deleting it. Every replica sharing a runtime may run cleanup; deleting an
+already-deleted session is harmless.
 
 <a id="configuration-examples-and-precedence"></a>
 

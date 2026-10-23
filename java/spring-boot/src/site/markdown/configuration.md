@@ -13,6 +13,7 @@ title: Configuration reference
 - [MCP properties](#mcp-properties)
 - [BYOK properties](#byok-properties)
 - [Execution properties](#execution-properties)
+- [Session properties](#session-properties)
 - [Observation properties](#observation-properties)
 - [Actuator properties](#actuator-properties)
 - [Security properties](#security-properties)
@@ -225,6 +226,19 @@ Admission does not block the caller. A full envelope returns a
 include calls serialized behind another call to the same conversation, not
 just tasks waiting for a global slot. These are client invocation bounds, not
 a guarantee about detached work continuing in the runtime.
+
+<a id="session-properties"></a>
+
+## Session properties
+
+Bound to `CopilotSessionProperties`. See
+[Listing, reading, and deleting sessions](conversations.html#session-store).
+
+| Property | Type | Default | Meaning and validation |
+| --- | --- | --- | --- |
+| `copilot.sessions.timeout` | Duration | `2m` | Positive bound on each `CopilotSessionStore` and cleanup runtime call, including how long a deletion waits for a turn in flight. |
+| `copilot.sessions.cleanup.max-age` | Duration | unset | Deletes agent sessions not modified for longer than this. Unset disables cleanup; must be positive. |
+| `copilot.sessions.cleanup.interval` | Duration | half of `max-age`, clamped to 1m–1h | Positive time between cleanup sweeps. |
 
 <a id="observation-properties"></a>
 

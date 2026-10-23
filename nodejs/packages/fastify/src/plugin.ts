@@ -2,6 +2,7 @@ import {
   CopilotConfigurationError,
   CopilotIntegrationError,
   createCopilot,
+  createSessionCleanup,
   defineAgent,
   toSseStream,
   type AgentHandle,
@@ -39,6 +40,9 @@ function createFastifyCopilot(core: Copilot, overrides: Record<string, Partial<C
     stop: (options) => core.stop(options),
     client: () => core.client(),
     capacity: () => core.capacity(),
+    get sessions() {
+      return core.sessions;
+    },
     health: () => core.health(),
     agent(nameOrDefinition: string | CopilotAgentDefinition): AgentHandle {
       if (typeof nameOrDefinition !== "string") return core.agent(nameOrDefinition);
@@ -82,6 +86,11 @@ function createPlugin(applyPrefix: boolean): FastifyPluginAsync<CopilotPluginOpt
     for (const definition of opts.agents) copilot.registerAgent(definition);
 
     fastify.decorate("copilot", copilot);
+    fastify.decorate("copilotSessions", core.sessions);
+    const cleanup = opts.sessionCleanup
+      ? createSessionCleanup(core.sessions, opts.sessionCleanup, fastifyCopilotLogger(fastify.log.child({ module: "copilot" })))
+      : null;
+    fastify.decorate("copilotSessionCleanup", cleanup);
     decorateRequestCopilot(fastify);
     fastify.decorateReply("copilotEvents", sendCopilotEvents);
 
@@ -98,7 +107,10 @@ function createPlugin(applyPrefix: boolean): FastifyPluginAsync<CopilotPluginOpt
         fastify.log.warn({ module: "copilot" }, `agentOverrides for unknown Copilot agents: ${unknown.join(", ")}`);
       }
       if (opts.startup === "eager") await core.start();
+      cleanup?.start();
     });
+
+    if (cleanup) fastify.addHook("onClose", async () => cleanup.stop());
 
     if (stopOnClose) {
       let stopping: Promise<void> | undefined;

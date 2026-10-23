@@ -1,4 +1,4 @@
-import { CopilotConfigurationError, type Copilot, type CopilotOptions } from "@copilot-sdk-integrations/agent-core";
+import { CopilotConfigurationError, type Copilot, type CopilotOptions, type CopilotSessionCleanupOptions } from "@copilot-sdk-integrations/agent-core";
 import { z } from "zod";
 import type { CopilotContextOptions, CopilotHealthRouteOptions, CopilotInfoRouteOptions, CopilotPluginOptions } from "./types.js";
 
@@ -59,6 +59,7 @@ const schema = z
       .optional(),
     shutdownGracePeriod: z.number().int().nonnegative().optional(),
     stopOnClose: z.boolean().optional(),
+    sessionCleanup: z.object({ maxAge: z.number().positive(), interval: z.number().positive().optional() }).strict().optional(),
     // Fastify's own register options.
     prefix: z.string().optional(),
     logLevel: z.string().optional(),
@@ -77,6 +78,7 @@ export interface ResolvedPluginOptions {
   info: (CopilotInfoRouteOptions & { path: string }) | false;
   shutdownGracePeriod: number;
   stopOnClose: boolean | undefined;
+  sessionCleanup: CopilotSessionCleanupOptions | undefined;
   prefix: string | undefined;
 }
 
@@ -110,6 +112,7 @@ export function resolvePluginOptions(options: CopilotPluginOptions | undefined):
     info,
     shutdownGracePeriod: opts.shutdownGracePeriod ?? DEFAULT_SHUTDOWN_GRACE_PERIOD_MS,
     stopOnClose: opts.stopOnClose,
+    sessionCleanup: opts.sessionCleanup,
     prefix: opts.prefix,
   };
 }

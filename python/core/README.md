@@ -13,6 +13,8 @@ It is the Python counterpart of [`java-core`](../../java-core/): framework integ
 | `CopilotRuntime` | Owns one `CopilotClient` on a dedicated event-loop thread; usable from sync and async code, fork-safe, reusable after `shutdown()`. |
 | `tool` / `ToolContext` / `ToolError` | Turns a typed function into a Copilot tool. `ctx: ToolContext` exposes the user, request and conversation. |
 | `policies` | Permission policies: `deny_all`, `allow_all`, `allow_kinds`, `allow_tools`, `allow_mcp_servers`, `allow_read_only`, `allow_registered_tools`, `any_of`. |
+| `SessionStore` | Lists, reads (`get_messages`, without resuming), checks and deletes sessions; `session_id_for(agent, conversation_id, user=...)` maps a conversation to its session ID. Sync and `a`-prefixed async methods. |
+| `SessionCleanup` | Opt-in sweeper that deletes this library's sessions (`agent-` prefix, not remote) older than `max_age`; `sweep()` / `asweep()` for one pass, `run()` for a loop. |
 | `ErrorRecoveryHooks` | Opt-in hook that classifies failed tool results, nudges the model to keep going, and retries transient SDK errors. See [Error recovery](#error-recovery). |
 | `derive_session_id` | Deterministic session IDs, byte-compatible with the Java integrations. |
 | `testing.CopilotTestRuntime` | In-memory runtime that scripts replies and tool calls, no CLI or network needed. |
@@ -49,6 +51,37 @@ agent = AgentInvoker(
 print(agent.invoke("Where is order 42?", result=Answer))
 print(agent.invoke("And order 43?", conversation_id="ticket-7", user="user-1"))
 ```
+
+## Listing, deleting and cleaning up sessions
+
+```python
+from datetime import timedelta
+from copilot_agents import SessionCleanup, SessionStore
+
+store = SessionStore(runtime)
+for meta in store.list():                     # local sessions, newest first
+    print(meta.session_id, meta.modified_time, meta.summary)
+
+session_id = store.session_id_for(agent, "ticket-7", user="user-1")
+store.exists(session_id)
+for message in store.get_messages(session_id) or []:  # None when the session is missing
+    print(message.role, message.content)
+store.delete(session_id)                      # False when it did not exist
+
+cleanup = SessionCleanup(store, max_age=timedelta(days=30))  # interval: max_age/2, 1 min..1 h
+deleted = cleanup.sweep()                     # or: asyncio.create_task(cleanup.run())
+```
+
+- `get_messages` pages through the SDK's persisted events
+  (`sessions.readPersistedEvents`), so the session is not resumed. It returns user and
+  assistant messages in order, and skips sub-agent events, tool calls and empty assistant
+  messages.
+- `delete` and the sweep do not race a turn in flight: `delete` waits for running turns on
+  that session, and new turns wait for the delete to finish. The sweep skips busy sessions.
+- The sweep only deletes sessions that are not remote, whose ID starts with `agent-`, and
+  that were last modified before `now - max_age`. It re-reads the metadata right before
+  deleting. It never starts the runtime: if the runtime is not started yet, the sweep does
+  nothing. Errors are logged; a failed delete does not stop the sweep.
 
 ## Behavior worth knowing
 

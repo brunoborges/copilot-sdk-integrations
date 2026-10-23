@@ -10,6 +10,7 @@ from copilot_agents import (
     CopilotInvocationError,
     CopilotReply,
     CopilotTimeout,
+    SessionMessage,
     ToolCall,
     ToolContext,
     ToolError,
@@ -19,6 +20,7 @@ from copilot_agents import (
 )
 
 from .agents import Conversation, CopilotAgent, prompt, register
+from .sessions import get_session_store
 from .tools import copilot_tool
 
 __all__ = [
@@ -33,11 +35,13 @@ __all__ = [
     "CopilotInvocationError",
     "CopilotReply",
     "CopilotTimeout",
+    "SessionMessage",
     "ToolCall",
     "ToolContext",
     "ToolError",
     "copilot_tool",
     "current_invocation",
+    "get_session_store",
     "message_source",
     "policies",
     "prompt",

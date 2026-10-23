@@ -6,9 +6,10 @@ import asyncio
 import inspect
 import logging
 import os
+import shutil
 import threading
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator, Mapping
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager, contextmanager, suppress
 from typing import Any, TypeVar
 
 from fastapi import APIRouter, Depends, FastAPI, Request
@@ -25,6 +26,8 @@ from copilot_agents import (
     CopilotInvocationError,
     CopilotRuntime,
     CopilotTimeout,
+    SessionCleanup,
+    SessionStore,
 )
 from copilot_agents.executor import ThreadPoolDispatcher
 from copilot_agents.policies import approves_everything
@@ -54,6 +57,44 @@ def redact(value: Any) -> Any:
 
 async def _sync_runner(fn: Callable[[], Any]) -> Any:
     return await run_in_threadpool(fn)
+
+
+class CopilotSessionStore(SessionStore):
+    """:class:`~copilot_agents.SessionStore` that also accepts agent classes, instances, and names.
+
+    ``session_id_for(SupportAgent, "ticket-42", user=user)`` derives the session ID the
+    agent uses for that conversation and user; an agent instance (for example one injected
+    with ``copilot.depends``) supplies its own user and request when none are given.
+    """
+
+    def __init__(self, copilot: Copilot, **kwargs: Any) -> None:
+        super().__init__(copilot.runtime, **kwargs)
+        self.copilot = copilot
+
+    def session_id_for(
+        self,
+        agent: Any,
+        conversation_id: str,
+        *,
+        user: Any = None,
+        request: Any = None,
+        partition_key: str | None = None,
+    ) -> str:
+        if isinstance(agent, CopilotAgent) and user is None and request is None:
+            user, request = agent.user, agent.request
+        return super().session_id_for(agent, conversation_id, user=user, request=request, partition_key=partition_key)
+
+    def _resolve_agent(self, agent: Any) -> Any:
+        if isinstance(agent, str):
+            try:
+                agent = self.copilot.agents[agent]
+            except KeyError:
+                raise LookupError(f"No Copilot agent named {agent!r}; known: {sorted(self.copilot.agents)}") from None
+        if isinstance(agent, CopilotAgent):
+            agent = type(agent)
+        if inspect.isclass(agent) and issubclass(agent, CopilotAgent):
+            return self.copilot.invoker(agent)
+        return agent
 
 
 class Copilot:
@@ -98,6 +139,7 @@ class Copilot:
         self._invokers: dict[type[CopilotAgent], AgentInvoker] = {}
         self._dependencies: dict[type[CopilotAgent], Any] = {}
         self._lock = threading.RLock()
+        self._session_store: CopilotSessionStore | None = None
         for cls in agents:
             self.register(cls)
 
@@ -247,6 +289,42 @@ class Copilot:
             self._dependencies[cls] = result
         return result
 
+    # -- sessions ---------------------------------------------------------------------
+
+    def session_store(self) -> CopilotSessionStore:
+        """The session store on this runtime; also usable as a FastAPI dependency.
+
+        ::
+
+            Sessions = Annotated[CopilotSessionStore, Depends(copilot.session_store)]
+
+            @app.delete("/chats/{chat_id}")
+            async def delete_chat(chat_id: str, agent: Support, sessions: Sessions):
+                await sessions.adelete(sessions.session_id_for(agent, chat_id))
+        """
+        store = self._session_store
+        if store is None:
+            with self._lock:
+                store = self._session_store
+                if store is None:
+                    store = CopilotSessionStore(
+                        self,
+                        timeout=self.settings.runtime.request_timeout,
+                        on_deleted=self._release_workspace,
+                    )
+                    self._session_store = store
+        return store
+
+    def session_cleanup(self) -> SessionCleanup | None:
+        """The cleanup job from ``settings.sessions``; ``None`` unless ``max_age`` is set."""
+        sessions = self.settings.sessions
+        if sessions.max_age is None:
+            return None
+        return SessionCleanup(self.session_store(), sessions.max_age, interval=sessions.cleanup_interval)
+
+    def _release_workspace(self, session_id: str) -> None:
+        shutil.rmtree(self.settings.base_directory / "workspaces" / session_id, ignore_errors=True)
+
     # -- validation -------------------------------------------------------------------
 
     def check(self) -> list[str]:
@@ -302,15 +380,21 @@ class Copilot:
 
     @asynccontextmanager
     async def lifespan(self, app: FastAPI | None = None) -> AsyncIterator[None]:
-        """Validate agents, optionally start the runtime, and shut it down on exit."""
+        """Validate agents, optionally start the runtime and session cleanup, and shut down on exit."""
         if self.settings.validate_on_startup:
             for warning in self.check():
                 log.warning(warning)
         if self.settings.runtime.start == "eager":
             await self.runtime.run_async(self.runtime.client())
+        cleanup = self.session_cleanup()
+        task = asyncio.create_task(cleanup.run(), name="copilot-session-cleanup") if cleanup else None
         try:
             yield
         finally:
+            if task is not None:
+                task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await task
             await asyncio.to_thread(self.runtime.shutdown)
 
     def init_app(self, app: FastAPI) -> None:

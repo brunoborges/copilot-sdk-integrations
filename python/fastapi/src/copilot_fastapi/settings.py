@@ -8,6 +8,7 @@ set as JSON, for example ``COPILOT_AGENTS='{"support": {"model": "gpt-5"}}'``.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, Literal
 
@@ -56,6 +57,39 @@ class DefaultSettings(BaseModel):
     reasoning_effort: str | None = None
     permissions: str | dict[str, Any] = "deny"
     working_directory: str = "isolated"
+
+
+class SessionSettings(BaseModel):
+    """Session retention. Cleanup is off unless ``max_age`` is set.
+
+    Durations accept seconds or ISO 8601 (``COPILOT_SESSIONS__MAX_AGE=P7D``).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    max_age: timedelta | None = Field(
+        default=None, description="Delete sessions created by this app that were not modified within this age"
+    )
+    cleanup_interval: timedelta | None = Field(
+        default=None, description="Time between sweeps; defaults to half of max_age, between 1 minute and 1 hour"
+    )
+
+    @field_validator("max_age", "cleanup_interval", mode="before")
+    @classmethod
+    def _seconds(cls, value: object) -> object:
+        if isinstance(value, str):
+            try:
+                return float(value)
+            except ValueError:
+                return value
+        return value
+
+    @field_validator("max_age", "cleanup_interval")
+    @classmethod
+    def _positive(cls, value: timedelta | None) -> timedelta | None:
+        if value is not None and value <= timedelta(0):
+            raise ValueError("must be a positive duration")
+        return value
 
 
 class ToolSearchSettings(BaseModel):
@@ -120,6 +154,7 @@ class CopilotSettings(BaseSettings):
     runtime: RuntimeSettings = Field(default_factory=RuntimeSettings)
     auth: AuthSettings = Field(default_factory=AuthSettings)
     defaults: DefaultSettings = Field(default_factory=DefaultSettings)
+    sessions: SessionSettings = Field(default_factory=SessionSettings)
     mcp_servers: dict[str, dict[str, Any]] = Field(default_factory=dict)
     providers: dict[str, dict[str, Any]] = Field(default_factory=dict)
     agents: dict[str, AgentOverrides] = Field(default_factory=dict)

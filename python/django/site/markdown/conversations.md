@@ -27,6 +27,37 @@ Each has an async variant: `asend`, `aresume`, `aexists`, `adelete`. `resume()` 
 Each call opens the session, sends one message, waits for the reply, and disconnects. Nothing
 is held open between requests, so any worker process can continue any conversation.
 
+## Listing, reading and deleting sessions
+
+`get_session_store()` returns a `SessionStore` for administrative work across conversations,
+for example a chat history page or an admin action. Each method has an `a`-prefixed async
+variant.
+
+```python
+from copilot_django import get_session_store
+
+store = get_session_store()
+store.list()                       # local session metadata, most recently modified first
+session_id = store.session_id_for(SupportAgent, f"ticket-{ticket.pk}", user=request.user)
+store.get(session_id)              # metadata, or None
+store.exists(session_id)
+for message in store.get_messages(session_id) or []:   # None when the session is missing
+    print(message.role, message.content)               # "user" / "assistant"
+store.delete(session_id)           # False if it did not exist; removes the working directory
+```
+
+`session_id_for` accepts an agent class, an agent instance (which supplies its own user), or a
+registered agent name. `get_messages` reads the persisted history without resuming the session
+and skips tool calls and sub-agent messages. `delete` waits for a turn in flight on that
+session to finish.
+
+## Removing old sessions
+
+Cleanup is off by default. Set `COPILOT["SESSIONS"]["MAX_AGE"]` to delete sessions that were
+created by this integration (their IDs start with `agent-`) and have not been modified for
+that long. Remote sessions and sessions with a turn in flight are never deleted, and a sweep
+never starts the runtime; see [Configuration](configuration.md#session-cleanup).
+
 ## Partitioning by user
 
 The runtime session ID is a hash of the agent class, the agent name, the conversation ID, and a

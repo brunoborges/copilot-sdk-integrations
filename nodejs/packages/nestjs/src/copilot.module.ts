@@ -5,6 +5,7 @@ import { COPILOT, COPILOT_CLIENT, getAgentToken } from "./constants.js";
 import { CopilotAgents, type CopilotAgentClass } from "./copilot-agents.service.js";
 import { CopilotClientManager } from "./copilot-client.manager.js";
 import { CopilotContextInterceptor } from "./copilot-context.interceptor.js";
+import { CopilotSessionCleanup, CopilotSessionsService } from "./copilot-sessions.service.js";
 import { CopilotExceptionFilter, DisabledCopilotExceptionFilter } from "./copilot-exception.filter.js";
 import { CopilotExplorer } from "./copilot.explorer.js";
 import { CopilotHealthIndicator } from "./copilot.health.js";
@@ -34,6 +35,8 @@ export class CopilotFeatureModule {}
     CopilotHealthIndicator,
     CopilotInfoService,
     CopilotContextInterceptor,
+    CopilotSessionsService,
+    CopilotSessionCleanup,
     {
       provide: COPILOT,
       useFactory: (manager: CopilotClientManager): Copilot => manager.copilot,
@@ -61,6 +64,8 @@ export class CopilotFeatureModule {}
     CopilotHealthIndicator,
     CopilotInfoService,
     CopilotExplorer,
+    CopilotSessionsService,
+    CopilotSessionCleanup,
   ],
 })
 export class CopilotModule extends CopilotConfigurableModule {

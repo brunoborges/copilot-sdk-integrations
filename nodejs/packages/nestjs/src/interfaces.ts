@@ -5,6 +5,7 @@ import type {
   CopilotAgentDefinition,
   CopilotContext,
   CopilotOptions,
+  CopilotSessionCleanupOptions,
   PermissionDecision,
   PermissionPolicy,
   PermissionPolicyContext,
@@ -116,6 +117,12 @@ export interface CopilotModuleOptions extends CopilotOptions {
   agents?: Record<string, CopilotAgentOverrides>;
   /** How long shutdown waits for in-flight turns before aborting them, in ms. Default 30 000. */
   shutdownGracePeriod?: number;
+  /**
+   * Periodically delete sessions created by this library that were not modified within `maxAge` ms
+   * (`CopilotSessionCleanup`). Disabled unless set. `interval` defaults to half of `maxAge`, clamped
+   * to between one minute and one hour. Sweeps never start the runtime.
+   */
+  sessionCleanup?: CopilotSessionCleanupOptions;
   /** Request context capture. `false` disables the global `CopilotContextInterceptor`. */
   context?: CopilotContextOptions | false;
   /**

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import tempfile
 from collections.abc import Mapping
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +34,11 @@ DEFAULTS: dict[str, Any] = {
         "REASONING_EFFORT": None,
         "PERMISSIONS": "deny",
         "WORKING_DIRECTORY": "isolated",
+    },
+    "SESSIONS": {
+        "MAX_AGE": None,
+        "CLEANUP_INTERVAL": None,
+        "BACKGROUND_CLEANUP": True,
     },
     "MCP_SERVERS": {},
     "PROVIDERS": {},
@@ -65,7 +71,7 @@ AGENT_KEYS = frozenset(
     }
 )
 
-_NESTED = ("RUNTIME", "AUTH", "DEFAULTS")
+_NESTED = ("RUNTIME", "AUTH", "DEFAULTS", "SESSIONS")
 _MAPPINGS = ("MCP_SERVERS", "PROVIDERS", "AGENTS")
 
 
@@ -140,6 +146,17 @@ def validate(raw: Any) -> list[str]:
         if not isinstance(timeout, int | float) or isinstance(timeout, bool) or timeout <= 0:
             errors.append("COPILOT['RUNTIME']['REQUEST_TIMEOUT'] must be a positive number")
 
+    sessions = raw.get("SESSIONS")
+    if isinstance(sessions, Mapping):
+        for key in ("MAX_AGE", "CLEANUP_INTERVAL"):
+            value = sessions.get(key)
+            if value is not None and not _positive_duration(value):
+                errors.append(
+                    f"COPILOT['SESSIONS'][{key!r}] must be None, a positive number of seconds, or a timedelta"
+                )
+        if not isinstance(sessions.get("BACKGROUND_CLEANUP", True), bool):
+            errors.append("COPILOT['SESSIONS']['BACKGROUND_CLEANUP'] must be a bool")
+
     agents = raw.get("AGENTS")
     if isinstance(agents, Mapping):
         for name, overrides in agents.items():
@@ -152,6 +169,12 @@ def validate(raw: Any) -> list[str]:
                 if key not in AGENT_KEYS
             ]
     return errors
+
+
+def _positive_duration(value: Any) -> bool:
+    if isinstance(value, timedelta):
+        return value > timedelta(0)
+    return isinstance(value, int | float) and not isinstance(value, bool) and value > 0
 
 
 _cached: CopilotSettings | None = None

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { MCPServerConfig, MessageSource, ResumeSessionConfig, SessionConfig, SessionEvent, SessionHooks, SystemMessageConfig } from "@github/copilot-sdk";
 import type { CopilotRuntime } from "./client.js";
 import { bindCopilotContext, getCopilotContext, runWithCopilotContext } from "./context.js";
-import { abortReason, deriveSessionId } from "./conversation.js";
+import { abortReason, COPILOT_SESSION_ID_PREFIX, deriveSessionId } from "./conversation.js";
 import { defineAgent } from "./define-agent.js";
 import {
   CopilotAbortedError,
@@ -40,7 +40,7 @@ import type {
 } from "./types.js";
 
 /** Extra lease time beyond the turn timeout, so a lease outlives its turn's cleanup. */
-const LEASE_MARGIN_MS = 30_000;
+export const LEASE_MARGIN_MS = 30_000;
 
 /** Store key for a conversation's cross-replica lease. */
 export function conversationLeaseKey(sessionId: string): string {
@@ -182,7 +182,7 @@ async function runTurn(runtime: CopilotRuntime, def: CopilotAgentDefinition, req
   const conversationId = req.conversationId;
   const ephemeral = conversationId === undefined;
   const sessionId = ephemeral
-    ? `copilot-${def.name}-${randomUUID()}`
+    ? `${COPILOT_SESSION_ID_PREFIX}${def.name}-${randomUUID()}`
     : deriveSessionId(def.name, principal, conversationId);
 
   const emittedErrors = new WeakSet<Error>();
@@ -214,12 +214,14 @@ async function runTurn(runtime: CopilotRuntime, def: CopilotAgentDefinition, req
   try {
     if (signal.aborted) throw abortReason(signal);
     ticket = runtime.admission.reserve();
+    // Ephemeral session ids are unique, so their lock is never contended; holding it marks the
+    // session as in flight for the session cleanup.
+    releaseLock = await runtime.locks.acquire(sessionId, {
+      waitMs: runtime.conversationWaitMs,
+      signal,
+      conversationId,
+    });
     if (!ephemeral) {
-      releaseLock = await runtime.locks.acquire(sessionId, {
-        waitMs: runtime.conversationWaitMs,
-        signal,
-        conversationId,
-      });
       const store = runtime.options.store;
       if (store) {
         const lease = await raceAbort(

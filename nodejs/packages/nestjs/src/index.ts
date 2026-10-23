@@ -71,6 +71,7 @@ export {
 } from "./copilot-agents.service.js";
 export { CopilotClientManager, nestCopilotLogger } from "./copilot-client.manager.js";
 export { CopilotExplorer } from "./copilot.explorer.js";
+export { CopilotSessionsService, CopilotSessionCleanup } from "./copilot-sessions.service.js";
 export { CopilotContextInterceptor, copilotContextFromRequest, defaultPrincipal } from "./copilot-context.interceptor.js";
 export {
   CopilotExceptionFilter,
