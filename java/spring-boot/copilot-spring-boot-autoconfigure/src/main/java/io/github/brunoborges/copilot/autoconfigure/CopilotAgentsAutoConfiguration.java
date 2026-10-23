@@ -6,6 +6,7 @@ import com.github.copilot.CopilotClient;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
 import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
 import io.github.brunoborges.copilot.agent.CopilotAgents;
+import io.github.brunoborges.copilot.agent.CopilotLoops;
 import io.github.brunoborges.copilot.agent.CopilotSessionStore;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentDefinition;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentFactory;
@@ -13,6 +14,7 @@ import io.github.brunoborges.copilot.agent.internal.CopilotSessionCleaner;
 import io.github.brunoborges.copilot.agent.internal.CopilotSessionStorage;
 import io.github.brunoborges.copilot.agent.internal.DefaultCopilotSessionStore;
 import io.github.brunoborges.copilot.agent.internal.DefaultCopilotAgents;
+import io.github.brunoborges.copilot.agent.internal.DefaultCopilotLoops;
 import io.github.brunoborges.copilot.autoconfigure.internal.CopilotAgentFactoryBean;
 import io.github.brunoborges.copilot.autoconfigure.internal.SpringAgentBinding;
 import io.github.brunoborges.copilot.autoconfigure.internal.SpringSessionCleanup;
@@ -79,5 +81,11 @@ public class CopilotAgentsAutoConfiguration {
     private static CopilotAgentFactory factory(Class<?> type, BeanFactory beans, Environment environment) {
         String name = "&" + CopilotAgentDefinition.name(type, environment::resolveRequiredPlaceholders);
         return beans.containsBean(name) ? beans.getBean(name, CopilotAgentFactoryBean.class).factory() : null;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(CopilotLoops.class)
+    CopilotLoops copilotLoops(CopilotAgents agents) {
+        return new DefaultCopilotLoops(agents);
     }
 }

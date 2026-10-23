@@ -52,6 +52,39 @@ print(agent.invoke("Where is order 42?", result=Answer))
 print(agent.invoke("And order 43?", conversation_id="ticket-7", user="user-1"))
 ```
 
+## Fresh-session loops (Ralph loop)
+
+`run_loop` (and `arun_loop`) sends the same prompt repeatedly, each iteration in a new
+ephemeral session (an `invoke` without `conversation_id`). State lives on disk (for example
+`IMPLEMENTATION_PLAN.md` in the agent's working directory), and builds or tests are the
+quality gate.
+
+```python
+import subprocess
+from pathlib import Path
+from copilot_agents import StopReason, run_loop
+
+result = run_loop(
+    builder,  # an AgentInvoker
+    lambda n: Path("PROMPT_build.md").read_text(),  # re-read every iteration
+    max_iterations=20,
+    iteration_timeout=900,
+    check=lambda prev: subprocess.run(["pytest", "-q"]).returncode == 0,
+    stop_when=lambda it: "ALL TASKS DONE" in (it.output or ""),
+    on_iteration=lambda it: print(it.number, it.duration),
+)
+assert result.stop_reason in (StopReason.STOP_CONDITION, StopReason.MAX_ITERATIONS)
+```
+
+The loop stops at the first of `stop_when` (after a successful iteration), `check` returning
+false (only between iterations), a failed or timed-out iteration (unless
+`continue_on_failure=True`), the `cancel` event being set, or `max_iterations`. A callable
+`step(iteration, prompt)` can replace the invoker; it must open a fresh session itself.
+
+Each iteration uses the agent's permission policy; nothing is approved implicitly. Run loops
+against a disposable checkout inside a container or VM, observe tool use with the agent's
+hooks, and schedule them from Celery, a Django management command, or any job runner.
+
 ## Listing, deleting and cleaning up sessions
 
 ```python

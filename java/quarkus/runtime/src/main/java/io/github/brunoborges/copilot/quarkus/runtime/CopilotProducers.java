@@ -11,10 +11,12 @@ import com.github.copilot.rpc.CopilotClientOptions;
 
 import io.github.brunoborges.copilot.agent.CopilotAgentTelemetry;
 import io.github.brunoborges.copilot.agent.CopilotAgents;
+import io.github.brunoborges.copilot.agent.CopilotLoops;
 import io.github.brunoborges.copilot.agent.CopilotSessionStore;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
 import io.github.brunoborges.copilot.agent.internal.CopilotSessionStorage;
 import io.github.brunoborges.copilot.agent.internal.DefaultCopilotAgents;
+import io.github.brunoborges.copilot.agent.internal.DefaultCopilotLoops;
 import io.github.brunoborges.copilot.agent.internal.DefaultCopilotSessionStore;
 import io.github.brunoborges.copilot.quarkus.runtime.config.CopilotConfigs;
 import io.github.brunoborges.copilot.quarkus.runtime.config.CopilotRuntimeConfig;
@@ -69,6 +71,13 @@ public class CopilotProducers {
     @DefaultBean
     CopilotAgents copilotAgents(CopilotAgentRegistry registry) {
         return new DefaultCopilotAgents(registry::factory);
+    }
+
+    @Produces
+    @Singleton
+    @DefaultBean
+    CopilotLoops copilotLoops(CopilotAgents agents) {
+        return new DefaultCopilotLoops(agents);
     }
 
     @Produces
