@@ -1,4 +1,4 @@
-# Copilot for Node.js
+# Copilot Agents for Node.js
 
 Status: **in development, not published**. Docs:
 [Copilot Agents for NestJS](https://brunoborges.github.io/copilot-sdk-integrations/nestjs/) and

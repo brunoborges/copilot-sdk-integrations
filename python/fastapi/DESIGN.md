@@ -1,4 +1,4 @@
-# Copilot for FastAPI — design
+# Copilot Agents for FastAPI — design
 
 This document describes `copilot-fastapi`, the FastAPI integration for the GitHub Copilot
 SDK for Python. It is the second integration built on the framework-neutral

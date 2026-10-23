@@ -86,5 +86,5 @@ runtime exports its own spans (model calls) over OTLP/HTTP, without message cont
 
 With Aspire, the service defaults set these variables, and `CopilotSdk.Aspire` adds the
 telemetry wiring above; see the
-[Copilot SDK for Aspire](https://brunoborges.github.io/copilot-sdk-integrations/aspire/)
+[Copilot Agents for Aspire](https://brunoborges.github.io/copilot-sdk-integrations/aspire/)
 documentation.

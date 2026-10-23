@@ -127,7 +127,7 @@ A connection string is how a Copilot runtime started elsewhere is consumed, most
 With Aspire, the AppHost writes this connection string for you, and `CopilotSdk.Aspire` adds
 `builder.AddCopilotClient("copilot")`, which calls `AddCopilot` with `ConnectionName` set and
 adds Aspire's health and telemetry defaults. See the
-[Copilot SDK for Aspire](https://brunoborges.github.io/copilot-sdk-integrations/aspire/)
+[Copilot Agents for Aspire](https://brunoborges.github.io/copilot-sdk-integrations/aspire/)
 documentation.
 
 ## BYOK providers

@@ -90,7 +90,7 @@ number. A non-loopback endpoint requires `ConnectionToken`.
 
 The same values can come from a [connection string](configuration.md#connection-strings),
 which is how an Aspire AppHost hands its runtime to your service. See the
-[Copilot SDK for Aspire](https://brunoborges.github.io/copilot-sdk-integrations/aspire/)
+[Copilot Agents for Aspire](https://brunoborges.github.io/copilot-sdk-integrations/aspire/)
 documentation.
 
 ## In-process runtime

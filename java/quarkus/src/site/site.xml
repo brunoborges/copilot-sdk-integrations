@@ -2,7 +2,7 @@
 <site xmlns="http://maven.apache.org/SITE/2.1.0"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://maven.apache.org/SITE/2.1.0 https://maven.apache.org/xsd/site-2.1.0.xsd"
-      name="Copilot Quarkus" combine.self="override">
+      name="Copilot Agents for Quarkus" combine.self="override">
     <skin>
         <groupId>io.github.brunoborges</groupId>
         <artifactId>copilot-quarkus-site-skin</artifactId>
@@ -131,7 +131,7 @@ html[data-theme="dark"] {
             <item name="Security and troubleshooting" href="operations.html"/>
         </menu>
         <footer><![CDATA[
-<p>Copilot Quarkus &middot; Java 21 &middot; Quarkus 3.40 &middot; Copilot SDK 1.0.24</p>
+<p>Copilot Agents for Quarkus &middot; Java 21 &middot; Quarkus 3.40 &middot; Copilot SDK 1.0.24</p>
         ]]></footer>
     </body>
 </site>

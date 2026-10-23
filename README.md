@@ -1,4 +1,4 @@
-# Copilot SDK Integrations
+# Copilot SDK Agentic Integrations
 
 Framework integrations for the [GitHub Copilot SDKs](https://github.com/github/copilot-sdk).
 

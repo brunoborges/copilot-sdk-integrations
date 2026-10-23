@@ -2,7 +2,7 @@
 title: Documentation
 ---
 
-# Copilot SDK for .NET
+# Copilot Agents for .NET
 
 `CopilotSdk.Extensions.Hosting` connects the
 [GitHub Copilot SDK for .NET](https://github.com/github/copilot-sdk/tree/main/dotnet)
@@ -49,7 +49,7 @@ app.MapPost("/chat", async (IChatClient chat, ChatRequest req, CancellationToken
 
 The Aspire packages build on this one, the same way `Aspire.Npgsql` builds on `Npgsql`. They
 are documented on their own site:
-[Copilot SDK for Aspire](https://brunoborges.github.io/copilot-sdk-integrations/aspire/).
+[Copilot Agents for Aspire](https://brunoborges.github.io/copilot-sdk-integrations/aspire/).
 
 ## Aspire and connection strings
 

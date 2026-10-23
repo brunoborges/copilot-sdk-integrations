@@ -1,4 +1,4 @@
-# Copilot for Django — design
+# Copilot Agents for Django — design
 
 Status: **M1 and M2 implemented** (`python/core`, `python/django`); M3–M5 remain proposals. See README.md for deviations.
 
