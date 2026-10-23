@@ -11,7 +11,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, SecretStr, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, PositiveInt, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Connection = Literal["stdio", "uri", "tcp", "inprocess"]
@@ -58,6 +58,22 @@ class DefaultSettings(BaseModel):
     working_directory: str = "isolated"
 
 
+class ToolSearchSettings(BaseModel):
+    """Runtime tool search override; unset fields keep the runtime default."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool | None = None
+    defer_threshold: PositiveInt | None = None
+
+    @field_validator("defer_threshold", mode="before")
+    @classmethod
+    def _reject_bool(cls, value: Any) -> Any:
+        if isinstance(value, bool):
+            raise ValueError("defer_threshold must be an integer, not a bool")
+        return value
+
+
 class AgentOverrides(BaseModel):
     """Per-agent overrides; only fields that are set replace the agent's class attributes."""
 
@@ -74,16 +90,21 @@ class AgentOverrides(BaseModel):
     excluded_tools: list[str] | None = None
     excluded_built_in_agents: list[str] | None = None
     built_in_tools: bool | None = None
+    tool_search: ToolSearchSettings | None = None
     working_directory: str | None = None
     additional_directories: list[str] | None = None
     permissions: str | dict[str, Any] | None = None
     hooks: list[str] | None = None
     token_resolver: str | None = None
     timeout: PositiveFloat | None = None
+    message_source: str | None = None
 
     def values(self) -> Mapping[str, Any]:
         """The fields explicitly set."""
-        return {name: getattr(self, name) for name in self.model_fields_set}
+        values = {name: getattr(self, name) for name in self.model_fields_set}
+        if isinstance(values.get("tool_search"), ToolSearchSettings):
+            values["tool_search"] = values["tool_search"].model_dump(exclude_unset=True, exclude_none=True)
+        return values
 
 
 class CopilotSettings(BaseSettings):

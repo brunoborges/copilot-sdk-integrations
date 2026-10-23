@@ -74,7 +74,7 @@ async def chat(request, pk):
 ## Features
 
 - **Agents** — `CopilotAgent` subclasses with `instructions` (or `instructions_template`), `model`,
-  `tools`, `mcp_servers`, `available_tools` / `excluded_tools`, `built_in_tools`,
+  `tools`, `mcp_servers`, `available_tools` / `excluded_tools`, `built_in_tools`, `tool_search`,
   `permissions`, `hooks`, `working_directory`, `provider`, `token_resolver`. Any attribute can
   be overridden per environment in `COPILOT["AGENTS"]["<name>"]`.
 - **Calls** — `ask` / `aask`, `conversation(id).send` / `asend`, `resume`, `exists`, `delete`,

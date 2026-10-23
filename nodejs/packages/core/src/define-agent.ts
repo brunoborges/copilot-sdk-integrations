@@ -1,5 +1,6 @@
 import { CopilotConfigurationError } from "./errors.js";
 import { validateToolFilters } from "./governance/index.js";
+import { parseMessageSource } from "./message-source.js";
 import { toSdkTools } from "./tools/index.js";
 import type { CopilotAgentDefinition } from "./types.js";
 
@@ -47,9 +48,15 @@ export function defineAgent(def: CopilotAgentDefinition): CopilotAgentDefinition
   if (def.mcpServers !== undefined && (def.mcpServers === null || typeof def.mcpServers !== "object")) {
     throw new CopilotConfigurationError(`${where}: mcpServers must be an object keyed by server name`);
   }
+  try {
+    parseMessageSource(def.messageSource);
+  } catch (error) {
+    throw new CopilotConfigurationError(`${where}: messageSource: ${messageOf(error)}`, { cause: error });
+  }
   if (def.availableTools !== undefined && def.excludedTools !== undefined) {
     throw new CopilotConfigurationError(`${where}: availableTools and excludedTools are mutually exclusive`);
   }
+  validateToolSearch(where, def.toolSearch);
 
   let customToolNames: Set<string>;
   try {
@@ -63,12 +70,31 @@ export function defineAgent(def: CopilotAgentDefinition): CopilotAgentDefinition
   validateToolFilters(def, { customToolNames });
 
   const copy: CopilotAgentDefinition = { ...def };
+  if (def.messageSource === ("" as unknown)) delete copy.messageSource;
   if (def.tools) copy.tools = Object.freeze([...def.tools]) as CopilotAgentDefinition["tools"];
   if (def.availableTools) copy.availableTools = Object.freeze([...def.availableTools]) as string[];
   if (def.excludedTools) copy.excludedTools = Object.freeze([...def.excludedTools]) as string[];
+  if (def.toolSearch) copy.toolSearch = Object.freeze({ ...def.toolSearch });
   const frozen = Object.freeze(copy);
   validated.add(frozen);
   return frozen;
+}
+
+function validateToolSearch(where: string, toolSearch: unknown): void {
+  if (toolSearch === undefined) return;
+  if (toolSearch === null || typeof toolSearch !== "object" || Array.isArray(toolSearch)) {
+    throw new CopilotConfigurationError(`${where}: toolSearch must be an object`);
+  }
+  const { enabled, deferThreshold } = toolSearch as { enabled?: unknown; deferThreshold?: unknown };
+  if (enabled !== undefined && typeof enabled !== "boolean") {
+    throw new CopilotConfigurationError(`${where}: toolSearch.enabled must be a boolean`);
+  }
+  if (deferThreshold !== undefined && (typeof deferThreshold !== "number" || !Number.isInteger(deferThreshold) || deferThreshold < 1)) {
+    throw new CopilotConfigurationError(`${where}: toolSearch.deferThreshold must be an integer >= 1`);
+  }
+  if (enabled === false && deferThreshold !== undefined) {
+    throw new CopilotConfigurationError(`${where}: toolSearch.deferThreshold has no effect when toolSearch.enabled is false`);
+  }
 }
 
 function validateInstructions(where: string, instructions: unknown): void {
@@ -88,4 +114,8 @@ function validateInstructions(where: string, instructions: unknown): void {
   if (mode === "replace" && (typeof content !== "string" || content.trim() === "")) {
     throw new CopilotConfigurationError(`${where}: instructions with mode "replace" require non-blank content`);
   }
+}
+
+function messageOf(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

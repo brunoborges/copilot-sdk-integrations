@@ -126,7 +126,7 @@ has registered its bean.
   (`instructions`, `instructionsResource`, `instructionsMode`, `systemMessageRef`, `model`,
   `reasoningEffort`, `permissionHandlerRef`, `toolRefs`, `mcpServers`, `provider`, `listenerRefs`,
   `customizerRefs`, `availableTools`, `excludedTools`, `excludedBuiltInAgents`, `builtInTools`,
-  `workingDirectory`, `additionalDirectories`, `hookRefs`, `tokenResolverRef`) and are passed to
+  `toolSearch`, `toolSearchDeferThreshold`, `workingDirectory`, `additionalDirectories`, `hookRefs`, `tokenResolverRef`) and are passed to
   core's `CopilotAgentDefinition.create(type, attributes, binding)`, so validation and governance
   are identical to the other integrations. Endpoint agents use the identity type
   `CopilotEndpointAgent`.

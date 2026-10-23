@@ -12,6 +12,7 @@ from copilot_fastapi import (
     policies,
 )
 from copilot_fastapi.agents import default_name
+from copilot_fastapi.testing import copilot_test_runtime
 from copilot_agents import derive_session_id
 
 from tests.shop import USERS, LockedAgent, SupportAgent
@@ -50,6 +51,20 @@ def test_settings_override_class_attributes(tmp_path):
     docs = copilot.definition(DocsAgent)
     assert docs.model == "default-model"
     assert docs.mcp_servers["docs"]["url"] == "https://example.com/mcp"
+
+
+def test_message_source_from_class_attribute_and_settings():
+    from copilot import AgentMessageSource
+
+    class NightlyAgent(CopilotAgent):
+        message_source = "system"
+
+    copilot = Copilot(CopilotSettings(agents={"support": {"message_source": "agent-ops"}}), agents=[SupportAgent, NightlyAgent])
+    assert copilot.definition(NightlyAgent).message_source == "system"
+    assert copilot.definition(SupportAgent).message_source == AgentMessageSource("ops")
+    bad = Copilot(CopilotSettings(agents={"support": {"message_source": "root"}}), agents=[SupportAgent])
+    with pytest.raises(CopilotConfigurationError, match="message_source"):
+        bad.definition(SupportAgent)
 
 
 def test_default_policy_denies(copilot, fake):
@@ -163,3 +178,47 @@ def test_user_token_resolver_rejects_users_without_a_key(settings, fake):
     copilot = Copilot(settings, agents=[SupportAgent], token_resolver=_NoTokens())
     with pytest.raises(CopilotConfigurationError, match="partition"):
         copilot.get(SupportAgent, user={"email": "a@x"}).conversation("c").session_id
+
+
+class SearchingAgent(CopilotAgent):
+    tool_search = {"enabled": True, "defer_threshold": 5}
+    permissions = "deny"
+
+
+def test_tool_search_is_not_passed_by_default(copilot, fake):
+    fake.agent("support").replies("ok")
+    copilot.get(SupportAgent).ask("hi")
+    assert copilot.definition(SupportAgent).tool_search is None
+    assert "tool_search" not in fake.last_session_options("support")
+
+
+def test_tool_search_attribute_passed_to_create_and_resume(settings):
+    copilot = Copilot(settings, agents=[SearchingAgent])
+    with copilot_test_runtime(copilot) as fake:
+        fake.agent("searching").replies("1", "2")
+        conversation = copilot.get(SearchingAgent, user=USERS["ana"]).conversation("c1")
+        conversation.send("first")
+        created = fake.last_session_options("searching")["tool_search"]
+        conversation.send("second")
+        assert fake.resumed == [conversation.session_id]
+        resumed = fake.last_session_options("searching")["tool_search"]
+    assert created == resumed == {"enabled": True, "defer_threshold": 5}
+    assert created is not resumed
+
+
+def test_tool_search_settings_override(tmp_path):
+    settings = CopilotSettings(agents={"searching": {"tool_search": {"enabled": False}}})
+    assert Copilot(settings, agents=[SearchingAgent]).definition(SearchingAgent).tool_search == {"enabled": False}
+    settings = CopilotSettings(agents={"searching": {"tool_search": {"defer_threshold": 50}}})
+    assert Copilot(settings, agents=[SearchingAgent]).definition(SearchingAgent).tool_search == {"defer_threshold": 50}
+
+
+def test_tool_search_validation(settings):
+    class BadSearchAgent(CopilotAgent):
+        tool_search = {"enabled": True, "defer_threshold": 0}
+
+    with pytest.raises(CopilotConfigurationError, match="defer_threshold must be an int >= 1"):
+        Copilot(settings, agents=[BadSearchAgent]).definition(BadSearchAgent)
+    overridden = CopilotSettings(agents={"searching": {"tool_search": {"enabled": False, "defer_threshold": 5}}})
+    with pytest.raises(CopilotConfigurationError, match="no effect when enabled is False"):
+        Copilot(overridden, agents=[SearchingAgent]).definition(SearchingAgent)

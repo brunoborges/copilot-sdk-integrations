@@ -47,11 +47,13 @@ const advisor = defineAgent({
 | `instructions` | System instructions; see below. |
 | `model` | Model id. Default: the runtime's default model. |
 | `reasoningEffort` | `low`, `medium`, `high`, or `xhigh`. |
+| `messageSource` | `user`, `system`, or `agent-<id>` provenance label for prompts (see [Message source](#message-source)). |
 | `provider` | A BYOK [`ProviderConfig`](#byok-providers). |
 | `tools` | [Tools](tools.md) the agent can call. |
 | `mcpServers` | [MCP servers](#mcp-servers), keyed by name. |
 | `availableTools` / `excludedTools` | [Tool filters](tools.md#tool-filters); mutually exclusive. |
 | `builtInTools` | Expose the runtime's built-in tools (shell, file edits, URL fetch). Default `false`. |
+| `toolSearch` | [Tool search](#tool-search): `{ enabled?, deferThreshold? }`. Default: the runtime's setting. |
 | `permissions` | A [permission policy](governance.md#permission-policies). Default: deny everything. |
 | `hooks` | SDK [session hooks](governance.md#hooks). |
 | `customAgents` | SDK custom (sub-)agent configurations. |
@@ -83,6 +85,32 @@ In NestJS, override them per environment with
 In Fastify, override them per environment with
 [`agentOverrides`](#per-agent-configuration-overrides) instead of editing definitions.
 <!-- /only -->
+
+## Message source
+
+Each prompt can carry a provenance label: `user`, `system` (an automated caller such as a cron
+job), or `agent-<id>` (another agent). For each turn, the first match wins:
+
+1. A `withMessageSource(source, fn)` scope around the call (it follows `await`). Inside a tool, only
+   a scope the tool opens itself counts; the caller's scope does not flow into tools.
+2. `agent-<name>` when an agent's tool calls another agent.
+3. The definition's `messageSource` (or a per-agent override).
+4. Nothing: the runtime applies its default, `user`.
+
+```ts
+import { withMessageSource } from "@copilot-sdk-integrations/agent-core";
+
+await withMessageSource("system", () => copilot.agent(digest).send({ prompt: "Summarize last night's alerts" }));
+```
+
+Agent ids must match `[A-Za-z0-9][A-Za-z0-9._-]{0,127}`; `defineAgent` rejects invalid values.
+Automatic inference never produces `user`.
+
+> The source is caller-supplied provenance, not an authenticated identity: never authorize from it.
+> It can still influence runtime behavior (auto-approval classification, queueing, steering), and
+> non-user sources persist in session history, so validate identifiers that cross trust boundaries
+> and never put secrets in them. `system` labels an automated caller; it does not create a
+> system-role message.
 
 ## BYOK providers
 
@@ -151,6 +179,21 @@ MCP tool calls go through the
 In NestJS, define servers once in the module's
 `mcpServers` option and list their names in `@CopilotAgent({ mcpServers: ["github"] })`.
 <!-- /only -->
+
+### Tool search
+
+Large MCP servers (GitHub, Playwright) add many tool definitions to every request. With tool
+search, the runtime defers MCP and external tool definitions behind a built-in
+`tool_search_tool` once the agent's total tool count reaches `deferThreshold`; the model
+searches for the tools it needs. The runtime default is enabled with a threshold of 30.
+
+```ts
+defineAgent({ name: "dev", mcpServers: { github }, toolSearch: { deferThreshold: 10 } });
+defineAgent({ name: "small", toolSearch: { enabled: false } }); // always send every tool
+```
+
+When `toolSearch` is unset, the session uses the runtime default. `deferThreshold` must be an
+integer `>= 1`, and setting it together with `enabled: false` is a configuration error.
 
 ## Session customization
 
@@ -283,7 +326,8 @@ The injection token is `getAgentToken("triage")`.
 <!-- only:nestjs -->
 The module option `agents.<name>` overrides decorator values per environment. It accepts
 `description`, `instructions`, `model`, `reasoningEffort`, `provider` (name or inline),
-`mcpServers` (names or inline), `availableTools`, `excludedTools`, and `builtInTools`.
+`mcpServers` (names or inline), `availableTools`, `excludedTools`, `builtInTools`, and
+`toolSearch`, and `messageSource` (`""` clears the decorator value).
 
 ```ts
 CopilotModule.forRoot({

@@ -19,6 +19,8 @@ import type {
   SessionHooks,
   SystemMessageConfig,
   Tool as SdkTool,
+  MessageSource,
+  ToolSearchConfig,
 } from "@github/copilot-sdk";
 
 // ---------------------------------------------------------------------------
@@ -28,8 +30,8 @@ import type {
 /** The subset of `CopilotSession` the core depends on. */
 export interface SessionLike {
   readonly sessionId: string;
-  send(options: { prompt: string; mode?: "enqueue" | "immediate" }): Promise<string>;
-  sendAndWait(options: { prompt: string }, responseSchema: StructuredSchema<unknown>, timeout?: number): Promise<unknown>;
+  send(options: { prompt: string; mode?: "enqueue" | "immediate"; source?: MessageSource }): Promise<string>;
+  sendAndWait(options: { prompt: string; source?: MessageSource }, responseSchema: StructuredSchema<unknown>, timeout?: number): Promise<unknown>;
   on(handler: (event: SessionEvent) => void): () => void;
   abort(): Promise<void>;
   disconnect(): Promise<void>;
@@ -217,11 +219,22 @@ export interface CopilotAgentDefinition {
   excludedTools?: string[];
   /** When false, no built-in runtime tools are available. Default: false. */
   builtInTools?: boolean;
+  /**
+   * Tool search: defers MCP/external tool definitions behind the built-in `tool_search_tool` once
+   * the tool count reaches `deferThreshold`. Unset: runtime default (enabled, threshold 30).
+   */
+  toolSearch?: ToolSearchConfig;
   /** Default: `permissions.denyAll()`. */
   permissions?: PermissionPolicy;
   hooks?: SessionHooks;
   customAgents?: CustomAgentConfig[];
   infiniteSessions?: boolean;
+  /**
+   * Provenance label sent with each prompt: `"user"`, `"system"` (an automated caller), or
+   * `"agent-<id>"`. Omitted: the runtime default (`user`). Caller-supplied provenance, not an
+   * authenticated identity. A `withMessageSource` scope and calls from another agent's tool take precedence.
+   */
+  messageSource?: MessageSource;
   /** Escape hatch: adjust the final SDK session config. */
   configureSession?: (config: SessionConfig, context: CopilotContext) => SessionConfig;
 }

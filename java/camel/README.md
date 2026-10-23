@@ -50,11 +50,17 @@ from("kafka:tickets")
   afterward.
 - The producer is asynchronous; Camel's `onException`, redelivery, and circuit breakers apply.
 
+Prompts carry a provenance label (`messageSource`: `user`, `system`, or `agent-<id>`). When the
+endpoint sets none and no `CopilotMessageSources` scope is active, exchanges from `timer:`,
+`scheduler:`, `quartz:`, or `cron:` routes are sent as `system`; other routes leave it unset
+(runtime default `user`). The label is caller-supplied provenance, not an authenticated identity:
+never authorize from it.
+
 Endpoint options mirror `@CopilotAgent` attributes: `instructions`, `instructionsResource`,
 `instructionsMode`, `systemMessageRef`, `model`, `reasoningEffort`, `toolRefs`, `mcpServers`,
 `provider`, `permissionHandlerRef`, `listenerRefs`, `customizerRefs`, `hookRefs`,
 `tokenResolverRef`, `availableTools`, `excludedTools`, `excludedBuiltInAgents`, `builtInTools`,
-`workingDirectory`, `additionalDirectories`. Lists are comma separated; `*Ref` values are bean
+`toolSearch`, `toolSearchDeferThreshold`, `workingDirectory`, `additionalDirectories`, `messageSource`. Lists are comma separated; `*Ref` values are bean
 names in the Camel registry. Agent settings can also be set per endpoint: `responseTimeout`
 (e.g. `PT2M`) and the permission shortcuts `allow`, `allowTools`, `allowMcpServers`,
 `allowAgentTools`, `allowReadOnly`.

@@ -3,6 +3,14 @@ export * from "./errors.js";
 export { getCopilotContext, runWithCopilotContext, bindCopilotContext } from "./context.js";
 export { createCopilot } from "./client.js";
 export { defineAgent } from "./define-agent.js";
+export {
+  AGENT_ID_PATTERN,
+  agentMessageSource,
+  getMessageSource,
+  parseMessageSource,
+  withMessageSource,
+  type MessageSource,
+} from "./message-source.js";
 export { deriveSessionId } from "./conversation.js";
 export { resolveMcpServers } from "./agent.js";
 export { memoryStore } from "./stores/index.js";

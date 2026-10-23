@@ -59,6 +59,10 @@ print(agent.invoke("And order 43?", conversation_id="ticket-7", user="user-1"))
   caller's transaction, thread-locals and context variables. Through `ainvoke` they run via
   the configured `sync_runner` (default: `run_in_executor`).
 - **Permissions default to deny.** Without a policy, every permission request is rejected.
+- **Message source.** `AgentDefinition(message_source="system")` (or `"user"`, `"agent-<id>"`)
+  labels prompts; a `message_source(...)` scope overrides it, and calls made from another agent's
+  tool are labeled `agent-<calling agent>` (an outer scope does not flow into tools). The label is
+  caller-supplied provenance, not an authenticated identity: never authorize from it.
 - **Session IDs** are `agent-<sha256>` over the agent type, name, conversation and partition,
   matching `java-core`.
 

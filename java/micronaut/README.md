@@ -104,6 +104,36 @@ existing TCP server):
 micronaut.copilot.cli-path=/absolute/path/to/copilot
 ```
 
+To run the runtime inside the JVM instead, set the experimental `micronaut.copilot.connection=inprocess`
+(or `stdio` to pin the child-process transport). It needs JNA and the platform runtime artifact:
+
+```xml
+<dependency>
+  <groupId>net.java.dev.jna</groupId>
+  <artifactId>jna</artifactId>
+  <version>5.19.1</version>
+</dependency>
+<dependency>
+  <groupId>com.github</groupId>
+  <artifactId>copilot-sdk-java-runtime</artifactId>
+  <version>${copilot-sdk.version}</version>
+  <classifier>darwin-arm64</classifier>
+</dependency>
+```
+
+Classifiers are `linux-x64`, `linux-arm64`, `linuxmusl-x64`, `linuxmusl-arm64`,
+`win32-x64`, `win32-arm64`, `darwin-x64`, and `darwin-arm64`. A `runtime.node`
+next to the CLI named by `COPILOT_CLI_PATH`, or next to `copilot` on `PATH`,
+also works. Startup fails with the missing dependency and the classifier for the
+current platform when JNA or the runtime cannot be found.
+
+In-process mode cannot be combined with `cli-path`, `cli-args`,
+`working-directory`, `cli-url`, or `tcp-connection-token`; startup names every
+conflicting setting. A JVM loads only one native runtime library.
+On JDK 24 and later, add `--enable-native-access=ALL-UNNAMED` to avoid native
+access warnings. `micronaut.copilot.connection=stdio` pins the child-process transport even
+when `COPILOT_SDK_DEFAULT_CONNECTION=inprocess` is set.
+
 Declare an agent interface:
 
 ```java
@@ -198,7 +228,12 @@ micronaut.copilot.agents.micronaut-advisor.response-timeout=2m
 micronaut.copilot.agents.micronaut-advisor.excluded-tools=shell
 micronaut.copilot.agents.micronaut-advisor.permissions.allow=read
 micronaut.copilot.agents.micronaut-advisor.mcp-servers=github
+# Defer MCP tool definitions behind tool search once the agent has 20+ tools
+micronaut.copilot.agents.micronaut-advisor.tool-search.defer-threshold=20
 micronaut.copilot.agents.micronaut-advisor.provider=foundry
+# Prompt provenance: user, system, or agent-<id> (none clears @CopilotAgent(messageSource)).
+# Caller-supplied, not an authenticated identity; never authorize from it.
+micronaut.copilot.agents.micronaut-advisor.message-source=system
 
 # MCP servers
 micronaut.copilot.mcp.servers.github.type=http

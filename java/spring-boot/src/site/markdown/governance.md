@@ -36,6 +36,8 @@ All three are applied to both newly created and resumed sessions, before
 | `availableTools` | `copilot.agents.<name>.available-tools` | `availableTools` allow-list |
 | `excludedTools` | `copilot.agents.<name>.excluded-tools` | `excludedTools` deny-list |
 | `builtInTools` | `copilot.agents.<name>.built-in-tools` | `false` adds `builtin:*` to `excludedTools` |
+| `toolSearch` | `copilot.agents.<name>.tool-search.enabled` | `toolSearch.enabled` |
+| `toolSearchDeferThreshold` | `copilot.agents.<name>.tool-search.defer-threshold` | `toolSearch.deferThreshold` |
 | `excludedBuiltInAgents` | `copilot.agents.<name>.excluded-built-in-agents` | `excludedBuiltInAgents` |
 | `workingDirectory` | `copilot.agents.<name>.working-directory` | `workingDirectory` for tool operations |
 | `additionalDirectories` | `copilot.agents.<name>.additional-directories` | `additionalDirectories` the session may access |
@@ -81,6 +83,13 @@ Semantics, as defined by the SDK and runtime:
   cannot be combined with an allow-list: list the built-in tools you want
   instead.
 - `excludedBuiltInAgents` hides runtime built-in sub-agents by name.
+- Tool search defers MCP and external tool definitions behind the runtime's
+  tool-search tool once the agent's total tool count reaches the defer
+  threshold, so agents selecting large MCP servers (such as GitHub or
+  Playwright) do not load every tool definition up front. Leave it unset to keep
+  the runtime default (enabled, threshold 30); `toolSearch = "false"` preloads
+  every tool, and a defer threshold cannot be combined with it. Each property
+  overrides only its own annotation value.
 
 A property overrides the annotation value; an empty list property clears it,
 and an empty `working-directory` restores the runtime default. Annotation

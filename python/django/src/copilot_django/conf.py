@@ -45,6 +45,7 @@ AGENT_KEYS = frozenset(
     {
         "INSTRUCTIONS",
         "INSTRUCTIONS_MODE",
+        "MESSAGE_SOURCE",
         "MODEL",
         "REASONING_EFFORT",
         "PROVIDER",
@@ -54,6 +55,7 @@ AGENT_KEYS = frozenset(
         "EXCLUDED_TOOLS",
         "EXCLUDED_BUILT_IN_AGENTS",
         "BUILT_IN_TOOLS",
+        "TOOL_SEARCH",
         "WORKING_DIRECTORY",
         "ADDITIONAL_DIRECTORIES",
         "PERMISSIONS",

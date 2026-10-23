@@ -40,12 +40,14 @@ class. Agent names must be unique within a `Copilot` instance.
 | `available_tools`, `excluded_tools` | Runtime tool filters such as `builtin:view`, `custom:*`, `mcp:docs/*`. |
 | `built_in_tools` | `False` excludes the runtime's built-in tools (shell, file edits, ...). |
 | `excluded_built_in_agents` | Built-in sub-agents to disable. |
+| `tool_search` | `{"enabled": bool, "defer_threshold": int}` (either key optional): override the runtime's tool search, which defers MCP and external tools behind `tool_search_tool` once the tool count reaches the threshold (runtime default: enabled, 30). Default: `None`, the runtime default. |
 | `working_directory` | `"isolated"` (default), a path, or a callable `(ctx) -> path`. |
 | `additional_directories` | Extra directories the agent may read. |
 | `permissions` | A [permission policy](permissions.md). Default: deny everything. |
 | `hooks` | `CopilotAgentHooks` instances, classes, or dotted paths. `Copilot(hooks=...)` and `settings.hooks` apply to every agent. |
 | `token_resolver` | A [token resolver](conversations.md#per-user-tokens) for this agent. |
 | `timeout` | Seconds per call. Default: `settings.runtime.request_timeout`. |
+| `message_source` | `"user"`, `"system"` or `"agent-<id>"` provenance label for prompts (see [Message source](#message-source)). |
 
 ## Injecting agents
 
@@ -101,6 +103,33 @@ from `async def` endpoints.
 
 All of them derive from `CopilotAgentError`. The status codes apply when the
 [exception handlers](operations.md#error-mapping) are installed.
+
+## Message source
+
+Each prompt can carry a provenance label: `"user"`, `"system"` (an automated caller such as a
+scheduled task), or `"agent-<id>"` (another agent). For each call, the first match wins:
+
+1. A `message_source(...)` context manager around the call (sync or async). Inside a tool, only a
+   scope the tool opens itself counts; the caller's scope does not flow into tools.
+2. `agent-<name>` when an agent's tool calls another agent.
+3. The `message_source` attribute, or its override `"message_source"`.
+4. Nothing: the runtime applies its default, `"user"`.
+
+```python
+from copilot_fastapi import message_source
+
+with message_source("system"):                # for example in a background job
+    await digest.aask("Summarize last night's alerts")
+```
+
+Agent ids must match `[A-Za-z0-9][A-Za-z0-9._-]{0,127}`; invalid values fail when the agent is
+built. Automatic inference never produces `"user"`.
+
+> The source is caller-supplied provenance, not an authenticated identity: never authorize from it.
+> It can still influence runtime behavior (auto-approval classification, queueing, steering), and
+> non-user sources persist in session history, so validate identifiers that cross trust boundaries
+> and never put secrets in them. `system` labels an automated caller; it does not create a
+> system-role message.
 
 ## Working directories
 

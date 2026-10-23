@@ -25,6 +25,8 @@ export interface ConvertedTools {
 export interface ToSdkToolsOptions {
   /** Context for tool calls. Defaults to the AsyncLocalStorage context, then `{ attributes: {} }`. */
   getContext?: () => CopilotContext | undefined;
+  /** Runs each handler; core uses it to mark calls as coming from the turn's agent. */
+  wrapHandler?: <T>(fn: () => T) => T;
 }
 
 /** Throws `CopilotConfigurationError` unless `name` is a valid tool name. */
@@ -75,6 +77,12 @@ export function toSdkTools(inputs: ToolInput[] | undefined, options: ToSdkToolsO
     result.tools.push(tool);
   };
   const resolveContext = () => options.getContext?.() ?? getCopilotContext() ?? { attributes: {} };
+  const wrap = options.wrapHandler;
+  const bind = (tool: Tool): Tool => {
+    const handler = tool.handler;
+    if (!wrap || !handler) return tool;
+    return { ...tool, handler: (args: unknown, invocation: ToolInvocation) => wrap(() => handler(args, invocation)) } as Tool;
+  };
 
   for (const input of inputs ?? []) {
     if (!isObjectLike(input) || Array.isArray(input)) {
@@ -83,9 +91,9 @@ export function toSdkTools(inputs: ToolInput[] | undefined, options: ToSdkToolsO
     const candidate = input as Record<string, unknown>;
     if (typeof candidate.name === "string") {
       if (typeof candidate.execute === "function") {
-        add(fromCopilotTool(defineCopilotTool(input as CopilotToolDefinition), resolveContext));
+        add(bind(fromCopilotTool(defineCopilotTool(input as CopilotToolDefinition), resolveContext)));
       } else if (candidate.handler === undefined || typeof candidate.handler === "function") {
-        add(options.getContext ? bindSdkTool(input as Tool, resolveContext) : (input as Tool));
+        add(bind(options.getContext ? bindSdkTool(input as Tool, resolveContext) : (input as Tool)));
       } else {
         throw new CopilotConfigurationError(`Tool "${candidate.name}" has a non-function handler`);
       }
@@ -93,7 +101,7 @@ export function toSdkTools(inputs: ToolInput[] | undefined, options: ToSdkToolsO
     }
     for (const [name, aiTool] of Object.entries(input as Record<string, AiSdkToolLike>)) {
       validateToolName(name);
-      add(fromAiSdkTool(name, aiTool, resolveContext));
+      add(bind(fromAiSdkTool(name, aiTool, resolveContext)));
       if (aiTool.needsApproval !== undefined && aiTool.needsApproval !== false) {
         const needsApproval = aiTool.needsApproval;
         result.approvalRequired.set(
