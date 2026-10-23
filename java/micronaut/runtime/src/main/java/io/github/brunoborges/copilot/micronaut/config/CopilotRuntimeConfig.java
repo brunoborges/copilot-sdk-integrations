@@ -28,6 +28,7 @@ public record CopilotRuntimeConfig(
         Optional<String> logLevel,
         Optional<String> cliUrl,
         Optional<String> tcpConnectionToken,
+        Optional<Connection> connection,
         Execution execution,
         Map<String, Agent> agents,
         Mcp mcp,
@@ -39,6 +40,14 @@ public record CopilotRuntimeConfig(
         Sessions sessions) {
 
     public static final String PREFIX = "micronaut.copilot";
+
+    /** How the client reaches the Copilot runtime ({@code micronaut.copilot.connection}). */
+    public enum Connection {
+        /** Child process over stdin/stdout, regardless of {@code COPILOT_SDK_DEFAULT_CONNECTION}. */
+        STDIO,
+        /** Runtime hosted inside this JVM (experimental); needs JNA and the platform runtime artifact. */
+        INPROCESS
+    }
 
     public record Execution(int maxConcurrentInvocations, int maxOutstandingInvocations) {
     }
@@ -55,7 +64,12 @@ public record CopilotRuntimeConfig(
             Optional<Boolean> builtInTools,
             Optional<String> workingDirectory,
             Optional<List<String>> additionalDirectories,
-            Permissions permissions) {
+            Permissions permissions,
+            ToolSearch toolSearch,
+            Optional<String> messageSource) {
+    }
+
+    public record ToolSearch(Optional<Boolean> enabled, OptionalInt deferThreshold) {
     }
 
     public record Permissions(
@@ -124,6 +138,16 @@ public record CopilotRuntimeConfig(
         }
     }
 
+    private static Connection connection(String value) {
+        String normalized = value.trim().replace("-", "").replace("_", "").toUpperCase(Locale.ROOT);
+        for (Connection connection : Connection.values()) {
+            if (connection.name().equals(normalized)) {
+                return connection;
+            }
+        }
+        throw new IllegalArgumentException(PREFIX + ".connection must be stdio or inprocess");
+    }
+
     /** Reads the configuration, applying the documented defaults. */
     public static CopilotRuntimeConfig from(PropertyResolver properties) {
         var reader = new Reader(properties);
@@ -136,6 +160,7 @@ public record CopilotRuntimeConfig(
                 reader.text(PREFIX + ".log-level"),
                 reader.text(PREFIX + ".cli-url"),
                 reader.text(PREFIX + ".tcp-connection-token"),
+                reader.text(PREFIX + ".connection").map(CopilotRuntimeConfig::connection),
                 new Execution(reader.integer(PREFIX + ".execution.max-concurrent-invocations", 8),
                         reader.integer(PREFIX + ".execution.max-outstanding-invocations", 64)),
                 reader.named(PREFIX + ".agents", reader::agent),
@@ -181,7 +206,10 @@ public record CopilotRuntimeConfig(
                     new Permissions(list(prefix + ".permissions.allow"), list(prefix + ".permissions.allow-tools"),
                             list(prefix + ".permissions.allow-mcp-servers"),
                             bool(prefix + ".permissions.allow-agent-tools", false),
-                            bool(prefix + ".permissions.allow-read-only", false)));
+                            bool(prefix + ".permissions.allow-read-only", false)),
+                    new ToolSearch(properties.getProperty(prefix + ".tool-search.enabled", Boolean.class),
+                            optionalInt(prefix + ".tool-search.defer-threshold")),
+                    text(prefix + ".message-source"));
         }
 
         McpServer mcpServer(String prefix) {

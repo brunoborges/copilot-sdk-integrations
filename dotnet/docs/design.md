@@ -153,6 +153,7 @@ Named agents inherit the default agent's code delegates, MCP servers, and
 
     "McpServers": { "docs": { "Type": "http", "Url": "https://docs.internal/mcp", "Tools": [ "search" ] } },
     "Provider": null,                    // BYOK, the SDK's ProviderConfig shape
+    "ToolSearch": { "Enabled": null, "DeferThreshold": null }, // null = runtime default (enabled, 30)
 
     "Agents": {
       "triage": { "Model": "gpt-5.4-mini", "Instructions": "You triage support tickets." }
@@ -191,6 +192,8 @@ Options are validated at startup, with messages that name the key to fix:
   own sign-in);
 - `InProcess` cannot be combined with `Endpoint`;
 - `Provider` requires `BaseUrl`;
+- `ToolSearch:DeferThreshold` must be at least 1, and cannot be combined with
+  `ToolSearch:Enabled` set to `false`;
 - an HTTP MCP server needs an absolute http(s) `Url`, a stdio server needs a
   `Command`, and unknown `Type` values are rejected;
 - `ResponseTimeout`, `MaxConcurrentTurns`, `SessionRetention`, and MCP

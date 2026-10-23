@@ -41,6 +41,7 @@ from copilot.generated.session_events import (
 from pydantic import BaseModel
 
 from .context import current_invocation
+from .message_sources import to_str as to_wire
 from .runtime import CopilotRuntime
 
 __all__ = ["AgentScript", "CopilotTestRuntime", "RecordedToolCall"]
@@ -191,7 +192,7 @@ class _FakeSession:
         if self.disconnected:
             raise RuntimeError("Session is disconnected")
         agent = self._stored.agent
-        self._runtime._record_prompt(agent, prompt)
+        self._runtime._record_prompt(agent, prompt, kwargs.get("source"))
         self._stored.append(
             _event(SessionEventType.USER_MESSAGE, UserMessageData(content=prompt, message_id=uuid.uuid4().hex))
         )
@@ -262,10 +263,17 @@ class _FakeSession:
             )
             result = await _maybe_await(tool.handler(invocation))
             ok = result.result_type == "success"
-            key = "on_post_tool_use" if ok else "on_post_tool_use_failure"
-            if key in hooks:
+            if ok and "on_post_tool_use" in hooks:
                 await _maybe_await(
-                    hooks[key]({**hook_input, "toolResult": result.text_result_for_llm}, {"session_id": self.session_id})
+                    hooks["on_post_tool_use"](
+                        {**hook_input, "toolResult": result.text_result_for_llm}, {"session_id": self.session_id}
+                    )
+                )
+            elif not ok and "on_post_tool_use_failure" in hooks:
+                await _maybe_await(
+                    hooks["on_post_tool_use_failure"](
+                        {**hook_input, "error": result.text_result_for_llm}, {"session_id": self.session_id}
+                    )
                 )
         else:
             ok = False
@@ -363,6 +371,7 @@ class CopilotTestRuntime:
         self._scripts: dict[str, AgentScript] = {}
         self._sessions: dict[str, _StoredSession] = {}
         self._prompts: dict[str, list[str]] = defaultdict(list)
+        self._sources: dict[str, list[str | None]] = defaultdict(list)
         self._tool_calls: list[RecordedToolCall] = []
         self._lock = threading.Lock()
         self.created: list[str] = []
@@ -381,6 +390,10 @@ class CopilotTestRuntime:
 
     def prompts(self, agent: str) -> list[str]:
         return list(self._prompts.get(agent, ()))
+
+    def sources(self, agent: str) -> list[str | None]:
+        """Wire-form message source of each prompt (``None`` when not set), aligned with :meth:`prompts`."""
+        return list(self._sources.get(agent, ()))
 
     def tool_calls(self, agent: str | None = None) -> list[RecordedToolCall]:
         return [call for call in self._tool_calls if agent is None or call.agent == agent]
@@ -437,6 +450,7 @@ class CopilotTestRuntime:
             self._scripts.clear()
             self._sessions.clear()
             self._prompts.clear()
+            self._sources.clear()
             self._tool_calls.clear()
             for log in (self.created, self.resumed, self.deleted, self.aborted, self._history):
                 log.clear()
@@ -451,9 +465,10 @@ class CopilotTestRuntime:
         finally:
             runtime.set_client_factory(previous)
 
-    def _record_prompt(self, agent: str, prompt: str) -> None:
+    def _record_prompt(self, agent: str, prompt: str, source: Any = None) -> None:
         with self._lock:
             self._prompts[agent].append(prompt)
+            self._sources[agent].append(to_wire(source))
 
     def _record_tool_call(self, call: RecordedToolCall) -> None:
         with self._lock:

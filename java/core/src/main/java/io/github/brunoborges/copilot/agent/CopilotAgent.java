@@ -133,6 +133,21 @@ public @interface CopilotAgent {
     boolean builtInTools() default true;
 
     /**
+     * Whether the runtime defers MCP and external tool definitions behind its built-in tool-search tool once the
+     * agent has many tools (SDK {@code toolSearch.enabled}): {@code "true"}, {@code "false"}, or empty to retain
+     * the runtime default. Useful for agents selecting large MCP servers. Overridden by
+     * {@code copilot.agents.<name>.tool-search.enabled}.
+     */
+    String toolSearch() default "";
+
+    /**
+     * Total tool count at which tool search defers MCP and external tools (SDK {@code toolSearch.deferThreshold});
+     * {@code 0} retains the runtime default. Cannot be combined with {@code toolSearch = "false"}. Overridden by
+     * {@code copilot.agents.<name>.tool-search.defer-threshold}.
+     */
+    int toolSearchDeferThreshold() default 0;
+
+    /**
      * Session working directory for built-in file and shell tools; empty retains the runtime default.
      * Overridden by {@code copilot.agents.<name>.working-directory}.
      */
@@ -156,4 +171,13 @@ public @interface CopilotAgent {
      * the client's ambient authentication.
      */
     String tokenResolverRef() default "";
+
+    /**
+     * Default provenance label of this agent's prompts: {@code user}, {@code system}, or {@code agent-<id>}
+     * (SDK {@code MessageSource}). Empty omits the field, so the runtime treats prompts as user input. A
+     * {@link CopilotMessageSources} scope or agent-to-agent delegation takes precedence. The label is not an
+     * authenticated identity; see {@link CopilotMessageSources} before relying on it.
+     * Overridden by {@code copilot.agents.<name>.message-source}.
+     */
+    String messageSource() default "";
 }

@@ -15,6 +15,7 @@ It is the Python counterpart of [`java-core`](../../java-core/): framework integ
 | `policies` | Permission policies: `deny_all`, `allow_all`, `allow_kinds`, `allow_tools`, `allow_mcp_servers`, `allow_read_only`, `allow_registered_tools`, `any_of`. |
 | `SessionStore` | Lists, reads (`get_messages`, without resuming), checks and deletes sessions; `session_id_for(agent, conversation_id, user=...)` maps a conversation to its session ID. Sync and `a`-prefixed async methods. |
 | `SessionCleanup` | Opt-in sweeper that deletes this library's sessions (`agent-` prefix, not remote) older than `max_age`; `sweep()` / `asweep()` for one pass, `run()` for a loop. |
+| `ErrorRecoveryHooks` | Opt-in hook that classifies failed tool results, nudges the model to keep going, and retries transient SDK errors. See [Error recovery](#error-recovery). |
 | `derive_session_id` | Deterministic session IDs, byte-compatible with the Java integrations. |
 | `testing.CopilotTestRuntime` | In-memory runtime that scripts replies and tool calls, no CLI or network needed. |
 
@@ -91,6 +92,10 @@ deleted = cleanup.sweep()                     # or: asyncio.create_task(cleanup.
   caller's transaction, thread-locals and context variables. Through `ainvoke` they run via
   the configured `sync_runner` (default: `run_in_executor`).
 - **Permissions default to deny.** Without a policy, every permission request is rejected.
+- **Message source.** `AgentDefinition(message_source="system")` (or `"user"`, `"agent-<id>"`)
+  labels prompts; a `message_source(...)` scope overrides it, and calls made from another agent's
+  tool are labeled `agent-<calling agent>` (an outer scope does not flow into tools). The label is
+  caller-supplied provenance, not an authenticated identity: never authorize from it.
 - **Session IDs** are `agent-<sha256>` over the agent type, name, conversation and partition,
   matching `java-core`.
 
@@ -101,3 +106,28 @@ cd python
 uv venv && uv pip install -e core -e django pytest pytest-asyncio pytest-django
 cd core && ../.venv/bin/python -m pytest
 ```
+
+## Error recovery
+
+`ErrorRecoveryHooks` is a ready-made `CopilotAgentHooks`, based on the Copilot SDK cookbook's
+[error-recovery recipe](https://github.com/github/awesome-copilot/blob/main/cookbook/copilot-sdk/python/error-recovery-hooks.md).
+It is off unless you add it:
+
+```python
+from copilot_agents import AgentDefinition, ErrorRecoveryHooks
+
+AgentDefinition(name="ops", hooks=[ErrorRecoveryHooks(max_consecutive_failures=3, retry_count=2)])
+```
+
+- `on_post_tool_use` and `on_post_tool_use_failure` classify the tool output as permission denied,
+  shell error or generic tool failure by case-insensitive phrase lists (`permission_phrases`,
+  `shell_error_phrases`). On a failure they add a `[SYSTEM NOTE: ...]` as `additionalContext`
+  telling the model not to stop. The tool result itself is not changed.
+- After `max_consecutive_failures` (default 3, `0` = unlimited) failures of the same tool in a
+  session, the note stops, so the model is not nudged into a loop. A successful call resets the count.
+- `on_error_occurred` retries transient SDK errors (timeouts, 429, 5xx, connection resets, or any
+  error the SDK marks `recoverable`) with `retry_count` attempts. Other errors are handled per
+  `unrecoverable_handling` (`"skip"` by default, `"abort"`, or `None` to leave the SDK default).
+- Hook chains use the first non-`None` result, so list `ErrorRecoveryHooks` after hooks that
+  should win.
+

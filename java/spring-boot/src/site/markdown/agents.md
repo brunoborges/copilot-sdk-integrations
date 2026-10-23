@@ -57,6 +57,8 @@ Attribute values fall into three kinds, and the name tells you which:
 | `excludedTools` | `String[]` | `{}` | SDK tool deny-list. Mutually exclusive with `availableTools`. |
 | `excludedBuiltInAgents` | `String[]` | `{}` | Runtime built-in sub-agents to hide. |
 | `builtInTools` | `boolean` | `true` | `false` hides every built-in tool (`builtin:*`). Cannot be combined with `availableTools`. |
+| `toolSearch` | `String` | `""` | `"true"` or `"false"` toggles runtime tool search, which defers MCP and external tool definitions when the agent has many tools; empty keeps the runtime default. |
+| `toolSearchDeferThreshold` | `int` | `0` | Total tool count at which tool search defers tools; `0` keeps the runtime default (30). |
 | `workingDirectory` | `String` | `""` | Session working directory for runtime tool operations. Empty uses the runtime default. |
 | `additionalDirectories` | `String[]` | `{}` | Extra directories the session may access. |
 | `hookRefs` | `String[]` | `{}` | Bean names of `CopilotAgentHooks` beans, run after global and targeted hooks in listed order. See [hooks](governance.html#session-hooks-as-spring-beans). |
@@ -197,6 +199,31 @@ by the built-in adapters. Default interface methods execute locally. Ordinary
 proxy `equals`, `hashCode`, and `toString` do not contact the SDK.
 
 <a id="enablecopilotagents"></a>
+
+## Message source
+
+Each prompt can carry a provenance label: `user`, `system` (an automated caller such as a
+scheduler), or `agent-<id>` (another agent). For each call, the first match wins:
+
+1. A `CopilotMessageSources.runAs(...)` / `callAs(...)` scope on the calling thread. Inside a tool
+   handler, only a scope the handler opens itself counts; the outer caller's scope is suspended.
+2. `agent-<name>` when an agent's tool handler calls another agent on the handler's thread.
+3. The `copilot.agents.<name>.message-source` property (an empty value clears the annotation value).
+4. `@CopilotAgent(messageSource = "system")` (placeholders are resolved).
+5. Nothing: the runtime applies its default, `user`.
+
+```java
+CopilotMessageSources.runAs(MessageSource.SYSTEM, () -> digest.summarize(report));
+```
+
+Agent ids must match `[A-Za-z0-9][A-Za-z0-9._-]{0,127}`; invalid values fail at startup (or when a
+scope opens). Automatic inference never produces `user`.
+
+> The source is caller-supplied provenance, not an authenticated identity: never authorize from it.
+> It can still influence runtime behavior (auto-approval classification, queueing, steering), and
+> non-user sources persist in session history, so validate identifiers that cross trust boundaries
+> and never put secrets in them. `system` labels an automated caller; it does not create a
+> system-role message.
 
 ## EnableCopilotAgents
 

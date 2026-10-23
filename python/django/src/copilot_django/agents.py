@@ -67,6 +67,7 @@ class CopilotAgent:
     excluded_tools: ClassVar[list[str] | None] = None
     excluded_built_in_agents: ClassVar[list[str] | None] = None
     built_in_tools: ClassVar[bool | None] = None
+    tool_search: ClassVar[Mapping[str, Any] | None] = None
     working_directory: ClassVar[str | Path | Callable[[AgentContext], str | None] | None] = None
     additional_directories: ClassVar[list[str] | None] = None
     permissions: ClassVar[Any] = None
@@ -75,6 +76,8 @@ class CopilotAgent:
     customizers: ClassVar[list[Any] | None] = None
     token_resolver: ClassVar[Any] = None
     timeout: ClassVar[float | None] = None
+    message_source: ClassVar[Any] = None
+    """``"user"``, ``"system"`` or ``"agent-<id>"`` provenance label (not an identity)."""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
@@ -507,6 +510,7 @@ class _Builder:
             "excluded_tools": self.pick("EXCLUDED_TOOLS", "excluded_tools", ()),
             "excluded_built_in_agents": self.pick("EXCLUDED_BUILT_IN_AGENTS", "excluded_built_in_agents", ()),
             "built_in_tools": self.pick("BUILT_IN_TOOLS", "built_in_tools", True),
+            "tool_search": self.pick("TOOL_SEARCH", "tool_search"),
             "working_directory": working_directory,
             "release_working_directory": release,
             "additional_directories": self.pick("ADDITIONAL_DIRECTORIES", "additional_directories", ()),
@@ -516,6 +520,7 @@ class _Builder:
             "customizers": self.callables("customizers", "customizer"),
             "token_resolver": self.token_resolver(),
             "timeout": self.pick("TIMEOUT", "timeout", self.settings.RUNTIME["REQUEST_TIMEOUT"]),
+            "message_source": self.pick("MESSAGE_SOURCE", "message_source"),
             "expose_tool_errors": bool(getattr(django_settings, "DEBUG", False)),
         }
         if self.issues:

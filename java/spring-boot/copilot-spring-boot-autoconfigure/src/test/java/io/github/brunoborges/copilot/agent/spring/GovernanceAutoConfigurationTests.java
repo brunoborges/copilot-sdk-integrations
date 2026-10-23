@@ -43,7 +43,9 @@ class GovernanceAutoConfigurationTests {
                 "copilot.agents.test-agent.permissions.allow-tools=echo",
                 "copilot.agents.test-agent.permissions.allow-mcp-servers=docs",
                 "copilot.agents.test-agent.permissions.allow-agent-tools=true",
-                "copilot.agents.test-agent.permissions.allow-read-only=true")
+                "copilot.agents.test-agent.permissions.allow-read-only=true",
+                "copilot.agents.test-agent.tool-search.enabled=true",
+                "copilot.agents.test-agent.tool-search.defer-threshold=20")
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     var agent = context.getBean(CopilotAgentsProperties.class).agents().get("test-agent");
@@ -57,6 +59,8 @@ class GovernanceAutoConfigurationTests {
                     assertThat(agent.permissions().allowMcpServers()).containsExactly("docs");
                     assertThat(agent.permissions().allowAgentTools()).isTrue();
                     assertThat(agent.permissions().allowReadOnly()).isTrue();
+                    assertThat(agent.toolSearch().enabled()).isTrue();
+                    assertThat(agent.toolSearch().deferThreshold()).isEqualTo(20);
                 });
     }
 

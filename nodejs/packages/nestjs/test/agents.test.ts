@@ -188,6 +188,50 @@ describe("declarative agents", () => {
     await ref.get(SupportAgent).answer("c1", "hi");
     expect(ref.get(CopilotTestRuntime).createdSessions[0].model).toBe("gpt-test");
   });
+
+  it("labels prompts with the configured message source", async () => {
+    const ref = await compile(
+      [
+        CopilotTestingModule.forRoot((rt) => rt.onPrompt(/.*/).reply("ok"), { agents: { support: { messageSource: "system" } } }),
+        CopilotModule.forFeature([SupportAgent]),
+      ],
+      [OrdersService, OrdersTools],
+    );
+    await ref.get(SupportAgent).answer("c1", "hi");
+    expect(ref.get(CopilotTestRuntime).receivedPrompts.map((p) => p.source)).toEqual(["system"]);
+    expect(ref.get(CopilotAgents).definition(SupportAgent).messageSource).toBe("system");
+  });
+});
+
+describe("toolSearch", () => {
+  @CopilotAgent({ name: "searcher", toolSearch: { deferThreshold: 10 } })
+  abstract class SearcherAgent {
+    @UserMessage()
+    ask(@Message() q: string): Promise<string> {
+      return implementedByCopilot();
+    }
+  }
+
+  it("applies the decorator value and lets configuration overrides win", async () => {
+    const plain = await compile([CopilotTestingModule.forRoot((rt) => rt.onPrompt(/.*/).reply("ok")), CopilotModule.forFeature([SearcherAgent])]);
+    await plain.get(SearcherAgent).ask("hi");
+    expect(plain.get(CopilotTestRuntime).createdSessions[0].toolSearch).toEqual({ deferThreshold: 10 });
+
+    const overridden = await compile([
+      CopilotTestingModule.forRoot((rt) => rt.onPrompt(/.*/).reply("ok"), { agents: { searcher: { toolSearch: { enabled: false } } } }),
+      CopilotModule.forFeature([SearcherAgent]),
+    ]);
+    await overridden.get(SearcherAgent).ask("hi");
+    expect(overridden.get(CopilotTestRuntime).createdSessions[0].toolSearch).toEqual({ enabled: false });
+  });
+
+  it("rejects invalid toolSearch overrides at bootstrap", async () => {
+    for (const toolSearch of [{ deferThreshold: 0 }, { enabled: false, deferThreshold: 5 }, { extra: true }]) {
+      await expect(
+        compile([CopilotModule.forRoot({ agents: { searcher: { toolSearch } } } as never), CopilotModule.forFeature([SearcherAgent])]),
+      ).rejects.toThrow(/agents\.searcher\.toolSearch/);
+    }
+  });
 });
 
 describe("tools and permissions", () => {

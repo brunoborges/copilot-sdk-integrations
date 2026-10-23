@@ -20,6 +20,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.github.copilot.rpc.MessageSource;
 import com.github.copilot.rpc.PermissionHandler;
 import com.github.copilot.rpc.PermissionInvocation;
 import com.github.copilot.rpc.PermissionRequest;
@@ -32,6 +33,7 @@ import io.github.brunoborges.copilot.agent.CopilotPermissionPolicies;
 import io.github.brunoborges.copilot.agent.CopilotSessionStore;
 import io.github.brunoborges.copilot.agent.UserMessage;
 import io.github.brunoborges.copilot.agent.internal.CopilotAgentInvoker;
+import io.github.brunoborges.copilot.camel.test.CopilotTestPrompt;
 import io.github.brunoborges.copilot.camel.test.CopilotTestRuntime;
 
 class CopilotComponentTest {
@@ -72,6 +74,49 @@ class CopilotComponentTest {
     }
 
     @Test
+    void scheduledRoutesLabelPromptsAsSystemUnlessConfigured() throws Exception {
+        start(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("timer:digest?repeatCount=1").setBody(constant("Summarize")).to("copilot:agent:digest");
+                from("timer:report?repeatCount=1").setBody(constant("Report"))
+                        .to("copilot:agent:report?messageSource=agent-reporting");
+                from("direct:ask").to("copilot:agent:support");
+            }
+        });
+        runtime.anyAgent().replies("ok");
+
+        template.requestBody("direct:ask", "hi");
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+        while ((runtime.prompts("digest").isEmpty() || runtime.prompts("report").isEmpty())
+                && System.nanoTime() < deadline) {
+            Thread.sleep(20);
+        }
+
+        assertThat(source("digest")).isEqualTo(MessageSource.SYSTEM);
+        assertThat(source("report")).isEqualTo(MessageSource.agent("reporting"));
+        assertThat(source("support")).as("request-driven routes keep the runtime default").isNull();
+    }
+
+    @Test
+    void rejectsInvalidMessageSources() throws Exception {
+        start(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:ask").to("copilot:agent:support?messageSource=admin");
+            }
+        });
+
+        assertThatThrownBy(() -> template.requestBody("direct:ask", "hi")).hasStackTraceContaining("message source");
+        assertThat(runtime.prompts()).isEmpty();
+    }
+
+    private MessageSource source(String agent) {
+        return runtime.receivedPrompts().stream().filter(p -> agent.equals(p.agent())).findFirst()
+                .map(CopilotTestPrompt::options).orElseThrow().getSource();
+    }
+
+    @Test
     void sendsBodyAsPromptAndRepliesWithAnswer() throws Exception {
         start(new RouteBuilder() {
             @Override
@@ -94,6 +139,28 @@ class CopilotComponentTest {
         assertThat(config.getModel()).isEqualTo("gpt-5");
         assertThat(config.getSystemMessage().getContent()).isEqualTo("Answer briefly.");
         assertThat(config.getExcludedTools()).as("endpoint agents run without built-in tools by default").isNotEmpty();
+        assertThat(config.getToolSearch()).isNull();
+    }
+
+    @Test
+    void toolSearchOptionsReachTheSession() throws Exception {
+        start(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:ask").to("copilot:agent:support?toolSearch=true&toolSearchDeferThreshold=20");
+            }
+        });
+        runtime.agent("support").replies("ok");
+
+        Exchange reply = template.request("direct:ask", exchange -> {
+            exchange.getMessage().setBody("hi");
+            exchange.getMessage().setHeader(CopilotConstants.CONVERSATION_ID, "c-1");
+        });
+
+        assertThat(reply.getException()).isNull();
+        var search = runtime.sessionConfig("support").getToolSearch();
+        assertThat(search.getEnabled()).isTrue();
+        assertThat(search.getDeferThreshold()).isEqualTo(20);
     }
 
     @Test

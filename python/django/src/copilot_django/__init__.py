@@ -15,6 +15,7 @@ from copilot_agents import (
     ToolContext,
     ToolError,
     current_invocation,
+    message_source,
     policies,
 )
 
@@ -41,6 +42,7 @@ __all__ = [
     "copilot_tool",
     "current_invocation",
     "get_session_store",
+    "message_source",
     "policies",
     "prompt",
     "register",

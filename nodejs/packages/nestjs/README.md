@@ -120,7 +120,7 @@ export class OrdersTools {
   - an injectable class with `evaluate(request, ctx)`
   - an instance
   - an app-wide default provided as `COPILOT_PERMISSION_POLICY`
-- **Hooks**: `@CopilotHook("preToolUse", { agents: [SupportAgent] })` methods are composed with each agent's `hooks`. Global hooks run first.
+- **Hooks**: `@CopilotHook("preToolUse", { agents: [SupportAgent] })` methods are composed with each agent's `hooks`. Global hooks run first. For opt-in error recovery (keep going after failed tool calls, retry transient errors), pass `hooks: errorRecoveryHooks()` from agent-core to `forRoot`; see [Error recovery](../core/README.md#error-recovery).
 - **Events**: `@OnCopilotEvent("done" | "tool-end" | "*")` methods receive `(event, context)`. Listener failures are logged and never break a turn.
 - **`@nestjs/event-emitter`**: set `eventEmitter: true` (or `{ prefix: "ai" }`) in `forRoot` and import `EventEmitterModule.forRoot()`. Every agent event is then re-emitted on `EventEmitter2` as `copilot.<type>` (for example `copilot.done`, `copilot.tool-end`, `copilot.permission-request`) with `(event, context)`, so `@OnEvent("copilot.done")` works. Bootstrap fails if the option is set but `EventEmitterModule` isn't imported. Emitter failures are logged and never break a turn. The package is an optional peer dependency, loaded only when the option is set.
 - **MCP servers with per-user credentials**: an MCP server's `headers` (HTTP) or `env` (stdio) values may be functions of the `CopilotContext`, or the whole map may be one function. They're resolved for every session create and resume, after the token resolver runs, so `ctx.githubToken` is available. Entries that resolve to `undefined` are dropped.

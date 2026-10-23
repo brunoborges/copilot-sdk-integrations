@@ -16,6 +16,7 @@ from copilot_agents import (
     ToolContext,
     ToolError,
     current_invocation,
+    message_source,
     policies,
 )
 
@@ -49,6 +50,7 @@ __all__ = [
     "UserTokenResolver",
     "copilot_tool",
     "current_invocation",
+    "message_source",
     "policies",
     "prompt",
 ]

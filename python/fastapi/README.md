@@ -84,7 +84,7 @@ Copilot lifespan around yours and installs the exception handlers.
 
 - **Agents.** Subclass `CopilotAgent` and set any of these class attributes:
   `instructions`, `model`, `reasoning_effort`, `tools`, `mcp_servers`, `available_tools` /
-  `excluded_tools`, `built_in_tools`, `permissions`, `hooks`, `working_directory`,
+  `excluded_tools`, `built_in_tools`, `tool_search`, `permissions`, `hooks`, `working_directory`,
   `provider`, `token_resolver` and `timeout`. Every attribute can be overridden per
   environment through `COPILOT_AGENTS`. Agent names must be unique within a `Copilot`
   instance.
@@ -169,6 +169,10 @@ COPILOT_HOOKS='["app.hooks.AuditHooks"]'
 COPILOT_SESSIONS__MAX_AGE=P30D             # seconds or ISO 8601; unset = no cleanup
 COPILOT_SESSIONS__CLEANUP_INTERVAL=3600    # default: MAX_AGE / 2, between 1 minute and 1 hour
 ```
+
+To have agents keep going after failed tool calls and retry transient errors, add the opt-in
+[`ErrorRecoveryHooks`](../core/README.md#error-recovery):
+`COPILOT_HOOKS='["copilot_agents.ErrorRecoveryHooks"]'`, or pass an instance with `Copilot(hooks=[ErrorRecoveryHooks(...)])`.
 
 Unknown keys in agent overrides are rejected. Secrets are `SecretStr` values and never
 appear in `repr` or in logs. To download the runtime at image build time, run

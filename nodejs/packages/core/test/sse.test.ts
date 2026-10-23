@@ -154,4 +154,8 @@ describe("describeAgent", () => {
     expect(info.provider).toBe("primary");
     expect(info.instructions).toBe("secret prompt");
   });
+
+  it("includes toolSearch settings", () => {
+    expect(describeAgent(defineAgent({ name: "ts", toolSearch: { deferThreshold: 5 } })).toolSearch).toEqual({ deferThreshold: 5 });
+  });
 });

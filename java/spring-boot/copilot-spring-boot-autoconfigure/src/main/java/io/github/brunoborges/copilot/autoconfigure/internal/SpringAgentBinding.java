@@ -59,7 +59,10 @@ public final class SpringAgentBinding {
                     agent.additionalDirectories(), permissions == null ? null
                             : new CopilotAgentSettings.Permissions(permissions.allow(), permissions.allowTools(),
                                     permissions.allowMcpServers(), permissions.allowAgentTools(),
-                                    permissions.allowReadOnly())));
+                                    permissions.allowReadOnly()),
+                    agent.toolSearch() == null ? null : new CopilotAgentSettings.ToolSearch(
+                            agent.toolSearch().enabled(), agent.toolSearch().deferThreshold()),
+                    agent.messageSource()));
         });
         return new CopilotAgentSettings(agents);
     }

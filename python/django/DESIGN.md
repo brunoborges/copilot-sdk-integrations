@@ -247,6 +247,7 @@ Parity with Java `@CopilotAgent`:
 | `model`, `reasoningEffort`, `provider` | `model`, `reasoning_effort`, `provider` |
 | `toolRefs`, `mcpServers` | `tools`, `mcp_servers` |
 | `availableTools`, `excludedTools`, `excludedBuiltInAgents`, `builtInTools` | `available_tools`, `excluded_tools`, `excluded_built_in_agents`, `built_in_tools` |
+| `toolSearch` (`enabled`, `deferThreshold`) | `tool_search` (`{"enabled": ..., "defer_threshold": ...}`) |
 | `workingDirectory`, `additionalDirectories` | `working_directory`, `additional_directories` |
 | `permissionHandlerRef` | `permissions` |
 | `hookRefs`, `listenerRefs`, `customizerRefs` | `hooks`, `listeners`, `customizers` |

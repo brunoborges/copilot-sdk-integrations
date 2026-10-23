@@ -372,6 +372,8 @@ Same model as Spring, expressed as Nest providers:
 - Tool filters on `@CopilotAgent`: `availableTools`, `excludedTools`,
   `builtInTools`, validated at bootstrap (both lists set, or an allow-list hiding the
   agent's own tools or MCP servers, fails fast).
+- Tool search on `@CopilotAgent` (`toolSearch: { enabled?, deferThreshold? }`): unset keeps the
+  runtime default; overridable per agent via `agents.<name>.toolSearch`.
 - **Permissions denied unless configured.** `permissions.*` policies (`denyAll`,
   `allowReadOnly`, `allowCustomTools`, `allowTools`, `allowMcpServers`, `allowKinds`,
   `askUser`, `anyOf`, `allOf`, `allowAll`), or a custom injectable implementing

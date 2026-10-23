@@ -116,6 +116,34 @@ public sealed class TicketService([FromKeyedServices("triage")] IChatClient tria
 }
 ```
 
+## Message source
+
+Each prompt can carry a provenance label: `user`, `system` (an automated caller such as a
+background service), or `agent-<id>` (another agent). For each turn, the first match wins:
+
+1. A `CopilotMessageSources.BeginScope(...)` scope in the calling async flow. Inside a tool, only a
+   scope the tool opens itself counts; the caller's scope does not flow into tools.
+2. `agent-<name>` when a Copilot agent's tool calls another Copilot chat client (`agent-default`
+   for the unnamed client).
+3. `MessageSource` in the agent's options (`Copilot:Agents:<name>:MessageSource` or `Copilot:MessageSource`).
+4. Nothing: the runtime applies its default, `user`.
+
+```csharp
+using (CopilotMessageSources.BeginScope(MessageSource.System))
+{
+    await chat.GetResponseAsync("Summarize last night's alerts", cancellationToken: ct);
+}
+```
+
+Agent ids must match `[A-Za-z0-9][A-Za-z0-9._-]{0,127}`; invalid options fail validation at startup.
+Automatic inference never produces `user`.
+
+> The source is caller-supplied provenance, not an authenticated identity: never authorize from it.
+> It can still influence runtime behavior (auto-approval classification, queueing, steering), and
+> non-user sources persist in session history, so validate identifiers that cross trust boundaries
+> and never put secrets in them. `system` labels an automated caller; it does not create a
+> system-role message.
+
 ## The CopilotClient escape hatch
 
 `CopilotClient` is registered as a singleton, so any part of the SDK is one injection away:

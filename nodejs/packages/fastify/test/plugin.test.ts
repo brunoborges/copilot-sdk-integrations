@@ -128,6 +128,15 @@ describe("agents", () => {
     expect(warn).toHaveBeenCalledWith(expect.anything(), expect.stringMatching(/ghost/));
   });
 
+  it("applies a messageSource override", async () => {
+    const { fastify, test } = await setup(
+      { agents: [support], agentOverrides: { support: { messageSource: "system" } } },
+      { script: (rt) => rt.onPrompt(/.*/).reply("ok") },
+    );
+    await fastify.copilot.agent("support").send({ prompt: "hi" });
+    expect(test.runtime.receivedPrompts.map((p) => p.source)).toEqual(["system"]);
+  });
+
   it("returns handles for definitions too", async () => {
     const { fastify } = await setup();
     expect(fastify.copilot.agent(support).definition).toBe(support);

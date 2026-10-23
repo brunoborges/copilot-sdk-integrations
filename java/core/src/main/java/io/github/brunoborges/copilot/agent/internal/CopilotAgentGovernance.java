@@ -13,6 +13,7 @@ import com.github.copilot.rpc.PermissionHandler;
 import com.github.copilot.rpc.ResumeSessionConfig;
 import com.github.copilot.rpc.SessionConfig;
 import com.github.copilot.rpc.ToolDefinition;
+import com.github.copilot.rpc.ToolSearchConfig;
 import io.github.brunoborges.copilot.agent.CopilotAgent;
 import io.github.brunoborges.copilot.agent.CopilotAgentContext;
 import io.github.brunoborges.copilot.agent.CopilotAgentHooks;
@@ -27,10 +28,11 @@ import io.github.brunoborges.copilot.agent.CopilotPermissionPolicies;
  * @param workingDirectory session working directory, or null for the runtime default
  * @param additionalDirectories extra accessible directories, or null for none
  * @param hooks ordered hook beans, global ones first
+ * @param toolSearch effective tool-search settings, or null for the runtime default
  */
 public record CopilotAgentGovernance(List<String> availableTools, List<String> excludedTools,
         List<String> excludedBuiltInAgents, String workingDirectory, List<String> additionalDirectories,
-        List<CopilotAgentHooks> hooks) {
+        List<CopilotAgentHooks> hooks, CopilotAgentSettings.ToolSearch toolSearch) {
 
     static final String ALL_BUILT_IN_TOOLS = "builtin:*";
 
@@ -76,7 +78,32 @@ public record CopilotAgentGovernance(List<String> availableTools, List<String> e
                 annotation.additionalDirectories(), environment);
         List<String> hookNames = select(null, null, annotation.hookRefs(), environment);
         return new CopilotAgentGovernance(nullIfEmpty(available), nullIfEmpty(excluded), nullIfEmpty(agents),
-                directory.isEmpty() ? null : directory, nullIfEmpty(directories), hooks(agent, type, hookNames, beans));
+                directory.isEmpty() ? null : directory, nullIfEmpty(directories), hooks(agent, type, hookNames, beans),
+                toolSearch(agent, annotation, settings, environment));
+    }
+
+    private static CopilotAgentSettings.ToolSearch toolSearch(String agent, CopilotAgent annotation,
+            CopilotAgentSettings.Agent settings, PropertyResolver environment) {
+        var override = settings == null ? null : settings.toolSearch();
+        Boolean enabled = override != null && override.enabled() != null ? override.enabled() : switch (
+                resolve(annotation.toolSearch(), environment)) {
+            case "" -> null;
+            case "true" -> Boolean.TRUE;
+            case "false" -> Boolean.FALSE;
+            default -> throw new IllegalArgumentException("Copilot agent " + agent
+                    + ": toolSearch must be \"true\", \"false\", or empty");
+        };
+        Assert.isTrue(annotation.toolSearchDeferThreshold() >= 0,
+                "Copilot agent " + agent + ": toolSearchDeferThreshold must not be negative");
+        Integer threshold = override != null && override.deferThreshold() != null ? override.deferThreshold()
+                : annotation.toolSearchDeferThreshold() > 0 ? annotation.toolSearchDeferThreshold() : null;
+        Assert.isTrue(threshold == null || !Boolean.FALSE.equals(enabled), "Copilot agent " + agent
+                + ": tool-search defer-threshold has no effect when tool search is disabled");
+        return enabled == null && threshold == null ? null : new CopilotAgentSettings.ToolSearch(enabled, threshold);
+    }
+
+    private ToolSearchConfig toolSearchConfig() {
+        return new ToolSearchConfig().setEnabled(toolSearch.enabled()).setDeferThreshold(toolSearch.deferThreshold());
     }
 
     /** Builds the property-driven permission policy, or returns null when none is configured. */
@@ -108,6 +135,9 @@ public record CopilotAgentGovernance(List<String> availableTools, List<String> e
     }
 
     void apply(CopilotAgentContext context, SessionConfig config, Supplier<CopilotAgentLifetime.Scope> callbackScope) {
+        if (toolSearch != null) {
+            config.setToolSearch(toolSearchConfig());
+        }
         if (availableTools != null) {
             config.setAvailableTools(new ArrayList<>(availableTools));
         }
@@ -129,6 +159,9 @@ public record CopilotAgentGovernance(List<String> availableTools, List<String> e
     }
 
     void apply(CopilotAgentContext context, ResumeSessionConfig config, Supplier<CopilotAgentLifetime.Scope> callbackScope) {
+        if (toolSearch != null) {
+            config.setToolSearch(toolSearchConfig());
+        }
         if (availableTools != null) {
             config.setAvailableTools(new ArrayList<>(availableTools));
         }

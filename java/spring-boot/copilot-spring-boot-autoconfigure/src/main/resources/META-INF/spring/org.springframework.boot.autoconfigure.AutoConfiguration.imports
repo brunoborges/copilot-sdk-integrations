@@ -5,3 +5,4 @@ io.github.brunoborges.copilot.autoconfigure.CopilotHealthContributorAutoConfigur
 io.github.brunoborges.copilot.autoconfigure.CopilotEndpointAutoConfiguration
 io.github.brunoborges.copilot.autoconfigure.CopilotInfoContributorAutoConfiguration
 io.github.brunoborges.copilot.autoconfigure.CopilotSecurityAutoConfiguration
+io.github.brunoborges.copilot.autoconfigure.CopilotErrorRecoveryAutoConfiguration
