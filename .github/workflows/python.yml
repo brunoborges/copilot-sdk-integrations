@@ -34,7 +34,7 @@ jobs:
       - name: Install
         run: |
           uv venv
-          uv pip install -e core -e django pytest pytest-asyncio pytest-django
+          uv pip install -e core -e django -e fastapi pytest pytest-asyncio pytest-django httpx
       - name: Test core
         working-directory: python/core
         run: ../.venv/bin/python -m pytest
@@ -44,6 +44,12 @@ jobs:
       - name: Test Django example
         working-directory: python/django/example
         run: ../../.venv/bin/python manage.py test
+      - name: Test FastAPI
+        working-directory: python/fastapi
+        run: ../.venv/bin/python -m pytest
+      - name: Test FastAPI example
+        working-directory: python/fastapi/example
+        run: ../../.venv/bin/python -m pytest
 
   site:
     runs-on: ubuntu-latest

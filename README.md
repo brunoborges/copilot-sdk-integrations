@@ -18,7 +18,7 @@ injection, lifecycle management, security context, observability, and testing.
 | .NET | Generic Host / ASP.NET Core ([Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`) | [`dotnet/`](dotnet/) | Preview, not yet on NuGet ([docs](https://brunoborges.github.io/copilot-sdk-integrations/dotnet/), [design](dotnet/docs/design.md)) |
 | Polyglot (C# AppHost; .NET, Java, Node.js, Python services) | [Aspire](https://aspire.dev/) (AppHost runtime resource + .NET client integration, builds on `dotnet`) | [`aspire/`](aspire/) | Preview, not yet on NuGet ([docs](https://brunoborges.github.io/copilot-sdk-integrations/aspire/), [design](aspire/docs/design.md)) |
 | Python | [Django](https://www.djangoproject.com/) | [`python/django/`](python/django/) | Preview, not yet on PyPI ([docs](https://brunoborges.github.io/copilot-sdk-integrations/django/), [design](python/django/DESIGN.md)) |
-| Python | [FastAPI](https://fastapi.tiangolo.com/) | `python/` | Under consideration |
+| Python | [FastAPI](https://fastapi.tiangolo.com/) | [`python/fastapi/`](python/fastapi/) | Preview, not yet on PyPI ([README](python/fastapi/README.md), [design](python/fastapi/DESIGN.md)) |
 | Node.js / TypeScript | [NestJS](https://nestjs.com/), [Fastify](https://fastify.dev/), framework-agnostic core, [AI SDK](https://ai-sdk.dev/) adapter | [`nodejs/`](nodejs/) | In development ([DESIGN.md](nodejs/DESIGN.md)) |
 
 ## Design goals
@@ -58,6 +58,7 @@ documentation landing page) live at the root.
 │   └── quarkus/     # Quarkus extension (Java, Maven)
 ├── dotnet/        # .NET integration for business apps (preview)
 ├── aspire/        # Aspire integration (.NET) (preview)
+├── python/        # Python core (copilot-agent-core), Django and FastAPI integrations (preview)
 ├── nodejs/        # Node.js core, NestJS module, Fastify plugin, and AI SDK adapter (TypeScript; in development)
 └── .github/       # CI workflows and documentation landing page
 ```
