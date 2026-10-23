@@ -38,6 +38,7 @@ jobs:
             dotnet/site/package-lock.json
             aspire/site/package-lock.json
             python/django/site/package-lock.json
+            python/fastapi/site/package-lock.json
       - uses: actions/configure-pages@v6
       - name: Build Spring Boot documentation site
         working-directory: java/spring-boot
@@ -69,6 +70,11 @@ jobs:
         run: |
           npm ci
           npm run build
+      - name: Build FastAPI documentation site
+        working-directory: python/fastapi/site
+        run: |
+          npm ci
+          npm run build
       - name: Assemble site
         run: |
           mkdir -p _site
@@ -78,6 +84,7 @@ jobs:
           cp -R dotnet/site/dist _site/dotnet
           cp -R aspire/site/dist _site/aspire
           cp -R python/django/site/dist _site/django
+          cp -R python/fastapi/site/dist _site/fastapi
           cp .github/pages/index.html .github/pages/dotnet-bot.png _site/
       - uses: actions/upload-pages-artifact@v5
         with:

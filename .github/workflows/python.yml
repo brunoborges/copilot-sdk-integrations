@@ -53,16 +53,20 @@ jobs:
 
   site:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [django, fastapi]
     defaults:
       run:
-        working-directory: python/django/site
+        working-directory: python/${{ matrix.package }}/site
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: python/django/site/package-lock.json
+          cache-dependency-path: python/${{ matrix.package }}/site/package-lock.json
       - name: Build documentation site
         run: |
           npm ci

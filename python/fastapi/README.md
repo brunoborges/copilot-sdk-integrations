@@ -7,7 +7,8 @@ working inside them. Agents work from both `def` and `async def` endpoints. The 
 builds on [`copilot-agent-core`](../core/), the same engine that
 [`copilot-django`](../django/) uses.
 
-Status: **preview** (not yet on PyPI). [DESIGN.md](DESIGN.md) covers the scope and the
+Status: **preview** (not yet on PyPI). Documentation: <https://brunoborges.github.io/copilot-sdk-integrations/fastapi/>
+(source in [`site/`](site/)). [DESIGN.md](DESIGN.md) covers the scope and the
 milestones. Streaming (SSE) and interactive approvals are planned.
 
 ## Quickstart
