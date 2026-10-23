@@ -1,9 +1,9 @@
 ---
 sites: nestjs
-title: Getting started
+title: NestJS module
 ---
 
-# Getting started
+# NestJS module
 
 **In this chapter**
 

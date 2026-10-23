@@ -8,7 +8,7 @@ title: Agent Core without a framework
 of the Copilot SDK. It works from Express, Hono, a queue worker, or a script. The NestJS, Fastify,
 and AI SDK packages are built on it.
 <!-- only:nestjs -->
-NestJS apps use the [`CopilotModule`](getting-started.md) instead of wiring Agent Core by hand.
+NestJS apps use the [`CopilotModule`](nestjs.md) instead of wiring Agent Core by hand.
 <!-- /only -->
 <!-- only:fastify -->
 Fastify apps use the [Fastify plugin](fastify.md) instead of wiring Agent Core by hand.

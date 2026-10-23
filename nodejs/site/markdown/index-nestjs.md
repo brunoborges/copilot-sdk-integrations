@@ -54,7 +54,7 @@ tools, permissions, conversations, events) applies unchanged in NestJS.
 
 | Chapter | Covers |
 | --- | --- |
-| [Getting started](getting-started.md) | Installation, `CopilotModule`, a first agent, tool, and controller. |
+| [NestJS module](nestjs.md) | Installation, `CopilotModule`, a first agent, tool, and controller. |
 | [Agent Core without a framework](core.md) | `createCopilot`, `defineAgent`, `send`, `stream`, lifecycle, and Express usage. |
 | [Agents](agents.md) | Agent definitions, instructions, models, BYOK providers, MCP servers, NestJS decorators, and structured output. |
 | [Tools](tools.md) | Tool definitions, Zod and JSON Schema input, AI SDK tools, `@CopilotTool` providers, interceptors, and tool filters. |

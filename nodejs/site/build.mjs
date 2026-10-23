@@ -63,7 +63,7 @@ const sites = {
         name: "Start here",
         items: [
           ["Documentation", "index"],
-          ["Getting started", "getting-started"],
+          ["NestJS module", "nestjs"],
           ["Agent Core without a framework", "core"],
         ],
       },
@@ -95,7 +95,7 @@ const sites = {
 };
 
 // Former combined site (/nodejs/): every page redirects to its NestJS page, except the Fastify chapter.
-const legacyRedirects = { fastify: "../fastify/fastify.html" };
+const legacyRedirects = { fastify: "../fastify/fastify.html", "getting-started": "../nestjs/nestjs.html" };
 
 // ---------------------------------------------------------------------------
 // Syntax highlighting: a tiny tokenizer emitting highlight.js-compatible classes.
