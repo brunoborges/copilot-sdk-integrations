@@ -1,6 +1,6 @@
 import { createApprovalStore } from "@copilot-sdk-integrations/ai";
-import { defineAgent, permissions } from "@copilot-sdk-integrations/core";
-import { parseSse } from "@copilot-sdk-integrations/core/testing";
+import { defineAgent, permissions } from "@copilot-sdk-integrations/agent-core";
+import { parseSse } from "@copilot-sdk-integrations/agent-core/testing";
 import { isToolUIPart, jsonSchema, readUIMessageStream, tool, type UIMessage, type UIMessageChunk } from "ai";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { describe, expect, it } from "vitest";

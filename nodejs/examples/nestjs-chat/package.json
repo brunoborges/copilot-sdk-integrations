@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@copilot-sdk-integrations/ai": "0.1.0",
-    "@copilot-sdk-integrations/core": "0.1.0",
+    "@copilot-sdk-integrations/agent-core": "0.1.0",
     "@copilot-sdk-integrations/nestjs": "0.1.0",
     "@nestjs/common": "^12.2.0",
     "@nestjs/config": "^12.0.1",

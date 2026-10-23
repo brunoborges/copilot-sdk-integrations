@@ -1,4 +1,4 @@
-import { describeAgent, type CopilotInfo } from "@copilot-sdk-integrations/core";
+import { describeAgent, type CopilotInfo } from "@copilot-sdk-integrations/agent-core";
 import type { FastifyInstance } from "fastify";
 import type { CopilotInfoRouteOptions } from "./types.js";
 

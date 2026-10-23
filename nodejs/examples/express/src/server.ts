@@ -1,4 +1,4 @@
-import { createCopilot } from "@copilot-sdk-integrations/core";
+import { createCopilot } from "@copilot-sdk-integrations/agent-core";
 import { createApp } from "./app.js";
 
 const copilot = createCopilot({

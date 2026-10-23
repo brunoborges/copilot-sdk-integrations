@@ -13,8 +13,13 @@ and can supply a per-user GitHub token.
 
 - [The context](#the-context)
 - [Setting the context in core](#setting-the-context-in-core)
+<!-- only:nestjs -->
 - [The NestJS context interceptor](#the-nestjs-context-interceptor)
 - [nestjs-cls and other context stores](#nestjs-cls-and-other-context-stores)
+<!-- /only -->
+<!-- only:fastify -->
+- [The Fastify context hook](#the-fastify-context-hook)
+<!-- /only -->
 - [Per-user GitHub tokens](#per-user-github-tokens)
 - [Token precedence](#token-precedence)
 
@@ -33,7 +38,7 @@ and can supply a per-user GitHub token.
 Read it anywhere downstream of a turn:
 
 ```ts
-import { getCopilotContext } from "@copilot-sdk-integrations/core";
+import { getCopilotContext } from "@copilot-sdk-integrations/agent-core";
 
 const audit = (action: string) => log.info({ action, user: getCopilotContext()?.principal });
 ```
@@ -43,7 +48,7 @@ Tool handlers also receive it as `invocation.context`, and policies as `ctx.cont
 ## Setting the context in core
 
 ```ts
-import { bindCopilotContext, runWithCopilotContext } from "@copilot-sdk-integrations/core";
+import { bindCopilotContext, runWithCopilotContext } from "@copilot-sdk-integrations/agent-core";
 
 app.post("/chat", (req, res, next) =>
   runWithCopilotContext({ principal: req.user.id, attributes: { tenant: req.user.tenant } }, () =>
@@ -59,9 +64,28 @@ app.post("/chat", (req, res, next) =>
 - The `context` send option merges extra fields for one turn; the `principal` of a bound
   conversation wins over both.
 
-In Fastify, the [plugin's context hook](fastify.md#request-context) does this for every request,
-taking the principal from `request.user` by default.
+<!-- only:fastify -->
 
+## The Fastify context hook
+
+The [plugin's context hook](fastify.md#request-context) does this for every request, taking the
+principal from `request.user` by default. Configure it with the plugin's `context` option:
+
+```ts
+await app.register(copilotPlugin, {
+  agents: [support],
+  context: {
+    headers: ["x-tenant", "traceparent"],
+    principal: (request) => request.user?.email,
+    attributes: (request) => ({ tenant: request.headers["x-tenant"] }),
+  },
+});
+```
+
+Set `context: false` to disable the hook and set the context yourself with
+`runWithCopilotContext`.
+<!-- /only -->
+<!-- only:nestjs -->
 ## The NestJS context interceptor
 
 `CopilotModule` registers a global `CopilotContextInterceptor` for HTTP handlers. It runs after
@@ -124,6 +148,7 @@ export class AppModule {}
   `CopilotContextBridge` with `capture()` and an optional `restore(context, fn)`. Provide your
   own bridge (or an array of bridges) to feed the context from another store.
 
+<!-- /only -->
 ## Per-user GitHub tokens
 
 By default, every turn uses the client's credentials (a service token or the logged-in CLI
@@ -138,6 +163,11 @@ const copilot = createCopilot({
 });
 ```
 
+<!-- only:fastify -->
+Fastify: pass `tokenResolver` in the plugin's `client` options. Headers listed in the `context`
+option are available to it as `ctx.attributes.headers`.
+<!-- /only -->
+<!-- only:nestjs -->
 NestJS: provide a `CopilotTokenResolver`. `PassportGitHubTokenResolver` reads the token that a
 Passport GitHub strategy stored on `request.user` (`accessToken`, `githubToken`, or
 `github.accessToken`):
@@ -153,6 +183,7 @@ export class AppModule {}
 The Passport verify callback must keep the access token on the user object. For other
 identity providers, extend `CopilotTokenResolver` and implement `resolve(context)` (sync or
 async). A module-level `tokenResolver` option wins over the provider.
+<!-- /only -->
 
 ## Token precedence
 

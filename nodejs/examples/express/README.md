@@ -1,7 +1,7 @@
 # Express example
 
 A small plain [Express 5](https://expressjs.com/) app (ESM) that uses only
-`@copilot-sdk-integrations/core` and `@copilot-sdk-integrations/ai`. It runs a "Node.js advisor"
+`@copilot-sdk-integrations/agent-core` and `@copilot-sdk-integrations/ai`. It runs a "Node.js advisor"
 agent, which is the Node counterpart of the Spring Boot `spring-advisor` sample.
 
 ## What it demonstrates
@@ -63,5 +63,5 @@ with `API_URL=http://localhost:3000`.
 npm test -w examples/express
 ```
 
-The tests use a scripted runtime from `@copilot-sdk-integrations/core/testing`. They need no
+The tests use a scripted runtime from `@copilot-sdk-integrations/agent-core/testing`. They need no
 credentials and no network access.

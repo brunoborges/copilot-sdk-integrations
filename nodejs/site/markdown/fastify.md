@@ -1,4 +1,5 @@
 ---
+sites: fastify
 title: Fastify plugin
 ---
 
@@ -26,7 +27,7 @@ plain core definitions, so the same code runs under NestJS, Express, or Fastify.
 ## Install
 
 ```sh
-npm install @copilot-sdk-integrations/fastify @copilot-sdk-integrations/core fastify zod
+npm install @copilot-sdk-integrations/fastify @copilot-sdk-integrations/agent-core fastify zod
 # for useChat routes (./ai):
 npm install @copilot-sdk-integrations/ai ai
 ```
@@ -47,7 +48,7 @@ then pass a scripted client (see [Testing](#testing)).
 
 ```ts
 import Fastify from "fastify";
-import { defineAgent, permissions, type Copilot, type CopilotOptions } from "@copilot-sdk-integrations/core";
+import { defineAgent, permissions, type Copilot, type CopilotOptions } from "@copilot-sdk-integrations/agent-core";
 import { copilotPlugin } from "@copilot-sdk-integrations/fastify";
 
 export const support = defineAgent({
@@ -168,7 +169,7 @@ unchanged. Fastify allows one error handler per scope, so if the app has its own
 `errorHandler: false` and delegate:
 
 ```ts
-import { CopilotIntegrationError } from "@copilot-sdk-integrations/core";
+import { CopilotIntegrationError } from "@copilot-sdk-integrations/agent-core";
 import { copilotErrorHandler } from "@copilot-sdk-integrations/fastify";
 
 app.setErrorHandler((error, request, reply) => {
@@ -177,7 +178,7 @@ app.setErrorHandler((error, request, reply) => {
 });
 ```
 
-The same table is used by NestJS ([HTTP error mapping](operations.md#http-error-mapping)) and is
+The same table is shared by every integration ([HTTP error mapping](operations.md#http-error-mapping)) and is
 exported as `copilotErrorToHttp(error)`.
 
 ## Streaming
@@ -258,7 +259,7 @@ await app.register(underPressure, { healthCheck: copilotHealthCheck(app), health
   (`{ state, version, capacity }`), with `503` when the client is `failed`, `stopping`, or
   `stopped`. It never starts a lazy runtime.
 - **Info** returns `{ state, version, capacity, agents }`, each agent described as in the
-  NestJS [info endpoint](operations.md#info-endpoint). It never includes keys or headers. Guard
+[info endpoint](operations.md#info-endpoint). It never includes keys or headers. Guard
   it with `onRequest`; the plugin logs a warning when there's no guard.
 - **`@fastify/under-pressure`.** `copilotHealthCheck(app)` makes the Copilot state part of the
   app's existing health check and load shedding.

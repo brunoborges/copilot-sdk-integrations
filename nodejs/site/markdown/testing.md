@@ -5,7 +5,7 @@ title: Testing
 # Testing
 
 Agent code is tested against a scripted runtime: `CopilotTestRuntime` from
-`@copilot-sdk-integrations/core/testing`. It replaces the Copilot runtime process, so tests
+`@copilot-sdk-integrations/agent-core/testing`. It replaces the Copilot runtime process, so tests
 need no CLI, no credentials, and make no paid requests, while your tools, permission policies,
 hooks, tool filters, and conversation handling run for real.
 
@@ -14,14 +14,18 @@ hooks, tool filters, and conversation handling run for real.
 - [Core tests](#core-tests)
 - [Scripting replies](#scripting-replies)
 - [Recordings](#recordings)
+<!-- only:nestjs -->
 - [NestJS tests](#nestjs-tests)
+<!-- /only -->
+<!-- only:fastify -->
 - [Fastify tests](#fastify-tests)
+<!-- /only -->
 - [Testing AI SDK routes](#testing-ai-sdk-routes)
 
 ## Core tests
 
 ```ts
-import { createTestCopilot } from "@copilot-sdk-integrations/core/testing";
+import { createTestCopilot } from "@copilot-sdk-integrations/agent-core/testing";
 import { expect, test } from "vitest";
 
 test("looks up the order", async () => {
@@ -103,6 +107,7 @@ changes the model list, and `runtime.reset()` clears rules and recordings betwee
 Assert on governance, not just text: for example, that a denied tool never ran
 (`toolCalls[0].approved === false`) or that the session config hid built-in tools.
 
+<!-- only:nestjs -->
 ## NestJS tests
 
 `CopilotTestingModule` from `@copilot-sdk-integrations/nestjs/testing` registers
@@ -136,6 +141,8 @@ await moduleRef.close();
 - Test runners must emit decorator metadata (`emitDecoratorMetadata`) for constructor injection
   by type. With Vitest, use [`unplugin-swc`](https://github.com/unplugin/unplugin-swc).
 
+<!-- /only -->
+<!-- only:fastify -->
 ## Fastify tests
 
 `buildCopilotTestApp(build, script)` from `@copilot-sdk-integrations/fastify/testing` passes a
@@ -153,6 +160,7 @@ await app.close();
 ```
 
 See [Fastify plugin](fastify.md#testing).
+<!-- /only -->
 
 ## Testing AI SDK routes
 

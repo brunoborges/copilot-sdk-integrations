@@ -6,7 +6,7 @@ import type {
   CopilotContext,
   CopilotOptions,
   ToSseStreamOptions,
-} from "@copilot-sdk-integrations/core";
+} from "@copilot-sdk-integrations/agent-core";
 import type { FastifyReply, FastifyRequest, onRequestHookHandler } from "fastify";
 
 /**

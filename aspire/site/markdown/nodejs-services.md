@@ -5,8 +5,8 @@ title: Node.js
 # Node.js
 
 Node.js services connect to the AppHost's runtime with the
-[Node.js integration](https://brunoborges.github.io/copilot-sdk-integrations/nodejs/)
-(`@copilot-sdk-integrations/core`, or the NestJS and AI SDK packages built on it) or with the
+Node.js integrations (`@copilot-sdk-integrations/agent-core`, or the
+[NestJS](https://brunoborges.github.io/copilot-sdk-integrations/nestjs/), [Fastify](https://brunoborges.github.io/copilot-sdk-integrations/fastify/), and AI SDK packages built on it) or with the
 Copilot SDK for Node.js (`@github/copilot-sdk`) directly.
 
 ## AppHost
@@ -44,7 +44,7 @@ rather than using `CHAT_ENDPOINT`:
 const cliUrl = `${process.env.CHAT_HOST}:${process.env.CHAT_PORT}`;
 ```
 
-## With `@copilot-sdk-integrations/core`
+## With `@copilot-sdk-integrations/agent-core`
 
 `createCopilot({ cliUrl })` connects to an external runtime, but it has no option for the connection
 token. Pass the token through `configureClient`, which receives the SDK client options before the
@@ -52,7 +52,7 @@ client is created:
 
 ```ts
 import { RuntimeConnection } from "@github/copilot-sdk";
-import { createCopilot, defineAgent } from "@copilot-sdk-integrations/core";
+import { createCopilot, defineAgent } from "@copilot-sdk-integrations/agent-core";
 
 const cliUrl = `${process.env.CHAT_HOST}:${process.env.CHAT_PORT}`;
 

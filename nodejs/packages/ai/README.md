@@ -1,13 +1,13 @@
 # @copilot-sdk-integrations/ai
 
-This package connects [`@copilot-sdk-integrations/core`](../core) to the [Vercel AI SDK](https://ai-sdk.dev) v7 (`ai@^7`). It has three parts:
+This package connects [`@copilot-sdk-integrations/agent-core`](../core) to the [Vercel AI SDK](https://ai-sdk.dev) v7 (`ai@^7`). It has three parts:
 
 - **UI message streams**: maps Copilot agent events to the AI SDK UI message stream protocol, so `useChat` frontends work unchanged. Tool approvals are included.
 - **`useChat` handler**: `streamCopilotChat` takes a `useChat` request and turns it into a Copilot turn. History stays on the server, keyed by the chat id. It also handles the approval round trip.
 - **AI SDK provider**: `createCopilotProvider` (alias `copilot`) returns a `LanguageModelV4`, so you can use `generateText` and `streamText` with Copilot agents. `createCopilotAgent` returns an AI SDK `Agent`.
 
 ```bash
-npm install @copilot-sdk-integrations/ai @copilot-sdk-integrations/core ai
+npm install @copilot-sdk-integrations/ai @copilot-sdk-integrations/agent-core ai
 ```
 
 ## Chat UI (`useChat`)
@@ -16,7 +16,7 @@ npm install @copilot-sdk-integrations/ai @copilot-sdk-integrations/core ai
 
 ```ts
 // app/api/chat/route.ts
-import { createCopilot, defineAgent, permissions } from "@copilot-sdk-integrations/core";
+import { createCopilot, defineAgent, permissions } from "@copilot-sdk-integrations/agent-core";
 import { createCopilotChatResponse } from "@copilot-sdk-integrations/ai";
 import type { UIMessage } from "ai";
 

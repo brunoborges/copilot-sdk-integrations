@@ -1,4 +1,4 @@
-import { defineAgent, defineCopilotTool, getCopilotContext, type CopilotContext } from "@copilot-sdk-integrations/core";
+import { defineAgent, defineCopilotTool, getCopilotContext, type CopilotContext } from "@copilot-sdk-integrations/agent-core";
 import type { FastifyRequest } from "fastify";
 import { describe, expect, it } from "vitest";
 import { setup } from "./helpers.js";

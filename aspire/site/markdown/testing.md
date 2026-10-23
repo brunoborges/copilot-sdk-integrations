@@ -47,7 +47,7 @@ Test each service's Copilot code without a runtime, using its own integration's 
 | .NET | Fakes from the core .NET integration. See the [.NET docs](https://brunoborges.github.io/copilot-sdk-integrations/dotnet/). |
 | Spring Boot | The `copilot-spring-boot-test` module. See the [Spring Boot docs](https://brunoborges.github.io/copilot-sdk-integrations/spring-boot/). |
 | Quarkus | The Quarkus test module. See the [Quarkus docs](https://brunoborges.github.io/copilot-sdk-integrations/quarkus/). |
-| Node.js | The scripted test runtime in the core and NestJS packages' `testing` entry points. See the [Node.js docs](https://brunoborges.github.io/copilot-sdk-integrations/nodejs/). |
+| Node.js | The scripted test runtime in the Agent Core, NestJS, and Fastify packages' `testing` entry points. See the [NestJS](https://brunoborges.github.io/copilot-sdk-integrations/nestjs/testing.html) and [Fastify](https://brunoborges.github.io/copilot-sdk-integrations/fastify/testing.html) docs. |
 | Python | No integration-specific support. Mock the SDK client in your tests. |
 
 These tests don't involve Aspire. A service reads its connection from configuration, so a test sets

@@ -1,4 +1,4 @@
-import { describeAgent, type Copilot, type CopilotAgentInfo, type CopilotInfo } from "@copilot-sdk-integrations/core";
+import { describeAgent, type Copilot, type CopilotAgentInfo, type CopilotInfo } from "@copilot-sdk-integrations/agent-core";
 import {
   Controller,
   Get,
@@ -20,7 +20,7 @@ export interface CopilotInfoOptions {
   includeInstructions?: boolean;
 }
 
-export type { CopilotAgentInfo, CopilotInfo } from "@copilot-sdk-integrations/core";
+export type { CopilotAgentInfo, CopilotInfo } from "@copilot-sdk-integrations/agent-core";
 
 /** Builds the info document (state, version, capacity, agents) without starting a lazy runtime. */
 @Injectable()

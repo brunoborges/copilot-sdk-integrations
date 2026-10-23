@@ -80,7 +80,9 @@ jobs:
           mkdir -p _site
           cp -R java/spring-boot/target/site _site/spring-boot
           cp -R java/quarkus/target/site _site/quarkus
-          cp -R nodejs/site/dist _site/nodejs
+          cp -R nodejs/site/dist/nestjs _site/nestjs
+          cp -R nodejs/site/dist/fastify _site/fastify
+          cp -R nodejs/site/dist/nodejs _site/nodejs
           cp -R dotnet/site/dist _site/dotnet
           cp -R aspire/site/dist _site/aspire
           cp -R python/django/site/dist _site/django

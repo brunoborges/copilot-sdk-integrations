@@ -27,8 +27,14 @@ graceful shutdown, error handling, and observability.
 
 - With `startup: "lazy"` (the default), the runtime starts on the first turn, and a failure
   surfaces on that turn as `CopilotRuntimeUnavailableError`.
+<!-- only:nestjs -->
 - With `startup: "eager"`, NestJS starts it at bootstrap and bootstrap fails if it can't start.
   In core, call `await copilot.start()` at startup.
+<!-- /only -->
+<!-- only:fastify -->
+- With `startup: "eager"`, the Fastify plugin starts it in `onReady`, so `ready()` and
+  `listen()` fail if it can't start. In core, call `await copilot.start()` at startup.
+<!-- /only -->
 - A failed start leaves the client `failed`; the next turn or `start()` retries.
 - If the runtime process dies or its connection drops while running, the client goes to `failed`
   and the next turn starts a fresh runtime. See [Runtime restarts](#runtime-restarts).
@@ -81,6 +87,7 @@ holds a runtime session. See [turn admission](conversations.md#turn-admission).
 
 `copilot.health()` returns `{ state, version?, capacity }` without starting a lazy runtime.
 
+<!-- only:nestjs -->
 In NestJS, `CopilotHealthIndicator` plugs into [`@nestjs/terminus`](https://docs.nestjs.com/recipes/terminus)
 11 or 12 (an optional peer dependency, loaded only when the indicator runs):
 
@@ -97,31 +104,50 @@ export class HealthController {
 }
 ```
 
-In Fastify, the plugin's `health` route and `copilotHealthCheck()` for `@fastify/under-pressure`
-do the same; see [Fastify plugin](fastify.md#health-info-and-under-pressure).
-
 `isHealthy(key = "copilot")` resolves to
 `{ copilot: { status: "up" | "down", state, version?, capacity } }`. It reports `down` when the
 runtime is `stopping`, `stopped`, or `failed`, and `up` for a lazy runtime that hasn't started
 yet. The result is built with Terminus's `HealthIndicatorService` (`check(key).up()/down()`), so
 `HealthCheckService` answers `503 Service Unavailable` when Copilot is down and `200` otherwise.
 The indicator never starts a lazy runtime.
+<!-- /only -->
+<!-- only:fastify -->
+In Fastify, the plugin's `health` route (`503` when the client is `failed`, `stopping`, or
+`stopped`) and `copilotHealthCheck()` for `@fastify/under-pressure` expose it; see
+[Fastify plugin](fastify.md#health-info-and-under-pressure). Neither starts a lazy runtime.
+<!-- /only -->
 
 ## Info endpoint
 
+<!-- only:nestjs -->
 `CopilotInfoModule` is opt-in, the counterpart of the Spring Boot Actuator info endpoint. It
 exposes a read-only `GET /copilot/info`:
 
 ```ts
 imports: [CopilotInfoModule.register({ path: "admin/copilot", guards: [AdminGuard] })]
 ```
+<!-- /only -->
+<!-- only:fastify -->
+The plugin's `info` option is opt-in, the counterpart of the Spring Boot Actuator info
+endpoint. It exposes a read-only route (`info: true` uses `/copilot/info`):
+
+```ts
+await app.register(copilotPlugin, { info: { path: "/admin/copilot", onRequest: app.auth([app.verifyAdmin]) } });
+```
+<!-- /only -->
 
 The response contains the runtime `state`, `version` (when running), `capacity`, and the
 registered agents: name, description, model, reasoning effort, provider name, custom tool
 names, MCP server names, and tool filters. Provider keys, MCP headers and env, and instructions
 are never included; `includeInstructions: true` adds instructions. Reading it never starts a
+<!-- only:nestjs -->
 lazy runtime. Protect it with `guards`, or inject `CopilotInfoService` and build your own
 endpoint with `info()` or `describeAgents()`.
+<!-- /only -->
+<!-- only:fastify -->
+lazy runtime. Protect it with `onRequest`; the plugin logs a warning when there's no guard.
+`describeAgent()` from Agent Core builds the same description for your own route.
+<!-- /only -->
 
 ## Graceful shutdown
 
@@ -129,6 +155,7 @@ endpoint with `info()` or `describeAgents()`.
 `CopilotShuttingDownError`, HTTP `503`), waits up to the grace period for in-flight turns,
 aborts the rest, and stops the runtime.
 
+<!-- only:nestjs -->
 NestJS calls it on application shutdown with `shutdownGracePeriod` (default 30 s). Enable
 shutdown hooks so it runs on `SIGTERM`, and keep the grace period below your platform's
 termination timeout:
@@ -137,17 +164,27 @@ termination timeout:
 const app = await NestFactory.create(AppModule);
 app.enableShutdownHooks();
 ```
-
+<!-- /only -->
+<!-- only:fastify -->
 The [Fastify plugin](fastify.md#lifecycle) calls it from `app.close()` (`preClose` and
-`onClose`) with the same `shutdownGracePeriod` default; call `app.close()` on `SIGTERM`.
+`onClose`) with `shutdownGracePeriod` (default 30 s). Call `app.close()` on `SIGTERM`, and keep
+the grace period below your platform's termination timeout.
+<!-- /only -->
 
 Turns suspended on a `useChat` approval live in the AI SDK `CopilotApprovalStore`; call
 `approvals.clear()` at shutdown to abort them.
 
 ## HTTP error mapping
 
+<!-- only:nestjs -->
 `CopilotExceptionFilter` is registered globally (disable with `exceptionFilter: false`) and maps
 core errors to responses with a `{ statusCode, error, message }` body:
+<!-- /only -->
+<!-- only:fastify -->
+The [Fastify plugin](fastify.md#errors) installs an error handler (disable with
+`errorHandler: false`) that maps core errors to responses with Fastify's
+`{ statusCode, code, error, message }` body:
+<!-- /only -->
 
 | Error | Status |
 | --- | --- |
@@ -160,15 +197,15 @@ core errors to responses with a `{ statusCode, error, message }` body:
 | `CopilotSessionError`, `CopilotOutputValidationError` | `502 Bad Gateway` |
 | Others (for example `CopilotConfigurationError`) | `500`, with the generic message "Internal server error" |
 
+<!-- only:nestjs -->
 5xx errors are logged. If the response has already started (a stream), the filter just ends
-it. Non-HTTP contexts rethrow. `copilotErrorToHttp(error)` returns `{ status, headers }` for
-your own filters.
-
-The [Fastify plugin](fastify.md#errors) installs an error handler with the same table and
-Fastify's error body. In other frameworks, add an error middleware that applies it:
+it. Non-HTTP contexts rethrow.
+<!-- /only -->
+`copilotErrorToHttp(error)` returns `{ status, headers }` for
+your own handlers. In other frameworks, add an error middleware that applies it:
 
 ```ts
-import { CopilotAdmissionRejectedError, CopilotIntegrationError, CopilotTimeoutError } from "@copilot-sdk-integrations/core";
+import { CopilotAdmissionRejectedError, CopilotIntegrationError, CopilotTimeoutError } from "@copilot-sdk-integrations/agent-core";
 
 app.use((err, req, res, next) => {
   if (!(err instanceof CopilotIntegrationError)) return next(err);
@@ -180,7 +217,7 @@ app.use((err, req, res, next) => {
 
 ## Errors
 
-All errors extend `CopilotIntegrationError`, exported from `@copilot-sdk-integrations/core`:
+All errors extend `CopilotIntegrationError`, exported from `@copilot-sdk-integrations/agent-core`:
 
 | Error | Raised when |
 | --- | --- |
@@ -200,17 +237,26 @@ All errors extend `CopilotIntegrationError`, exported from `@copilot-sdk-integra
 
 There is no built-in OpenTelemetry instrumentation yet. Use the hooks the integration provides:
 
-- **Events.** A global `onEvent` listener (or `@OnCopilotEvent`, or `@nestjs/event-emitter`
-  re-emission) sees every turn's `turn-start`, `tool-start`, `tool-end`, `usage`, `error`, and
+- **Events.** A global `onEvent` listener
+<!-- only:nestjs -->
+  (or `@OnCopilotEvent`, or `@nestjs/event-emitter` re-emission)
+<!-- /only -->
+  sees every turn's `turn-start`, `tool-start`, `tool-end`, `usage`, `error`, and
   `done` events together with the turn's `CopilotContext` (principal, conversation, agent,
   attributes). Record usage per principal, tool latency, and error rates from there. See
   [global event listeners](streaming.md#global-event-listeners).
 - **Hooks.** `onPreToolUse`/`onPostToolUse` and the other [hooks](governance.md#hooks) see
   tool arguments and results for audit logs.
+<!-- only:nestjs -->
 - **Logs.** Pass a `logger` (core) or rely on Nest's `Logger` (context `Copilot`); set the
   runtime's `logLevel` for its own diagnostics.
+<!-- /only -->
+<!-- only:fastify -->
+- **Logs.** Pass a `logger` (core) or rely on the Fastify logger
+  (`fastify.log.child({ module: "copilot" })`); set the runtime's `logLevel` for its own diagnostics.
+<!-- /only -->
 - **Trace correlation.** Copy `traceparent` or request ids into the context with
-  `context.headers` (NestJS) or `attributes`, then read them in listeners and tools.
+  `context.headers` or `attributes`, then read them in listeners and tools.
 
 ## Security checklist
 
@@ -222,5 +268,12 @@ There is no built-in OpenTelemetry instrumentation yet. Use the hooks the integr
   run with the end user's GitHub permissions.
 - Keep provider API keys and MCP credentials in configuration or secret stores; the info
   endpoint never exposes them.
-- Protect the info endpoint with guards, and don't expose raw `error` events to untrusted
+- Protect the info endpoint
+<!-- only:nestjs -->
+  with guards,
+<!-- /only -->
+<!-- only:fastify -->
+  with an `onRequest` hook,
+<!-- /only -->
+   and don't expose raw `error` events to untrusted
   clients (the AI SDK adapter already sends only safe messages).

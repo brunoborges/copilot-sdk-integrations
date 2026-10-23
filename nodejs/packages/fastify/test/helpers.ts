@@ -1,4 +1,4 @@
-import { createTestCopilot, type CreateTestCopilotOptions, type TestCopilot } from "@copilot-sdk-integrations/core/testing";
+import { createTestCopilot, type CreateTestCopilotOptions, type TestCopilot } from "@copilot-sdk-integrations/agent-core/testing";
 import Fastify, { type FastifyInstance } from "fastify";
 import { afterEach } from "vitest";
 import { copilotPlugin, type CopilotPluginOptions } from "../src/index.js";

@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { Injectable, Module, Scope } from "@nestjs/common";
 import { Test, type TestingModule } from "@nestjs/testing";
-import { CopilotConfigurationError, CopilotConversationNotFoundError, defineAgent, getCopilotContext, permissions, type AgentHandle, type CopilotAgentEvent } from "@copilot-sdk-integrations/core";
+import { CopilotConfigurationError, CopilotConversationNotFoundError, defineAgent, getCopilotContext, permissions, type AgentHandle, type CopilotAgentEvent } from "@copilot-sdk-integrations/agent-core";
 import { Observable, firstValueFrom, lastValueFrom, toArray } from "rxjs";
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";

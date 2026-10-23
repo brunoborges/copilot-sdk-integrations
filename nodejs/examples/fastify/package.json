@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@copilot-sdk-integrations/ai": "0.1.0",
-    "@copilot-sdk-integrations/core": "0.1.0",
+    "@copilot-sdk-integrations/agent-core": "0.1.0",
     "@copilot-sdk-integrations/fastify": "0.1.0",
     "ai": "^7.0.0",
     "fastify": "^5.12.0",
