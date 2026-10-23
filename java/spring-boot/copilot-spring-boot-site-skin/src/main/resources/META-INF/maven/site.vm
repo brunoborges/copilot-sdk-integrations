@@ -21,7 +21,10 @@
     </div>
   </header>
   <div id="breadcrumbs">
-    <span>Version $esc.xml($project.version)</span>
+    <div class="breadcrumb-trail">
+      <a class="landing-link" href="$relativePath/../index.html">&larr; All integrations</a>
+      <span>Version $esc.xml($project.version)</span>
+    </div>
     <div class="project-links">
 #foreach($item in $site.body.links)
       <a href="$esc.xml($item.href)">$esc.xml($item.name)</a>

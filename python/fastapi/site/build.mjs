@@ -350,7 +350,10 @@ ${THEME_HEAD}
     </div>
   </header>
   <div id="breadcrumbs">
-    <span>Version ${escapeHtml(version)}</span>
+    <div class="breadcrumb-trail">
+      <a class="landing-link" href="../index.html">&larr; All integrations</a>
+      <span>Version ${escapeHtml(version)}</span>
+    </div>
     <div class="project-links">
 ${links}
     </div>
@@ -386,6 +389,8 @@ function checkLinks(pages) {
     for (const [, raw] of html.matchAll(/\s(?:href|src)="([^"]+)"/g)) {
       const href = raw.replace(/&amp;/g, "&");
       if (/^[a-z]+:/i.test(href) || href.startsWith("//")) continue;
+      // Links outside this site (e.g. the shared landing page) are not generated here.
+      if (href.startsWith("../")) continue;
       const [path, anchor] = href.split("#");
       const target = path === "" ? file : path.replace(/^\.\//, "");
       if (target.startsWith("css/") || target.startsWith("js/")) {
