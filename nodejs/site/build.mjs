@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Static documentation site generator: renders site/markdown/*.md into one site per framework
-// (site/dist/nestjs, site/dist/fastify) plus redirect stubs for the former combined site (site/dist/nodejs).
+// (site/dist/nestjs, site/dist/fastify).
 // Usage: node site/build.mjs (from nodejs/), or `npm run site`.
 //
 // Pages are shared unless their front matter lists `sites: nestjs` or `sites: fastify`; `page:` overrides the
@@ -93,9 +93,6 @@ const sites = {
     footer: `Copilot Agents for Fastify &middot; ${version} &middot; Node.js 20.19+ / 22.12+ &middot; Fastify 5 &middot; AI SDK 7 &middot; Copilot SDK ${sdkVersion}`,
   },
 };
-
-// Former combined site (/nodejs/): every page redirects to its NestJS page, except the Fastify chapter.
-const legacyRedirects = { fastify: "../fastify/fastify.html", "getting-started": "../nestjs/nestjs.html" };
 
 // ---------------------------------------------------------------------------
 // Syntax highlighting: a tiny tokenizer emitting highlight.js-compatible classes.
@@ -446,37 +443,10 @@ function buildSite(siteId, sources) {
   return pages;
 }
 
-function redirectPage(target) {
-  const href = escapeHtml(target);
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta http-equiv="refresh" content="0; url=${href}"/>
-  <link rel="canonical" href="${href}"/>
-  <title>Moved</title>
-</head>
-<body><p>This page moved to <a href="${href}">${href}</a>.</p></body>
-</html>
-`;
-}
-
-function buildLegacyRedirects(nestjsPages) {
-  const outDir = join(distDir, "nodejs");
-  mkdirSync(outDir, { recursive: true });
-  const legacy = new Set([...nestjsPages.keys()].map((f) => f.slice(0, -5)));
-  for (const page of Object.keys(legacyRedirects)) legacy.add(page);
-  for (const page of legacy) {
-    writeFileSync(join(outDir, `${page}.html`), redirectPage(legacyRedirects[page] ?? `../nestjs/${page}.html`));
-  }
-  console.log(`Wrote ${legacy.size} redirects into ${outDir}`);
-}
-
 function build() {
   const sources = readSources();
   rmSync(distDir, { recursive: true, force: true });
-  const built = Object.fromEntries(Object.keys(sites).map((id) => [id, buildSite(id, sources)]));
-  buildLegacyRedirects(built.nestjs);
+  for (const id of Object.keys(sites)) buildSite(id, sources);
 }
 
 try {
