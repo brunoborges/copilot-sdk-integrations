@@ -7,11 +7,15 @@ on:
       - 'java/core/**'
       - 'java/micronaut/**'
       - '.github/workflows/micronaut.yml'
+      - 'java/quarkus/site-skin/**'
+      - 'java/quarkus/src/site/resources/**'
   pull_request:
     paths:
       - 'java/core/**'
       - 'java/micronaut/**'
       - '.github/workflows/micronaut.yml'
+      - 'java/quarkus/site-skin/**'
+      - 'java/quarkus/src/site/resources/**'
   workflow_dispatch:
 
 permissions:
@@ -33,6 +37,11 @@ jobs:
           cache: maven
           cache-dependency-path: |
             java/micronaut/**/pom.xml
+            java/quarkus/**/pom.xml
             java/core/pom.xml
       - name: Build
         run: ./mvnw --batch-mode --no-transfer-progress verify
+      - name: Build documentation
+        run: |
+          ../quarkus/mvnw --batch-mode --no-transfer-progress -f ../quarkus/pom.xml -pl site-skin -am install -DskipTests
+          ./mvnw --batch-mode --no-transfer-progress -N site
