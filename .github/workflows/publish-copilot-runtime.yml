@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: '23 6 * * *'
   push:
-    branches: [main, brunoborges-testcontainers-integration]
+    branches: [main]
     paths:
       - 'testcontainers/image/**'
       - 'testcontainers/src/**'
@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   release:
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.release.outputs.version }}
