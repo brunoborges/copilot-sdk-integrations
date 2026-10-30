@@ -341,7 +341,8 @@ GraalVM native images are not yet tested.
 
 ## Documentation
 
-Published documentation: [Micronaut](https://brunoborges.github.io/copilot-sdk-integrations/micronaut/).
+Once deployed by the Pages workflow, the documentation site is served at
+<https://brunoborges.github.io/copilot-sdk-integrations/micronaut/>.
 
 The site in `src/site/` reuses the Quarkus integration's internal Maven skin and site assets. Build it from the
 repository root:
