@@ -97,6 +97,17 @@ Published documentation: [Testcontainers](https://brunoborges.github.io/copilot-
 
 ## Layout
 
+The documentation reuses the Quarkus integration's internal Maven skin and site
+assets to keep the integration sites consistent. Build it from the repository root:
+
+```sh
+mvn -f java/quarkus/pom.xml -pl site-skin -am install -DskipTests
+mvn -f testcontainers/pom.xml site
+```
+
+The generated site is in `testcontainers/target/site`. The Pages workflow already
+installs this skin before building Testcontainers documentation.
+
 - `image/`: shared Linux amd64/arm64 runtime image and entrypoint.
 - `src/main/java/`: optional Java Testcontainers helper.
 - `src/test/java/`: Docker-free unit tests and real-runtime integration tests.

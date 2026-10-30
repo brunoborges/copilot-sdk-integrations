@@ -6,10 +6,14 @@ on:
     paths:
       - 'testcontainers/**'
       - '.github/workflows/testcontainers.yml'
+      - 'java/quarkus/site-skin/**'
+      - 'java/quarkus/src/site/resources/**'
   pull_request:
     paths:
       - 'testcontainers/**'
       - '.github/workflows/testcontainers.yml'
+      - 'java/quarkus/site-skin/**'
+      - 'java/quarkus/src/site/resources/**'
   workflow_dispatch:
 
 permissions:
@@ -34,7 +38,9 @@ jobs:
       - name: Test Java integration against the real runtime
         run: mvn --batch-mode --no-transfer-progress -f testcontainers/pom.xml -Pcontainer-tests verify
       - name: Build documentation
-        run: mvn --batch-mode --no-transfer-progress -f testcontainers/pom.xml site
+        run: |
+          mvn --batch-mode --no-transfer-progress -f java/quarkus/pom.xml -pl site-skin -am install -DskipTests
+          mvn --batch-mode --no-transfer-progress -f testcontainers/pom.xml site
       - uses: actions/upload-artifact@v6
         if: failure()
         with:
