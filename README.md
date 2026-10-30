@@ -37,6 +37,7 @@ injection, lifecycle management, security context, observability, and testing.
 | Java | [Apache Camel](https://camel.apache.org/) | [`java/camel/`](java/camel/) | Available (unreleased) |
 | .NET | Generic Host / ASP.NET Core ([Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`) | [`dotnet/`](dotnet/) | Preview, not yet on NuGet ([docs](https://brunoborges.github.io/copilot-sdk-integrations/dotnet/), [design](dotnet/docs/design.md)) |
 | Polyglot (C# AppHost; .NET, Java, Node.js, Python services) | [Aspire](https://aspire.dev/) (AppHost runtime resource + .NET client integration, builds on `dotnet`) | [`aspire/`](aspire/) | Preview, not yet on NuGet ([docs](https://brunoborges.github.io/copilot-sdk-integrations/aspire/), [design](aspire/docs/design.md)) |
+| Polyglot (Java reference module) | [Testcontainers](https://testcontainers.com/) (shared CLI/runtime image and Java helper) | [`testcontainers/`](testcontainers/) | Preview, daily GHCR image publishing; Maven artifact unreleased ([docs](https://brunoborges.github.io/copilot-sdk-integrations/testcontainers/)) |
 | Python | [Django](https://www.djangoproject.com/) | [`python/django/`](python/django/) | Preview, not yet on PyPI ([docs](https://brunoborges.github.io/copilot-sdk-integrations/django/), [design](python/django/DESIGN.md)) |
 | Python | [FastAPI](https://fastapi.tiangolo.com/) | [`python/fastapi/`](python/fastapi/) | Preview, not yet on PyPI ([docs](https://brunoborges.github.io/copilot-sdk-integrations/fastapi/), [design](python/fastapi/DESIGN.md)) |
 | Node.js / TypeScript | [NestJS](https://nestjs.com/), [Fastify](https://fastify.dev/), framework-agnostic Agent Core, [AI SDK](https://ai-sdk.dev/) adapter | [`nodejs/`](nodejs/) | In development ([NestJS docs](https://brunoborges.github.io/copilot-sdk-integrations/nestjs/), [Fastify docs](https://brunoborges.github.io/copilot-sdk-integrations/fastify/), [design](nodejs/DESIGN.md)) |
@@ -60,15 +61,18 @@ framework's idioms:
 - **Per-user identity**: per-request GitHub authentication and context propagation.
 - **Observability**: health checks, metrics, and tracing through the framework's
   standard mechanisms.
-- **Testing**: an in-memory, scripted Copilot runtime for fast, deterministic tests.
+- **Testing**: an in-memory, scripted Copilot runtime for fast, deterministic tests,
+  plus a shared Testcontainers image for tests against the real runtime harness.
 
 ## Repository layout
 
 Each integration is a self-contained project in its own directory, with its own build,
-README, and documentation. Java integrations live under [`java/`](java/) and share the
+README, and documentation. Java framework integrations live under [`java/`](java/) and share the
 framework-neutral agent API and engine in [`java/core/`](java/core/), which every Java Maven build
 includes as a reactor module. Shared repository files (license, CI workflows, and the
 documentation landing page) live at the root.
+The polyglot [`testcontainers/`](testcontainers/) integration includes its standalone
+Java helper alongside the language-neutral runtime image.
 
 ```
 .
@@ -80,6 +84,7 @@ documentation landing page) live at the root.
 │   └── camel/       # Apache Camel component (Java, Maven)
 ├── dotnet/        # .NET integration for business apps (preview)
 ├── aspire/        # Aspire integration (.NET) (preview)
+├── testcontainers/ # Polyglot runtime image and standalone Java Testcontainers helper (preview)
 ├── python/        # Python core (copilot-agent-core), Django and FastAPI integrations (preview)
 ├── nodejs/        # Node.js Agent Core, NestJS module, Fastify plugin, and AI SDK adapter (TypeScript; in development)
 ├── examples/      # Museum Exhibit and Web Accessibility workshop agents in eight frameworks

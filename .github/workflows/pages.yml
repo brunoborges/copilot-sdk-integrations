@@ -29,6 +29,7 @@ jobs:
             java/spring-boot/**/pom.xml
             java/quarkus/**/pom.xml
             java/core/pom.xml
+            testcontainers/pom.xml
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
@@ -75,6 +76,8 @@ jobs:
         run: |
           npm ci
           npm run build
+      - name: Build Testcontainers documentation site
+        run: mvn --batch-mode --no-transfer-progress -f testcontainers/pom.xml site
       - name: Assemble site
         run: |
           mkdir -p _site
@@ -86,6 +89,7 @@ jobs:
           cp -R aspire/site/dist _site/aspire
           cp -R python/django/site/dist _site/django
           cp -R python/fastapi/site/dist _site/fastapi
+          cp -R testcontainers/target/site _site/testcontainers
           cp .github/pages/index.html .github/pages/dotnet-bot.png _site/
       - uses: actions/upload-pages-artifact@v5
         with:

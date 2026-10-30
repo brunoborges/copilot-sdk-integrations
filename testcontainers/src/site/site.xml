@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site xmlns="http://maven.apache.org/SITE/2.1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://maven.apache.org/SITE/2.1.0 https://maven.apache.org/xsd/site-2.1.0.xsd"
+      name="Copilot Testcontainers">
+    <skin>
+        <groupId>org.apache.maven.skins</groupId>
+        <artifactId>maven-fluido-skin</artifactId>
+        <version>2.0.0</version>
+    </skin>
+    <body>
+        <links>
+            <item name="All integrations" href="../index.html"/>
+            <item name="GitHub" href="https://github.com/brunoborges/copilot-sdk-integrations/tree/main/testcontainers"/>
+        </links>
+        <menu name="Copilot Testcontainers">
+            <item name="Guide and container contract" href="index.html"/>
+        </menu>
+    </body>
+</site>

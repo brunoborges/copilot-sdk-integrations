@@ -193,7 +193,9 @@ behavior.
 `CopilotContainer` runs a headless Copilot CLI server in Docker. Add
 `org.springframework.boot:spring-boot-testcontainers` and
 `org.testcontainers:testcontainers-junit-jupiter`; Spring Boot manages their versions.
-No public CLI server image is published, so you must supply an image name.
+No public CLI server image is published, so you must supply an image name. The
+repository's [polyglot Testcontainers integration](https://brunoborges.github.io/copilot-sdk-integrations/testcontainers/)
+provides a pinned, non-root runtime image that also works with this Spring helper.
 
 ```java
 @Testcontainers(disabledWithoutDocker = true)
@@ -202,8 +204,7 @@ class CopilotServerTests {
 
     @Container
     @ServiceConnection
-    static CopilotContainer copilot = new CopilotContainer("copilot-cli-server:local")
-            .withGitHubToken(System.getenv("COPILOT_GITHUB_TOKEN"));
+    static CopilotContainer copilot = new CopilotContainer("copilot-runtime:1.0.105");
 
     @Autowired
     CopilotClient client;
@@ -224,39 +225,22 @@ The container passes these environment variables to the image:
 
 The container is ready once the log contains `listening on port <n>`.
 
-The following sample image installs the CLI with npm. The CLI server binds to
-loopback only, so `socat` exposes it on all interfaces:
-
-```dockerfile
-FROM node:22-slim
-RUN apt-get update \
- && apt-get install -y --no-install-recommends socat ca-certificates git \
- && rm -rf /var/lib/apt/lists/* \
- && npm install -g @github/copilot
-COPY entrypoint.sh /usr/local/bin/copilot-server
-RUN chmod +x /usr/local/bin/copilot-server
-ENV COPILOT_PORT=4321
-EXPOSE 4321
-ENTRYPOINT ["copilot-server"]
-```
+Build the shared image from the repository root:
 
 ```sh
-#!/bin/sh
-# entrypoint.sh
-set -e
-INTERNAL_PORT=$((COPILOT_PORT + 1))
-socat TCP-LISTEN:"$COPILOT_PORT",fork,reuseaddr,bind=0.0.0.0 TCP:127.0.0.1:"$INTERNAL_PORT" &
-exec copilot --server --port "$INTERNAL_PORT" --no-auto-update --log-level info "$@"
+docker build -t copilot-runtime:1.0.105 testcontainers/image
 ```
 
-Build the image with `docker build -t copilot-cli-server:local .`. The CLI reads
-`COPILOT_CONNECTION_TOKEN` itself.
+The image uses the native headless runtime's all-interface TCP listener and reads
+`COPILOT_CONNECTION_TOKEN` itself. No `socat` proxy is needed. To send real Copilot
+prompts, call `withGitHubToken(...)` with an explicitly supplied test token, or use
+a session-level BYOK provider. The connection-only example above needs neither.
 
 The module's own container test runs only when `COPILOT_TEST_IMAGE` is set and
 Docker is available:
 
 ```sh
-COPILOT_TEST_IMAGE=copilot-cli-server:local ./mvnw -pl copilot-spring-boot-test -am verify
+COPILOT_TEST_IMAGE=copilot-runtime:1.0.105 ./mvnw -pl copilot-spring-boot-test -am verify
 ```
 
 Without Docker or the variable, it is skipped.
