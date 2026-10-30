@@ -10,8 +10,8 @@ or a transitive Copilot SDK dependency.
 [`Publish Copilot CLI image` workflow](../.github/workflows/publish-copilot-runtime.yml)
 publishes the bundled CLI and runtime harness to
 `ghcr.io/brunoborges/copilot-sdk-integrations/copilot-runtime` daily at **06:23 UTC**,
-on relevant pushes to `main`, and on manual dispatch. The package becomes
-available after its first successful run on `main`. This is a community
+on relevant pushes to `main`, and on manual dispatch. The package is public
+and multi-arch (`linux/amd64`, `linux/arm64`). This is a community
 integration, not an official GitHub runtime image.
 
 ## Quick start

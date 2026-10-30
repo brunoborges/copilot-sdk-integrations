@@ -8,9 +8,8 @@ typed helper.
 
 This is a community integration with an unreleased Java artifact. The bundled
 CLI/runtime image is published through this repository's GitHub Actions workflow
-to **`ghcr.io/brunoborges/copilot-sdk-integrations/copilot-runtime`**. It becomes
-available after the first successful publishing run on `main`; local image builds
-remain supported.
+to **`ghcr.io/brunoborges/copilot-sdk-integrations/copilot-runtime`**. It is public
+and multi-arch (`linux/amd64`, `linux/arm64`); local image builds remain supported.
 
 ## Architecture and scope
 
@@ -56,8 +55,8 @@ rerun compatibility tests. Do not rely on a floating `latest` tag. The Java
 reference tests use SDK `1.0.24`; other SDK/runtime pairs must have compatible
 protocol versions.
 
-After the first successful publication, replace the local image name in every
-language's recipe below with
+To skip the local build, replace the local image name in every language's
+recipe below with
 `ghcr.io/brunoborges/copilot-sdk-integrations/copilot-runtime:<cli-version>`.
 The image contains the CLI at build time and requires no runtime download.
 
@@ -88,10 +87,10 @@ OS packages. Version tags are therefore **not immutable**: use a digest from
 The Java SDK compatibility check is deliberate: if a newer CLI requires a newer
 SDK, update the reference SDK and tests rather than publishing an untested image.
 
-### First publication and repository linkage
+### Repository linkage
 
-Merge the workflow and image into `main`, then run the workflow manually to
-publish immediately, or wait for the next daily run. The job-scoped Actions token
+Run the workflow manually to publish immediately, or wait for the next daily
+run. The job-scoped Actions token
 has `packages: write`; no personal token, Copilot token, or extra registry secret
 is used. The workflow logs into `ghcr.io`, and the image's
 `org.opencontainers.image.source` label links the package to this repository so
