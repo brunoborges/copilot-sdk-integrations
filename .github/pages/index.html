@@ -150,6 +150,34 @@
 
     h2 { font-size: 1.375rem; margin: 0 0 0.35rem; }
     .section-lead { color: var(--muted); margin: 0 0 1.25rem; }
+    .ecosystem-filter {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0 0 1.25rem;
+      font-weight: 600;
+    }
+    .ecosystem-filter > span { margin-right: 0.25rem; }
+    .ecosystem-filter button {
+      min-height: 2.75rem;
+      padding: 0.5rem 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--fg);
+      font: inherit;
+      font-size: 0.875rem;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .ecosystem-filter button:hover { border-color: var(--accent); }
+    .ecosystem-filter button[aria-pressed="true"] {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--bg);
+    }
+    .ecosystem-filter button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
@@ -362,7 +390,8 @@
        dotnet-bot from the .NET brand repository (github.com/dotnet/brand, CC0);
        Aspire mark adapted from github.com/microsoft/aspire (MIT, .NET Foundation);
        Micronaut mark from github.com/micronaut-projects/micronaut-core (Apache-2.0, Micronaut Foundation);
-       Apache Camel logo from github.com/apache/camel-website (Apache-2.0, The Apache Software Foundation).
+       Apache Camel logo from github.com/apache/camel-website (Apache-2.0, The Apache Software Foundation);
+       Testcontainers mark from github.com/testcontainers/testcontainers-java/blob/main/docs/logo.svg (MIT, Richard North).
        Trademarks belong to their owners. -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
     <defs>
@@ -381,6 +410,35 @@
       </symbol>
       <symbol id="i-java" viewBox="0 0 24 24">
         <path d="M11.915 0 11.7.215C9.515 2.4 7.47 6.39 6.046 10.483c-1.064 1.024-3.633 2.81-3.711 3.551-.093.87 1.746 2.611 1.55 3.235-.198.625-1.304 1.408-1.014 1.939.1.188.823.011 1.277-.491a13.389 13.389 0 0 0-.017 2.14c.076.906.27 1.668.643 2.232.372.563.956.911 1.667.911.397 0 .727-.114 1.024-.264.298-.149.571-.33.91-.5.68-.34 1.634-.666 3.530-.604 1.903.062 2.872.39 3.559.704.687.314 1.15.664 1.925.664.767 0 1.395-.336 1.807-.9.412-.563.631-1.33.72-2.24.06-.623.055-1.32 0-2.066.454.45 1.117.604 1.213.424.29-.53-.816-1.314-1.013-1.937-.198-.624 1.642-2.366 1.549-3.236-.08-.748-2.707-2.568-3.748-3.586C16.428 6.374 14.308 2.394 12.130.215zm.175 6.038a2.95 2.95 0 0 1 2.943 2.942 2.95 2.95 0 0 1-2.943 2.943A2.95 2.95 0 0 1 9.148 8.98a2.950 2.950 0 0 1 2.942-2.942zM8.685 7.983a3.515 3.515 0 0 0-.145.997c0 1.951 1.6 3.55 3.55 3.55 1.95 0 3.55-1.598 3.55-3.55 0-.329-.046-.648-.132-.951.334.095.64.208.915.336a42.699 42.699 0 0 1 2.042 5.829c.678 2.545 1.01 4.92.846 6.607-.082.844-.29 1.51-.606 1.94-.315.431-.713.651-1.315.651-.593 0-.932-.27-1.673-.61-.741-.338-1.825-.694-3.792-.758-1.974-.064-3.073.293-3.821.669-.375.188-.659.373-.911.5s-.466.2-.752.2c-.53 0-.876-.209-1.160-.64-.285-.43-.474-1.101-.545-1.948-.141-1.693.176-4.069.823-6.614a43.155 43.155 0 0 1 1.934-5.783c.348-.167.749-.31 1.192-.425zm-3.382 4.362a.216.216 0 0 1 .13.031c-.166.56-.323 1.116-.463 1.665a33.849 33.849 0 0 0-.547 2.555 3.9 3.9 0 0 0-.2-.39c-.58-1.012-.914-1.642-1.16-2.08.315-.24 1.679-1.755 2.24-1.781zm13.394.01c.562.027 1.926 1.543 2.24 1.783-.246.438-.58 1.068-1.16 2.08a4.428 4.428 0 0 0-.163.309 32.354 32.354 0 0 0-.562-2.49 40.579 40.579 0 0 0-.482-1.652.216.216 0 0 1 .127-.03z"/>
+      </symbol>
+      <symbol id="i-testcontainers" viewBox="0 0 263 300">
+        <!--
+        The MIT License (MIT)
+
+        Copyright (c) 2015-2019 Richard North
+
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        -->
+        <path fill="#fff" d="M262.8,81c0-0.2,0-0.4,0-0.7c0-0.6-0.1-1.2-0.2-1.8c-0.5-3.2-2.5-5.9-5.3-7.6c-0.3-0.1-0.5-0.3-0.8-0.4L137,1.5c-3.4-1.9-7.5-1.9-10.8,0L5.6,71c-3.4,1.9-5.4,5.5-5.4,9.4L0.1,219.5c0,3.9,2.1,7.4,5.4,9.4L126,298.5c1.6,1,3.5,1.5,5.4,1.5h0.2c1.9,0,3.8-0.5,5.4-1.5l120.5-69.6c3.4-1.9,5.4-5.5,5.4-9.4L262.8,81z"/>
+        <polygon fill="#0c94aa" points="239.6,87.6 239.6,212.4 131.5,274.8 131.5,150"/>
+        <polygon fill="#2bafac" points="239.6,87.6 131.5,150 23.4,87.6 131.5,25.2"/>
+        <polygon fill="#09cfbb" points="131.5,150 131.5,274.8 23.4,212.4 23.4,87.6"/>
       </symbol>
       <symbol id="i-dotnet" viewBox="0 0 24 24">
         <path d="M24 8.77h-2.468v7.565h-1.425V8.77h-2.462V7.53H24zm-6.852 7.565h-4.821V7.53h4.63v1.24h-3.205v2.494h2.953v1.234h-2.953v2.604h3.396zm-6.708 0H8.882L4.78 9.863a2.896 2.896 0 0 1-.258-.51h-.036c.032.189.048.592.048 1.21v5.772H3.157V7.53h1.659l3.965 6.32c.167.261.275.442.323.54h.024c-.04-.233-.06-.629-.06-1.185V7.529h1.372zm-8.703-.693a.868.829 0 0 1-.869.829.868.829 0 0 1-.868-.83.868.829 0 0 1 .868-.828.868.829 0 0 1 .869.829Z"/>
@@ -556,8 +614,17 @@
     <section id="integrations" aria-labelledby="integrations-title">
       <h2 id="integrations-title">Choose an integration</h2>
       <p class="section-lead">Which integration would you like to read about?</p>
-      <ul class="grid">
-        <li>
+      <div class="ecosystem-filter" id="ecosystem-filter" role="group" aria-labelledby="ecosystem-filter-label">
+        <span id="ecosystem-filter-label">Ecosystem</span>
+        <button type="button" data-ecosystem="all" aria-pressed="true" aria-controls="integrations-grid">All ecosystems</button>
+        <button type="button" data-ecosystem="java" aria-pressed="false" aria-controls="integrations-grid">Java</button>
+        <button type="button" data-ecosystem="nodejs" aria-pressed="false" aria-controls="integrations-grid">Node.js / TypeScript</button>
+        <button type="button" data-ecosystem="dotnet" aria-pressed="false" aria-controls="integrations-grid">.NET</button>
+        <button type="button" data-ecosystem="python" aria-pressed="false" aria-controls="integrations-grid">Python</button>
+        <button type="button" data-ecosystem="polyglot" aria-pressed="false" aria-controls="integrations-grid">Polyglot</button>
+      </div>
+      <ul class="grid" id="integrations-grid">
+        <li data-ecosystem="java">
           <a class="card" href="spring-boot/" style="--brand: #6db33f">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg fill="#6db33f"><use href="#i-spring"/></svg></span>
@@ -570,7 +637,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="java">
           <a class="card" href="quarkus/" style="--brand: #4695eb">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg fill="#4695eb"><use href="#i-quarkus"/></svg></span>
@@ -583,7 +650,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="java">
           <a class="card" href="micronaut/" style="--brand: #2a5f9e">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg style="fill: var(--fg)"><use href="#i-micronaut"/></svg></span>
@@ -596,7 +663,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="java">
           <a class="card" href="camel/" style="--brand: #e97826">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg><use href="#i-camel"/></svg></span>
@@ -609,7 +676,7 @@
             <span class="go">Read the docs →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="nodejs">
           <a class="card" href="nestjs/" style="--brand: #e0234e">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg fill="#e0234e"><use href="#i-nestjs"/></svg></span>
@@ -622,7 +689,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="nodejs">
           <a class="card" href="fastify/" style="--brand: var(--fg)">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg style="fill: var(--fg)"><use href="#i-fastify"/></svg></span>
@@ -635,7 +702,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="dotnet">
           <a class="card" href="dotnet/" style="--brand: #512bd4">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg fill="#512bd4"><use href="#i-dotnet"/></svg></span>
@@ -646,7 +713,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="polyglot">
           <a class="card" href="aspire/" style="--brand: #7455dd">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg><use href="#i-aspire"/></svg></span>
@@ -657,7 +724,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="python">
           <a class="card" href="django/" style="--brand: #44b78b">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg style="fill:#44b78b"><use href="#i-django"/></svg></span>
@@ -668,7 +735,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="python">
           <a class="card" href="fastapi/" style="--brand: #009688">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg fill="#009688"><use href="#i-fastapi"/></svg></span>
@@ -679,15 +746,18 @@
             <span class="go">View on GitHub →</span>
           </a>
         </li>
-        <li>
-          <a class="card" href="testcontainers/" style="--brand: #2496ed">
+        <li data-ecosystem="polyglot">
+          <a class="card" href="testcontainers/" style="--brand: #0c94aa">
+            <span class="logos" aria-hidden="true">
+              <span class="logo"><svg><use href="#i-testcontainers"/></svg></span>
+            </span>
             <span class="lang">Polyglot · Preview</span>
             <h3>Testcontainers</h3>
             <p>Test SDK applications against the real Copilot runtime in a disposable container. Shared image contract for every Testcontainers ecosystem, with a standalone Java helper.</p>
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="all">
           <div class="card soon">
             <svg aria-hidden="true"><use href="#i-plus"/></svg>
             <strong>More integrations are planned</strong>
@@ -1128,10 +1198,27 @@ app.include_router(copilot.router())        <span class="tok-c"># GET /copilot/h
     </section>
 
     <footer>
-      <span>GitHub Copilot, Spring, Quarkus, Java, NestJS, Fastify, TypeScript, .NET, Node.js, Django, Python, Micronaut, Apache Camel, FastAPI, Aspire, Anthropic, OpenAI, and Ollama are trademarks of their respective owners.</span>
+      <span>GitHub Copilot, Spring, Quarkus, Java, NestJS, Fastify, TypeScript, .NET, Node.js, Django, Python, Micronaut, Apache Camel, FastAPI, Aspire, Testcontainers, Anthropic, OpenAI, and Ollama are trademarks of their respective owners.</span>
       <span>Source on <a href="https://github.com/brunoborges/copilot-sdk-integrations">GitHub</a>.</span>
       <span>Copyright &copy; 2026 Microsoft. Licensed under the <a href="https://github.com/brunoborges/copilot-sdk-integrations/blob/main/LICENSE">MIT License</a>.</span>
     </footer>
   </main>
+  <script>
+    const ecosystemButtons = document.querySelectorAll("#ecosystem-filter button");
+    const integrationCards = document.querySelectorAll("#integrations-grid > li");
+
+    ecosystemButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const selectedEcosystem = button.dataset.ecosystem;
+
+        ecosystemButtons.forEach((option) => {
+          option.setAttribute("aria-pressed", String(option === button));
+        });
+        integrationCards.forEach((card) => {
+          card.hidden = selectedEcosystem !== "all" && card.dataset.ecosystem !== selectedEcosystem;
+        });
+      });
+    });
+  </script>
 </body>
 </html>
