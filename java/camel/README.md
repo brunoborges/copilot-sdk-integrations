@@ -9,6 +9,9 @@ engine in [`java/core`](../core/), so agents behave exactly like the
 
 > Status: available, unreleased. Build it from this repository.
 
+[Documentation](https://brunoborges.github.io/copilot-sdk-integrations/camel/)
+includes getting started, route patterns, configuration, permissions, sessions, and testing.
+
 ## Build
 
 ```sh
@@ -18,6 +21,19 @@ cd java/camel
 
 Requires Java 21 and, at runtime, the Copilot CLI (the SDK starts it and authenticates with your
 GitHub credentials).
+
+### Documentation site
+
+The site reuses the Java documentation skin and assets from the Quarkus integration,
+as the Testcontainers site does. From `java/camel`, build it with:
+
+```sh
+./mvnw -f ../quarkus/pom.xml -pl site-skin -am install
+./mvnw -N site
+```
+
+Open `target/site/index.html` to read it locally. GitHub Pages publishes this output
+under `/camel/`.
 
 ## Dependency
 

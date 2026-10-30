@@ -6,11 +6,15 @@ on:
     paths:
       - 'java/core/**'
       - 'java/camel/**'
+      - 'java/quarkus/site-skin/**'
+      - 'java/quarkus/src/site/resources/**'
       - '.github/workflows/camel.yml'
   pull_request:
     paths:
       - 'java/core/**'
       - 'java/camel/**'
+      - 'java/quarkus/site-skin/**'
+      - 'java/quarkus/src/site/resources/**'
       - '.github/workflows/camel.yml'
   workflow_dispatch:
 
@@ -34,5 +38,12 @@ jobs:
           cache-dependency-path: |
             java/camel/**/pom.xml
             java/core/pom.xml
+            java/quarkus/pom.xml
+            java/quarkus/site-skin/pom.xml
       - name: Build
         run: ./mvnw --batch-mode --no-transfer-progress verify
+      - name: Build shared documentation skin
+        working-directory: java/quarkus
+        run: ./mvnw --batch-mode --no-transfer-progress -pl site-skin -am install
+      - name: Build documentation site
+        run: ./mvnw --batch-mode --no-transfer-progress -N site

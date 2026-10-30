@@ -28,6 +28,7 @@ jobs:
           cache-dependency-path: |
             java/spring-boot/**/pom.xml
             java/quarkus/**/pom.xml
+            java/camel/**/pom.xml
             java/core/pom.xml
             testcontainers/pom.xml
       - uses: actions/setup-node@v7
@@ -56,6 +57,9 @@ jobs:
         run: |
           npm ci
           npm run site
+      - name: Build Camel documentation site
+        working-directory: java/camel
+        run: ./mvnw --batch-mode --no-transfer-progress -N site
       - name: Build .NET documentation site
         working-directory: dotnet/site
         run: |
@@ -83,6 +87,7 @@ jobs:
           mkdir -p _site
           cp -R java/spring-boot/target/site _site/spring-boot
           cp -R java/quarkus/target/site _site/quarkus
+          cp -R java/camel/target/site _site/camel
           cp -R nodejs/site/dist/nestjs _site/nestjs
           cp -R nodejs/site/dist/fastify _site/fastify
           cp -R dotnet/site/dist _site/dotnet

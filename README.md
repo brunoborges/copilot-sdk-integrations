@@ -34,7 +34,7 @@ injection, lifecycle management, security context, observability, and testing.
 | Java | [Spring Boot](https://spring.io/projects/spring-boot) | [`java/spring-boot/`](java/spring-boot/) | Available (unreleased) |
 | Java | [Quarkus](https://quarkus.io/) | [`java/quarkus/`](java/quarkus/) | Available (unreleased) |
 | Java | [Micronaut](https://micronaut.io/) | [`java/micronaut/`](java/micronaut/) | Available (unreleased) |
-| Java | [Apache Camel](https://camel.apache.org/) | [`java/camel/`](java/camel/) | Available (unreleased) |
+| Java | [Apache Camel](https://camel.apache.org/) | [`java/camel/`](java/camel/) | Available (unreleased) ([docs](https://brunoborges.github.io/copilot-sdk-integrations/camel/)) |
 | .NET | Generic Host / ASP.NET Core ([Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai) `IChatClient`) | [`dotnet/`](dotnet/) | Preview, not yet on NuGet ([docs](https://brunoborges.github.io/copilot-sdk-integrations/dotnet/), [design](dotnet/docs/design.md)) |
 | Polyglot (C# AppHost; .NET, Java, Node.js, Python services) | [Aspire](https://aspire.dev/) (AppHost runtime resource + .NET client integration, builds on `dotnet`) | [`aspire/`](aspire/) | Preview, not yet on NuGet ([docs](https://brunoborges.github.io/copilot-sdk-integrations/aspire/), [design](aspire/docs/design.md)) |
 | Polyglot (Java reference module) | [Testcontainers](https://testcontainers.com/) (shared CLI/runtime image and Java helper) | [`testcontainers/`](testcontainers/) | Preview, daily GHCR image publishing; Maven artifact unreleased ([docs](https://brunoborges.github.io/copilot-sdk-integrations/testcontainers/)) |
