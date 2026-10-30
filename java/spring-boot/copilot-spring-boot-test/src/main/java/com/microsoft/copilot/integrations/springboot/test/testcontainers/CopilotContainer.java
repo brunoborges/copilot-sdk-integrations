@@ -11,7 +11,7 @@ import org.testcontainers.utility.DockerImageName;
 /**
  * A Testcontainers container running a headless Copilot CLI server ({@code copilot --server --port ...}).
  *
- * <p>No official image exists, so the image must be supplied; see the testing guide for a sample Dockerfile. The
+ * <p>The image must be supplied; see the testing guide for the shared Testcontainers runtime image. The
  * image is expected to:
  * <ul>
  * <li>start the Copilot CLI in server mode, reachable on {@link #DEFAULT_PORT} (or the port configured with
