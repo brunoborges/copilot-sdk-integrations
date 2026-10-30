@@ -100,7 +100,27 @@ html[data-theme="dark"] {
             <item name="GitHub" href="https://github.com/brunoborges/copilot-sdk-integrations/tree/main/testcontainers"/>
         </links>
         <menu name="Start here">
-            <item name="Guide and container contract" href="index.html"/>
+            <item name="Overview" href="index.html"/>
+            <item name="Architecture and scope" href="index.html#Architecture_and_scope"/>
+            <item name="Build and run" href="index.html#Build_and_run"/>
+        </menu>
+        <menu name="Language guides">
+            <item name="Java" href="index.html#Java_reference"/>
+            <item name="Framework wiring" href="index.html#Wire_framework_applications"/>
+            <item name="Node.js / TypeScript" href="index.html#Node.js_.2F_TypeScript"/>
+            <item name="Python" href="index.html#Python"/>
+            <item name=".NET" href="index.html#a.NET"/>
+            <item name="Go and other languages" href="index.html#Go_and_other_Testcontainers_implementations"/>
+        </menu>
+        <menu name="Container reference">
+            <item name="Image contract" href="index.html#Language-neutral_image_contract"/>
+            <item name="Full CLI" href="index.html#Use_the_full_CLI"/>
+        </menu>
+        <menu name="Operate and test">
+            <item name="Model testing" href="index.html#Deterministic_model_tests_and_live_tests"/>
+            <item name="Daily images and tags" href="index.html#Daily_GitHub_Packages_publication"/>
+            <item name="GitHub Packages setup" href="index.html#Repository_linkage"/>
+            <item name="Security and troubleshooting" href="index.html#Security.2C_isolation.2C_and_troubleshooting"/>
         </menu>
         <footer><![CDATA[
 <p>Copilot Testcontainers &middot; Language-neutral runtime image &middot; Java, Node.js, Python, .NET, and Go</p>

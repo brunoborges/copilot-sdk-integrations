@@ -35,6 +35,8 @@
         <copilot-sdk.version>1.0.24</copilot-sdk.version>
         <compiler-plugin.version>3.14.0</compiler-plugin.version>
         <surefire-plugin.version>3.5.3</surefire-plugin.version>
+        <resources-plugin.version>3.3.1</resources-plugin.version>
+        <maven-site-plugin.version>3.22.0</maven-site-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -95,5 +97,40 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <!-- The documentation reuses the Quarkus integration's site skin and assets. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>${resources-plugin.version}</version>
+                <inherited>false</inherited>
+                <executions>
+                    <execution>
+                        <id>documentation-assets</id>
+                        <phase>pre-site</phase>
+                        <goals><goal>copy-resources</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/site</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../quarkus/src/site/resources</directory>
+                                    <filtering>false</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>${maven-site-plugin.version}</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <generateReports>false</generateReports>
+                    <relativizeSiteLinks>false</relativizeSiteLinks>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 </project>

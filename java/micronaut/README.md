@@ -339,6 +339,21 @@ To test against a real Copilot CLI, set `micronaut.copilot.test-runtime.enabled=
 
 GraalVM native images are not yet tested.
 
+## Documentation
+
+Once deployed by the Pages workflow, the documentation site is served at
+<https://brunoborges.github.io/copilot-sdk-integrations/micronaut/>.
+
+The site in `src/site/` reuses the Quarkus integration's internal Maven skin and site assets. Build it from the
+repository root:
+
+```sh
+java/quarkus/mvnw -f java/quarkus/pom.xml -pl site-skin -am install -DskipTests
+java/micronaut/mvnw -f java/micronaut/pom.xml -N site
+```
+
+The output is in `java/micronaut/target/site/`.
+
 ## License
 
 [MIT](../../LICENSE)
