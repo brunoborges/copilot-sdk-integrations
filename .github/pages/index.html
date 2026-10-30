@@ -150,6 +150,23 @@
 
     h2 { font-size: 1.375rem; margin: 0 0 0.35rem; }
     .section-lead { color: var(--muted); margin: 0 0 1.25rem; }
+    .ecosystem-filter {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 0 0 1.25rem;
+      font-weight: 600;
+    }
+    .ecosystem-filter select {
+      min-width: 12rem;
+      padding: 0.55rem 2rem 0.55rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      background: var(--card);
+      color: var(--fg);
+      font: inherit;
+    }
+    .ecosystem-filter select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
@@ -556,8 +573,19 @@
     <section id="integrations" aria-labelledby="integrations-title">
       <h2 id="integrations-title">Choose an integration</h2>
       <p class="section-lead">Which integration would you like to read about?</p>
-      <ul class="grid">
-        <li>
+      <label class="ecosystem-filter" for="ecosystem-filter">
+        <span>Ecosystem</span>
+        <select id="ecosystem-filter" aria-controls="integrations-grid">
+          <option value="all">All ecosystems</option>
+          <option value="java">Java</option>
+          <option value="nodejs">Node.js / TypeScript</option>
+          <option value="dotnet">.NET</option>
+          <option value="python">Python</option>
+          <option value="polyglot">Polyglot</option>
+        </select>
+      </label>
+      <ul class="grid" id="integrations-grid">
+        <li data-ecosystem="java">
           <a class="card" href="spring-boot/" style="--brand: #6db33f">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg fill="#6db33f"><use href="#i-spring"/></svg></span>
@@ -570,7 +598,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="java">
           <a class="card" href="quarkus/" style="--brand: #4695eb">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg fill="#4695eb"><use href="#i-quarkus"/></svg></span>
@@ -583,7 +611,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="java">
           <a class="card" href="micronaut/" style="--brand: #2a5f9e">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg style="fill: var(--fg)"><use href="#i-micronaut"/></svg></span>
@@ -596,7 +624,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="java">
           <a class="card" href="camel/" style="--brand: #e97826">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg><use href="#i-camel"/></svg></span>
@@ -609,7 +637,7 @@
             <span class="go">Read the docs →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="nodejs">
           <a class="card" href="nestjs/" style="--brand: #e0234e">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg fill="#e0234e"><use href="#i-nestjs"/></svg></span>
@@ -622,7 +650,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="nodejs">
           <a class="card" href="fastify/" style="--brand: var(--fg)">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg style="fill: var(--fg)"><use href="#i-fastify"/></svg></span>
@@ -635,7 +663,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="dotnet">
           <a class="card" href="dotnet/" style="--brand: #512bd4">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg fill="#512bd4"><use href="#i-dotnet"/></svg></span>
@@ -646,7 +674,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="polyglot">
           <a class="card" href="aspire/" style="--brand: #7455dd">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg><use href="#i-aspire"/></svg></span>
@@ -657,7 +685,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="python">
           <a class="card" href="django/" style="--brand: #44b78b">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg style="fill:#44b78b"><use href="#i-django"/></svg></span>
@@ -668,7 +696,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="python">
           <a class="card" href="fastapi/" style="--brand: #009688">
             <span class="logos" aria-hidden="true">
               <span class="logo"><svg fill="#009688"><use href="#i-fastapi"/></svg></span>
@@ -679,7 +707,7 @@
             <span class="go">View on GitHub →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="polyglot">
           <a class="card" href="testcontainers/" style="--brand: #2496ed">
             <span class="lang">Polyglot · Preview</span>
             <h3>Testcontainers</h3>
@@ -687,7 +715,7 @@
             <span class="go">View documentation →</span>
           </a>
         </li>
-        <li>
+        <li data-ecosystem="all">
           <div class="card soon">
             <svg aria-hidden="true"><use href="#i-plus"/></svg>
             <strong>More integrations are planned</strong>
@@ -1133,5 +1161,17 @@ app.include_router(copilot.router())        <span class="tok-c"># GET /copilot/h
       <span>Copyright &copy; 2026 Microsoft. Licensed under the <a href="https://github.com/brunoborges/copilot-sdk-integrations/blob/main/LICENSE">MIT License</a>.</span>
     </footer>
   </main>
+  <script>
+    const ecosystemFilter = document.getElementById("ecosystem-filter");
+    const integrationCards = document.querySelectorAll("#integrations-grid > li");
+
+    ecosystemFilter.addEventListener("change", () => {
+      const selectedEcosystem = ecosystemFilter.value;
+
+      integrationCards.forEach((card) => {
+        card.hidden = selectedEcosystem !== "all" && card.dataset.ecosystem !== selectedEcosystem;
+      });
+    });
+  </script>
 </body>
 </html>
