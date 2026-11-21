@@ -7,9 +7,9 @@ worker services, and back-office apps.
 
 📖 **[Documentation](https://brunoborges.github.io/copilot-sdk-integrations/dotnet/)**
 
-> **Status: Preview — implemented, not yet published to NuGet.** Build it from
-> source (below). Read the [design document](docs/design.md) and open an issue
-> or PR with feedback.
+> **Status: Preview — released to GitHub Packages, not nuget.org.** Install it
+> from the GitHub Packages NuGet feed or build it from source (below). Read the
+> [design document](docs/design.md) and open an issue or PR with feedback.
 
 ## What it looks like
 
@@ -57,7 +57,21 @@ nothing to configure. Elsewhere, supply a service token either as
 or point `Copilot:Endpoint` at a shared runtime. The SDK downloads its bundled runtime on
 first build.
 
-From `dotnet/`:
+Add the GitHub Packages feed, then the package. GitHub Packages requires a
+token even for public packages: a personal access token (classic) with the
+`read:packages` scope, which the commands below read from `GITHUB_TOKEN`. See
+[Installing released packages](../README.md#installing-released-packages) and
+[Releases](https://github.com/brunoborges/copilot-sdk-integrations/releases)
+for the latest version.
+
+```bash
+dotnet nuget add source https://nuget.pkg.github.com/brunoborges/index.json \
+  --name copilot-sdk-integrations --username YOUR_GITHUB_USERNAME \
+  --password "$GITHUB_TOKEN" --store-password-in-clear-text
+dotnet add package CopilotSdk.Extensions.Hosting --version 0.1.0
+```
+
+To build from source, run the tests, or run a sample, from `dotnet/`:
 
 ```bash
 dotnet build CopilotSdk.slnx

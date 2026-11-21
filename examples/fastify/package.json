@@ -11,8 +11,8 @@
     "start": "node --env-file-if-exists=.env dist/src/main.js"
   },
   "dependencies": {
-    "@copilot-sdk-integrations/agent-core": "0.1.0",
-    "@copilot-sdk-integrations/fastify": "0.1.0",
+    "@brunoborges/copilot-agent-core": "0.1.0",
+    "@brunoborges/copilot-fastify": "0.1.0",
     "@workshop/node-common": "1.0.0",
     "fastify": "^5.12.0"
   },

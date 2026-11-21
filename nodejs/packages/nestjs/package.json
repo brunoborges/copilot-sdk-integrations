@@ -1,8 +1,10 @@
 {
-  "name": "@copilot-sdk-integrations/nestjs",
+  "name": "@brunoborges/copilot-nestjs",
   "version": "0.1.0",
   "description": "NestJS module for the Microsoft Copilot SDK",
   "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/brunoborges/copilot-sdk-integrations.git", "directory": "nodejs/packages/nestjs" },
+  "publishConfig": { "registry": "https://npm.pkg.github.com" },
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -29,7 +31,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@copilot-sdk-integrations/agent-core": "0.1.0",
+    "@brunoborges/copilot-agent-core": "0.1.0",
     "zod": "^4.0.0"
   },
   "peerDependencies": {

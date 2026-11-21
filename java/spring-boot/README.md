@@ -43,7 +43,7 @@ targeting **Spring Boot 4.1.1**, **Java 21**, and Microsoft Copilot SDK **2.0.1*
   Testcontainers `CopilotContainer` wired through `@ServiceConnection`.
 
 Permissions are denied unless you supply an explicit `PermissionHandler` bean; the
-starter never approves tool use implicitly. No artifacts have been published yet.
+starter never approves tool use implicitly. Releases are published to GitHub Packages.
 
 ## Modules
 
@@ -59,10 +59,18 @@ starter never approves tool use implicitly. No artifacts have been published yet
 
 ## Quick start
 
-Until releases are published, install the reactor locally:
+Releases are published to GitHub Packages, which requires authentication even for
+public packages. Add the repository to your `pom.xml`, and a token with the
+`read:packages` scope to `~/.m2/settings.xml` as described in
+[Installing released packages](../../README.md#installing-released-packages):
 
-```sh
-./mvnw --batch-mode --no-transfer-progress install
+```xml
+<repositories>
+    <repository>
+        <id>copilot-sdk-integrations</id>
+        <url>https://maven.pkg.github.com/brunoborges/copilot-sdk-integrations</url>
+    </repository>
+</repositories>
 ```
 
 Add the starter to a Java 21 / Spring Boot 4.1.1 application:
@@ -71,9 +79,12 @@ Add the starter to a Java 21 / Spring Boot 4.1.1 application:
 <dependency>
     <groupId>com.microsoft</groupId>
     <artifactId>copilot-spring-boot-starter</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
 ```
+
+To try unreleased changes instead, install the reactor locally with
+`./mvnw --batch-mode --no-transfer-progress install` and use `0.1.0-SNAPSHOT`.
 
 Point it at an installed, authenticated Copilot CLI. Alternatives (the
 `COPILOT_CLI_PATH` variable, SDK runtime artifacts, or an existing TCP server) are

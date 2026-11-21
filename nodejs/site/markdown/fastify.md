@@ -5,7 +5,7 @@ title: Fastify plugin
 
 # Fastify plugin
 
-`@copilot-sdk-integrations/fastify` is a Fastify 5 plugin built on the
+`@brunoborges/copilot-fastify` is a Fastify 5 plugin built on the
 [core](core.md). It adds `fastify.copilot` and request-bound agent handles, request context for
 tools and policies, HTTP error mapping, SSE streaming, AI SDK `useChat` routes with tool
 approvals, health and info routes, and a testing helper for `app.inject()`. Agents and tools are
@@ -26,10 +26,23 @@ plain core definitions, so the same code runs under NestJS, Express, or Fastify.
 
 ## Install
 
+The packages are published to GitHub Packages, not npmjs, and GitHub Packages requires
+authentication even for public packages. Create a
+[personal access token (classic)](https://github.com/settings/tokens/new?scopes=read:packages)
+with the `read:packages` scope, export it as `GITHUB_TOKEN`, and point the `@brunoborges` scope
+at GitHub Packages in your project's `.npmrc`:
+
+```ini
+@brunoborges:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+Then install the plugin and core. Fastify, Zod, and `ai` still come from npmjs:
+
 ```sh
-npm install @copilot-sdk-integrations/fastify @copilot-sdk-integrations/agent-core fastify zod
+npm install @brunoborges/copilot-fastify @brunoborges/copilot-agent-core fastify zod
 # for useChat routes (./ai):
-npm install @copilot-sdk-integrations/ai ai
+npm install @brunoborges/copilot-ai ai
 ```
 
 The package requires Fastify 5 and Node.js 20.19+ or 22.12+, and it's ESM-only. It has three
@@ -37,9 +50,9 @@ entry points:
 
 | Entry point | Contents |
 | --- | --- |
-| `@copilot-sdk-integrations/fastify` | `copilotPlugin`, decorators, context hook, `copilotErrorHandler`, `reply.copilotEvents`, health and info routes, `copilotHealthCheck` |
-| `@copilot-sdk-integrations/fastify/ai` | `copilotAiPlugin`: `reply.copilotChat()`, `reply.copilotUIStream()`, `fastify.copilotApprovals` |
-| `@copilot-sdk-integrations/fastify/testing` | `buildCopilotTestApp()` and `parseSse()` |
+| `@brunoborges/copilot-fastify` | `copilotPlugin`, decorators, context hook, `copilotErrorHandler`, `reply.copilotEvents`, health and info routes, `copilotHealthCheck` |
+| `@brunoborges/copilot-fastify/ai` | `copilotAiPlugin`: `reply.copilotChat()`, `reply.copilotUIStream()`, `fastify.copilotApprovals` |
+| `@brunoborges/copilot-fastify/testing` | `buildCopilotTestApp()` and `parseSse()` |
 
 ## Register the plugin
 
@@ -48,8 +61,8 @@ then pass a scripted client (see [Testing](#testing)).
 
 ```ts
 import Fastify from "fastify";
-import { defineAgent, permissions, type Copilot, type CopilotOptions } from "@copilot-sdk-integrations/agent-core";
-import { copilotPlugin } from "@copilot-sdk-integrations/fastify";
+import { defineAgent, permissions, type Copilot, type CopilotOptions } from "@brunoborges/copilot-agent-core";
+import { copilotPlugin } from "@brunoborges/copilot-fastify";
 
 export const support = defineAgent({
   name: "support",
@@ -109,7 +122,7 @@ Augment `CopilotAgentRegistry` to type agent names. When it has keys, `agent()` 
 those names:
 
 ```ts
-declare module "@copilot-sdk-integrations/fastify" {
+declare module "@brunoborges/copilot-fastify" {
   interface CopilotAgentRegistry {
     support: typeof support;
   }
@@ -170,8 +183,8 @@ unchanged. Fastify allows one error handler per scope, so if the app has its own
 `errorHandler: false` and delegate:
 
 ```ts
-import { CopilotIntegrationError } from "@copilot-sdk-integrations/agent-core";
-import { copilotErrorHandler } from "@copilot-sdk-integrations/fastify";
+import { CopilotIntegrationError } from "@brunoborges/copilot-agent-core";
+import { copilotErrorHandler } from "@brunoborges/copilot-fastify";
 
 app.setErrorHandler((error, request, reply) => {
   if (error instanceof CopilotIntegrationError) return copilotErrorHandler(error, request, reply);
@@ -220,7 +233,7 @@ Register `copilotAiPlugin` after `copilotPlugin`. `reply.copilotChat()` answers 
 request in one call:
 
 ```ts
-import { copilotAiPlugin, type CopilotChatBody } from "@copilot-sdk-integrations/fastify/ai";
+import { copilotAiPlugin, type CopilotChatBody } from "@brunoborges/copilot-fastify/ai";
 
 await app.register(copilotAiPlugin); // adds reply.copilotChat, reply.copilotUIStream, fastify.copilotApprovals
 
@@ -247,7 +260,7 @@ app.post<{ Body: CopilotChatBody }>("/api/chat", async (request, reply) =>
 
 ```ts
 import underPressure from "@fastify/under-pressure";
-import { copilotHealthCheck } from "@copilot-sdk-integrations/fastify";
+import { copilotHealthCheck } from "@brunoborges/copilot-fastify";
 
 await app.register(copilotPlugin, {
   health: { path: "/health/copilot" },
@@ -299,7 +312,7 @@ passes it to your factory as `{ client }`, and stops it when the app closes. Cal
 `app.inject()`; `parseSse()` splits SSE bodies into frames.
 
 ```ts
-import { buildCopilotTestApp, parseSse } from "@copilot-sdk-integrations/fastify/testing";
+import { buildCopilotTestApp, parseSse } from "@brunoborges/copilot-fastify/testing";
 
 it("answers through the agent", async () => {
   const { app, runtime } = await buildCopilotTestApp(

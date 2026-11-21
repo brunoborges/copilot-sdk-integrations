@@ -9,7 +9,7 @@ import type {
   CopilotSessions,
   SessionCleanup,
   ToSseStreamOptions,
-} from "@copilot-sdk-integrations/agent-core";
+} from "@brunoborges/copilot-agent-core";
 import type { FastifyReply, FastifyRequest, onRequestHookHandler } from "fastify";
 
 /**
@@ -17,7 +17,7 @@ import type { FastifyReply, FastifyRequest, onRequestHookHandler } from "fastify
  * accepted); apps augment it:
  *
  * ```ts
- * declare module "@copilot-sdk-integrations/fastify" {
+ * declare module "@brunoborges/copilot-fastify" {
  *   interface CopilotAgentRegistry {
  *     support: typeof support;
  *   }

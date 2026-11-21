@@ -18,7 +18,7 @@ metrics, and Reactor streaming.
 | Java | 25 |
 | Micronaut | 5.2 (platform 5.2.3) |
 | Microsoft Copilot SDK for Java | 2.0.1 |
-| Integration | `com.microsoft:copilot-micronaut`, `0.1.0-SNAPSHOT` |
+| Integration | `com.microsoft:copilot-micronaut`, `0.1.0` |
 
 The agent API (`com.microsoft.copilot.integrations.core`: `@CopilotAgent`,
 `@ConversationId`, `@UserMessage`, `CopilotAgents`, hooks, listeners, customizers,
@@ -27,8 +27,8 @@ the [Quarkus extension](../quarkus/) use, so agent interfaces move between
 frameworks unchanged.
 
 Permissions are denied unless you supply an explicit `PermissionHandler` bean or
-permission policy; the integration never approves tool use implicitly. No artifacts
-have been published yet.
+permission policy; the integration never approves tool use implicitly. Releases are
+published to GitHub Packages; see [Getting started](getting-started.html#install).
 
 <a id="features"></a>
 

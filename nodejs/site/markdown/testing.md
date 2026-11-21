@@ -5,7 +5,7 @@ title: Testing
 # Testing
 
 Agent code is tested against a scripted runtime: `CopilotTestRuntime` from
-`@copilot-sdk-integrations/agent-core/testing`. It replaces the Copilot runtime process, so tests
+`@brunoborges/copilot-agent-core/testing`. It replaces the Copilot runtime process, so tests
 need no CLI, no credentials, and make no paid requests, while your tools, permission policies,
 hooks, tool filters, and conversation handling run for real.
 
@@ -25,7 +25,7 @@ hooks, tool filters, and conversation handling run for real.
 ## Core tests
 
 ```ts
-import { createTestCopilot } from "@copilot-sdk-integrations/agent-core/testing";
+import { createTestCopilot } from "@brunoborges/copilot-agent-core/testing";
 import { expect, test } from "vitest";
 
 test("looks up the order", async () => {
@@ -112,14 +112,14 @@ Assert on governance, not just text: for example, that a denied tool never ran
 <!-- only:nestjs -->
 ## NestJS tests
 
-`CopilotTestingModule` from `@copilot-sdk-integrations/nestjs/testing` registers
+`CopilotTestingModule` from `@brunoborges/copilot-nestjs/testing` registers
 `CopilotModule` globally with the scripted runtime. Inject `CopilotTestRuntime` to script
 replies and read recordings:
 
 ```ts
 import { Test } from "@nestjs/testing";
-import { CopilotModule } from "@copilot-sdk-integrations/nestjs";
-import { CopilotTestingModule, CopilotTestRuntime } from "@copilot-sdk-integrations/nestjs/testing";
+import { CopilotModule } from "@brunoborges/copilot-nestjs";
+import { CopilotTestingModule, CopilotTestRuntime } from "@brunoborges/copilot-nestjs/testing";
 
 const moduleRef = await Test.createTestingModule({
   imports: [
@@ -147,12 +147,12 @@ await moduleRef.close();
 <!-- only:fastify -->
 ## Fastify tests
 
-`buildCopilotTestApp(build, script)` from `@copilot-sdk-integrations/fastify/testing` passes a
+`buildCopilotTestApp(build, script)` from `@brunoborges/copilot-fastify/testing` passes a
 scripted client to your app factory and stops it when the app closes. Call routes with
 `app.inject()` and split SSE bodies with `parseSse()`:
 
 ```ts
-import { buildCopilotTestApp, parseSse } from "@copilot-sdk-integrations/fastify/testing";
+import { buildCopilotTestApp, parseSse } from "@brunoborges/copilot-fastify/testing";
 
 const { app, runtime } = await buildCopilotTestApp((options) => buildApp(options), (rt) =>
   rt.onPrompt(/order 42/).callTool("lookupOrder", { id: "42" }).thenReply("Order 42 shipped."));

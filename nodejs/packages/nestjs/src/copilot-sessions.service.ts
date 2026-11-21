@@ -5,7 +5,7 @@ import {
   type CopilotSessionMetadata,
   type CopilotSessions,
   type SessionCleanup,
-} from "@copilot-sdk-integrations/agent-core";
+} from "@brunoborges/copilot-agent-core";
 import { Inject, Injectable, Logger, type OnApplicationBootstrap, type OnModuleDestroy } from "@nestjs/common";
 import { CopilotClientManager, nestCopilotLogger } from "./copilot-client.manager.js";
 

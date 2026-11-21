@@ -7,7 +7,8 @@ git clone https://github.com/brunoborges/copilot-sdk-integrations.git
 cd copilot-sdk-integrations/quarkus
 ```
 
-Install the extension modules locally (no artifacts are published yet). This also
+Install the extension modules locally; the example uses the repository's
+snapshot version rather than a published release. This also
 builds the example and runs its tests against the scripted test runtime, so it
 needs no Copilot CLI:
 

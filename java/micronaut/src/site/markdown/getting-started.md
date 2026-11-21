@@ -22,11 +22,36 @@ title: Getting started
 
 ## Install
 
-Until releases are published, install the reactor locally from `java/micronaut`:
+Releases are published to GitHub Packages, which requires authentication even
+for public packages. Add the repository to your `pom.xml`:
 
-```sh
-./mvnw --batch-mode --no-transfer-progress install
+```xml
+<repositories>
+    <repository>
+        <id>copilot-sdk-integrations</id>
+        <url>https://maven.pkg.github.com/brunoborges/copilot-sdk-integrations</url>
+    </repository>
+</repositories>
 ```
+
+Add matching credentials to `~/.m2/settings.xml`, using a
+[personal access token (classic)](https://github.com/settings/tokens/new?scopes=read:packages)
+with the `read:packages` scope:
+
+```xml
+<settings>
+    <servers>
+        <server>
+            <id>copilot-sdk-integrations</id>
+            <username>YOUR_GITHUB_USERNAME</username>
+            <password>${env.GITHUB_TOKEN}</password>
+        </server>
+    </servers>
+</settings>
+```
+
+See [Installing released packages](https://github.com/brunoborges/copilot-sdk-integrations#installing-released-packages)
+for Gradle and GitHub Actions setup.
 
 Add the runtime to a Micronaut 5 application:
 
@@ -34,7 +59,7 @@ Add the runtime to a Micronaut 5 application:
 <dependency>
     <groupId>com.microsoft</groupId>
     <artifactId>copilot-micronaut</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
@@ -50,7 +75,7 @@ Add the processor next to Micronaut's own annotation processors:
     <path>
         <groupId>com.microsoft</groupId>
         <artifactId>copilot-micronaut-processor</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.1.0</version>
     </path>
     <!-- Generates tool metadata for @CopilotTool methods -->
     <path>
@@ -65,6 +90,13 @@ The SDK jar also contains an experimental-API checker that rejects the tool
 processor's generated code, so list the processors explicitly, as in the example's
 [`pom.xml`](https://github.com/brunoborges/copilot-sdk-integrations/blob/main/java/micronaut/example/pom.xml),
 or pass `-Acopilot.experimental.allowed=true`.
+
+To try unreleased changes, install the reactor locally from `java/micronaut` and
+use `0.1.0-SNAPSHOT` for both artifacts instead:
+
+```sh
+./mvnw --batch-mode --no-transfer-progress install
+```
 
 <a id="connect-to-the-runtime"></a>
 

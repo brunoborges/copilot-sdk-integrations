@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { CopilotTestingModule, CopilotTestRuntime } from "@copilot-sdk-integrations/nestjs/testing";
+import { CopilotTestingModule, CopilotTestRuntime } from "@brunoborges/copilot-nestjs/testing";
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import type { UIMessage } from "ai";

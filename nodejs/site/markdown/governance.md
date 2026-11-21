@@ -70,7 +70,7 @@ Request kinds are `shell`, `write`, `read`, `mcp`, `custom-tool`, `url`, `memory
 ## Writing a policy
 
 ```ts
-import type { PermissionPolicy } from "@copilot-sdk-integrations/agent-core";
+import type { PermissionPolicy } from "@brunoborges/copilot-agent-core";
 
 const tenantOnly: PermissionPolicy = (request, { context }) => {
   if (request.kind !== "custom-tool") return "abstain";

@@ -1,6 +1,6 @@
 import Fastify from "fastify";
-import { copilotPlugin } from "@copilot-sdk-integrations/fastify";
-import type { Copilot, CopilotAgentDefinition, CopilotOptions } from "@copilot-sdk-integrations/agent-core";
+import { copilotPlugin } from "@brunoborges/copilot-fastify";
+import type { Copilot, CopilotAgentDefinition, CopilotOptions } from "@brunoborges/copilot-agent-core";
 import { loadWorkshopConfig } from "@workshop/node-common";
 
 export async function createApplication(definition: CopilotAgentDefinition, client?: Copilot | CopilotOptions, environment = process.env) {

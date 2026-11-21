@@ -8,6 +8,21 @@ Status: **M1 + M2 of [DESIGN.md](DESIGN.md) implemented** (core, settings, agent
 prompts, ORM tools, permissions, checks, management commands, testing). Streaming, interactive
 approvals, signals and the admin integration are planned (M3–M5).
 
+## Install
+
+The packages are attached to each
+[GitHub Release](https://github.com/brunoborges/copilot-sdk-integrations/releases) rather than
+published to PyPI. Install from the release's assets; no token is needed:
+
+```bash
+pip install copilot-django==0.1.0 \
+  --find-links https://github.com/brunoborges/copilot-sdk-integrations/releases/expanded_assets/v0.1.0
+```
+
+Replace `0.1.0` with the latest release. `copilot-agent-core` is resolved from the same
+release, and `uv pip install` accepts the same `--find-links` option. See
+[Installing released packages](../../README.md#installing-released-packages).
+
 ## Quickstart
 
 ```python

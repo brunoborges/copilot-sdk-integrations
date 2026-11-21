@@ -1,4 +1,4 @@
-import type { Copilot } from "@copilot-sdk-integrations/agent-core";
+import type { Copilot } from "@brunoborges/copilot-agent-core";
 import { Inject, Injectable } from "@nestjs/common";
 import { COPILOT } from "./constants.js";
 

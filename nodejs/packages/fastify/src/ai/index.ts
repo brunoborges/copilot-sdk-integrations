@@ -6,8 +6,8 @@ import {
   type StreamCopilotChatOptions,
   type ToUIMessageStreamOptions,
   type UIMessageStreamResponseInit,
-} from "@copilot-sdk-integrations/ai";
-import type { AgentHandle, CopilotAgentEvent } from "@copilot-sdk-integrations/agent-core";
+} from "@brunoborges/copilot-ai";
+import type { AgentHandle, CopilotAgentEvent } from "@brunoborges/copilot-agent-core";
 import type { UIMessage } from "ai";
 import type { FastifyInstance, FastifyReply } from "fastify";
 import fp from "fastify-plugin";

@@ -3,7 +3,7 @@
 Status: **implemented** (phases F1–F3: plugin, streaming and AI SDK, example and docs). See
 [§18](#18-implementation-notes) for deviations from the original proposal.
 
-This document designs `@copilot-sdk-integrations/fastify`, a Fastify plugin for the
+This document designs `@brunoborges/copilot-fastify`, a Fastify plugin for the
 [Microsoft Copilot SDK for Node.js/TypeScript](https://github.com/microsoft/copilot-sdk/tree/main/nodejs).
 It is the second framework integration after the [NestJS module](DESIGN.md) and is built
 on the same framework-agnostic core ([DESIGN.md §3](DESIGN.md#3-shared-core)). Everything
@@ -80,9 +80,9 @@ flowchart TB
 
 | Entry point | Contents | Depends on |
 | --- | --- | --- |
-| `@copilot-sdk-integrations/fastify` | `copilotPlugin`, decorators, context hook, error handler, SSE helper, health and info routes | core, `fastify-plugin`; peer `fastify ^5` |
-| `@copilot-sdk-integrations/fastify/ai` | `reply.copilotChat()` / `reply.copilotUIStream()` for AI SDK `useChat` front ends | the `ai` package; optional peer `ai` |
-| `@copilot-sdk-integrations/fastify/testing` | `buildCopilotTestApp()` convenience on top of `core/testing` | core |
+| `@brunoborges/copilot-fastify` | `copilotPlugin`, decorators, context hook, error handler, SSE helper, health and info routes | core, `fastify-plugin`; peer `fastify ^5` |
+| `@brunoborges/copilot-fastify/ai` | `reply.copilotChat()` / `reply.copilotUIStream()` for AI SDK `useChat` front ends | the `ai` package; optional peer `ai` |
+| `@brunoborges/copilot-fastify/testing` | `buildCopilotTestApp()` convenience on top of `core/testing` | core |
 
 Same conventions as the other packages: ESM-only with `require(esm)` for CommonJS apps,
 `types` and `default` export conditions plus `typesVersions`, released with the same
@@ -96,7 +96,7 @@ reached end of life on 2025-06-30, and Fastify 6 is added when it ships.
 ```ts
 // app.ts
 import Fastify from "fastify";
-import { copilotPlugin } from "@copilot-sdk-integrations/fastify";
+import { copilotPlugin } from "@brunoborges/copilot-fastify";
 import { support } from "./agents/support.js";
 
 export async function buildApp() {
@@ -135,7 +135,7 @@ export const support = defineAgent({
   permissions: permissions.allowCustomTools(),
 });
 
-declare module "@copilot-sdk-integrations/fastify" {
+declare module "@brunoborges/copilot-fastify" {
   interface CopilotAgentRegistry {
     support: typeof support;
   }
@@ -327,7 +327,7 @@ The `./ai` entry point wraps the existing `ai` package helpers so a `useChat` en
 is one call:
 
 ```ts
-import { copilotAiPlugin } from "@copilot-sdk-integrations/fastify/ai";
+import { copilotAiPlugin } from "@brunoborges/copilot-fastify/ai";
 
 await app.register(copilotAiPlugin); // adds reply.copilotChat / reply.copilotUIStream
 
@@ -369,7 +369,7 @@ app.post<{ Body: CopilotChatRequest }>("/api/chat", (req, reply) =>
 
 ## 12. Encapsulation
 
-- The plugin is wrapped with `fastify-plugin` (name `@copilot-sdk-integrations/fastify`,
+- The plugin is wrapped with `fastify-plugin` (name `@brunoborges/copilot-fastify`,
   `fastify: "5.x"`), so its decorators and hooks apply to the whole app, which is the
   usual choice for shared clients (like `@fastify/postgres`).
 - Registering the plugin twice in the same scope fails (Fastify's duplicate-decorator
@@ -386,7 +386,7 @@ Fastify apps test with `app.inject()`, and the core already ships a scripted run
 the testing entry point is small:
 
 ```ts
-import { buildCopilotTestApp } from "@copilot-sdk-integrations/fastify/testing";
+import { buildCopilotTestApp } from "@brunoborges/copilot-fastify/testing";
 
 const { app, runtime } = await buildCopilotTestApp(buildApp, (runtime) =>
   runtime.onPrompt(/order 42/).callTool("lookupOrder", { id: "42" }).thenReply("Order 42 shipped."),

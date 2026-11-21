@@ -1,4 +1,4 @@
-import { serializeAgentEvent, type CopilotAgentEvent } from "@copilot-sdk-integrations/agent-core";
+import { serializeAgentEvent, type CopilotAgentEvent } from "@brunoborges/copilot-agent-core";
 
 export { serializeAgentEvent };
 import type { MessageEvent } from "@nestjs/common";

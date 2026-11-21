@@ -18,10 +18,10 @@ From the repository root:
 ```sh
 npm --prefix nodejs ci
 npm --prefix nodejs run build \
-  --workspace @copilot-sdk-integrations/agent-core \
-  --workspace @copilot-sdk-integrations/ai \
-  --workspace @copilot-sdk-integrations/nestjs \
-  --workspace @copilot-sdk-integrations/fastify
+  --workspace @brunoborges/copilot-agent-core \
+  --workspace @brunoborges/copilot-ai \
+  --workspace @brunoborges/copilot-nestjs \
+  --workspace @brunoborges/copilot-fastify
 npm --prefix examples ci
 npm --prefix examples run build
 npm --prefix examples run typecheck

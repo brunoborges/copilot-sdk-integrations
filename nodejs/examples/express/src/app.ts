@@ -1,5 +1,5 @@
-import { copilotErrorToHttp, CopilotIntegrationError, getCopilotContext, type Copilot } from "@copilot-sdk-integrations/agent-core";
-import { createApprovalStore, pipeCopilotChatToResponse, pipeCopilotEventsToResponse, type CopilotApprovalStore } from "@copilot-sdk-integrations/ai";
+import { copilotErrorToHttp, CopilotIntegrationError, getCopilotContext, type Copilot } from "@brunoborges/copilot-agent-core";
+import { createApprovalStore, pipeCopilotChatToResponse, pipeCopilotEventsToResponse, type CopilotApprovalStore } from "@brunoborges/copilot-ai";
 import type { UIMessage } from "ai";
 import express, { type NextFunction, type Request, type Response } from "express";
 import { createAdvisor, Notebook } from "./advisor.js";

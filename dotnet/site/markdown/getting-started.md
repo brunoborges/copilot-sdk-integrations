@@ -10,7 +10,7 @@ tool, multi-turn conversations, and a health check.
 **In this chapter**
 
 - [Prerequisites](#prerequisites)
-- [Reference the library](#reference-the-library)
+- [Add the package](#add-the-package)
 - [Register Copilot](#register-copilot)
 - [Add a tool](#add-a-tool)
 - [Call the agent](#call-the-agent)
@@ -28,10 +28,31 @@ first build) and uses the user signed in to the
 supply a service token as `Copilot:GitHubToken`, or through the `COPILOT_GITHUB_TOKEN`,
 `GH_TOKEN`, or `GITHUB_TOKEN` environment variables. See [Runtime and identity](identity.md).
 
-## Reference the library
+## Add the package
 
-The package is in preview and not on NuGet yet. Clone the repository and add a project
-reference, the way the samples do:
+`CopilotSdk.Extensions.Hosting` is published to GitHub Packages. Every integration in the
+repository is released under one version; this page uses `0.1.0`, and
+[Releases](https://github.com/brunoborges/copilot-sdk-integrations/releases) lists the latest.
+GitHub Packages requires authentication even for public packages: create a
+[personal access token (classic)](https://github.com/settings/tokens/new?scopes=read:packages)
+with the `read:packages` scope and export it as `GITHUB_TOKEN`. Then add the feed and the
+package:
+
+```bash
+dotnet nuget add source https://nuget.pkg.github.com/brunoborges/index.json \
+  --name copilot-sdk-integrations --username YOUR_GITHUB_USERNAME \
+  --password "$GITHUB_TOKEN" --store-password-in-clear-text
+dotnet add package CopilotSdk.Extensions.Hosting --version 0.1.0
+```
+
+The package brings in `Microsoft.Copilot.SDK` and `Microsoft.Extensions.AI` transitively. For
+CI and the other languages, see
+[Installing released packages](https://github.com/brunoborges/copilot-sdk-integrations#installing-released-packages).
+
+### Build from source
+
+To build the library yourself, clone the repository and add a project reference, the way the
+samples do:
 
 ```bash
 git clone https://github.com/brunoborges/copilot-sdk-integrations.git

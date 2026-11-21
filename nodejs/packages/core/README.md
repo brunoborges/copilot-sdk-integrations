@@ -1,9 +1,16 @@
-# @copilot-sdk-integrations/agent-core
+# @brunoborges/copilot-agent-core
 
-Agent Core: the framework-agnostic integration layer for the [Microsoft Copilot SDK](https://github.com/microsoft/copilot-sdk) for Node.js. It manages one runtime client per application (lazy start, admission limits, timeouts, graceful shutdown, restart after a crash), declarative agents with Zod-typed tools, permission policies, conversations, streaming events, and a scripted test runtime. [`@copilot-sdk-integrations/nestjs`](../nestjs), [`@copilot-sdk-integrations/fastify`](../fastify), and [`@copilot-sdk-integrations/ai`](../ai) are built on it; see [`DESIGN.md`](../../DESIGN.md) for the full design.
+Agent Core: the framework-agnostic integration layer for the [Microsoft Copilot SDK](https://github.com/microsoft/copilot-sdk) for Node.js. It manages one runtime client per application (lazy start, admission limits, timeouts, graceful shutdown, restart after a crash), declarative agents with Zod-typed tools, permission policies, conversations, streaming events, and a scripted test runtime. [`@brunoborges/copilot-nestjs`](../nestjs), [`@brunoborges/copilot-fastify`](../fastify), and [`@brunoborges/copilot-ai`](../ai) are built on it; see [`DESIGN.md`](../../DESIGN.md) for the full design.
+
+The `@brunoborges` packages are published to GitHub Packages, not npmjs. Point the scope at GitHub Packages in your project's `.npmrc`, with a token that has the `read:packages` scope (see [Installing released packages](https://github.com/brunoborges/copilot-sdk-integrations#installing-released-packages)):
+
+```ini
+@brunoborges:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
 
 ```sh
-npm install @copilot-sdk-integrations/agent-core zod
+npm install @brunoborges/copilot-agent-core zod
 ```
 
 The package is ESM-only. CommonJS apps load it with `require()` on Node `^20.19` or `>=22.12` (`require(esm)`).
@@ -13,7 +20,7 @@ The package is ESM-only. CommonJS apps load it with `require()` on Node `^20.19`
 Create one `Copilot` per application and share it. The runtime starts on the first turn.
 
 ```ts
-import { createCopilot } from "@copilot-sdk-integrations/agent-core";
+import { createCopilot } from "@brunoborges/copilot-agent-core";
 
 const copilot = createCopilot({
   limits: { maxConcurrentTurns: 8, maxQueuedTurns: 32 },
@@ -31,7 +38,7 @@ process.on("SIGTERM", () => copilot.stop({ gracePeriodMs: 30_000 }));
 
 ```ts
 import { z } from "zod";
-import { defineAgent, defineCopilotTool, permissions } from "@copilot-sdk-integrations/agent-core";
+import { defineAgent, defineCopilotTool, permissions } from "@brunoborges/copilot-agent-core";
 
 const lookupOrder = defineCopilotTool({
   name: "lookupOrder",
@@ -84,7 +91,7 @@ Every call accepts `signal`, `timeout`, extra `tools`, and `context`. Wrap reque
 Policies decide each runtime permission request (`approve`, `deny`, `ask-user`, or `abstain`):
 
 ```ts
-import { PermissionKinds, permissions } from "@copilot-sdk-integrations/agent-core";
+import { PermissionKinds, permissions } from "@brunoborges/copilot-agent-core";
 
 permissions.denyAll();                          // the default
 permissions.allowReadOnly();
@@ -104,7 +111,7 @@ permissions.allOf(permissions.allowCustomTools(), (request, { context }) => (con
 ```ts
 import { readFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
-import { runCopilotLoop } from "@copilot-sdk-integrations/agent-core";
+import { runCopilotLoop } from "@brunoborges/copilot-agent-core";
 
 const result = await runCopilotLoop(copilot.agent(builder), {
   prompt: () => readFile("PROMPT_build.md", "utf8"), // re-read every iteration
@@ -129,7 +136,7 @@ Each iteration uses the agent's permission policy; nothing is approved implicitl
 Pass it as global `hooks` (or an agent's `hooks`); it composes with other hooks.
 
 ```ts
-import { createCopilot, errorRecoveryHooks } from "@copilot-sdk-integrations/agent-core";
+import { createCopilot, errorRecoveryHooks } from "@brunoborges/copilot-agent-core";
 
 const copilot = createCopilot({
   hooks: errorRecoveryHooks({ maxConsecutiveFailures: 3, retryCount: 2, onFailure: (e) => log.debug(e) }),
@@ -150,10 +157,10 @@ In NestJS pass it as `CopilotModule.forRoot({ hooks: errorRecoveryHooks() })`; i
 
 ## Testing
 
-`@copilot-sdk-integrations/agent-core/testing` replaces the runtime with a scripted, in-process one: no CLI, no network.
+`@brunoborges/copilot-agent-core/testing` replaces the runtime with a scripted, in-process one: no CLI, no network.
 
 ```ts
-import { createTestCopilot } from "@copilot-sdk-integrations/agent-core/testing";
+import { createTestCopilot } from "@brunoborges/copilot-agent-core/testing";
 
 await using test = createTestCopilot({
   script: (rt) => rt.onPrompt(/order/).callTool("lookupOrder", { id: "42" }).thenReply("It shipped."),

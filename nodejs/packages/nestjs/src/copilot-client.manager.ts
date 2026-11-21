@@ -6,7 +6,7 @@ import {
   type CopilotContext,
   type CopilotLogger,
   type CopilotOptions,
-} from "@copilot-sdk-integrations/agent-core";
+} from "@brunoborges/copilot-agent-core";
 import {
   Inject,
   Injectable,

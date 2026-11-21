@@ -1,9 +1,9 @@
-import { CopilotIntegrationError, copilotErrorToHttp } from "@copilot-sdk-integrations/agent-core";
+import { CopilotIntegrationError, copilotErrorToHttp } from "@brunoborges/copilot-agent-core";
 import { Catch, HttpStatus, Inject, Logger, Optional, type ArgumentsHost, type ExceptionFilter } from "@nestjs/common";
 import { HttpAdapterHost } from "@nestjs/core";
 import { throwError, type Observable } from "rxjs";
 
-export { copilotErrorToHttp, CLIENT_CLOSED_REQUEST, type CopilotHttpError } from "@copilot-sdk-integrations/agent-core";
+export { copilotErrorToHttp, CLIENT_CLOSED_REQUEST, type CopilotHttpError } from "@brunoborges/copilot-agent-core";
 
 /**
  * Maps `CopilotIntegrationError`s to HTTP responses (registered globally by `CopilotModule` unless

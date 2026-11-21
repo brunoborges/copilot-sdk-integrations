@@ -1,5 +1,5 @@
-import { createApprovalStore, CopilotApprovalStore } from "@copilot-sdk-integrations/ai";
-import { CopilotModule } from "@copilot-sdk-integrations/nestjs";
+import { createApprovalStore, CopilotApprovalStore } from "@brunoborges/copilot-ai";
+import { CopilotModule } from "@brunoborges/copilot-nestjs";
 import { Module } from "@nestjs/common";
 import { AdvisorController } from "./advisor.controller";
 import { NodeAdvisor } from "./advisor.agent";

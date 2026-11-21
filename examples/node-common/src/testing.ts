@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { resolve } from "node:path";
-import { createTestCopilot, type TestCopilot } from "@copilot-sdk-integrations/agent-core/testing";
-import type { AgentHandle, CopilotAgentDefinition, Copilot } from "@copilot-sdk-integrations/agent-core";
+import { createTestCopilot, type TestCopilot } from "@brunoborges/copilot-agent-core/testing";
+import type { AgentHandle, CopilotAgentDefinition, Copilot } from "@brunoborges/copilot-agent-core";
 import { createMuseum, exhibits } from "./museum.js";
 import { createAccessibility } from "./accessibility.js";
 import { SnapshotStore } from "./snapshot.js";

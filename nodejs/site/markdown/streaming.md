@@ -70,8 +70,8 @@ value so the return type is in the decorator metadata, or set
 ```ts
 import { Sse } from "@nestjs/common";
 import { Observable } from "rxjs";
-import type { CopilotAgentEvent } from "@copilot-sdk-integrations/agent-core";
-import { toSseEvents } from "@copilot-sdk-integrations/nestjs";
+import type { CopilotAgentEvent } from "@brunoborges/copilot-agent-core";
+import { toSseEvents } from "@brunoborges/copilot-nestjs";
 
 @CopilotAgent({ name: "support" })
 export class SupportAgent {
@@ -175,5 +175,5 @@ Bootstrap fails if the option is set but `EventEmitterModule` isn't imported.
 ## useChat
 
 For React, Vue, or Svelte chat UIs built with the AI SDK's `useChat`, don't hand-roll SSE:
-return a UI message stream with `streamCopilotChat` from `@copilot-sdk-integrations/ai`. See
+return a UI message stream with `streamCopilotChat` from `@brunoborges/copilot-ai`. See
 [Vercel AI SDK](ai-sdk.md).

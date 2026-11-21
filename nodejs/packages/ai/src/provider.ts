@@ -21,7 +21,7 @@ import type {
   SendOptions,
   StructuredSchema,
   ToolInput,
-} from "@copilot-sdk-integrations/agent-core";
+} from "@brunoborges/copilot-agent-core";
 import { toCopilotPrompt } from "./prompt.js";
 import { UIChunkMapper, type CopilotUsage } from "./ui-stream.js";
 

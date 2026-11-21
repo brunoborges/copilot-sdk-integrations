@@ -11,9 +11,9 @@ application functions into tools, from both `def` and `async def` endpoints.
 
 > **Status:** preview. Milestone M1 of the
 > [design](https://github.com/brunoborges/copilot-sdk-integrations/blob/main/python/fastapi/DESIGN.md)
-> is implemented and tested, but the packages are not on PyPI yet. Install them from the
-> [repository](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/python). See
-> [Getting started](getting-started.md).
+> is implemented and tested. The packages are attached to each
+> [GitHub Release](https://github.com/brunoborges/copilot-sdk-integrations/releases) rather
+> than published to PyPI. See [Getting started](getting-started.md).
 
 ```python
 class SupportAgent(CopilotAgent):

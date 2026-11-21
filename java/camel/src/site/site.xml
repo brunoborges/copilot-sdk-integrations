@@ -114,7 +114,7 @@ html[data-theme="dark"] {
             <item name="Testing and troubleshooting" href="testing.html"/>
         </menu>
         <footer><![CDATA[
-<p>Copilot for Apache Camel &middot; Java 21 &middot; Available, unreleased</p>
+<p>Copilot for Apache Camel &middot; Java 21 &middot; Available, GitHub Packages (Maven)</p>
         ]]></footer>
     </body>
 </site>

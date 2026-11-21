@@ -1,9 +1,16 @@
-# @copilot-sdk-integrations/fastify
+# @brunoborges/copilot-fastify
 
-Fastify plugin for the [Microsoft Copilot SDK](https://github.com/microsoft/copilot-sdk). It provides `fastify.copilot` and request-bound agent handles, request-context propagation to tools and policies, HTTP error mapping, SSE streaming, AI SDK `useChat` support, health and info routes, and a scripted testing helper. It's built on [`@copilot-sdk-integrations/agent-core`](../core); see [`DESIGN-FASTIFY.md`](../../DESIGN-FASTIFY.md) for the full design.
+Fastify plugin for the [Microsoft Copilot SDK](https://github.com/microsoft/copilot-sdk). It provides `fastify.copilot` and request-bound agent handles, request-context propagation to tools and policies, HTTP error mapping, SSE streaming, AI SDK `useChat` support, health and info routes, and a scripted testing helper. It's built on [`@brunoborges/copilot-agent-core`](../core); see [`DESIGN-FASTIFY.md`](../../DESIGN-FASTIFY.md) for the full design.
+
+The `@brunoborges` packages are published to GitHub Packages, not npmjs. Point the scope at GitHub Packages in your project's `.npmrc`, with a token that has the `read:packages` scope (see [Installing released packages](https://github.com/brunoborges/copilot-sdk-integrations#installing-released-packages)):
+
+```ini
+@brunoborges:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
 
 ```sh
-npm install @copilot-sdk-integrations/fastify @copilot-sdk-integrations/agent-core fastify zod
+npm install @brunoborges/copilot-fastify @brunoborges/copilot-agent-core fastify zod
 ```
 
 Requires Fastify 5 and Node.js 20.19+ or 22.12+. The package is ESM-only.
@@ -12,8 +19,8 @@ Requires Fastify 5 and Node.js 20.19+ or 22.12+. The package is ESM-only.
 
 ```ts
 import Fastify from "fastify";
-import { defineAgent } from "@copilot-sdk-integrations/agent-core";
-import { copilotPlugin } from "@copilot-sdk-integrations/fastify";
+import { defineAgent } from "@brunoborges/copilot-agent-core";
+import { copilotPlugin } from "@brunoborges/copilot-fastify";
 
 const support = defineAgent({ name: "support", model: "gpt-5", instructions: "You help customers." });
 
@@ -45,7 +52,7 @@ The plugin is wrapped with `fastify-plugin`, so its decorators, hooks, and error
 Augment `CopilotAgentRegistry` to type agent names:
 
 ```ts
-declare module "@copilot-sdk-integrations/fastify" {
+declare module "@brunoborges/copilot-fastify" {
   interface CopilotAgentRegistry {
     support: typeof support;
   }
@@ -98,8 +105,8 @@ The plugin sets an error handler that maps Copilot errors to HTTP with a Fastify
 Other errors (validation errors, your own errors) go to Fastify's default handler unchanged. If the app has its own error handler, pass `errorHandler: false` and delegate:
 
 ```ts
-import { CopilotIntegrationError } from "@copilot-sdk-integrations/agent-core";
-import { copilotErrorHandler } from "@copilot-sdk-integrations/fastify";
+import { CopilotIntegrationError } from "@brunoborges/copilot-agent-core";
+import { copilotErrorHandler } from "@brunoborges/copilot-fastify";
 
 app.setErrorHandler((error, request, reply) => {
   if (error instanceof CopilotIntegrationError) return copilotErrorHandler(error, request, reply);
@@ -128,7 +135,7 @@ The body is sent through `reply.send()`, so `onSend` hooks, compression, and COR
 ## AI SDK `useChat`
 
 ```ts
-import { copilotAiPlugin } from "@copilot-sdk-integrations/fastify/ai";
+import { copilotAiPlugin } from "@brunoborges/copilot-fastify/ai";
 
 await app.register(copilotAiPlugin); // after copilotPlugin
 app.post("/api/chat", async (request, reply) => reply.copilotChat({ agent: "support" }));
@@ -139,13 +146,13 @@ app.post("/api/chat", async (request, reply) => reply.copilotChat({ agent: "supp
 - The conversation id is scoped by principal: `${principal}:${chatId}`, with `"anonymous"` when there's no principal.
 - `permissions.askUser()` and AI SDK `needsApproval` tools round-trip through `addToolApprovalResponse` using `fastify.copilotApprovals`. Pass `approvals` to `copilotAiPlugin` or `copilotChat` to replace it. Only the request's principal can answer an approval from its own conversation; anyone else gets an "expired or unknown" tool error.
 
-`reply.copilotUIStream(events, init)` streams any event iterable as a UI message stream. The `ai` and `@copilot-sdk-integrations/ai` packages are optional peer dependencies, needed only for this entry point.
+`reply.copilotUIStream(events, init)` streams any event iterable as a UI message stream. The `ai` and `@brunoborges/copilot-ai` packages are optional peer dependencies, needed only for this entry point.
 
 ## Health and info
 
 ```ts
 import underPressure from "@fastify/under-pressure";
-import { copilotHealthCheck } from "@copilot-sdk-integrations/fastify";
+import { copilotHealthCheck } from "@brunoborges/copilot-fastify";
 
 await app.register(copilotPlugin, {
   health: { path: "/health/copilot" },
@@ -161,7 +168,7 @@ await app.register(underPressure, { healthCheck: copilotHealthCheck(app), health
 ## Testing
 
 ```ts
-import { buildCopilotTestApp, parseSse } from "@copilot-sdk-integrations/fastify/testing";
+import { buildCopilotTestApp, parseSse } from "@brunoborges/copilot-fastify/testing";
 
 const { app, runtime } = await buildCopilotTestApp(
   (options) => buildApp(options), // your app factory; pass options.client to copilotPlugin
@@ -191,5 +198,5 @@ There's no runtime process, no credentials, and no paid requests.
 
 - [`DESIGN-FASTIFY.md`](../../DESIGN-FASTIFY.md): the Fastify integration design.
 - [`examples/fastify`](../../examples/fastify): a runnable Fastify app using the plugin, with `app.inject()` tests.
-- [`@copilot-sdk-integrations/agent-core`](../core): agents, tools, permissions, conversations, and the scripted runtime.
-- [`@copilot-sdk-integrations/ai`](../ai): AI SDK provider and `useChat` streaming.
+- [`@brunoborges/copilot-agent-core`](../core): agents, tools, permissions, conversations, and the scripted runtime.
+- [`@brunoborges/copilot-ai`](../ai): AI SDK provider and `useChat` streaming.

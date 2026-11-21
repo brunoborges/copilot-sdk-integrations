@@ -6,11 +6,11 @@ every Testcontainers ecosystem can use its generic container API. A standalone
 Java helper provides typed configuration and connection details without Spring
 or a transitive Microsoft Copilot SDK dependency.
 
-**Preview.** The Java artifact is unreleased. The
+**Preview.** The Java artifact is published to GitHub Packages (Maven). The
 [`Publish Copilot CLI image` workflow](../.github/workflows/publish-copilot-runtime.yml)
 publishes the bundled CLI and runtime harness to
 `ghcr.io/brunoborges/copilot-sdk-integrations/copilot-runtime` daily at **06:23 UTC**,
-on relevant pushes to `main`, and on manual dispatch. The package is public
+on relevant pushes to `main`, and on manual dispatch. The image is public
 and multi-arch (`linux/amd64`, `linux/arm64`). This is a community
 integration, not an official GitHub runtime image.
 
@@ -57,14 +57,31 @@ unchanged. Publication uses the Actions `GITHUB_TOKEN` with job-scoped
 `packages: write`; no personal access token or registry secret is required.
 See the guide for first-publication and package-visibility setup.
 
+The Java helper is released to GitHub Packages (Maven), which, unlike pulling the
+image, requires authentication even for public packages. Add the repository to your
+`pom.xml`, and a token with the `read:packages` scope to `~/.m2/settings.xml` as
+described in [Installing released packages](../README.md#installing-released-packages):
+
+```xml
+<repositories>
+    <repository>
+        <id>copilot-sdk-integrations</id>
+        <url>https://maven.pkg.github.com/brunoborges/copilot-sdk-integrations</url>
+    </repository>
+</repositories>
+```
+
 ```xml
 <dependency>
     <groupId>com.microsoft</groupId>
     <artifactId>copilot-testcontainers</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <scope>test</scope>
 </dependency>
 ```
+
+To try unreleased changes instead, use `0.1.0-SNAPSHOT` after the local `install`
+above.
 
 Add the Microsoft Copilot SDK for Java separately (tested with
 `com.microsoft:copilot-sdk:2.0.1`, which requires a protocol 4 runtime such as CLI `1.0.114`).

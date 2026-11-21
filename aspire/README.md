@@ -21,9 +21,9 @@ Node.js integration, or a raw Copilot SDK for Java, Node.js or Python.
 `WithReference(chat)` injects language-neutral environment variables for this:
 `CHAT_HOST`, `CHAT_PORT`, `CHAT_ENDPOINT`, `CHAT_CONNECTIONTOKEN` and `CHAT_MODEL`.
 
-> **Status: Preview — implemented, not yet published to NuGet.** Build it from
-> source (below). Read the [design document](docs/design.md) and open an issue
-> or PR with feedback.
+> **Status: Preview — released to GitHub Packages, not nuget.org.** Install it
+> from the GitHub Packages NuGet feed or build it from source (below). Read the
+> [design document](docs/design.md) and open an issue or PR with feedback.
 
 ## What it looks like
 
@@ -72,7 +72,28 @@ generated `{name}-github-token` secret parameter. The hosting package targets
 `net8.0` and finds the runtime via `COPILOT_CLI_PATH`, then the SDK-bundled
 runtime, then `copilot` on `PATH` (override with `WithCliPath`).
 
-From `aspire/`:
+Add the GitHub Packages feed, then `CopilotSdk.Aspire.Hosting` to the AppHost
+and, optionally, `CopilotSdk.Aspire` to each .NET service. GitHub Packages
+requires a token even for public packages: a personal access token (classic)
+with the `read:packages` scope, which the commands below read from
+`GITHUB_TOKEN`. See
+[Installing released packages](../README.md#installing-released-packages) and
+[Releases](https://github.com/brunoborges/copilot-sdk-integrations/releases)
+for the latest version.
+
+```bash
+dotnet nuget add source https://nuget.pkg.github.com/brunoborges/index.json \
+  --name copilot-sdk-integrations --username YOUR_GITHUB_USERNAME \
+  --password "$GITHUB_TOKEN" --store-password-in-clear-text
+dotnet add package CopilotSdk.Aspire.Hosting --version 0.1.0   # in the AppHost
+dotnet add package CopilotSdk.Aspire --version 0.1.0           # in each .NET service
+```
+
+Services in other languages don't use these packages. To install this
+repository's Java, Node.js, or Python integrations for them, see the same
+[install section](../README.md#installing-released-packages).
+
+To build from source and run the tests, from `aspire/`:
 
 ```bash
 dotnet build CopilotSdk.Aspire.slnx

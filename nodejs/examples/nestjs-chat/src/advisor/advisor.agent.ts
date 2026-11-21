@@ -1,5 +1,5 @@
-import type { CopilotAgentEvent } from "@copilot-sdk-integrations/agent-core";
-import { ConversationId, CopilotAgent, implementedByCopilot, Message, P, Returns, Signal, UserMessage } from "@copilot-sdk-integrations/nestjs";
+import type { CopilotAgentEvent } from "@brunoborges/copilot-agent-core";
+import { ConversationId, CopilotAgent, implementedByCopilot, Message, P, Returns, Signal, UserMessage } from "@brunoborges/copilot-nestjs";
 import { Observable } from "rxjs";
 import { z } from "zod";
 import { AdvisorPermissionPolicy } from "./advisor.policy";

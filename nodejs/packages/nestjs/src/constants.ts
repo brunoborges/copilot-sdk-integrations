@@ -1,21 +1,21 @@
 /** Injection token for the core `Copilot` instance. */
-export const COPILOT = Symbol.for("@copilot-sdk-integrations/nestjs:Copilot");
+export const COPILOT = Symbol.for("@brunoborges/copilot-nestjs:Copilot");
 /** Injection token for `CopilotClientAccessor`: `() => Promise<ClientLike>` (starts a lazy runtime). */
-export const COPILOT_CLIENT = Symbol.for("@copilot-sdk-integrations/nestjs:CopilotClient");
+export const COPILOT_CLIENT = Symbol.for("@brunoborges/copilot-nestjs:CopilotClient");
 /** Optional provider: a `CopilotClientCustomizer` (or an array of them) adjusting raw SDK client options. */
-export const COPILOT_CLIENT_CUSTOMIZER = Symbol.for("@copilot-sdk-integrations/nestjs:ClientCustomizer");
+export const COPILOT_CLIENT_CUSTOMIZER = Symbol.for("@brunoborges/copilot-nestjs:ClientCustomizer");
 /** Optional provider: a `CopilotSessionCustomizer` (or an array of them) adjusting raw SDK session config. */
-export const COPILOT_SESSION_CUSTOMIZER = Symbol.for("@copilot-sdk-integrations/nestjs:SessionCustomizer");
+export const COPILOT_SESSION_CUSTOMIZER = Symbol.for("@brunoborges/copilot-nestjs:SessionCustomizer");
 /** Optional provider: the default permission policy for agents that don't declare one. */
-export const COPILOT_PERMISSION_POLICY = Symbol.for("@copilot-sdk-integrations/nestjs:PermissionPolicy");
+export const COPILOT_PERMISSION_POLICY = Symbol.for("@brunoborges/copilot-nestjs:PermissionPolicy");
 
 /**
  * Optional provider: a `CopilotContextBridge` (or an array of them) contributing ambient context
- * (e.g. from `nestjs-cls`) to agent calls. `CopilotClsModule` from `@copilot-sdk-integrations/nestjs/cls` registers one.
+ * (e.g. from `nestjs-cls`) to agent calls. `CopilotClsModule` from `@brunoborges/copilot-nestjs/cls` registers one.
  */
-export const COPILOT_CONTEXT_BRIDGE = Symbol.for("@copilot-sdk-integrations/nestjs:ContextBridge");
+export const COPILOT_CONTEXT_BRIDGE = Symbol.for("@brunoborges/copilot-nestjs:ContextBridge");
 /** Optional provider: `CopilotInfoOptions` for `CopilotInfoController`. */
-export const COPILOT_INFO_OPTIONS = Symbol.for("@copilot-sdk-integrations/nestjs:InfoOptions");
+export const COPILOT_INFO_OPTIONS = Symbol.for("@brunoborges/copilot-nestjs:InfoOptions");
 
 /** Injection token of a functional agent registered with `CopilotModule.forFeature([defineAgent(...)])`. */
 export function getAgentToken(name: string): string {

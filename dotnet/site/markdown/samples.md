@@ -14,6 +14,9 @@ Each targets .NET 10 and references the library project directly:
 </ItemGroup>
 ```
 
+Your own app can install the released package instead; see
+[Getting started](getting-started.md#add-the-package).
+
 **In this chapter**
 
 - [Overview](#overview)

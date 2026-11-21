@@ -8,23 +8,45 @@ For live agent requests, install and authenticate the
 with an account that can use Copilot. The SDK starts the CLI at runtime.
 The [scripted test runtime](testing.html) needs neither the CLI nor network access.
 
-## Install from source
+## Install
 
-Artifacts are unreleased. From the repository root:
+Releases are published to GitHub Packages, which requires authentication even
+for public packages. Add the repository to your `pom.xml`:
 
-```sh
-cd java/camel
-./mvnw install
+```xml
+<repositories>
+  <repository>
+    <id>copilot-sdk-integrations</id>
+    <url>https://maven.pkg.github.com/brunoborges/copilot-sdk-integrations</url>
+  </repository>
+</repositories>
 ```
 
-This installs `copilot-core`, `copilot-camel-test`, and `copilot-camel` into the local
-Maven repository. Add the component and the Camel components used by your application:
+Add matching credentials to `~/.m2/settings.xml`, using a
+[personal access token (classic)](https://github.com/settings/tokens/new?scopes=read:packages)
+with the `read:packages` scope:
+
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>copilot-sdk-integrations</id>
+      <username>YOUR_GITHUB_USERNAME</username>
+      <password>${env.GITHUB_TOKEN}</password>
+    </server>
+  </servers>
+</settings>
+```
+
+See [Installing released packages](https://github.com/brunoborges/copilot-sdk-integrations#installing-released-packages)
+for Gradle and GitHub Actions setup. Add the component and the Camel components used
+by your application:
 
 ```xml
 <dependency>
   <groupId>com.microsoft</groupId>
   <artifactId>copilot-camel</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.0</version>
 </dependency>
 <dependency>
   <groupId>org.apache.camel</groupId>
@@ -32,6 +54,18 @@ Maven repository. Add the component and the Camel components used by your applic
   <version>4.23.0</version>
 </dependency>
 ```
+
+## Install from source
+
+To try unreleased changes, build from the repository root:
+
+```sh
+cd java/camel
+./mvnw install
+```
+
+This installs `copilot-core`, `copilot-camel-test`, and `copilot-camel` into the local
+Maven repository. Use version `0.1.0-SNAPSHOT` in the dependencies above.
 
 ## Run a route
 

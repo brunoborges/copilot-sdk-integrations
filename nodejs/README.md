@@ -1,6 +1,6 @@
 # Copilot Agents for Node.js
 
-Status: **in development, not published**. Docs:
+Status: **preview**, published to GitHub Packages (npm), not npmjs. Docs:
 [Copilot Agents for NestJS](https://brunoborges.github.io/copilot-sdk-integrations/nestjs/) and
 [Copilot Agents for Fastify](https://brunoborges.github.io/copilot-sdk-integrations/fastify/).
 
@@ -36,10 +36,33 @@ The packages are ESM-only; CommonJS apps load them with `require()` through Node
 
 | Package | Purpose |
 | --- | --- |
-| [`@copilot-sdk-integrations/agent-core`](packages/core/) | Client lifecycle, typed agents, tools, governance, conversations, and the scripted test runtime |
-| [`@copilot-sdk-integrations/ai`](packages/ai/) | AI SDK provider and UI message stream adapter |
-| [`@copilot-sdk-integrations/nestjs`](packages/nestjs/) | `CopilotModule`, decorators, Terminus health indicator, and testing module |
-| [`@copilot-sdk-integrations/fastify`](packages/fastify/) | Fastify plugin: decorators, context hook, error handler, SSE, `useChat` routes (`./ai`), and `buildCopilotTestApp` (`./testing`) |
+| [`@brunoborges/copilot-agent-core`](packages/core/) | Client lifecycle, typed agents, tools, governance, conversations, and the scripted test runtime |
+| [`@brunoborges/copilot-ai`](packages/ai/) | AI SDK provider and UI message stream adapter |
+| [`@brunoborges/copilot-nestjs`](packages/nestjs/) | `CopilotModule`, decorators, Terminus health indicator, and testing module |
+| [`@brunoborges/copilot-fastify`](packages/fastify/) | Fastify plugin: decorators, context hook, error handler, SSE, `useChat` routes (`./ai`), and `buildCopilotTestApp` (`./testing`) |
+
+## Install
+
+The packages are published to GitHub Packages, which requires authentication even for
+public packages. Create a
+[personal access token (classic)](https://github.com/settings/tokens/new?scopes=read:packages)
+with the `read:packages` scope, export it as `GITHUB_TOKEN`, and point the `@brunoborges`
+scope at GitHub Packages in your project's `.npmrc`:
+
+```ini
+@brunoborges:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+Then install the packages you need, for example:
+
+```sh
+npm install @brunoborges/copilot-nestjs
+```
+
+Other dependencies, such as `@microsoft/copilot-sdk`, Zod, NestJS, Fastify, and `ai`, still
+come from npmjs. See [Installing released packages](../README.md#installing-released-packages)
+for every language.
 
 ## Examples
 

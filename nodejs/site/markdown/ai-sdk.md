@@ -4,7 +4,7 @@ title: Vercel AI SDK
 
 # Vercel AI SDK
 
-`@copilot-sdk-integrations/ai` connects Copilot agents to the [Vercel AI SDK](https://ai-sdk.dev)
+`@brunoborges/copilot-ai` connects Copilot agents to the [Vercel AI SDK](https://ai-sdk.dev)
 v7 (`ai@^7`):
 
 - **`useChat` handler.** `streamCopilotChat` turns a `useChat` request into a Copilot turn and
@@ -14,8 +14,11 @@ v7 (`ai@^7`):
 - **Provider.** `createCopilotProvider` returns a `LanguageModelV4`, so `generateText` and
   `streamText` can run on Copilot agents. `createCopilotAgent` returns an AI SDK `Agent`.
 
+Like the other `@brunoborges` packages, it's published to GitHub Packages, so point the scope
+at GitHub Packages in your `.npmrc` first, as shown in [Agent Core](core.md#install):
+
 ```sh
-npm install @copilot-sdk-integrations/ai @copilot-sdk-integrations/agent-core ai
+npm install @brunoborges/copilot-ai @brunoborges/copilot-agent-core ai
 ```
 
 **In this chapter**
@@ -39,8 +42,8 @@ A Next.js route handler:
 
 ```ts
 // app/api/chat/route.ts
-import { createCopilot, defineAgent, permissions } from "@copilot-sdk-integrations/agent-core";
-import { createCopilotChatResponse } from "@copilot-sdk-integrations/ai";
+import { createCopilot, defineAgent, permissions } from "@brunoborges/copilot-agent-core";
+import { createCopilotChatResponse } from "@brunoborges/copilot-ai";
 import type { UIMessage } from "ai";
 
 const copilot = createCopilot();
@@ -81,7 +84,7 @@ Omit `conversationId` for an ephemeral turn.
 `pipeCopilotChatToResponse(res, options)` writes the stream to a Node.js `ServerResponse`:
 
 ```ts
-import { pipeCopilotChatToResponse } from "@copilot-sdk-integrations/ai";
+import { pipeCopilotChatToResponse } from "@brunoborges/copilot-ai";
 
 app.post("/api/chat", express.json(), async (req, res) => {
   await pipeCopilotChatToResponse(res, { agent: copilot.agent(support), messages: req.body.messages, conversationId: req.body.id });
@@ -149,7 +152,7 @@ Suspended turns wait in a process-local `CopilotApprovalStore`:
 For full control, map an event stream yourself:
 
 ```ts
-import { toUIMessageStreamResponse } from "@copilot-sdk-integrations/ai";
+import { toUIMessageStreamResponse } from "@brunoborges/copilot-ai";
 
 const events = copilot.agent(support).stream({ prompt, conversationId });
 return toUIMessageStreamResponse(events, {
@@ -191,7 +194,7 @@ return toUIMessageStreamResponse(events, {
 
 ```ts
 import { generateText, streamText } from "ai";
-import { createCopilotProvider } from "@copilot-sdk-integrations/ai";
+import { createCopilotProvider } from "@brunoborges/copilot-ai";
 
 const copilotAI = createCopilotProvider({ copilot, agent: advisor });
 
@@ -237,7 +240,7 @@ and image models throw `NoSuchModelError`.
 
 ```ts
 import { createAgentUIStreamResponse } from "ai";
-import { createCopilotAgent } from "@copilot-sdk-integrations/ai";
+import { createCopilotAgent } from "@brunoborges/copilot-ai";
 
 const agent = createCopilotAgent({ copilot, agent: advisor });
 await agent.generate({ prompt: "Hello" });

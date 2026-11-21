@@ -1,21 +1,21 @@
 {
-  "name": "@copilot-sdk-integrations/example-nestjs-chat",
+  "name": "@brunoborges/copilot-example-nestjs-chat",
   "version": "0.0.0",
   "private": true,
-  "description": "NestJS (CommonJS) chat example using @copilot-sdk-integrations/nestjs and /ai, with a React useChat UI",
+  "description": "NestJS (CommonJS) chat example using @brunoborges/copilot-nestjs and /ai, with a React useChat UI",
   "license": "MIT",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "node dist/main.js",
     "start:dev": "npm run build && node --enable-source-maps dist/main.js",
-    "web": "npm run dev -w @copilot-sdk-integrations/example-nestjs-chat-web",
+    "web": "npm run dev -w @brunoborges/copilot-example-nestjs-chat-web",
     "test": "vitest run"
   },
   "dependencies": {
-    "@copilot-sdk-integrations/ai": "0.1.0",
-    "@copilot-sdk-integrations/agent-core": "0.1.0",
-    "@copilot-sdk-integrations/nestjs": "0.1.0",
+    "@brunoborges/copilot-ai": "0.1.0",
+    "@brunoborges/copilot-agent-core": "0.1.0",
+    "@brunoborges/copilot-nestjs": "0.1.0",
     "@nestjs/common": "^12.2.0",
     "@nestjs/config": "^12.0.1",
     "@nestjs/core": "^12.2.0",

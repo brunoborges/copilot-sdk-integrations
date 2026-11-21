@@ -1,4 +1,4 @@
-import { CopilotModule, type CopilotModuleOptions } from "@copilot-sdk-integrations/nestjs";
+import { CopilotModule, type CopilotModuleOptions } from "@brunoborges/copilot-nestjs";
 import { ConfigService } from "@nestjs/config";
 
 /**

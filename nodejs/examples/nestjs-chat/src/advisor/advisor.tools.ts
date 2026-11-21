@@ -1,4 +1,4 @@
-import { CopilotTool, type CopilotToolInvocation } from "@copilot-sdk-integrations/nestjs";
+import { CopilotTool, type CopilotToolInvocation } from "@brunoborges/copilot-nestjs";
 import { Injectable, Logger } from "@nestjs/common";
 import { z } from "zod";
 import { NotesService } from "./notes.service";

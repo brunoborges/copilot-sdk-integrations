@@ -16,8 +16,10 @@ variables. `WithReference(chat)` injects a connection string and language-neutra
 such as `CHAT_HOST`, `CHAT_PORT`, `CHAT_CONNECTIONTOKEN` and `CHAT_MODEL`. Each service
 passes them to its own Copilot SDK or framework integration.
 
-> **Status:** preview. The packages are implemented and tested but not yet published to
-> NuGet. Build them from the [repository](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/aspire).
+> **Status:** preview. The packages are implemented, tested, and released to GitHub Packages
+> (not nuget.org). Add the GitHub Packages feed and install them, or build them from the
+> [repository](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/aspire). See
+> [Getting started](getting-started.md#add-the-packages).
 
 ```cs
 var builder = DistributedApplication.CreateBuilder(args);
@@ -119,7 +121,7 @@ version 2 of the Microsoft Copilot SDKs for Node.js (`@microsoft/copilot-sdk` `2
 
 | Chapter | Covers |
 | --- | --- |
-| [Getting started](getting-started.md) | Build the packages, create an AppHost, add the runtime and a model, and connect a first service. |
+| [Getting started](getting-started.md) | Add the packages, create an AppHost, add the runtime and a model, and connect a first service. |
 | [How it works](how-it-works.md) | The runtime resource, model resources, what `WithReference` injects, and the trust boundary. |
 | [Runtime resource](runtime.md) | Executable, container, and existing runtimes; the connection token, the GitHub token, storage, logging, and the runtime binary. |
 | [Models and BYOK providers](models.md) | `AddModel`, reasoning effort, and `WithProvider` for OpenAI, Azure, and Anthropic endpoints. |

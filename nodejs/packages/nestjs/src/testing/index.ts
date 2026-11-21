@@ -1,6 +1,6 @@
 import "reflect-metadata";
-import { CopilotTestRuntime, createTestCopilot, silentLogger, type CopilotTestRuntimeOptions } from "@copilot-sdk-integrations/agent-core/testing";
-import type { CopilotOptions } from "@copilot-sdk-integrations/agent-core";
+import { CopilotTestRuntime, createTestCopilot, silentLogger, type CopilotTestRuntimeOptions } from "@brunoborges/copilot-agent-core/testing";
+import type { CopilotOptions } from "@brunoborges/copilot-agent-core";
 import { Module, type DynamicModule, type ModuleMetadata } from "@nestjs/common";
 import { CopilotModule } from "../copilot.module.js";
 import type { CopilotModuleOptions } from "../interfaces.js";
@@ -19,7 +19,7 @@ export {
   type TestToolCall,
   type TestTurn,
   type TestUsage,
-} from "@copilot-sdk-integrations/agent-core/testing";
+} from "@brunoborges/copilot-agent-core/testing";
 
 export interface CopilotTestingModuleOptions
   extends Omit<CopilotModuleOptions, "copilotFactory" | "cliPath" | "cliUrl" | "clientFactory">,

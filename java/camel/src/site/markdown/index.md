@@ -5,8 +5,8 @@ permission handlers, and session event sinks. The `copilot:` component uses the
 Microsoft Copilot SDK for Java and the same framework-neutral agent engine as the Spring Boot
 and Quarkus integrations.
 
-**Status: available, unreleased.** Build the Maven artifacts from this repository;
-they are not yet published to Maven Central.
+**Status: available.** The Maven artifacts are published to GitHub Packages; see
+[Getting started](getting-started.html) to add the repository and credentials.
 
 ```java
 from("direct:ask")

@@ -1,8 +1,8 @@
 {
-  "name": "@copilot-sdk-integrations/example-express",
+  "name": "@brunoborges/copilot-example-express",
   "version": "0.0.0",
   "private": true,
-  "description": "Plain Express (ESM) example using @copilot-sdk-integrations/agent-core and /ai",
+  "description": "Plain Express (ESM) example using @brunoborges/copilot-agent-core and /ai",
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
@@ -11,8 +11,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@copilot-sdk-integrations/ai": "0.1.0",
-    "@copilot-sdk-integrations/agent-core": "0.1.0",
+    "@brunoborges/copilot-ai": "0.1.0",
+    "@brunoborges/copilot-agent-core": "0.1.0",
     "ai": "^7.0.0",
     "express": "^5.1.0",
     "zod": "^4.0.0"
