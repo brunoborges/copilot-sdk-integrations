@@ -16,11 +16,11 @@ import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.copilot.SystemMessageMode;
-import com.github.copilot.rpc.SectionOverride;
-import com.github.copilot.rpc.SectionOverrideAction;
-import com.github.copilot.rpc.SystemMessageConfig;
-import com.github.copilot.rpc.SystemMessageSections;
+import com.microsoft.copilot.SystemMessageMode;
+import com.microsoft.copilot.rpc.SectionOverride;
+import com.microsoft.copilot.rpc.SectionOverrideAction;
+import com.microsoft.copilot.rpc.SystemMessageConfig;
+import com.microsoft.copilot.rpc.SystemMessageSections;
 import example.agentwire.WireAgent;
 import example.agentwire.BoundWireAgent;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.EnableCopilotAgents;
@@ -63,8 +63,8 @@ class CopilotAgentWireTests {
                     });
             var received = requests.get(5, TimeUnit.SECONDS);
             assertThat(received).extracting(request -> request.get("method").asText()).containsExactly(
-                    "connect", "session.getMetadata", "session.create", "session.send", "session.detach",
-                    "session.getMetadata", "session.resume", "session.send", "session.detach");
+                    "connect", "session.getMetadata", "session.create", "session.sendAndWait", "session.detach",
+                    "session.getMetadata", "session.resume", "session.sendAndWait", "session.detach");
             assertThat(received.get(2).get("params").get("sessionId"))
                     .isEqualTo(received.get(6).get("params").get("sessionId"));
         }
@@ -114,21 +114,21 @@ class CopilotAgentWireTests {
                     });
             var received = requests.get(5, TimeUnit.SECONDS);
             assertThat(received).extracting(request -> request.get("method").asText()).containsExactly(
-                    "connect", "session.getMetadata", "session.create", "session.send", "session.detach",
-                    "session.getMetadata", "session.resume", "session.send", "session.detach");
+                    "connect", "session.getMetadata", "session.create", "session.sendAndWait", "session.detach",
+                    "session.getMetadata", "session.resume", "session.sendAndWait", "session.detach");
             var created = received.get(2).get("params");
             var resumed = received.get(6).get("params");
             assertThat(resumed.get("sessionId")).isEqualTo(created.get("sessionId"));
             assertThat(created.get("systemMessage").get("mode").asText()).isEqualTo(mode.getValue());
             assertThat(resumed.get("systemMessage")).isEqualTo(created.get("systemMessage"));
-            var mcp = created.get("mcpServers");
+            var mcp = created.get("mcp").get("servers");
             assertThat(mcp.get("files").get("type").asText()).isEqualTo("stdio");
             assertThat(mcp.get("files").get("command").asText()).isEqualTo("node");
             assertThat(mcp.get("files").get("tools").get(0).asText()).isEqualTo("read_file");
             assertThat(mcp.get("files").get("timeout").asInt()).isEqualTo(2000);
             assertThat(mcp.get("docs").get("type").asText()).isEqualTo("http");
             assertThat(mcp.get("docs").get("url").asText()).isEqualTo("https://example.com/mcp");
-            assertThat(resumed.get("mcpServers")).isEqualTo(mcp);
+            assertThat(resumed.get("mcp").get("servers")).isEqualTo(mcp);
         }
     }
 
@@ -148,7 +148,7 @@ class CopilotAgentWireTests {
                 String method = request.get("method").asText();
                 var params = request.get("params");
                 Object result = switch (method) {
-                    case "connect" -> Map.of("protocolVersion", 2);
+                    case "connect" -> Map.of("protocolVersion", 4);
                     case "session.getMetadata" -> {
                         var metadata = mapper.createObjectNode();
                         String id = params.get("sessionId").asText();
@@ -161,19 +161,22 @@ class CopilotAgentWireTests {
                         sessions.add(id);
                         yield Map.of("sessionId", id);
                     }
-                    case "session.send" -> Map.of("messageId", "message-" + requests.size());
+                    case "session.sendAndWait" -> {
+                        String id = params.get("sessionId").asText();
+                        var reply = Map.of("type", "assistant.message", "id", UUID.randomUUID().toString(),
+                                "data", Map.of("messageId", "assistant", "content", "reply:" + params.get("prompt").asText()));
+                        String idle = UUID.randomUUID().toString();
+                        write(output, mapper, Map.of("jsonrpc", "2.0", "method", "session.event", "params",
+                                Map.of("sessionId", id, "event", reply)));
+                        write(output, mapper, Map.of("jsonrpc", "2.0", "method", "session.event", "params",
+                                Map.of("sessionId", id, "event", Map.of("type", "session.idle", "id", idle))));
+                        yield Map.of("messageId", "message-" + requests.size(), "aborted", false, "response", reply,
+                                "completionEventId", idle);
+                    }
                     case "session.detach" -> Map.of("success", true);
                     default -> throw new IOException("Unexpected SDK request: " + method);
                 };
                 write(output, mapper, Map.of("jsonrpc", "2.0", "id", request.get("id"), "result", result));
-                if (method.equals("session.send")) {
-                    String id = params.get("sessionId").asText();
-                    write(output, mapper, Map.of("jsonrpc", "2.0", "method", "session.event", "params",
-                            Map.of("sessionId", id, "event", Map.of("type", "assistant.message", "id", UUID.randomUUID().toString(),
-                                    "data", Map.of("messageId", "assistant", "content", "reply:" + params.get("prompt").asText())))));
-                    write(output, mapper, Map.of("jsonrpc", "2.0", "method", "session.event", "params",
-                            Map.of("sessionId", id, "event", Map.of("type", "session.idle", "id", UUID.randomUUID().toString()))));
-                }
             }
         }
         return requests;

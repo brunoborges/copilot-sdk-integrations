@@ -5,8 +5,8 @@ import jakarta.inject.Named;
 
 import org.jboss.logging.Logger;
 
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.generated.SessionEvent;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.generated.SessionEvent;
 
 import com.microsoft.copilot.integrations.core.CopilotAgentContext;
 import com.microsoft.copilot.integrations.core.CopilotAgentListener;

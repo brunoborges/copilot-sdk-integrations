@@ -15,12 +15,12 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.generated.AssistantMessageDeltaEvent;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.generated.ToolExecutionCompleteEvent;
-import com.github.copilot.generated.ToolExecutionStartEvent;
-import com.github.copilot.generated.UserMessageEvent;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.generated.AssistantMessageDeltaEvent;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.generated.ToolExecutionCompleteEvent;
+import com.microsoft.copilot.generated.ToolExecutionStartEvent;
+import com.microsoft.copilot.generated.UserMessageEvent;
 
 import com.microsoft.copilot.integrations.springboot.test.app.AdvisorApplication;
 import com.microsoft.copilot.integrations.springboot.test.app.CodeReviewer;
@@ -162,8 +162,8 @@ class AutoConfigureCopilotTestRuntimeTests {
     void timesOutLikeTheSdk() {
         copilot.anyAgent().delays(Duration.ofSeconds(30)).replies("too late");
 
-        assertThatThrownBy(() -> copilot.client().createSession(new com.github.copilot.rpc.SessionConfig()).join()
-                .sendAndWait(new com.github.copilot.rpc.MessageOptions().setPrompt("slow"), 50).join())
+        assertThatThrownBy(() -> copilot.client().createSession(new com.microsoft.copilot.rpc.CreateSessionOptions()).join()
+                .sendAndWait(new com.microsoft.copilot.rpc.MessageOptions().setPrompt("slow"), 50).join())
                 .hasRootCauseInstanceOf(java.util.concurrent.TimeoutException.class)
                 .hasRootCauseMessage("sendAndWait timed out after 50ms");
     }

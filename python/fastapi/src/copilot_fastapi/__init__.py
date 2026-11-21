@@ -1,4 +1,4 @@
-"""FastAPI integration for the GitHub Copilot SDK."""
+"""FastAPI integration for the Microsoft Copilot SDK."""
 
 from copilot_agents import (
     SHARED,

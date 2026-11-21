@@ -6,7 +6,7 @@ title: Copilot Agents for Quarkus
 
 # Copilot Agents for Quarkus
 
-Use the Copilot Java SDK in Quarkus through a CDI-managed client, typed agents,
+Use the Microsoft Copilot SDK for Java in Quarkus through a CDI-managed client, typed agents,
 and conversation-bound instances. The runtime owns the agent loop and persisted
 history. The extension discovers agents at build time and provides configuration,
 lifecycle, tool binding, and optional health, metrics, and streaming.
@@ -15,7 +15,7 @@ lifecycle, tool binding, and optional health, metrics, and streaming.
 | --- | --- |
 | Java | 21 |
 | Quarkus | 3.40.1 |
-| Copilot Java SDK | 1.0.24 |
+| Microsoft Copilot SDK for Java | 2.0.1 |
 | Extension | `com.microsoft:copilot-quarkus`, `0.1.0-SNAPSHOT` |
 
 The agent API (`com.microsoft.copilot.integrations.core`) is the same one the

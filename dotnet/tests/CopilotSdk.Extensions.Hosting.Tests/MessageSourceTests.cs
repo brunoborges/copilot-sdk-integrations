@@ -1,5 +1,5 @@
 using CopilotSdk.Extensions.Hosting;
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -70,7 +70,7 @@ public sealed class MessageSourceTests
             async () => (await helper.GetResponseAsync("help", cancellationToken: ct)).Text, "ask_helper");
         gateway.Setup = session =>
         {
-            if (session.Config.Tools is { Count: > 0 } tools)
+            if (session.Config.Tools.Definitions is { Count: > 0 } tools)
             {
                 session.OnSendAndWait = async (_, _, token) =>
                 {

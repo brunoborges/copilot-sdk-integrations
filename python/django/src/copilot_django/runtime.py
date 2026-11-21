@@ -7,7 +7,7 @@ from typing import Any
 
 from django.db import close_old_connections
 
-from copilot_agents import CopilotRuntime
+from copilot_agents import CopilotRuntime, connection
 from copilot_agents.executor import ThreadPoolDispatcher
 
 from .conf import get_settings
@@ -16,42 +16,24 @@ _lock = threading.Lock()
 _runtime: CopilotRuntime | None = None
 
 
-def _connection(runtime: dict[str, Any]) -> Any:
-    from copilot import RuntimeConnection
-
-    kind = runtime["CONNECTION"]
-    if kind == "uri":
-        return RuntimeConnection.for_uri(runtime["URL"], connection_token=runtime["CONNECTION_TOKEN"])
-    if kind == "tcp":
-        return RuntimeConnection.for_tcp(
-            port=runtime["PORT"] or 0,
-            connection_token=runtime["CONNECTION_TOKEN"],
-            path=runtime["CLI_PATH"],
-        )
-    if kind == "inprocess":
-        return RuntimeConnection.for_inprocess()
-    return RuntimeConnection.for_stdio(path=runtime["CLI_PATH"])
-
-
 def build_client() -> Any:
     """Create an SDK ``CopilotClient`` from settings (not started)."""
-    from copilot import CopilotClient
-
     conf = get_settings()
     runtime = conf.RUNTIME
     base = conf.base_directory
     base.mkdir(parents=True, exist_ok=True)
-    kwargs: dict[str, Any] = {
-        "connection": _connection(runtime),
-        "base_directory": str(base),
-        "log_level": runtime["LOG_LEVEL"],
-        "mode": runtime["MODE"],
-    }
-    if conf.AUTH.get("GITHUB_TOKEN"):
-        kwargs["github_token"] = conf.AUTH["GITHUB_TOKEN"]
-    if conf.TELEMETRY:
-        kwargs["telemetry"] = {str(k).lower(): v for k, v in conf.TELEMETRY.items()}
-    return CopilotClient(**kwargs)
+    return connection.build_client(
+        runtime["CONNECTION"],
+        mode=runtime["MODE"],
+        url=runtime["URL"],
+        connection_token=runtime["CONNECTION_TOKEN"],
+        cli_path=runtime["CLI_PATH"],
+        port=runtime["PORT"],
+        base_directory=str(base),
+        log_level=runtime["LOG_LEVEL"],
+        github_token=conf.AUTH.get("GITHUB_TOKEN"),
+        telemetry={str(k).lower(): v for k, v in conf.TELEMETRY.items()} if conf.TELEMETRY else None,
+    )
 
 
 def get_runtime() -> CopilotRuntime:

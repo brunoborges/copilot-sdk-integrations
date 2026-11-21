@@ -5,8 +5,8 @@ import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.github.copilot.tool.CopilotTool;
-import com.github.copilot.tool.CopilotToolParam;
+import com.microsoft.copilot.tool.CopilotTool;
+import com.microsoft.copilot.tool.CopilotToolParam;
 
 public class AccessibilityTools {
     private SnapshotStore snapshot;

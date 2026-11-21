@@ -52,7 +52,7 @@ literal of the same shape works too.
 An agent's `tools` (and the per-call `tools` option) accept:
 
 - a `CopilotToolDefinition`, as above;
-- an SDK tool from `defineTool` in `@github/copilot-sdk`;
+- an SDK tool from `defineTool` in `@microsoft/copilot-sdk`;
 - a record of [AI SDK](https://ai-sdk.dev) `tool()` objects keyed by name.
 
 ```ts

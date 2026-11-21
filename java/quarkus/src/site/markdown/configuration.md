@@ -30,7 +30,7 @@ variables, and any additional MicroProfile Config source. All keys live under
 build-time switches by `CopilotBuildTimeConfig` in the deployment module.
 
 Only the extension-owned keys below are mapped automatically. Arbitrary
-`SessionConfig` fields are not forwarded from similarly named properties.
+`CreateSessionOptions` fields are not forwarded from similarly named properties.
 Use SDK beans/customizers for settings not listed here.
 
 <a id="property-format"></a>
@@ -83,19 +83,20 @@ These configure the extension-produced client, not individual conversations.
 | `quarkus.copilot.cli-path` | String | Unset | Explicit local executable; non-blank if supplied. SDK resolves the runtime when omitted. |
 | `quarkus.copilot.cli-args` | List of strings | Empty | Additional local runtime arguments; blank elements are rejected. |
 | `quarkus.copilot.working-directory` | String | Unset | Local process working directory; omitted values retain SDK defaults. Not a per-session working directory. |
-| `quarkus.copilot.log-level` | String | SDK default, `info` | Non-blank, forwarded to SDK/CLI without an extension-specific level enum. |
-| `quarkus.copilot.cli-url` | String | Unset | Existing raw-TCP server address; switches the client away from stdio. |
+| `quarkus.copilot.log-level` | String | Unset (runtime default) | Non-blank, forwarded to a runtime the client starts without an extension-specific level enum. Rejected with `cli-url`. |
+| `quarkus.copilot.cli-url` | String | Unset | Existing TCP server address; switches the client away from stdio. |
 | `quarkus.copilot.tcp-connection-token` | String | Unset | Non-blank external-server token; requires `cli-url`. |
-| `quarkus.copilot.connection` | `stdio`, `inprocess` | Unset | Runtime transport; `inprocess` (experimental) hosts the runtime in the JVM. Unset keeps the SDK default. |
+| `quarkus.copilot.connection` | `stdio`, `inprocess` | Unset | Runtime transport; `inprocess` (experimental) hosts the runtime in the JVM. Unset uses `cli-url` if set, else `COPILOT_SDK_DEFAULT_CONNECTION=inprocess`, else stdio. |
 
-`cli-url` cannot be combined with `cli-path`, non-empty `cli-args`, or
-`working-directory`. Supported address forms include `4321`, `localhost:4321`,
+`cli-url` cannot be combined with `cli-path`, non-empty `cli-args`,
+`working-directory`, or `log-level`. Supported address forms include `4321`, `localhost:4321`,
 `http://localhost:4321`, and `[::1]:4321`. Ports must be 1-65535. URI credentials,
 paths (including a trailing `/`), queries, and fragments are rejected.
 Validation errors name the property but never echo the configured value.
 
-**SDK 1.0.24 uses raw TCP for external-server connections. Neither `http://`
-nor `https://` enables HTTP or TLS.** Use a trusted local connection or a
+**The SDK attaches to external servers over raw TCP
+(`RuntimeConnection.forTcp(host, port)`); only the host and port of `cli-url` are used.
+Neither `http://` nor `https://` enables HTTP or TLS.** Use a trusted local connection or a
 separately secured tunnel, especially when sending a connection token. The
 external server owns its GitHub authentication and process lifecycle.
 
@@ -108,18 +109,13 @@ them, and these client properties are then not applied (`eager-start` and
 ### In-process runtime (experimental)
 
 Set `quarkus.copilot.connection=inprocess` to host the Copilot runtime inside the JVM
-instead of starting a CLI child process. Add JNA and the native runtime for
-each platform you deploy to:
+instead of starting a CLI child process. The SDK already depends on JNA; add the
+native runtime for each platform you deploy to:
 
 ```xml
 <dependency>
-  <groupId>net.java.dev.jna</groupId>
-  <artifactId>jna</artifactId>
-  <version>5.19.1</version>
-</dependency>
-<dependency>
-  <groupId>com.github</groupId>
-  <artifactId>copilot-sdk-java-runtime</artifactId>
+  <groupId>com.microsoft</groupId>
+  <artifactId>copilot-sdk-runtime</artifactId>
   <version>${copilot-sdk.version}</version>
   <classifier>darwin-arm64</classifier>
 </dependency>

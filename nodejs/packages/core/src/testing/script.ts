@@ -1,4 +1,4 @@
-import type { SessionEvent } from "@github/copilot-sdk";
+import type { SessionEvent } from "@microsoft/copilot-sdk";
 
 /** Matches a prompt: substring (string), regular expression, or predicate. */
 export type PromptMatcher = string | RegExp | ((prompt: string) => boolean);

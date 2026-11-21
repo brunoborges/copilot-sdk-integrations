@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { z } from "zod";
-import { defineTool } from "@github/copilot-sdk";
+import { defineTool } from "@microsoft/copilot-sdk";
 import {
   CopilotAbortedError,
   CopilotAdmissionRejectedError,
@@ -44,7 +44,7 @@ describe("createTestCopilot", () => {
     expect(copilot.state).toBe("running");
     expect(runtime.prompts).toEqual(["Hi"]);
     expect(runtime.clientOptions[0]).toMatchObject({ mode: "empty" });
-    expect(runtime.clientOptions[0]!.baseDirectory).not.toMatch(/\.copilot$/);
+    expect((runtime.clientOptions[0]!.runtime as { baseDirectory?: string }).baseDirectory).not.toMatch(/\.copilot$/);
   });
 
   it("is async-disposable and stops the runtime", async () => {
@@ -66,9 +66,9 @@ describe("integration: core over the scripted runtime", () => {
 
     const config = runtime.createdSessions[0]!;
     expect(config.systemMessage).toEqual({ mode: "append", content: "Be helpful." });
-    expect(config.availableTools).toEqual(["custom:*", "mcp:*"]);
-    expect(config.excludedTools).toEqual(["builtin:*"]);
-    expect(typeof config.onPermissionRequest).toBe("function");
+    expect(config.tools?.availableTools).toEqual(["custom:*", "mcp:*"]);
+    expect(config.tools?.excludedTools).toEqual(["builtin:*"]);
+    expect(typeof config.permissions?.onRequest).toBe("function");
     expect(runtime.deletedSessions).toEqual([config.sessionId]);
   });
 
@@ -84,7 +84,7 @@ describe("integration: core over the scripted runtime", () => {
     expect(events).toContainEqual({ type: "reasoning-delta", delta: "thinking" });
     expect(events).toContainEqual(expect.objectContaining({ type: "usage", inputTokens: 3, outputTokens: 2 }));
     expect(events.at(-1)).toMatchObject({ type: "done", text: "Hello" });
-    expect(runtime.createdSessions[0]!.streaming).toBe(true);
+    expect(runtime.createdSessions[0]!.events?.streaming).toBe(true);
   });
 
   describe("structured output", () => {
@@ -226,7 +226,7 @@ describe("integration: core over the scripted runtime", () => {
       const answer = await test.copilot.agent(support).send({ prompt: "Where is order 42?" });
       expect(answer).toMatch(/not available/);
       expect(seen).toHaveLength(0);
-      expect(test.runtime.createdSessions[0]).toMatchObject({ availableTools: ["custom:other"], excludedTools: ["builtin:*"] });
+      expect(test.runtime.createdSessions[0]!.tools).toMatchObject({ availableTools: ["custom:other"], excludedTools: ["builtin:*"] });
     });
 
     it("routes ask-user permissions to the stream consumer", async () => {

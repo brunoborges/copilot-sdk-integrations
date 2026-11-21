@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { SessionHooks } from "@github/copilot-sdk";
+import type { SessionHooks } from "@microsoft/copilot-sdk";
 import { CopilotConfigurationError } from "../src/errors.js";
 import {
   buildToolFilterConfig,

@@ -19,8 +19,8 @@ The extension supplies these native SDK beans:
 
 | Type | Scope | Behavior |
 | --- | --- | --- |
-| `com.github.copilot.rpc.CopilotClientOptions` | `@Singleton`, `@DefaultBean` | Maps and validates the `quarkus.copilot.*` client properties unless the application supplies its own options or client bean. |
-| `com.github.copilot.CopilotClient` | `@Singleton`, `@DefaultBean` | Shared connection owner, built from the options bean and closed by the container on shutdown. |
+| `com.microsoft.copilot.rpc.CopilotClientOptions` | `@Singleton`, `@DefaultBean` | Maps and validates the `quarkus.copilot.*` client properties unless the application supplies its own options or client bean. |
+| `com.microsoft.copilot.CopilotClient` | `@Singleton`, `@DefaultBean` | Shared connection owner, built from the options bean and closed by the container on shutdown. |
 
 Use the SDK directly when the typed agent contract is not appropriate:
 
@@ -29,7 +29,7 @@ import java.util.concurrent.CompletableFuture;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 
 @ApplicationScoped
 public class RuntimeProbe {
@@ -45,10 +45,10 @@ public class RuntimeProbe {
 }
 ```
 
-`CopilotClient`, `CopilotSession`, `SessionConfig`, `ResumeSessionConfig`,
+`CopilotClient`, `CopilotSession`, `CreateSessionOptions`, `ResumeSessionOptions`,
 `SystemMessageConfig`, and `ToolDefinition` are SDK APIs, not reimplementations
 provided by this project. Consult the
-[Java SDK documentation](https://github.com/github/copilot-sdk/tree/main/java)
+[Microsoft Copilot SDK for Java documentation](https://github.com/microsoft/copilot-sdk/tree/main/java)
 for their complete contracts.
 
 Close sessions and subscriptions created directly by application code. Do not
@@ -91,7 +91,9 @@ mapping (`cli-path`, `cli-args`, `working-directory`, `log-level`, `cli-url`,
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 
-import com.github.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.CopilotClientMode;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.RuntimeConnection;
 
 @Singleton
 public class CopilotOptionsProducer {
@@ -99,12 +101,19 @@ public class CopilotOptionsProducer {
     @Produces
     @Singleton
     CopilotClientOptions copilotClientOptions() {
-        return new CopilotClientOptions()
-                .setCliPath("/absolute/path/to/copilot")
-                .setLogLevel("debug");
+        var options = new CopilotClientOptions()
+                .setMode(CopilotClientMode.CODING_AGENT)
+                .setRuntime(RuntimeConnection.forSpawnedStdio("/absolute/path/to/copilot"));
+        options.getObservability().setLogLevel("debug");
+        return options;
     }
 }
 ```
+
+The SDK requires an explicit client mode; the extension's own options use
+`CopilotClientMode.CODING_AGENT`. Without `setRuntime`, the SDK chooses its default
+connection (in-process unless `COPILOT_SDK_DEFAULT_CONNECTION=stdio`), not the
+extension's stdio default.
 
 The default client is still built from your options bean, closed on shutdown,
 and controlled by `quarkus.copilot.eager-start` and
@@ -131,7 +140,9 @@ public class CopilotClientProducer {
     @Produces
     @Singleton
     CopilotClient copilotClient() {
-        return new CopilotClient(new CopilotClientOptions().setCliUrl("localhost:4321"));
+        return new CopilotClient(new CopilotClientOptions()
+                .setMode(CopilotClientMode.CODING_AGENT)
+                .setRuntime(RuntimeConnection.forTcp("localhost", 4321)));
     }
 
     void close(@Disposes CopilotClient client) {

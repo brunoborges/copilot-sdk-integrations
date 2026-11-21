@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import type { PermissionRequest, PermissionRequestResult } from "@github/copilot-sdk";
+import type { PermissionRequest, PermissionRequestResult } from "@microsoft/copilot-sdk";
 import { createCopilot } from "../src/client.js";
 import { getCopilotContext, runWithCopilotContext } from "../src/context.js";
 import { deriveSessionId } from "../src/conversation.js";
@@ -85,15 +85,16 @@ describe("send()", () => {
     }).send({ prompt: "x", tools: [{ name: "extra", description: "Extra", execute: () => "y" }] });
     const config = fake.created[0]!;
     expect(config.model).toBe("gpt-x");
-    expect(config.reasoningEffort).toBe("high");
+    expect(config.inference?.reasoningEffort).toBe("high");
     expect(config.systemMessage).toEqual({ mode: "append", content: "Be nice." });
-    expect(config.tools?.map((t) => t.name).sort()).toEqual(["extra", "lookup"]);
-    expect(config.infiniteSessions).toEqual({ enabled: true });
-    expect(config.mcpServers).toHaveProperty("gh");
-    expect(config.availableTools).toEqual(["custom:*", "mcp:*"]);
-    expect(config.excludedTools).toEqual(["builtin:*"]);
-    expect(config.streaming).toBeUndefined();
-    expect(config.onPermissionRequest).toBeTypeOf("function");
+    expect(config.tools?.definitions?.map((t) => t.name).sort()).toEqual(["extra", "lookup"]);
+    expect(config.state?.infiniteSessions).toEqual({ enabled: true });
+    expect(config.mcp?.servers).toHaveProperty("gh");
+    expect(config.tools?.availableTools).toEqual(["custom:*", "mcp:*"]);
+    expect(config.tools?.excludedTools).toEqual(["builtin:*"]);
+    expect(config.events?.streaming).toBeUndefined();
+    expect(config.permissions?.onRequest).toBeTypeOf("function");
+    expect(config.github).toBeUndefined();
   });
 
   it("resolves MCP headers and env from the request context on every session", async () => {
@@ -116,7 +117,7 @@ describe("send()", () => {
     });
     await agent.send({ prompt: "x", context: { principal: "alice", attributes: { tenant: "t1" } } });
     await runWithCopilotContext({ principal: "bob", attributes: { tenant: "t2" } }, () => agent.send({ prompt: "y" }));
-    const [first, second] = fake.created.map((c) => c.mcpServers as Record<string, Record<string, unknown>>);
+    const [first, second] = fake.created.map((c) => c.mcp?.servers as Record<string, Record<string, unknown>>);
     expect(first!.remote).toEqual({ type: "http", url: "http://mcp", headers: { Authorization: "Bearer token-alice", "X-Static": "1" } });
     expect(first!.local).toEqual({ command: "mcp-local", env: { TENANT: "t1" } });
     expect(first!.plain).toEqual({ type: "http", url: "http://plain", headers: { A: "b" } });
@@ -144,15 +145,15 @@ describe("send()", () => {
   it("leaves toolSearch unset by default and applies a fresh copy when configured", async () => {
     const { fake, copilot } = setup();
     await copilot.agent(bot).send({ prompt: "x" });
-    expect(fake.created[0]!).not.toHaveProperty("toolSearch");
+    expect(fake.created[0]!.tools).not.toHaveProperty("search");
     const toolSearch = { enabled: true, deferThreshold: 10 };
     const agent = copilot.agent({ name: "ts", toolSearch });
     await agent.send({ prompt: "1", conversationId: "c" });
     await agent.send({ prompt: "2", conversationId: "c" });
-    expect(fake.created[1]!.toolSearch).toEqual({ enabled: true, deferThreshold: 10 });
-    expect(fake.created[1]!.toolSearch).not.toBe(toolSearch);
-    expect(fake.resumedConfigs[0]!.config.toolSearch).toEqual({ enabled: true, deferThreshold: 10 });
-    expect(fake.resumedConfigs[0]!.config.toolSearch).not.toBe(fake.created[1]!.toolSearch);
+    expect(fake.created[1]!.tools?.search).toEqual({ enabled: true, deferThreshold: 10 });
+    expect(fake.created[1]!.tools?.search).not.toBe(toolSearch);
+    expect(fake.resumedConfigs[0]!.config.tools?.search).toEqual({ enabled: true, deferThreshold: 10 });
+    expect(fake.resumedConfigs[0]!.config.tools?.search).not.toBe(fake.created[1]!.tools?.search);
   });
 
   it("rejects invalid toolSearch settings", () => {
@@ -180,9 +181,9 @@ describe("send()", () => {
     const { fake, copilot } = setup();
     await copilot.agent({ name: "a1", availableTools: ["custom:*", "builtin:view"], builtInTools: true }).send({ prompt: "x" });
     await copilot.agent({ name: "a2", builtInTools: true }).send({ prompt: "x" });
-    expect(fake.created[0]!.availableTools).toEqual(["custom:*", "builtin:view"]);
-    expect(fake.created[1]!.availableTools).toEqual(["builtin:*", "custom:*", "mcp:*"]);
-    expect(fake.created[1]!.excludedTools).toBeUndefined();
+    expect(fake.created[0]!.tools?.availableTools).toEqual(["custom:*", "builtin:view"]);
+    expect(fake.created[1]!.tools?.availableTools).toEqual(["builtin:*", "custom:*", "mcp:*"]);
+    expect(fake.created[1]!.tools?.excludedTools).toBeUndefined();
   });
 
   it("passes object instructions through", async () => {
@@ -199,7 +200,6 @@ describe("send()", () => {
           session.emit("assistant.message", { messageId: "1", content: "first" });
           session.emit("assistant.message", { messageId: "2", content: "", toolRequests: [] });
           session.emit("assistant.message", { messageId: "3", content: "from sub-agent" }, { agentId: "sub" });
-          session.emit("assistant.message", { messageId: "4", content: "nested", parentToolCallId: "t" });
           session.emit("session.idle", {}, { agentId: "sub" });
           session.emit("assistant.message", { messageId: "5", content: "final" });
           session.emit("session.idle", {});
@@ -265,9 +265,25 @@ describe("send()", () => {
     ).rejects.toBeInstanceOf(CopilotConfigurationError);
     await expect(
       copilot
-        .agent({ name: "c3", configureSession: (config) => ({ ...config, onPermissionRequest: undefined as never }) })
+        .agent({ name: "c3", configureSession: (config) => ({ ...config, permissions: {} }) })
         .send({ prompt: "x" }),
     ).rejects.toBeInstanceOf(CopilotConfigurationError);
+  });
+
+  it("routes a BYOK provider through a default named connection with CAPI disabled", async () => {
+    const { fake, copilot } = setup();
+    const provider = { type: "openai" as const, baseUrl: "https://models.example.com/v1", apiKey: "k" };
+    await copilot.agent({ name: "p1", model: "gpt-4o", provider }).send({ prompt: "x" });
+    await copilot.agent({ name: "p2", provider: { ...provider, wireModel: "deployment", maxOutputTokens: 100 } }).send({ prompt: "x" });
+    const [plain, withModel] = fake.created;
+    expect(plain!.model).toBe("gpt-4o");
+    expect(plain!.github).toEqual({ capi: { enabled: false } });
+    expect(plain!.inference).toEqual({ providers: [{ ...provider, name: "byok" }], defaultProvider: "byok" });
+    expect(withModel!.model).toBe("deployment");
+    expect(withModel!.inference?.providers).toEqual([{ ...provider, name: "byok" }]);
+    expect(withModel!.inference?.models).toEqual([
+      { provider: "byok", id: "deployment", wireModel: "deployment", maxOutputTokens: 100 },
+    ]);
   });
 });
 
@@ -292,10 +308,25 @@ describe("conversations", () => {
     const agent = copilot.agent(bot);
     await agent.send({ prompt: "1", conversationId: "c" });
     await agent.send({ prompt: "2", conversationId: "c" });
-    const resumed = fake.resumedConfigs[0]!.config as Record<string, unknown>;
-    expect(resumed.sessionId).toBeUndefined();
-    expect(resumed.onPermissionRequest).toBeTypeOf("function");
+    const resumed = fake.resumedConfigs[0]!.config;
+    expect(resumed).not.toHaveProperty("sessionId");
+    expect(resumed.permissions?.onRequest).toBeTypeOf("function");
     expect(resumed.systemMessage).toEqual({ mode: "append", content: "Be terse." });
+
+    const nested = copilot.agent({
+      ...bot,
+      name: "nested",
+      configureSession: (config) => ({
+        ...config,
+        filesystem: { trustWorkingDirectory: "session", trackFileChanges: true },
+        instructions: { refreshCustomInstructions: true, skipCustomInstructions: true },
+      }),
+    });
+    await nested.send({ prompt: "1", conversationId: "n" });
+    await nested.send({ prompt: "2", conversationId: "n" });
+    expect(fake.resumedConfigs[1]!.config.filesystem).toEqual({ trackFileChanges: true });
+    expect(fake.resumedConfigs[1]!.config.instructions).toEqual({ skipCustomInstructions: true });
+    expect(fake.created.at(-1)!.filesystem).toEqual({ trustWorkingDirectory: "session", trackFileChanges: true });
   });
 
   for (const metadata of [true, false]) {
@@ -560,7 +591,7 @@ describe("stream()", () => {
     expect(events.at(-1)).toEqual({ type: "done", text: "echo: hi", sessionId: fake.lastSession.sessionId });
     const deltas = events.filter((e) => e.type === "text-delta").map((e) => (e as { delta: string }).delta);
     expect(deltas.join("")).toBe("echo: hi");
-    expect(fake.created[0]!.streaming).toBe(true);
+    expect(fake.created[0]!.events?.streaming).toBe(true);
   });
 
   it("is cold: nothing runs until iterated, and each iteration runs a new turn", async () => {
@@ -876,9 +907,9 @@ describe("context propagation", () => {
         // Invoke callbacks outside the caller's async scope, as the SDK's JSON-RPC handlers do.
         await new Promise((r) => setTimeout(r, 1));
         await session.requestPermission(toolRequest("whoami"));
-        const hooks = session.config.hooks!;
+        const hooks = session.config.hooks!.handlers!;
         await hooks.onPreToolUse!({ toolName: "whoami", toolArgs: {} } as never, { sessionId: session.sessionId });
-        const tool = session.config.tools!.find((t) => t.name === "whoami")!;
+        const tool = session.config.tools!.definitions!.find((t) => t.name === "whoami")!;
         const result = await tool.handler!({}, { sessionId: session.sessionId, toolCallId: "t", toolName: "whoami", arguments: {} });
         session.emit("assistant.message", { messageId: "m", content: String(result) });
         session.emit("session.idle", {});
@@ -931,27 +962,27 @@ describe("context propagation", () => {
     const { fake, copilot } = setup({ tokenResolver });
     await copilot.agent(bot).send({ prompt: "x", context: { principal: "alice" } });
     expect(tokenResolver).toHaveBeenCalledWith(expect.objectContaining({ principal: "alice", agentName: "bot" }));
-    expect(fake.created[0]!.gitHubToken).toBe("token-for-alice");
+    expect(fake.created[0]!.github?.token).toBe("token-for-alice");
     await copilot.agent(bot).send({ prompt: "x", context: { githubToken: "explicit" } });
-    expect(fake.created[1]!.gitHubToken).toBe("explicit");
+    expect(fake.created[1]!.github?.token).toBe("explicit");
     expect(tokenResolver).toHaveBeenCalledTimes(1);
   });
 
   it("does not set a session token by default, but uses githubToken for external runtimes", async () => {
     const a = setup({ githubToken: "service" });
     await a.copilot.agent(bot).send({ prompt: "x" });
-    expect(a.fake.created[0]!.gitHubToken).toBeUndefined();
-    const b = setup({ githubToken: "service", cliUrl: "http://localhost:1" });
+    expect(a.fake.created[0]!.github?.token).toBeUndefined();
+    const b = setup({ githubToken: "service", cliUrl: "localhost:1" });
     await b.copilot.agent(bot).send({ prompt: "x" });
-    expect(b.fake.created[0]!.gitHubToken).toBe("service");
+    expect(b.fake.created[0]!.github?.token).toBe("service");
   });
 
   it("configureSession token settings win", async () => {
     const { fake, copilot } = setup({ tokenResolver: () => "resolved" });
     await copilot
-      .agent({ ...bot, configureSession: (config) => ({ ...config, gitHubToken: "custom" }) })
+      .agent({ ...bot, configureSession: (config) => ({ ...config, github: { token: "custom" } }) })
       .send({ prompt: "x" });
-    expect(fake.created[0]!.gitHubToken).toBe("custom");
+    expect(fake.created[0]!.github?.token).toBe("custom");
   });
 });
 

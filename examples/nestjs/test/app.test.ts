@@ -24,7 +24,7 @@ test("Nest async module configuration applies environment settings without weake
   try {
     assert.equal(await agent.send({ prompt: "configured" }), "ok");
     assert.equal(runtime.runtime.createdSessions[0]?.model, "configured-model");
-    assert.deepEqual(runtime.runtime.createdSessions[0]?.excludedTools, ["builtin:*"]);
+    assert.deepEqual(runtime.runtime.createdSessions[0]?.tools?.excludedTools, ["builtin:*"]);
   } finally {
     await app.close();
     await runtime.stop();

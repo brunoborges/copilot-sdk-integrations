@@ -1,5 +1,5 @@
 /**
- * Framework-neutral declarative agent API and engine for the GitHub Copilot SDK for Java.
+ * Framework-neutral declarative agent API and engine for the Microsoft Copilot SDK for Java.
  *
  * <p>{@code com.microsoft.copilot.integrations.core} is the public API shared by the Spring Boot, Quarkus, and
  * Micronaut integrations. {@code com.microsoft.copilot.integrations.core.internal} is the engine those integrations
@@ -7,7 +7,7 @@
  */
 @SuppressWarnings({"requires-transitive-automatic", "module"})
 module com.microsoft.copilot.integrations.core {
-    requires transitive com.github.copilot.java;
+    requires transitive com.microsoft.copilot.java;
     requires com.fasterxml.jackson.datatype.jsr310;
     requires java.logging;
 

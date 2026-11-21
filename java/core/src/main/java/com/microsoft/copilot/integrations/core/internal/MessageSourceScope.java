@@ -1,6 +1,6 @@
 package com.microsoft.copilot.integrations.core.internal;
 
-import com.github.copilot.rpc.MessageSource;
+import com.microsoft.copilot.rpc.MessageSource;
 
 /**
  * Thread-local holder behind {@link com.microsoft.copilot.integrations.core.CopilotMessageSources} scopes. The invoker

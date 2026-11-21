@@ -14,10 +14,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.generated.SessionEvent;
-import com.github.copilot.generated.UserMessageEvent;
-import com.github.copilot.rpc.SessionMetadata;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.generated.SessionEvent;
+import com.microsoft.copilot.generated.UserMessageEvent;
+import com.microsoft.copilot.rpc.SessionMetadata;
 import com.microsoft.copilot.integrations.core.CopilotSessionMessage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;

@@ -5,7 +5,7 @@ title: Documentation
 # Copilot Agents for .NET
 
 `CopilotSdk.Extensions.Hosting` connects the
-[GitHub Copilot SDK for .NET](https://github.com/github/copilot-sdk/tree/main/dotnet)
+[Microsoft Copilot SDK for .NET](https://github.com/microsoft/copilot-sdk/tree/main/dotnet)
 to the .NET Generic Host: ASP.NET Core APIs, worker services, and back-office apps. One call,
 `AddCopilot`, registers a `Microsoft.Extensions.AI` `IChatClient` backed by Copilot, and owns
 the client lifecycle, conversations, tools with a DI scope per call, a safe default permission
@@ -35,16 +35,16 @@ app.MapPost("/chat", async (IChatClient chat, ChatRequest req, CancellationToken
 | --- | --- |
 | .NET | `net10.0` and `net8.0` (the library multi-targets; the samples and tests target .NET 10) |
 | .NET SDK to build the repository | 10.0 (`global.json`: `10.0.100`, roll forward to the latest feature band) |
-| Copilot SDK (`GitHub.Copilot.SDK`) | `1.0.26` |
+| Microsoft Copilot SDK (`Microsoft.Copilot.SDK`) | `2.0.1` |
 | `Microsoft.Extensions.AI` | `10.11.0` |
-| Hosting, options, and health-check abstractions | `10.0.13` |
+| Hosting, options, and health-check abstractions | `10.0.15` |
 | A GitHub account | with Copilot access (or a [BYOK provider](configuration.md#byok-providers)) |
 
 ## Choose your integration
 
 | Package | Use it when | Depends on |
 | --- | --- | --- |
-| `CopilotSdk.Extensions.Hosting` | You build an ASP.NET Core API, a worker service, or any Generic Host app and want an injectable `IChatClient` backed by Copilot. | `GitHub.Copilot.SDK`, `Microsoft.Extensions.AI`, hosting abstractions |
+| `CopilotSdk.Extensions.Hosting` | You build an ASP.NET Core API, a worker service, or any Generic Host app and want an injectable `IChatClient` backed by Copilot. | `Microsoft.Copilot.SDK`, `Microsoft.Extensions.AI`, hosting abstractions |
 | `CopilotSdk.Aspire` and `CopilotSdk.Aspire.Hosting` | Your app runs in an [Aspire](https://aspire.dev/) AppHost, which starts the Copilot runtime and hands its address to your services. | `CopilotSdk.Extensions.Hosting`, Aspire |
 
 The Aspire packages build on this one, the same way `Aspire.Npgsql` builds on `Npgsql`. They

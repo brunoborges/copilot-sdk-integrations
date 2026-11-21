@@ -19,16 +19,16 @@ const packageVersion = (file, id) => {
 const dotnetPackages = join(here, "..", "Directory.Packages.props");
 const aspirePackages = join(here, "..", "..", "aspire", "Directory.Packages.props");
 const version = "Preview";
-const sdkVersion = packageVersion(dotnetPackages, "GitHub.Copilot.SDK");
+const sdkVersion = packageVersion(dotnetPackages, "Microsoft.Copilot.SDK");
 const meaiVersion = packageVersion(dotnetPackages, "Microsoft.Extensions.AI");
 const aspireVersion = packageVersion(aspirePackages, "Aspire.Hosting");
 
 const site = {
   name: "Copilot Agents for .NET",
-  description: "Guides and reference for using the GitHub Copilot SDK with the .NET Generic Host, ASP.NET Core, Microsoft.Extensions.AI, and Aspire.",
+  description: "Guides and reference for using the Microsoft Copilot SDK with the .NET Generic Host, ASP.NET Core, Microsoft.Extensions.AI, and Aspire.",
   links: [
     { name: "GitHub", href: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/dotnet" },
-    { name: "Copilot .NET SDK", href: "https://github.com/github/copilot-sdk/tree/main/dotnet" },
+    { name: "Microsoft Copilot .NET SDK", href: "https://github.com/microsoft/copilot-sdk/tree/main/dotnet" },
   ],
   menus: [
     {
@@ -60,7 +60,7 @@ const site = {
       ],
     },
   ],
-  footer: `Copilot SDK integrations for .NET &middot; preview &middot; .NET 8 / 10 &middot; Microsoft.Extensions.AI ${meaiVersion} &middot; Aspire ${aspireVersion} &middot; Copilot SDK ${sdkVersion}`,
+  footer: `Copilot SDK integrations for .NET &middot; preview &middot; .NET 8 / 10 &middot; Microsoft.Extensions.AI ${meaiVersion} &middot; Aspire ${aspireVersion} &middot; Microsoft Copilot SDK ${sdkVersion}`,
 };
 
 // ---------------------------------------------------------------------------

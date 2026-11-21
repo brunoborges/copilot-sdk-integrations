@@ -121,7 +121,7 @@ def test_tool_search_is_not_passed_by_default(copilot_runtime):
     copilot_runtime.agent("locked").replies("ok")
     LockedAgent(user=None).ask("x")
     assert LockedAgent.definition().tool_search is None
-    assert "tool_search" not in copilot_runtime.last_session_options("locked")
+    assert "search" not in copilot_runtime.last_session_options("locked").get("tools", {})
 
 
 @pytest.mark.django_db
@@ -133,10 +133,10 @@ def test_tool_search_attribute_passed_to_create_and_resume(copilot_runtime, isol
     copilot_runtime.agent("searching").replies("1", "2")
     conversation = SearchingAgent(user=user).conversation("c1")
     conversation.send("first")
-    created = copilot_runtime.last_session_options("searching")["tool_search"]
+    created = copilot_runtime.last_session_options("searching")["tools"]["search"]
     conversation.send("second")
     assert copilot_runtime.resumed == [conversation.session_id]
-    resumed = copilot_runtime.last_session_options("searching")["tool_search"]
+    resumed = copilot_runtime.last_session_options("searching")["tools"]["search"]
     assert created == resumed == {"enabled": True, "defer_threshold": 5}
     assert created is not resumed
 

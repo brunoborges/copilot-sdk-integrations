@@ -5,7 +5,7 @@ title: Documentation
 # Copilot Agents for Django
 
 `copilot-django` connects the
-[GitHub Copilot SDK for Python](https://github.com/github/copilot-sdk/tree/main/python) to
+[Microsoft Copilot SDK for Python](https://github.com/microsoft/copilot-sdk/tree/main/python) to
 Django. Declare agents as classes, expose ORM-aware functions as tools, and call agents from
 views, management commands, or background tasks, synchronously or with `async`/`await`.
 

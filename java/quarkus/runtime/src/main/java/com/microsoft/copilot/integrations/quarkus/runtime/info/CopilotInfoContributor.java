@@ -7,7 +7,7 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import com.github.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
 
 import io.quarkus.info.runtime.spi.InfoContributor;
 

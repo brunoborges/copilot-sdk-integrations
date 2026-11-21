@@ -7,7 +7,7 @@
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Camel Copilot - Parent</name>
-    <description>Apache Camel component for the GitHub Copilot SDK for Java</description>
+    <description>Apache Camel component for the Microsoft Copilot SDK for Java</description>
     <url>https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/camel</url>
     <licenses>
         <license>
@@ -24,7 +24,7 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <camel.version>4.23.0</camel.version>
-        <copilot-sdk.version>1.0.24</copilot-sdk.version>
+        <copilot-sdk.version>2.0.1</copilot-sdk.version>
         <junit.version>5.13.4</junit.version>
         <assertj.version>3.27.6</assertj.version>
         <mockito.version>5.20.0</mockito.version>
@@ -49,8 +49,8 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>com.github</groupId>
-                <artifactId>copilot-sdk-java</artifactId>
+                <groupId>com.microsoft</groupId>
+                <artifactId>copilot-sdk</artifactId>
                 <version>${copilot-sdk.version}</version>
             </dependency>
             <dependency>

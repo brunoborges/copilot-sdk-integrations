@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal, TypeVar
 
-from copilot.generated.session_events import AssistantMessageData, UserMessageData
+from copilot.session_events import AssistantMessageData, UserMessageData
 
 from .definition import AgentDefinition
 from .invoker import AgentInvoker, _ensure_no_running_loop
@@ -346,7 +346,7 @@ def _timestamp(value: Any) -> datetime | None:
 
 
 async def _read_events(client: Any, session_id: str) -> list[Any]:
-    from copilot.generated.rpc import CursorStatus, SessionsReadPersistedEventsRequest
+    from copilot.rpc import CursorStatus, SessionsReadPersistedEventsRequest
 
     events: list[Any] = []
     cursor: str | None = None

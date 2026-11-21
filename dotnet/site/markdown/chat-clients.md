@@ -197,6 +197,8 @@ To change session or client settings that `CopilotOptions` doesn't cover, use
 
 ## Microsoft Agent Framework
 
-For agent orchestration patterns, use `Microsoft.Agents.AI.GitHub.Copilot`
-(`copilotClient.AsAIAgent(...)`) with the injected `CopilotClient`. No extra package from this
-repository is needed.
+The Agent Framework's Copilot adapter (`Microsoft.Agents.AI.GitHub.Copilot`,
+`copilotClient.AsAIAgent(...)`) is built on the previous SDK (`GitHub.Copilot.SDK` 1.x) and isn't
+compatible with `Microsoft.Copilot.SDK` 2.x, which this library uses. Until a compatible adapter
+ships, wrap the injected `IChatClient` in the Agent Framework's `ChatClientAgent` for agent
+orchestration patterns. No extra package from this repository is needed.

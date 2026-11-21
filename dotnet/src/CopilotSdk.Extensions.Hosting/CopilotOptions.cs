@@ -1,4 +1,4 @@
-using GitHub.Copilot;
+using Microsoft.Copilot;
 
 namespace CopilotSdk.Extensions.Hosting;
 
@@ -69,10 +69,8 @@ public sealed class CopilotOptions
 
     /// <summary>
     /// When <see langword="true"/>, the SDK hosts the runtime in this process instead of starting a child process.
-    /// Experimental in the SDK. Cannot be combined with <see cref="Endpoint"/>, and runtime OpenTelemetry export is
-    /// not available in-process.
+    /// Cannot be combined with <see cref="Endpoint"/>.
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.Experimental("GHCP001")]
     public bool InProcess { get; set; }
 
     /// <summary>
@@ -106,7 +104,10 @@ public sealed class CopilotOptions
     /// </summary>
     public CopilotToolSearchOptions ToolSearch { get; set; } = new();
 
-    /// <summary>Bring-your-own-key model provider, using the SDK's <see cref="ProviderConfig"/> shape.</summary>
+    /// <summary>
+    /// Bring-your-own-key model provider, using the SDK's <see cref="ProviderConfig"/> shape. When set, sessions route
+    /// every model to this provider and Copilot API models are turned off.
+    /// </summary>
     public ProviderConfig? Provider { get; set; }
 
     /// <summary>
@@ -124,7 +125,7 @@ public sealed class CopilotOptions
 
     internal List<Action<CopilotClientOptions>> ClientConfigurations { get; } = [];
 
-    internal List<Action<SessionConfigBase>> SessionConfigurations { get; } = [];
+    internal List<Action<SessionOptionsBase>> SessionConfigurations { get; } = [];
 
     /// <summary>
     /// Configures the SDK's <see cref="CopilotClientOptions"/> directly. Applied after the integration's
@@ -140,13 +141,13 @@ public sealed class CopilotOptions
     }
 
     /// <summary>
-    /// Configures the SDK's <see cref="SessionConfigBase"/> directly, for both new and resumed sessions.
+    /// Configures the SDK's <see cref="SessionOptionsBase"/> directly, for both new and resumed sessions.
     /// Applied after the integration's own settings, so it can replace them (for example
-    /// <see cref="SessionConfigBase.OnPermissionRequest"/>).
+    /// <see cref="SessionPermissionOptions.OnRequest"/>).
     /// </summary>
     /// <param name="configure">The action that configures the session.</param>
     /// <returns>This instance.</returns>
-    public CopilotOptions ConfigureSession(Action<SessionConfigBase> configure)
+    public CopilotOptions ConfigureSession(Action<SessionOptionsBase> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
         SessionConfigurations.Add(configure);

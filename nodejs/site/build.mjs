@@ -18,7 +18,7 @@ const distDir = join(here, "dist");
 
 const corePackage = JSON.parse(readFileSync(join(here, "..", "packages", "core", "package.json"), "utf8"));
 const version = corePackage.version;
-const sdkVersion = corePackage.dependencies["@github/copilot-sdk"].replace(/^\^/, "");
+const sdkVersion = corePackage.dependencies["@microsoft/copilot-sdk"].replace(/^\^/, "");
 
 const sharedMenus = [
   {
@@ -55,7 +55,7 @@ const sites = {
     description: "Guides and API reference for building GitHub Copilot agents in NestJS applications.",
     links: [
       { name: "GitHub", href: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/nodejs/packages/nestjs" },
-      { name: "Copilot Node SDK", href: "https://github.com/github/copilot-sdk/tree/main/nodejs" },
+      { name: "Microsoft Copilot SDK for Node.js", href: "https://github.com/microsoft/copilot-sdk/tree/main/nodejs" },
     ],
     accent: { light: ["#e0234e", "#c41d43", "rgba(224, 35, 78, 0.08)", "rgba(224, 35, 78, 0.12)"], dark: ["#ff6b88", "#ff5577", "rgba(255, 107, 136, 0.14)", "rgba(255, 107, 136, 0.12)"] },
     menus: [
@@ -69,14 +69,14 @@ const sites = {
       },
       ...sharedMenus,
     ],
-    footer: `Copilot Agents for NestJS &middot; ${version} &middot; Node.js 20.19+ / 22.12+ &middot; NestJS 11/12 &middot; AI SDK 7 &middot; Copilot SDK ${sdkVersion}`,
+    footer: `Copilot Agents for NestJS &middot; ${version} &middot; Node.js 20.19+ / 22.12+ &middot; NestJS 11/12 &middot; AI SDK 7 &middot; Microsoft Copilot SDK ${sdkVersion}`,
   },
   fastify: {
     name: "Copilot Agents for Fastify",
     description: "Guides and API reference for building GitHub Copilot agents in Fastify applications.",
     links: [
       { name: "GitHub", href: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/nodejs/packages/fastify" },
-      { name: "Copilot Node SDK", href: "https://github.com/github/copilot-sdk/tree/main/nodejs" },
+      { name: "Microsoft Copilot SDK for Node.js", href: "https://github.com/microsoft/copilot-sdk/tree/main/nodejs" },
     ],
     accent: { light: ["#1f1f1f", "#000000", "rgba(0, 0, 0, 0.06)", "rgba(0, 0, 0, 0.08)"], dark: ["#f2f2f2", "#ffffff", "rgba(255, 255, 255, 0.1)", "rgba(255, 255, 255, 0.08)"] },
     menus: [
@@ -90,7 +90,7 @@ const sites = {
       },
       ...sharedMenus,
     ],
-    footer: `Copilot Agents for Fastify &middot; ${version} &middot; Node.js 20.19+ / 22.12+ &middot; Fastify 5 &middot; AI SDK 7 &middot; Copilot SDK ${sdkVersion}`,
+    footer: `Copilot Agents for Fastify &middot; ${version} &middot; Node.js 20.19+ / 22.12+ &middot; Fastify 5 &middot; AI SDK 7 &middot; Microsoft Copilot SDK ${sdkVersion}`,
   },
 };
 

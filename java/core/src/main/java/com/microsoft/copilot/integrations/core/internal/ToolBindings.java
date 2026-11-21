@@ -13,9 +13,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.github.copilot.rpc.ToolDefinition;
-import com.github.copilot.tool.CopilotTool;
-import com.github.copilot.tool.CopilotToolMetadataProvider;
+import com.microsoft.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.tool.CopilotTool;
+import com.microsoft.copilot.tool.CopilotToolMetadataProvider;
 
 /**
  * Binds {@code toolRefs} beans to SDK tool definitions. A bean is either an SDK {@link ToolDefinition} or declares
@@ -114,7 +114,7 @@ public final class ToolBindings {
             return ((List<?>) result).stream().map(ToolDefinition.class::cast).toList();
         } catch (ClassNotFoundException ex) {
             throw new IllegalArgumentException("Missing generated SDK tool metadata for " + name
-                    + "; enable com.github.copilot.tool.CopilotToolProcessor when compiling " + type.getName(), ex);
+                    + "; enable com.microsoft.copilot.tool.CopilotToolProcessor when compiling " + type.getName(), ex);
         } catch (InvocationTargetException ex) {
             throw new IllegalArgumentException("SDK tool binding failed for " + name, ex.getCause());
         } catch (ReflectiveOperationException ex) {

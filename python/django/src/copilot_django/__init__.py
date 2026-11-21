@@ -1,4 +1,4 @@
-"""Django integration for the GitHub Copilot SDK."""
+"""Django integration for the Microsoft Copilot SDK."""
 
 from copilot_agents import (
     SHARED,

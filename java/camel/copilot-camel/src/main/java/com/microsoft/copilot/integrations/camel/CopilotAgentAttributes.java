@@ -3,7 +3,7 @@ package com.microsoft.copilot.integrations.camel;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 
-import com.github.copilot.SystemMessageMode;
+import com.microsoft.copilot.SystemMessageMode;
 
 import com.microsoft.copilot.integrations.core.CopilotAgent;
 

@@ -3,13 +3,13 @@ package workshop.springboot;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Value;
-import com.github.copilot.rpc.PermissionHandler;
+import com.microsoft.copilot.rpc.PermissionHandler;
 import workshop.common.AccessibilityTools;
 import workshop.common.MuseumTools;
 import workshop.common.BrowserOptions;
 import workshop.common.ToolPermissions;
 import workshop.common.WikipediaResearch;
-import com.github.copilot.rpc.McpStdioServerConfig;
+import com.microsoft.copilot.rpc.McpStdioServerConfig;
 
 @Configuration
 public class ToolsConfiguration {

@@ -18,7 +18,7 @@
 [![Python CI](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/python.yml/badge.svg)](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/python.yml)
 [![Node.js CI](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/nodejs.yml/badge.svg)](https://github.com/brunoborges/copilot-sdk-integrations/actions/workflows/nodejs.yml)
 
-Framework integrations for the [GitHub Copilot SDKs](https://github.com/github/copilot-sdk).
+Framework integrations for the [Microsoft Copilot SDKs](https://github.com/microsoft/copilot-sdk).
 
 The Copilot SDKs give you a low-level client for the Copilot runtime. This repository
 adds idiomatic integration layers for popular application frameworks, so the client,

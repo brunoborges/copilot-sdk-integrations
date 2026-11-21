@@ -1,6 +1,6 @@
 package com.microsoft.copilot.integrations.core;
 
-import com.github.copilot.generated.SessionEvent;
+import com.microsoft.copilot.generated.SessionEvent;
 
 /**
  * A native SDK session event paired with the invocation that observed it.

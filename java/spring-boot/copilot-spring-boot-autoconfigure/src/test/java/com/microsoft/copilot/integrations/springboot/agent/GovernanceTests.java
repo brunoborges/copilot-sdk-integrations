@@ -11,27 +11,27 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.github.copilot.CopilotClient;
-import com.github.copilot.CopilotSession;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.rpc.AgentStopHookInput;
-import com.github.copilot.rpc.AgentStopHookOutput;
-import com.github.copilot.rpc.McpHttpServerConfig;
-import com.github.copilot.rpc.PermissionHandler;
-import com.github.copilot.rpc.PermissionRequest;
-import com.github.copilot.rpc.PermissionRequestResult;
-import com.github.copilot.rpc.PostToolUseHookInput;
-import com.github.copilot.rpc.PostToolUseHookOutput;
-import com.github.copilot.rpc.PreToolUseHookInput;
-import com.github.copilot.rpc.PreToolUseHookOutput;
-import com.github.copilot.rpc.ResumeSessionConfig;
-import com.github.copilot.rpc.SessionConfig;
-import com.github.copilot.rpc.SessionHooks;
-import com.github.copilot.rpc.SessionMetadata;
-import com.github.copilot.rpc.ToolDefinition;
-import com.github.copilot.rpc.ToolNamespace;
-import com.github.copilot.rpc.UserPromptSubmittedHookInput;
-import com.github.copilot.rpc.UserPromptSubmittedHookOutput;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotSession;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.rpc.AgentStopHookInput;
+import com.microsoft.copilot.rpc.AgentStopHookOutput;
+import com.microsoft.copilot.rpc.McpHttpServerConfig;
+import com.microsoft.copilot.rpc.PermissionHandler;
+import com.microsoft.copilot.rpc.PermissionRequest;
+import com.microsoft.copilot.rpc.PermissionRequestResult;
+import com.microsoft.copilot.rpc.PostToolUseHookInput;
+import com.microsoft.copilot.rpc.PostToolUseHookOutput;
+import com.microsoft.copilot.rpc.PreToolUseHookInput;
+import com.microsoft.copilot.rpc.PreToolUseHookOutput;
+import com.microsoft.copilot.rpc.ResumeSessionOptions;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
+import com.microsoft.copilot.rpc.SessionHooks;
+import com.microsoft.copilot.rpc.SessionMetadata;
+import com.microsoft.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.rpc.ToolNamespace;
+import com.microsoft.copilot.rpc.UserPromptSubmittedHookInput;
+import com.microsoft.copilot.rpc.UserPromptSubmittedHookOutput;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.CopilotAgentFactoryBean;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
@@ -72,18 +72,18 @@ class GovernanceTests {
         assertThat(definition.governance().excludedTools()).isNull();
 
         var configs = run(GovernedAgent.class, none);
-        SessionConfig created = (SessionConfig) configs.get(0);
-        ResumeSessionConfig resumed = (ResumeSessionConfig) configs.get(1);
-        assertThat(created.getAvailableTools()).containsExactly("view", "builtin:grep", "custom:*", "mcp:*");
-        assertThat(resumed.getAvailableTools()).isEqualTo(created.getAvailableTools());
-        assertThat(created.getExcludedBuiltInAgents()).containsExactly("explore");
-        assertThat(resumed.getExcludedBuiltInAgents()).containsExactly("explore");
+        CreateSessionOptions created = (CreateSessionOptions) configs.get(0);
+        ResumeSessionOptions resumed = (ResumeSessionOptions) configs.get(1);
+        assertThat(created.getTools().getAvailableTools()).containsExactly("view", "builtin:grep", "custom:*", "mcp:*");
+        assertThat(resumed.getTools().getAvailableTools()).isEqualTo(created.getTools().getAvailableTools());
+        assertThat(created.getAgents().getExcludedBuiltInAgents()).containsExactly("explore");
+        assertThat(resumed.getAgents().getExcludedBuiltInAgents()).containsExactly("explore");
         assertThat(created.getWorkingDirectory()).isEqualTo("/srv/work");
         assertThat(resumed.getWorkingDirectory()).isEqualTo("/srv/work");
-        assertThat(created.getAdditionalDirectories()).containsExactly("/srv/shared");
-        assertThat(resumed.getAdditionalDirectories()).containsExactly("/srv/shared");
-        assertThat(created.getExcludedTools()).isNull();
-        assertThat(created.getHooks()).isNull();
+        assertThat(created.getFilesystem().getAdditionalDirectories()).containsExactly("/srv/shared");
+        assertThat(resumed.getFilesystem().getAdditionalDirectories()).containsExactly("/srv/shared");
+        assertThat(created.getTools().getExcludedTools()).isNull();
+        assertThat(created.getHooks().getHandlers()).isNull();
     }
 
     @Test
@@ -127,8 +127,8 @@ class GovernanceTests {
     void builtInToolsCanBeDisabledButNotCombinedWithAnAllowList() throws Exception {
         assertThat(definition(NoBuiltInsAgent.class, none).governance().excludedTools()).containsExactly("bash", "builtin:*");
         var configs = run(NoBuiltInsAgent.class, none);
-        assertThat(((SessionConfig) configs.get(0)).getExcludedTools()).containsExactly("bash", "builtin:*");
-        assertThat(((ResumeSessionConfig) configs.get(1)).getExcludedTools()).containsExactly("bash", "builtin:*");
+        assertThat(((CreateSessionOptions) configs.get(0)).getTools().getExcludedTools()).containsExactly("bash", "builtin:*");
+        assertThat(((ResumeSessionOptions) configs.get(1)).getTools().getExcludedTools()).containsExactly("bash", "builtin:*");
 
         var enabled = agentSettings("noBuiltInsAgent", null, null, null, true, null, null);
         assertThat(definition(NoBuiltInsAgent.class, enabled).governance().excludedTools()).containsExactly("bash");
@@ -144,15 +144,15 @@ class GovernanceTests {
     void toolSearchIsUnsetByDefault() throws Exception {
         assertThat(definition(HooklessAgent.class, none).governance().toolSearch()).isNull();
         var configs = run(HooklessAgent.class, none);
-        assertThat(((SessionConfig) configs.get(0)).getToolSearch()).isNull();
-        assertThat(((ResumeSessionConfig) configs.get(1)).getToolSearch()).isNull();
+        assertThat(((CreateSessionOptions) configs.get(0)).getTools().getSearch()).isNull();
+        assertThat(((ResumeSessionOptions) configs.get(1)).getTools().getSearch()).isNull();
     }
 
     @Test
     void toolSearchReachesCreateAndResume() throws Exception {
         var configs = run(ToolSearchAgent.class, none);
-        for (var search : List.of(((SessionConfig) configs.get(0)).getToolSearch(),
-                ((ResumeSessionConfig) configs.get(1)).getToolSearch())) {
+        for (var search : List.of(((CreateSessionOptions) configs.get(0)).getTools().getSearch(),
+                ((ResumeSessionOptions) configs.get(1)).getTools().getSearch())) {
             assertThat(search.getEnabled()).isTrue();
             assertThat(search.getDeferThreshold()).isEqualTo(20);
         }
@@ -326,8 +326,8 @@ class GovernanceTests {
                 .containsExactly("EarlyGlobal", "LateGlobal", "Recording", "Recording");
 
         var configs = run(HookedAgent.class, none);
-        SessionHooks created = ((SessionConfig) configs.get(0)).getHooks();
-        SessionHooks resumed = ((ResumeSessionConfig) configs.get(1)).getHooks();
+        SessionHooks created = ((CreateSessionOptions) configs.get(0)).getHooks().getHandlers();
+        SessionHooks resumed = ((ResumeSessionOptions) configs.get(1)).getHooks().getHandlers();
         assertThat(created).isNotNull();
         assertThat(resumed).isNotNull();
 
@@ -518,7 +518,7 @@ class GovernanceTests {
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null))
                 .thenReturn(CompletableFuture.completedFuture(new SessionMetadata()));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
         when(client.resumeSession(anyString(), any())).thenReturn(CompletableFuture.completedFuture(session));
@@ -532,8 +532,8 @@ class GovernanceTests {
                 assertThat(reply.get(5, TimeUnit.SECONDS)).isEqualTo("ok");
             }
         }
-        ArgumentCaptor<SessionConfig> created = ArgumentCaptor.captor();
-        ArgumentCaptor<ResumeSessionConfig> resumed = ArgumentCaptor.captor();
+        ArgumentCaptor<CreateSessionOptions> created = ArgumentCaptor.captor();
+        ArgumentCaptor<ResumeSessionOptions> resumed = ArgumentCaptor.captor();
         verify(client).createSession(created.capture());
         verify(client).resumeSession(anyString(), resumed.capture());
         return List.of(created.getValue(), resumed.getValue());

@@ -1,6 +1,6 @@
 package com.microsoft.copilot.integrations.springboot.reactor;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;

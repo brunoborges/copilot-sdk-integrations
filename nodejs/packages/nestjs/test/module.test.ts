@@ -16,6 +16,7 @@ import {
   implementedByCopilot,
   type CopilotClientAccessor,
   type CopilotModuleOptions,
+  type CopilotClientOptions,
   type CopilotSessionCustomizer,
 } from "../src/index.js";
 import { CopilotTestRuntime, CopilotTestingModule } from "../src/testing/index.js";
@@ -133,13 +134,13 @@ describe("module registration", () => {
       [CopilotTestingModule.forRoot((rt) => rt.onPrompt(/.*/).reply("ok")), CopilotModule.forFeature([EchoAgent])],
       [
         { provide: COPILOT_SESSION_CUSTOMIZER, useValue: customize },
-        { provide: COPILOT_CLIENT_CUSTOMIZER, useValue: [(o: Record<string, unknown>) => ({ ...o, logLevel: "debug" })] },
+        { provide: COPILOT_CLIENT_CUSTOMIZER, useValue: [(o: CopilotClientOptions) => ({ ...o, observability: { ...o.observability, logLevel: "debug" } })] },
       ],
     );
     await ref.get(EchoAgent).say("hi");
     const runtime = ref.get(CopilotTestRuntime);
     expect(runtime.createdSessions[0].model).toBe("custom-echo");
-    expect(runtime.clientOptions[0].logLevel).toBe("debug");
+    expect(runtime.clientOptions[0].observability?.logLevel).toBe("debug");
   });
 });
 

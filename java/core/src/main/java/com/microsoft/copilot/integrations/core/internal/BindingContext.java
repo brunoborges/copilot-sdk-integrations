@@ -2,8 +2,8 @@ package com.microsoft.copilot.integrations.core.internal;
 
 import java.util.function.Function;
 
-import com.github.copilot.rpc.McpServerConfig;
-import com.github.copilot.rpc.ProviderConfig;
+import com.microsoft.copilot.rpc.McpServerConfig;
+import com.microsoft.copilot.rpc.ProviderConfig;
 
 /**
  * Everything needed to resolve an agent definition: beans, placeholders, resources, and configuration. Each

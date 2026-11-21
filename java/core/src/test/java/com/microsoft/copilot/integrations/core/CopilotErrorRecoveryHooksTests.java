@@ -3,9 +3,9 @@ package com.microsoft.copilot.integrations.core;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.github.copilot.rpc.PostToolUseFailureHookInput;
-import com.github.copilot.rpc.PostToolUseHookInput;
-import com.github.copilot.rpc.SessionEndHookInput;
+import com.microsoft.copilot.rpc.PostToolUseFailureHookInput;
+import com.microsoft.copilot.rpc.PostToolUseHookInput;
+import com.microsoft.copilot.rpc.SessionEndHookInput;
 import com.microsoft.copilot.integrations.core.CopilotErrorRecoveryHooks.Category;
 import org.junit.jupiter.api.Test;
 

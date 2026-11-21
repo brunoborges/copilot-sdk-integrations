@@ -55,9 +55,9 @@ For example:
 
 ```xml
 <dependency>
-    <groupId>com.github</groupId>
-    <artifactId>copilot-sdk-java-runtime</artifactId>
-    <version>1.0.24</version>
+    <groupId>com.microsoft</groupId>
+    <artifactId>copilot-sdk-runtime</artifactId>
+    <version>2.0.1</version>
     <classifier>linux-x64</classifier>
 </dependency>
 ```

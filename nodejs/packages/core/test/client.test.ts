@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { RuntimeConnection } from "@github/copilot-sdk";
+import { RuntimeConnection } from "@microsoft/copilot-sdk";
 import { defineAgent } from "../src/define-agent.js";
 import { buildClientOptions, createCopilot } from "../src/client.js";
 import {
@@ -14,40 +14,46 @@ const agentDef = { name: "bot", instructions: "Be terse." };
 afterEach(() => vi.useRealTimers());
 
 describe("buildClientOptions", () => {
-  it("always uses empty mode and defaults baseDirectory", () => {
+  it("always uses empty mode and spawns the bundled runtime over stdio with a default baseDirectory", () => {
     const options = buildClientOptions({}, {});
     expect(options.mode).toBe("empty");
-    expect(options.baseDirectory).toMatch(/\.copilot$/);
-    expect(options.connection).toBeUndefined();
+    expect(options.runtime).toEqual(RuntimeConnection.forSpawnedStdio({ baseDirectory: expect.stringMatching(/\.copilot$/) }));
   });
 
   it("honors COPILOT_CLI_PATH and COPILOT_HOME, with explicit options winning", () => {
     const env = { COPILOT_CLI_PATH: "/env/copilot", COPILOT_HOME: "/env/home" };
     const fromEnv = buildClientOptions({}, env);
-    expect(fromEnv.baseDirectory).toBe("/env/home");
-    expect(fromEnv.connection).toEqual(RuntimeConnection.forStdio({ path: "/env/copilot" }));
+    expect(fromEnv.runtime).toEqual(RuntimeConnection.forSpawnedStdio({ path: "/env/copilot", baseDirectory: "/env/home" }));
     const explicit = buildClientOptions({ cliPath: "/opt/copilot", baseDirectory: "/data" }, env);
-    expect(explicit.connection).toEqual(RuntimeConnection.forStdio({ path: "/opt/copilot" }));
-    expect(explicit.baseDirectory).toBe("/data");
+    expect(explicit.runtime).toEqual(RuntimeConnection.forSpawnedStdio({ path: "/opt/copilot", baseDirectory: "/data" }));
   });
 
   it("passes token, logged-in user and log level", () => {
     const options = buildClientOptions({ githubToken: "ghs_x", useLoggedInUser: false, logLevel: "debug" }, {});
-    expect(options.gitHubToken).toBe("ghs_x");
-    expect(options.useLoggedInUser).toBe(false);
-    expect(options.logLevel).toBe("debug");
+    expect(options.github).toEqual({ token: "ghs_x", useLoggedInUser: false });
+    expect(options.observability).toEqual({ logLevel: "debug" });
   });
 
-  it("connects to an external runtime by URL without a client-level token", () => {
-    const options = buildClientOptions({ cliUrl: "http://localhost:9000", githubToken: "ghs_x" }, {});
-    expect(options.connection).toEqual(RuntimeConnection.forUri("http://localhost:9000"));
-    expect(options.gitHubToken).toBeUndefined();
-    expect(options.baseDirectory).toBeUndefined();
+  it("connects to an external runtime by host and port without runtime startup settings", () => {
+    const options = buildClientOptions({ cliUrl: "http://localhost:9000", githubToken: "ghs_x", baseDirectory: "/data" }, {});
+    expect(options.runtime).toEqual(RuntimeConnection.forTcp("localhost", 9000));
+    expect(options.github).toBeUndefined();
+  });
+
+  it("parses cliUrl forms into host and port", () => {
+    const tcp = (cliUrl: string) => buildClientOptions({ cliUrl }, {}).runtime;
+    expect(tcp("4321")).toEqual(RuntimeConnection.forTcp("localhost", 4321));
+    expect(tcp("runtime.internal:4321")).toEqual(RuntimeConnection.forTcp("runtime.internal", 4321));
+    expect(tcp("https://10.0.0.5:443/")).toEqual(RuntimeConnection.forTcp("10.0.0.5", 443));
+    expect(tcp("[::1]:4321")).toEqual(RuntimeConnection.forTcp("::1", 4321));
+    for (const invalid of ["localhost", "http://localhost:0", "localhost:70000", "[nope]:1", "host:1/path", "a:b:1"]) {
+      expect(() => buildClientOptions({ cliUrl: invalid }, {}), invalid).toThrow(CopilotConfigurationError);
+    }
   });
 
   it("rejects conflicting connection options", () => {
-    expect(() => buildClientOptions({ cliUrl: "http://x", cliPath: "/y" }, {})).toThrow(CopilotConfigurationError);
-    expect(() => buildClientOptions({ cliUrl: "http://x", useLoggedInUser: true }, {})).toThrow(CopilotConfigurationError);
+    expect(() => buildClientOptions({ cliUrl: "localhost:1", cliPath: "/y" }, {})).toThrow(CopilotConfigurationError);
+    expect(() => buildClientOptions({ cliUrl: "localhost:1", useLoggedInUser: true }, {})).toThrow(CopilotConfigurationError);
   });
 });
 
@@ -57,7 +63,7 @@ describe("createCopilot", () => {
     expect(() => createCopilot({ limits: { maxQueuedTurns: -1 } })).toThrow(CopilotConfigurationError);
     expect(() => createCopilot({ responseTimeout: 0 })).toThrow(CopilotConfigurationError);
     expect(() => createCopilot({ startup: "soon" as never })).toThrow(CopilotConfigurationError);
-    expect(() => createCopilot({ cliUrl: "http://x", cliPath: "/y" })).toThrow(CopilotConfigurationError);
+    expect(() => createCopilot({ cliUrl: "localhost:1", cliPath: "/y" })).toThrow(CopilotConfigurationError);
   });
 
   it("starts lazily, once, shared by concurrent callers", async () => {
@@ -86,11 +92,17 @@ describe("createCopilot", () => {
     const copilot = createCopilot({
       clientFactory: factory,
       baseDirectory: "/data",
-      configureClient: (o) => ({ ...o, logLevel: "error" }),
+      configureClient: (o) => ({ ...o, observability: { logLevel: "error" } }),
       logger: silentLogger(),
     });
     await copilot.start();
-    expect(factory).toHaveBeenCalledWith(expect.objectContaining({ mode: "empty", baseDirectory: "/data", logLevel: "error" }));
+    expect(factory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mode: "empty",
+        runtime: expect.objectContaining({ kind: "spawned-stdio", baseDirectory: "/data" }),
+        observability: { logLevel: "error" },
+      }),
+    );
   });
 
   it("start failure marks the client failed, wraps the error, and a later call retries", async () => {

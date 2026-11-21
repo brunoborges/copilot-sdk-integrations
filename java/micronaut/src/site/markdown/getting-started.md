@@ -54,9 +54,9 @@ Add the processor next to Micronaut's own annotation processors:
     </path>
     <!-- Generates tool metadata for @CopilotTool methods -->
     <path>
-        <groupId>com.github</groupId>
-        <artifactId>copilot-sdk-java</artifactId>
-        <version>1.0.24</version>
+        <groupId>com.microsoft</groupId>
+        <artifactId>copilot-sdk</artifactId>
+        <version>2.0.1</version>
     </path>
 </annotationProcessorPaths>
 ```
@@ -79,17 +79,12 @@ micronaut.copilot.cli-path=/absolute/path/to/copilot
 
 To run the runtime inside the JVM instead, set the experimental
 `micronaut.copilot.connection=inprocess` (or `stdio` to pin the child-process
-transport). It needs JNA and the platform runtime artifact:
+transport). It needs the platform runtime artifact (JNA already comes with the SDK):
 
 ```xml
 <dependency>
-  <groupId>net.java.dev.jna</groupId>
-  <artifactId>jna</artifactId>
-  <version>5.19.1</version>
-</dependency>
-<dependency>
-  <groupId>com.github</groupId>
-  <artifactId>copilot-sdk-java-runtime</artifactId>
+  <groupId>com.microsoft</groupId>
+  <artifactId>copilot-sdk-runtime</artifactId>
   <version>${copilot-sdk.version}</version>
   <classifier>darwin-arm64</classifier>
 </dependency>

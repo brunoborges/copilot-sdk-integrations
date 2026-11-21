@@ -27,7 +27,7 @@ Each targets .NET 10 and references the library project directly:
 | Sample | Kind | What it shows |
 | --- | --- | --- |
 | `SupportApi` | ASP.NET Core minimal API | `AddCopilot` with instructions, `WithTools<OrderTools>()` (a scoped repository injected per tool call), a `[RequiresApproval]` refund tool decided by `OnApproval`, multi-turn chat through `ChatOptions.ConversationId`, streaming over server-sent events, structured output, and the `/health` check. |
-| `SupportApi.RawSdk` | ASP.NET Core minimal API | The same endpoints and behavior written directly against `GitHub.Copilot.SDK`, with no integration, for comparison. |
+| `SupportApi.RawSdk` | ASP.NET Core minimal API | The same endpoints and behavior written directly against `Microsoft.Copilot.SDK`, with no integration, for comparison. |
 | `InvoiceWorker` | Worker service | A `BackgroundService` that drains an in-memory invoice queue, extracts an `InvoiceExtraction` record from each invoice, and calls a `lookup_vendor` tool. |
 
 ## Run the samples

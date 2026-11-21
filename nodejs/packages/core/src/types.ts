@@ -6,22 +6,23 @@
  */
 import type {
   CopilotClientOptions,
+  CreateSessionOptions,
   CustomAgentConfig,
   MCPHTTPServerConfig,
   MCPServerConfig,
   MCPStdioServerConfig,
+  NamedProviderConfig,
   PermissionRequest,
   PermissionRequestResult,
-  ProviderConfig,
-  ResumeSessionConfig,
-  SessionConfig,
+  ProviderModelConfig,
+  ResumeSessionOptions,
   SessionEvent,
   SessionHooks,
   SystemMessageConfig,
   Tool as SdkTool,
   MessageSource,
   ToolSearchConfig,
-} from "@github/copilot-sdk";
+} from "@microsoft/copilot-sdk";
 
 // ---------------------------------------------------------------------------
 // Runtime abstraction (implemented by the real SDK client and the test runtime)
@@ -42,8 +43,8 @@ export interface SessionLike {
 export interface ClientLike {
   start(): Promise<void>;
   stop(): Promise<Error[]>;
-  createSession(config: SessionConfig): Promise<SessionLike>;
-  resumeSession(sessionId: string, config: ResumeSessionConfig): Promise<SessionLike>;
+  createSession(config: CreateSessionOptions): Promise<SessionLike>;
+  resumeSession(sessionId: string, config: ResumeSessionOptions): Promise<SessionLike>;
   deleteSession(sessionId: string): Promise<void>;
   getSessionMetadata?(sessionId: string): Promise<unknown | undefined>;
   /** Lists persisted sessions (SDK `SessionMetadata`). Required by `copilot.sessions.list()` and the session cleanup. */
@@ -216,6 +217,14 @@ export type CopilotMCPHTTPServerConfig = Omit<MCPHTTPServerConfig, "headers"> & 
 /** An SDK `MCPServerConfig`, or one with context-derived `headers`/`env`. */
 export type CopilotMCPServerConfig = MCPServerConfig | CopilotMCPStdioServerConfig | CopilotMCPHTTPServerConfig;
 
+/**
+ * A BYOK model provider for one agent: the connection (endpoint, wire API, transport, credentials)
+ * plus optional model settings. Core registers it as the session's only provider connection and
+ * disables Copilot API (CAPI) models, so the agent's `model` is routed to this provider.
+ */
+export type CopilotProviderConfig = Omit<NamedProviderConfig, "name"> &
+  Pick<ProviderModelConfig, "modelId" | "wireModel" | "maxPromptTokens" | "maxContextWindowTokens" | "maxOutputTokens" | "capabilities">;
+
 export type Instructions =
   | string
   | { mode: "append" | "replace"; content: string }
@@ -228,8 +237,8 @@ export interface CopilotAgentDefinition {
   instructions?: Instructions;
   model?: string;
   reasoningEffort?: "low" | "medium" | "high" | "xhigh";
-  /** BYOK provider. */
-  provider?: ProviderConfig;
+  /** BYOK provider. Requires `model` (or the provider's `modelId`/`wireModel`). */
+  provider?: CopilotProviderConfig;
   tools?: ToolInput[];
   /** MCP servers keyed by name. `headers` (remote) and `env` (local) may be functions of the `CopilotContext`. */
   mcpServers?: Record<string, CopilotMCPServerConfig>;
@@ -254,8 +263,8 @@ export interface CopilotAgentDefinition {
    * authenticated identity. A `withMessageSource` scope and calls from another agent's tool take precedence.
    */
   messageSource?: MessageSource;
-  /** Escape hatch: adjust the final SDK session config. */
-  configureSession?: (config: SessionConfig, context: CopilotContext) => SessionConfig;
+  /** Escape hatch: adjust the final SDK session options (used for both create and resume). */
+  configureSession?: (config: CreateSessionOptions, context: CopilotContext) => CreateSessionOptions;
 }
 
 // ---------------------------------------------------------------------------
@@ -332,7 +341,10 @@ export interface CopilotRestartOptions {
 export interface CopilotOptions {
   /** Path to the Copilot CLI/runtime. Falls back to `COPILOT_CLI_PATH`, then the SDK's bundled runtime. */
   cliPath?: string;
-  /** Connect to an existing runtime server instead of spawning one. */
+  /**
+   * Connect to an existing runtime server instead of spawning one: `"host:port"`, `"[ipv6]:port"`,
+   * `"http://host:port"`, or just a port (`localhost`).
+   */
   cliUrl?: string;
   /**
    * "lazy" (default): the runtime starts on the first turn. "eager": core itself does nothing
@@ -344,7 +356,7 @@ export interface CopilotOptions {
   githubToken?: string;
   /** Use the logged-in CLI user. Default: true when no token is configured. */
   useLoggedInUser?: boolean;
-  /** COPILOT_HOME for the runtime. */
+  /** COPILOT_HOME for the spawned runtime. Ignored with `cliUrl` (the external runtime owns its storage). */
   baseDirectory?: string;
   logLevel?: "none" | "error" | "warning" | "info" | "debug" | "all";
   limits?: CopilotLimits;

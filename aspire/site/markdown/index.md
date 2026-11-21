@@ -76,7 +76,7 @@ builder.Build().Run();
 <text class="arch-sub" x="505" y="300" text-anchor="middle">core, NestJS, or raw SDK</text>
 <rect class="arch-node" x="620" y="245" width="170" height="80" rx="10"/>
 <text class="arch-title" x="705" y="276" text-anchor="middle">Python</text>
-<text class="arch-code-sm" x="705" y="300" text-anchor="middle">github-copilot-sdk</text>
+<text class="arch-code-sm" x="705" y="300" text-anchor="middle">microsoft-copilot-sdk</text>
 <path class="arch-tcp" d="M105 325V360M305 325V360M505 325V360M705 325V360M105 360H830V106H767" marker-end="url(#arch-arrow-accent)"/>
 <text class="arch-tcp-text" x="455" y="385" text-anchor="middle">TCP + connection token to the one shared runtime</text>
 </svg>
@@ -93,8 +93,8 @@ See [How it works](how-it-works.md).
 | AppHost resources (`AddCopilot`, `AddModel`, `WithMcpServer`, `WithProvider`, …) | C# | `CopilotSdk.Aspire.Hosting` |
 | .NET service client (`AddCopilotClient`) | C# | `CopilotSdk.Aspire` (optional, .NET only) |
 | Java service | Java | [Spring Boot starter](https://brunoborges.github.io/copilot-sdk-integrations/spring-boot/) or [Quarkus extension](https://brunoborges.github.io/copilot-sdk-integrations/quarkus/) |
-| Node.js service | TypeScript / JavaScript | [NestJS](https://brunoborges.github.io/copilot-sdk-integrations/nestjs/) or [Fastify](https://brunoborges.github.io/copilot-sdk-integrations/fastify/) integration, or `@github/copilot-sdk` |
-| Python service | Python | `github-copilot-sdk` |
+| Node.js service | TypeScript / JavaScript | [NestJS](https://brunoborges.github.io/copilot-sdk-integrations/nestjs/) or [Fastify](https://brunoborges.github.io/copilot-sdk-integrations/fastify/) integration, or `@microsoft/copilot-sdk` |
+| Python service | Python | `microsoft-copilot-sdk` |
 
 Only the AppHost needs .NET. The `CopilotSdk.Aspire` client package is a convenience for .NET
 services. Other services read the injected environment variables through their usual
@@ -104,16 +104,16 @@ configuration.
 
 | Component | Version |
 | --- | --- |
-| Aspire (`Aspire.Hosting`) | `13.6.3` |
+| Aspire (`Aspire.Hosting`) | `13.6.5` |
 | .NET SDK for the AppHost | `10.0` |
 | `CopilotSdk.Aspire.Hosting` target framework | `net8.0` |
 | `CopilotSdk.Aspire` target frameworks | `net10.0`, `net8.0` |
-| Copilot SDK for .NET (`GitHub.Copilot.SDK`) | `1.0.26` |
+| Microsoft Copilot SDK for .NET (`Microsoft.Copilot.SDK`) | `2.0.1` |
 | GitHub account | Copilot access, or a BYOK model provider |
 
 Services in other languages use their own toolchains. The examples in this guide target
-version `1.0.26` of the Copilot SDKs for Node.js and Python, the same version as the .NET SDK
-that the Aspire packages use.
+version 2 of the Microsoft Copilot SDKs for Node.js (`@microsoft/copilot-sdk` `2.0.0`) and Python
+(`microsoft-copilot-sdk` `2.0.1`), the same major version as the .NET SDK that the Aspire packages use.
 
 ## Read by chapter
 
@@ -127,7 +127,7 @@ that the Aspire packages use.
 | [.NET services](dotnet-services.md) | `AddCopilotClient`, keyed clients, client settings, and using core without the client package. |
 | [Java (Spring Boot and Quarkus)](java-services.md) | `AddSpringBootApp`, `AddQuarkusApp`, and the `copilot.*` and `quarkus.copilot.*` properties. |
 | [Node.js](nodejs-services.md) | `AddNodeApp`, `AddJavaScriptApp`, `createCopilot`, and the raw SDK. |
-| [Python](python-services.md) | `AddPythonApp`, `AddUvicornApp`, and `CopilotClient` with `RuntimeConnection.for_uri`. |
+| [Python](python-services.md) | `AddPythonApp`, `AddUvicornApp`, and `CopilotClient` with `RuntimeConnection.for_tcp`. |
 | [Environment variable reference](environment-variables.md) | Every variable a referencing service receives, and how names are formed. |
 | [Telemetry and health](telemetry-and-health.md) | OpenTelemetry export, content capture, and the AppHost and client health checks. |
 | [Deployment](deployment.md) | Publish mode, the container image, secrets, and storage. |
@@ -141,5 +141,5 @@ that the Aspire packages use.
 - [Copilot Agents for Quarkus](https://brunoborges.github.io/copilot-sdk-integrations/quarkus/)
 - [Copilot Agents for NestJS](https://brunoborges.github.io/copilot-sdk-integrations/nestjs/)
 - [Copilot Agents for Fastify](https://brunoborges.github.io/copilot-sdk-integrations/fastify/)
-- [GitHub Copilot SDK](https://github.com/github/copilot-sdk)
+- [Microsoft Copilot SDK](https://github.com/microsoft/copilot-sdk)
 - [Aspire documentation](https://aspire.dev/)

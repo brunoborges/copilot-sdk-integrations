@@ -1,6 +1,6 @@
 package workshop.common;
 
-import com.github.copilot.rpc.PermissionHandler;
+import com.microsoft.copilot.rpc.PermissionHandler;
 import com.microsoft.copilot.integrations.core.CopilotPermissionPolicies;
 
 public final class ToolPermissions {

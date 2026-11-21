@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-import com.github.copilot.generated.SessionIdleEvent;
+import com.microsoft.copilot.generated.SessionIdleEvent;
 import com.microsoft.copilot.integrations.core.CopilotAgentContext;
 import com.microsoft.copilot.integrations.core.CopilotAgentEvent;
 import org.junit.jupiter.api.Test;

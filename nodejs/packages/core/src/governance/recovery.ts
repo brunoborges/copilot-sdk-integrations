@@ -1,4 +1,4 @@
-import type { SessionHooks } from "@github/copilot-sdk";
+import type { SessionHooks } from "@microsoft/copilot-sdk";
 import { CopilotConfigurationError } from "../errors.js";
 
 export type ToolResultCategory = "permission_denied" | "shell_error" | "tool_failure" | "normal";
@@ -97,7 +97,7 @@ export function classifySdkError(
 }
 
 /**
- * Opt-in hooks that keep an agent working when tools fail, based on the Copilot SDK cookbook's
+ * Opt-in hooks that keep an agent working when tools fail, based on the Microsoft Copilot SDK cookbook's
  * error-recovery recipe:
  *
  * - `onPostToolUse` / `onPostToolUseFailure`: classify the output by phrase lists and add an

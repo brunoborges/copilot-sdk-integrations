@@ -10,14 +10,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.copilot.ConnectionState;
-import com.github.copilot.generated.AssistantMessageDeltaEvent;
-import com.github.copilot.generated.SessionEvent;
-import com.github.copilot.generated.SessionIdleEvent;
-import com.github.copilot.rpc.MessageOptions;
-import com.github.copilot.rpc.ResumeSessionConfig;
-import com.github.copilot.rpc.SessionConfig;
-import com.github.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.ConnectionState;
+import com.microsoft.copilot.generated.AssistantMessageDeltaEvent;
+import com.microsoft.copilot.generated.SessionEvent;
+import com.microsoft.copilot.generated.SessionIdleEvent;
+import com.microsoft.copilot.rpc.MessageOptions;
+import com.microsoft.copilot.rpc.ResumeSessionOptions;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
+import com.microsoft.copilot.rpc.SessionToolOptions;
+import com.microsoft.copilot.rpc.ToolDefinition;
 
 import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
 
@@ -36,13 +37,13 @@ class CopilotTestRuntimeTests {
         assertThat(client.getState()).isEqualTo(ConnectionState.CONNECTED);
         assertThat(client.getSessionMetadata("missing").join()).isNull();
 
-        var session = client.createSession(new SessionConfig().setSessionId("s1").setModel("gpt-5")).join();
+        var session = client.createSession(new CreateSessionOptions().setSessionId("s1").setModel("gpt-5")).join();
         assertThat(session.getSessionId()).isEqualTo("s1");
         assertThat(client.getSessionMetadata("s1").join().getSessionId()).isEqualTo("s1");
         assertThat(client.listSessions().join()).extracting(m -> m.getSessionId()).containsExactly("s1");
         assertThat(client.getLastSessionId().join()).isEqualTo("s1");
-        assertThat(client.createSession(new SessionConfig().setSessionId("s1"))).isCompletedExceptionally();
-        assertThat(client.resumeSession("missing", new ResumeSessionConfig())).isCompletedExceptionally();
+        assertThat(client.createSession(new CreateSessionOptions().setSessionId("s1"))).isCompletedExceptionally();
+        assertThat(client.resumeSession("missing", new ResumeSessionOptions())).isCompletedExceptionally();
 
         client.deleteSession("s1").join();
         assertThat(client.getSessionMetadata("s1").join()).isNull();
@@ -53,7 +54,7 @@ class CopilotTestRuntimeTests {
     @Test
     void returnsStructuredOutput() {
         runtime.anyAgent().replyJson(new Verdict("approved", 9));
-        var session = runtime.client().createSession(new SessionConfig()).join();
+        var session = runtime.client().createSession(new CreateSessionOptions()).join();
 
         var verdict = session.sendAndWait(new MessageOptions().setPrompt("Judge"), Verdict.class, 1_000).join();
         assertThat(verdict).isEqualTo(new Verdict("approved", 9));
@@ -72,14 +73,14 @@ class CopilotTestRuntimeTests {
         String reply;
         var call = telemetry.start("a", "");
         try (CopilotAgentTelemetry.Scope scope = call.openScope()) {
-            reply = runtime.client().createSession(new SessionConfig()).join().sendAndWait("hi").join().getData()
+            reply = runtime.client().createSession(new CreateSessionOptions()).join().sendAndWait("hi").join().getData()
                     .content();
         }
         assertThat(reply).isEqualTo("from a");
-        assertThat(runtime.client().createSession(new SessionConfig()).join().sendAndWait("hey").join().getData()
+        assertThat(runtime.client().createSession(new CreateSessionOptions()).join().sendAndWait("hey").join().getData()
                 .content()).isEqualTo("fallback");
         try (var scope = runtime.actAs("b")) {
-            runtime.client().createSession(new SessionConfig()).join().sendAndWait("yo").join();
+            runtime.client().createSession(new CreateSessionOptions()).join().sendAndWait("yo").join();
         }
         assertThat(runtime.prompts("a")).containsExactly("hi");
         assertThat(runtime.prompts(null)).containsExactly("hey");
@@ -94,7 +95,8 @@ class CopilotTestRuntimeTests {
                         (Integer) invocation.getArguments().get("a") + (Integer) invocation.getArguments().get("b")));
         runtime.anyAgent().invokesTool("add", Map.of("a", 2, "b", 3)).streams("5")
                 .repliesUsing(turn -> "sum=" + turn.toolResult("add"));
-        var session = runtime.client().createSession(new SessionConfig().setTools(List.of(tool))).join();
+        var session = runtime.client().createSession(
+                new CreateSessionOptions().setTools(new SessionToolOptions().setDefinitions(List.of(tool)))).join();
         var deltas = new CopyOnWriteArrayList<String>();
         session.on(AssistantMessageDeltaEvent.class, event -> deltas.add(event.getData().deltaContent()));
 
@@ -107,7 +109,7 @@ class CopilotTestRuntimeTests {
     @Test
     void failsUnknownToolCallsClearly() {
         runtime.anyAgent().invokesTool("missing").replies("never");
-        var session = runtime.client().createSession(new SessionConfig().setSessionId("s")).join();
+        var session = runtime.client().createSession(new CreateSessionOptions().setSessionId("s")).join();
 
         assertThatThrownBy(() -> session.sendAndWait("go").join()).hasRootCauseMessage(
                 "Scripted tool call 'missing' does not match a tool registered with Copilot session 's'; "
@@ -117,7 +119,7 @@ class CopilotTestRuntimeTests {
     @Test
     void abortsInFlightTurns() throws Exception {
         runtime.anyAgent().delays(Duration.ofSeconds(30)).replies("never");
-        var session = runtime.client().createSession(new SessionConfig().setSessionId("s")).join();
+        var session = runtime.client().createSession(new CreateSessionOptions().setSessionId("s")).join();
         var events = new CopyOnWriteArrayList<SessionEvent>();
         session.on(events::add);
 
@@ -134,7 +136,7 @@ class CopilotTestRuntimeTests {
     void rejectsUnsupportedOperations() {
         assertThatThrownBy(() -> runtime.client().listModels()).isInstanceOf(UnsupportedOperationException.class)
                 .hasMessageStartingWith("CopilotClient.listModels() is not supported by CopilotTestRuntime");
-        var session = runtime.client().createSession(new SessionConfig()).join();
+        var session = runtime.client().createSession(new CreateSessionOptions()).join();
         assertThatThrownBy(() -> session.compact()).isInstanceOf(UnsupportedOperationException.class)
                 .hasMessageStartingWith("CopilotSession.compact() is not supported");
         session.close();
@@ -144,14 +146,14 @@ class CopilotTestRuntimeTests {
     @Test
     void resetForgetsEverything() {
         runtime.anyAgent().replies("hi");
-        runtime.client().createSession(new SessionConfig().setSessionId("s")).join().sendAndWait("hello").join();
+        runtime.client().createSession(new CreateSessionOptions().setSessionId("s")).join().sendAndWait("hello").join();
 
         runtime.reset();
 
         assertThat(runtime.sessions()).isEmpty();
         assertThat(runtime.prompts()).isEmpty();
         assertThat(runtime.client().getSessionMetadata("s").join()).isNull();
-        assertThat(runtime.client().createSession(new SessionConfig()).join().sendAndWait("again"))
+        assertThat(runtime.client().createSession(new CreateSessionOptions()).join().sendAndWait("again"))
                 .failsWithin(Duration.ofSeconds(1));
     }
 }

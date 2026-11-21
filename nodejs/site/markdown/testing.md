@@ -99,9 +99,9 @@ between tests.
 | `receivedPrompts` | `{ sessionId, messageId, prompt }` per prompt. |
 | `toolCalls` | `{ sessionId, toolCallId, name, args, result?, error?, approved }` per call. |
 | `permissionRequests` | `{ sessionId, request, result }` per permission request. |
-| `createdSessions` / `resumedSessions` / `deletedSessions` | Session configs and ids. |
+| `createdSessions` / `resumedSessions` / `deletedSessions` | SDK session options (`CreateSessionOptions` / `ResumeSessionOptions`) and ids. |
 | `sessionIds`, `sessionConfig(id)`, `events(id)` | Per-session state and emitted events. |
-| `clientOptions` | Options the client was created with (tokens, `cliUrl`, ...). |
+| `clientOptions` | SDK client options the client was created with (`mode`, `runtime`, `github`, `observability`, ...). |
 | `abortCount` | Number of `session.abort()` calls. |
 | `started` / `stopped` | Runtime lifecycle. |
 | `crashCount` | Number of `crash()` calls. |

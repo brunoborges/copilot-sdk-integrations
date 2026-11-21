@@ -3,7 +3,7 @@
  * SDK's observable behavior: sessions persist until deleted, resume of an unknown id fails with
  * "Session not found", `session.on` only receives live events, and a turn ends with `session.idle`.
  */
-import type { PermissionRequest, PermissionRequestResult, ResumeSessionConfig, SessionConfig, SessionEvent } from "@github/copilot-sdk";
+import type { CreateSessionOptions, PermissionRequest, PermissionRequestResult, ResumeSessionOptions, SessionEvent } from "@microsoft/copilot-sdk";
 import { vi } from "vitest";
 import type { ClientLike, SessionLike, StructuredSchema } from "../src/types.js";
 
@@ -76,7 +76,7 @@ export class FakeSession implements SessionLike {
 
   constructor(
     readonly sessionId: string,
-    readonly config: SessionConfig | ResumeSessionConfig,
+    readonly config: CreateSessionOptions | ResumeSessionOptions,
     readonly client: FakeClient,
     readonly resumed: boolean,
   ) {}
@@ -88,7 +88,7 @@ export class FakeSession implements SessionLike {
 
   /** Simulates the runtime asking for a permission (as the SDK's JSON-RPC handler would). */
   async requestPermission(request: PermissionRequest): Promise<PermissionRequestResult> {
-    return (await this.config.onPermissionRequest!(request, { sessionId: this.sessionId })) as PermissionRequestResult;
+    return (await this.config.permissions!.onRequest!(request, { sessionId: this.sessionId })) as PermissionRequestResult;
   }
 
   on(handler: (event: SessionEvent) => void): () => void {
@@ -142,12 +142,12 @@ export interface FakeClientOptions {
 
 export class FakeClient implements ClientLike {
   script: TurnScript;
-  readonly persisted = new Map<string, SessionConfig>();
+  readonly persisted = new Map<string, CreateSessionOptions>();
   readonly sessions: FakeSession[] = [];
   readonly sends: Array<{ sessionId: string; prompt: string }> = [];
   readonly responseSchemas: unknown[] = [];
-  readonly created: SessionConfig[] = [];
-  readonly resumedConfigs: Array<{ sessionId: string; config: ResumeSessionConfig }> = [];
+  readonly created: CreateSessionOptions[] = [];
+  readonly resumedConfigs: Array<{ sessionId: string; config: ResumeSessionOptions }> = [];
   readonly start = vi.fn(async () => {
     await this.startImpl?.();
   });
@@ -169,7 +169,7 @@ export class FakeClient implements ClientLike {
     }
   }
 
-  async createSession(config: SessionConfig): Promise<SessionLike> {
+  async createSession(config: CreateSessionOptions): Promise<SessionLike> {
     const id = config.sessionId!;
     if (this.persisted.has(id)) throw new Error(`Session ${id} already exists`);
     this.persisted.set(id, config);
@@ -179,7 +179,7 @@ export class FakeClient implements ClientLike {
     return session;
   }
 
-  async resumeSession(sessionId: string, config: ResumeSessionConfig): Promise<SessionLike> {
+  async resumeSession(sessionId: string, config: ResumeSessionOptions): Promise<SessionLike> {
     if (!this.persisted.has(sessionId)) throw new Error(`Session not found: ${sessionId}`);
     this.resumedConfigs.push({ sessionId, config });
     const session = new FakeSession(sessionId, config, this, true);

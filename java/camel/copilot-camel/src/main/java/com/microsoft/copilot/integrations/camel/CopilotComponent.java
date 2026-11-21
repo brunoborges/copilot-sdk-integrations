@@ -14,7 +14,7 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.ExtendedStartupListener;
 import org.apache.camel.support.DefaultComponent;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 
 import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
 import com.microsoft.copilot.integrations.core.CopilotAgents;
@@ -26,6 +26,7 @@ import com.microsoft.copilot.integrations.core.internal.CopilotAgentExecutionLim
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentFactory;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentSettings;
+import com.microsoft.copilot.integrations.core.internal.CopilotRuntimeConnections;
 import com.microsoft.copilot.integrations.core.internal.CopilotSessionCleaner;
 import com.microsoft.copilot.integrations.core.internal.CopilotSessionStorage;
 import com.microsoft.copilot.integrations.core.internal.DefaultCopilotAgents;
@@ -102,7 +103,9 @@ public class CopilotComponent extends DefaultComponent {
         var registry = getCamelContext().getRegistry();
         CopilotClient selected = client != null ? client : registry.findSingleByType(CopilotClient.class);
         ownsClient = selected == null;
-        activeClient = selected != null ? selected : new CopilotClient();
+        activeClient = selected != null ? selected
+                : new CopilotClient(CopilotRuntimeConnections.clientOptions(CONFIG_PREFIX + ".",
+                        new CopilotRuntimeConnections.Settings(null, null, null, null, null, null, null)));
         CopilotAgentTelemetry selectedTelemetry = telemetry != null ? telemetry
                 : registry.findSingleByType(CopilotAgentTelemetry.class);
         invoker = new CopilotAgentInvoker(activeClient,

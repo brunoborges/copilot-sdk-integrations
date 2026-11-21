@@ -2,11 +2,11 @@ package com.microsoft.copilot.integrations.springboot.example;
 
 import java.io.IOException;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.rpc.MessageOptions;
-import com.github.copilot.rpc.PermissionHandler;
-import com.github.copilot.rpc.SessionConfig;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.rpc.MessageOptions;
+import com.microsoft.copilot.rpc.PermissionHandler;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,7 +23,9 @@ public class ConversationService {
     }
 
     public void converse(String conversationId, String prompt) throws IOException {
-        try (var session = client.createSession(new SessionConfig().setOnPermissionRequest(permissions)).join();
+        var options = new CreateSessionOptions();
+        options.getPermissions().setOnRequest(permissions);
+        try (var session = client.createSession(options).join();
                 var messages = session.on(AssistantMessageEvent.class,
                         event -> output.onMessage(conversationId, session.getSessionId(), event))) {
             session.sendAndWait(new MessageOptions().setPrompt(prompt)).join();

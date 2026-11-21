@@ -182,9 +182,9 @@ to `429` with `Retry-After`). See [Operations](operations.md#http-error-mapping)
 
 ## Runtime and credentials
 
-By default the integration spawns the Copilot runtime bundled with `@github/copilot-sdk`.
-Point it elsewhere with `cliPath` (or the `COPILOT_CLI_PATH` environment variable), or
-connect to a running runtime server with `cliUrl`.
+By default the integration spawns the Copilot runtime bundled with `@microsoft/copilot-sdk`
+as a child process over stdio. Point it elsewhere with `cliPath` (or the `COPILOT_CLI_PATH`
+environment variable), or connect to a running runtime server over TCP with `cliUrl`.
 
 Authentication, in order of precedence:
 

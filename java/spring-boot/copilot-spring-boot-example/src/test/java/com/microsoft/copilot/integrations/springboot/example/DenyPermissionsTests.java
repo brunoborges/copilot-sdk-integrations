@@ -1,7 +1,7 @@
 package com.microsoft.copilot.integrations.springboot.example;
 
-import com.github.copilot.rpc.PermissionInvocation;
-import com.github.copilot.rpc.PermissionRequest;
+import com.microsoft.copilot.rpc.PermissionInvocation;
+import com.microsoft.copilot.rpc.PermissionRequest;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 

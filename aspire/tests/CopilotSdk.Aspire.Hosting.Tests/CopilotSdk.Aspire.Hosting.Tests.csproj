@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <!-- GHCP001: tests may exercise experimental GitHub.Copilot.SDK APIs. -->
-    <NoWarn>$(NoWarn);GHCP001</NoWarn>
+    <!-- MCPSDK001: tests may exercise experimental Microsoft.Copilot.SDK APIs. -->
+    <NoWarn>$(NoWarn);MCPSDK001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

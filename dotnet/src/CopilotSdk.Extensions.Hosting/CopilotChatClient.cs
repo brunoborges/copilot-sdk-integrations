@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Channels;
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -251,7 +251,7 @@ internal sealed class CopilotChatClient : IChatClient
             cts.CancelAfter(agentOptions.ResponseTimeout);
             var token = cts.Token;
 
-            SessionConfigBase config = request.ConversationId is null
+            SessionOptionsBase config = request.ConversationId is null
                 ? _sessionConfigFactory.CreateSessionConfig(AgentName, _services)
                 : _sessionConfigFactory.CreateResumeSessionConfig(AgentName, _services);
 
@@ -261,11 +261,11 @@ internal sealed class CopilotChatClient : IChatClient
             if (request.ConversationId is { } id)
             {
                 Log.Resuming(_logger, AgentName, id);
-                session = await _gateway.ResumeSessionAsync(id, (ResumeSessionConfig)config, token).ConfigureAwait(false);
+                session = await _gateway.ResumeSessionAsync(id, (ResumeSessionOptions)config, token).ConfigureAwait(false);
             }
             else
             {
-                session = await _gateway.CreateSessionAsync((SessionConfig)config, token).ConfigureAwait(false);
+                session = await _gateway.CreateSessionAsync((CreateSessionOptions)config, token).ConfigureAwait(false);
                 Log.Created(_logger, AgentName, session.SessionId);
             }
 
@@ -299,11 +299,11 @@ internal sealed class CopilotChatClient : IChatClient
         }
     }
 
-    private static void ApplyChatOptions(SessionConfigBase config, ChatRequest request, ChatOptions? options, bool streaming, ToolContextHolder toolContext)
+    private static void ApplyChatOptions(SessionOptionsBase config, ChatRequest request, ChatOptions? options, bool streaming, ToolContextHolder toolContext)
     {
         if (streaming)
         {
-            config.Streaming = true;
+            config.Events.Streaming = true;
         }
 
         if (options is null)
@@ -318,7 +318,7 @@ internal sealed class CopilotChatClient : IChatClient
 
         if (MapReasoningEffort(options.Reasoning?.Effort) is { } effort)
         {
-            config.ReasoningEffort = effort;
+            config.Inference.ReasoningEffort = effort;
         }
 
         if (options.Tools is { Count: > 0 } tools)
@@ -331,9 +331,9 @@ internal sealed class CopilotChatClient : IChatClient
                     continue;
                 }
 
-                config.Tools ??= [];
-                config.Tools.Add(new TurnToolFunction(function, toolContext));
-                if (config.AvailableTools is { } available && !available.Contains(function.Name))
+                config.Tools.Definitions ??= [];
+                config.Tools.Definitions.Add(new TurnToolFunction(function, toolContext));
+                if (config.Tools.AvailableTools is { } available && !available.Contains(function.Name))
                 {
                     available.Add(function.Name);
                 }
@@ -371,7 +371,7 @@ internal sealed class CopilotChatClient : IChatClient
         return CopilotMessageSources.Parse(agentOptions.MessageSource);
     }
 
-    internal static void AppendSystemMessage(SessionConfigBase config, string text)
+    internal static void AppendSystemMessage(SessionOptionsBase config, string text)
     {
         if (config.SystemMessage is null)
         {
@@ -395,7 +395,7 @@ internal sealed class CopilotChatClient : IChatClient
     };
 
     private async Task ApplyTokenProviderAsync(
-        SessionConfigBase config,
+        SessionOptionsBase config,
         CopilotOptions agentOptions,
         ExecutionContext? callerContext,
         CancellationToken cancellationToken)
@@ -415,8 +415,8 @@ internal sealed class CopilotChatClient : IChatClient
 
         // The SDK calls this on its RPC thread. Initial requests reuse the token fetched on the caller's thread;
         // refreshes call the provider again under the caller's ExecutionContext (HttpContext, Activity, ...).
-        config.GitHubToken = null;
-        config.GitHubTokenProvider = async args =>
+        config.GitHub.Token = null;
+        config.GitHub.TokenProvider = async args =>
         {
             var token = initialToken;
             if (args.Reason == GitHubTokenRequestReason.Refresh)
@@ -426,7 +426,7 @@ internal sealed class CopilotChatClient : IChatClient
 
             return string.IsNullOrEmpty(token)
                 ? GitHubTokenProviderResult.Cancel()
-                : GitHubTokenProviderResult.FromToken(new GitHub.Copilot.GitHubToken { AccessToken = token, ExpiresIn = TokenExpiresInSeconds });
+                : GitHubTokenProviderResult.FromToken(new Microsoft.Copilot.GitHubToken { AccessToken = token, ExpiresIn = TokenExpiresInSeconds });
         };
     }
 

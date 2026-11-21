@@ -2,7 +2,7 @@
 
 Run GitHub Copilot agents as route steps and expose Camel routes to agents as tools,
 permission handlers, and session event sinks. The `copilot:` component uses the
-Copilot SDK for Java and the same framework-neutral agent engine as the Spring Boot
+Microsoft Copilot SDK for Java and the same framework-neutral agent engine as the Spring Boot
 and Quarkus integrations.
 
 **Status: available, unreleased.** Build the Maven artifacts from this repository;

@@ -45,7 +45,7 @@ micronaut.copilot.providers.foundry.wire-api=responses
 | Property | Effect |
 | --- | --- |
 | `micronaut.copilot.cli-path` | Path to an installed Copilot CLI to start as a child process. |
-| `micronaut.copilot.cli-url` | Connect to an existing TCP server instead of starting one. |
+| `micronaut.copilot.cli-url` | Connect to an existing TCP server (port, `host:port`, or `http://host:port`; only host and port are used) instead of starting one. Cannot be combined with `log-level` or local-process settings. |
 | `micronaut.copilot.connection` | `stdio` or the experimental `inprocess`. See [Getting started](getting-started.html#connect-to-the-runtime). |
 
 <a id="switches"></a>

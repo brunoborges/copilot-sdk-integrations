@@ -7,7 +7,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.function.Predicate;
 
-import com.github.copilot.tool.CopilotTool;
+import com.microsoft.copilot.tool.CopilotTool;
 import com.microsoft.copilot.integrations.core.CopilotAgentHooks;
 import com.microsoft.copilot.integrations.core.CopilotAgentHooksFor;
 import com.microsoft.copilot.integrations.core.GlobalCopilotAgentHooks;

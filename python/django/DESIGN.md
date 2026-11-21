@@ -3,8 +3,8 @@
 Status: **M1 and M2 implemented** (`python/core`, `python/django`); M3–M5 remain proposals. See README.md for deviations.
 
 This document designs `copilot-django`, a Django integration for the
-[GitHub Copilot SDK for Python](https://github.com/github/copilot-sdk/tree/main/python)
-(`github-copilot-sdk`). It follows the repository's [design goals](../../README.md#design-goals)
+[Microsoft Copilot SDK for Python](https://github.com/microsoft/copilot-sdk/tree/main/python)
+(`microsoft-copilot-sdk`). It follows the repository's [design goals](../../README.md#design-goals)
 and mirrors the concepts of the Java integrations (`java-core`, Spring Boot, Quarkus) in
 Django idioms, so the integrations feel like siblings.
 
@@ -130,10 +130,10 @@ This is the integration's most important correctness property and gets dedicated
 
 | `RUNTIME.CONNECTION` | SDK | When |
 | --- | --- | --- |
-| `"stdio"` (default) | `RuntimeConnection.for_stdio()` | Development and single-process servers. One runtime process per Django worker. |
-| `"uri"` | `RuntimeConnection.for_uri(url, connection_token=...)` | Production with many workers: one shared, externally managed runtime (sidecar or container) that also shares session state. |
-| `"tcp"` | `RuntimeConnection.for_tcp()` | SDK-managed TCP runtime. |
-| `"inprocess"` | `RuntimeConnection.for_inprocess()` | Experimental FFI transport; opt-in only. |
+| `"stdio"` (default) | `RuntimeConnection.for_spawned_stdio()` | Development and single-process servers. One runtime process per Django worker. |
+| `"uri"` | `RuntimeConnection.for_tcp(host, port, connection_token=...)`, with `URL` parsed into host and port | Production with many workers: one shared, externally managed runtime (sidecar or container) that also shares session state. |
+| `"tcp"` | `RuntimeConnection.for_spawned_tcp()` | SDK-managed TCP runtime. |
+| `"inprocess"` | `RuntimeConnection.for_inprocess()` | Native runtime loaded into the Django process (the SDK's own default); opt-in here. |
 
 Session state lives in the runtime's `base_directory` (`COPILOT_HOME`); see §10 for
 multi-host implications.
@@ -154,7 +154,7 @@ COPILOT = {
         "LOG_LEVEL": "info",
         "START": "lazy",                  # lazy | eager
         "REQUEST_TIMEOUT": 300,           # seconds per invocation
-        "MODE": "copilot-cli",            # SDK client mode; "empty" for minimal runtimes
+        "MODE": "coding-agent",           # SDK client mode; "empty" for minimal runtimes
     },
     "AUTH": {
         "GITHUB_TOKEN": env("GITHUB_TOKEN", default=None),  # ambient/shared identity
@@ -197,7 +197,7 @@ System checks (`manage.py check`; they never start the runtime):
 | `copilot.E003` | `available_tools` combined with `excluded_tools` or `built_in_tools = False` (as in Java). |
 | `copilot.E004` | BYOK provider without a model. |
 | `copilot.E005` | Duplicate agent or tool name. |
-| `copilot.W001` | Runtime binary not downloaded in `stdio` mode; suggests `copilot_download_runtime`. |
+| `copilot.W001` | Runtime not downloaded for an SDK-managed connection (`stdio`, `tcp`, `inprocess`); suggests `copilot_download_runtime`. |
 | `copilot.W002` | An agent uses an allow-all permission policy. |
 | `copilot.W003` | `stdio` with likely many workers (`WEB_CONCURRENCY > 2`); suggests `uri`. |
 
@@ -302,7 +302,11 @@ Consequences:
 
 `customizers = [fn]` receive the fully built SDK `create_session` keyword arguments and may
 modify them (mirrors `CopilotAgentCustomizer`). This is the supported path to SDK options
-the integration does not model yet.
+the integration does not model yet. The arguments follow the SDK's `CreateSessionOptions`:
+most settings sit in nested groups such as `tools`, `permissions`, `inference`, `mcp` and
+`hooks` (for example `options["tools"]["excluded_tools"]`), while `model`,
+`system_message` and `working_directory` stay at the top level. A customizer must not remove
+`options["permissions"]["on_request"]`.
 
 ## 7. Streaming
 

@@ -15,12 +15,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.copilot.CopilotClient;
-import com.github.copilot.CopilotSession;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.rpc.MessageOptions;
-import com.github.copilot.rpc.SessionConfig;
-import com.github.copilot.rpc.SessionMetadata;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotSession;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.rpc.MessageOptions;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
+import com.microsoft.copilot.rpc.SessionMetadata;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.CopilotAgentFactoryBean;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsProperties;
@@ -245,7 +245,7 @@ class MethodContractTests {
 
     private void stubCreate(CopilotSession session) {
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
     }

@@ -154,8 +154,8 @@ the call and the turn continues.
 | --- | --- |
 | `prompts()` / `prompts(agent)` | Prompt text in arrival order. |
 | `receivedPrompts()` | `CopilotTestPrompt` records with the agent, session ID, `MessageOptions`, and requested response type. |
-| `sessions()` / `sessions(agent)` / `session(id)` / `lastSession(agent)` | `CopilotTestSession` snapshots: creation `SessionConfig`, resume configurations, prompts, `resumed()`, `model()`, `tools()`, `toolNames()`, `systemMessage()`, and `mcpServers()`. |
-| `sessionConfig(agent)` | The creation `SessionConfig` of the agent's latest session. |
+| `sessions()` / `sessions(agent)` / `session(id)` / `lastSession(agent)` | `CopilotTestSession` snapshots: creation `CreateSessionOptions`, resume configurations, prompts, `resumed()`, `model()`, `tools()`, `toolNames()`, `systemMessage()`, and `mcpServers()`. |
+| `sessionConfig(agent)` | The creation `CreateSessionOptions` of the agent's latest session. |
 | `toolCalls()` / `toolCalls(agent)` | `CopilotTestToolCall` records with the arguments, the result or failure, and `succeeded()`. |
 | `aborts()` | IDs of the sessions on which `abort()` was called. |
 
@@ -220,7 +220,7 @@ supply an image name.
 ```java
 import jakarta.inject.Inject;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 
 import com.microsoft.copilot.integrations.quarkus.test.testcontainers.CopilotContainerTestResource;
 import io.quarkus.test.common.ResourceArg;

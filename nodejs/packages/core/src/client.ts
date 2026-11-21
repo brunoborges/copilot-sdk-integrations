@@ -1,6 +1,7 @@
+import { isIPv6 } from "node:net";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { CopilotClient, RuntimeConnection, type CopilotClientOptions } from "@github/copilot-sdk";
+import { CopilotClient, RuntimeConnection, type CopilotClientOptions } from "@microsoft/copilot-sdk";
 import { createAgentHandle } from "./agent.js";
 import { AdmissionController, ConversationLocks } from "./conversation.js";
 import { createCopilotSessions } from "./sessions.js";
@@ -74,7 +75,7 @@ export const defaultClientFactory: ClientFactory = (options) => new CopilotClien
 /** Translates `CopilotOptions` into SDK `CopilotClientOptions` (before `configureClient`). */
 export function buildClientOptions(options: CopilotOptions, env: NodeJS.ProcessEnv = process.env): CopilotClientOptions {
   const result: CopilotClientOptions = { mode: "empty" };
-  if (options.logLevel !== undefined) result.logLevel = options.logLevel;
+  if (options.logLevel !== undefined) result.observability = { logLevel: options.logLevel };
   if (options.cliUrl !== undefined) {
     if (options.cliPath !== undefined) {
       throw new CopilotConfigurationError("cliUrl and cliPath are mutually exclusive");
@@ -84,19 +85,57 @@ export function buildClientOptions(options: CopilotOptions, env: NodeJS.ProcessE
         "useLoggedInUser cannot be combined with cliUrl: an external runtime manages its own authentication",
       );
     }
-    result.connection = RuntimeConnection.forUri(options.cliUrl);
-    // The SDK rejects client-level gitHubToken for external servers; the agent executor uses
-    // `githubToken` as the per-session fallback instead.
-    if (options.baseDirectory !== undefined) result.baseDirectory = options.baseDirectory;
+    const { host, port } = parseCliUrl(options.cliUrl);
+    // The SDK rejects runtime startup settings (client-level GitHub token, base directory) for an
+    // attached runtime; the agent executor uses `githubToken` as the per-session fallback instead.
+    result.runtime = RuntimeConnection.forTcp(host, port);
   } else {
     const cliPath = options.cliPath ?? nonBlank(env.COPILOT_CLI_PATH);
-    if (cliPath !== undefined) result.connection = RuntimeConnection.forStdio({ path: cliPath });
-    if (options.githubToken !== undefined) result.gitHubToken = options.githubToken;
-    if (options.useLoggedInUser !== undefined) result.useLoggedInUser = options.useLoggedInUser;
     // Empty mode requires an explicit persistence location; default to the runtime's own default.
-    result.baseDirectory = options.baseDirectory ?? nonBlank(env.COPILOT_HOME) ?? join(homedir(), ".copilot");
+    const baseDirectory = options.baseDirectory ?? nonBlank(env.COPILOT_HOME) ?? join(homedir(), ".copilot");
+    // Spawn the runtime as a child process over stdio (the SDK's bundled runtime unless a path is set),
+    // rather than the SDK's in-process default.
+    result.runtime = RuntimeConnection.forSpawnedStdio(cliPath !== undefined ? { path: cliPath, baseDirectory } : { baseDirectory });
+    if (options.githubToken !== undefined || options.useLoggedInUser !== undefined) {
+      result.github = {};
+      if (options.githubToken !== undefined) result.github.token = options.githubToken;
+      if (options.useLoggedInUser !== undefined) result.github.useLoggedInUser = options.useLoggedInUser;
+    }
   }
   return result;
+}
+
+/**
+ * Parses `cliUrl` into the host and port of an existing runtime. Accepts `"port"`, `"host:port"`,
+ * `"[ipv6]:port"`, and `"http(s)://host:port"` (an optional trailing `/`).
+ */
+export function parseCliUrl(cliUrl: string): { host: string; port: number } {
+  const invalid = () =>
+    new CopilotConfigurationError(
+      `Invalid cliUrl ${JSON.stringify(cliUrl)}: expected "host:port", "[ipv6]:port", "http://host:port", or "port"`,
+    );
+  const value = String(cliUrl).trim().replace(/^https?:\/\//i, "").replace(/\/$/, "");
+  let host: string;
+  let portText: string;
+  const ipv6 = /^\[([^\]]+)\]:(\d+)$/.exec(value);
+  if (/^\d+$/.test(value)) {
+    host = "localhost";
+    portText = value;
+  } else if (ipv6) {
+    host = ipv6[1]!;
+    portText = ipv6[2]!;
+    if (!isIPv6(host)) throw invalid();
+  } else {
+    const parts = value.split(":");
+    if (parts.length !== 2 || !/^\d+$/.test(parts[1]!) || /[\s/\\?#@[\]]/.test(parts[0]!)) throw invalid();
+    host = parts[0] || "localhost";
+    portText = parts[1]!;
+  }
+  const port = Number(portText);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new CopilotConfigurationError(`Invalid port in cliUrl ${JSON.stringify(cliUrl)}: expected 1-65535`);
+  }
+  return { host, port };
 }
 
 /**

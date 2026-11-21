@@ -19,7 +19,7 @@ const packageVersion = (file, id) => {
 const dotnetPackages = join(here, "..", "..", "dotnet", "Directory.Packages.props");
 const aspirePackages = join(here, "..", "Directory.Packages.props");
 const version = "Preview";
-const sdkVersion = packageVersion(dotnetPackages, "GitHub.Copilot.SDK");
+const sdkVersion = packageVersion(dotnetPackages, "Microsoft.Copilot.SDK");
 const aspireVersion = packageVersion(aspirePackages, "Aspire.Hosting");
 
 const site = {
@@ -65,7 +65,7 @@ const site = {
       ],
     },
   ],
-  footer: `Copilot SDK integration for Aspire &middot; preview &middot; Aspire ${aspireVersion} &middot; .NET 10 AppHost &middot; Copilot SDK ${sdkVersion}`,
+  footer: `Copilot SDK integration for Aspire &middot; preview &middot; Aspire ${aspireVersion} &middot; .NET 10 AppHost &middot; Microsoft Copilot SDK ${sdkVersion}`,
 };
 
 // ---------------------------------------------------------------------------

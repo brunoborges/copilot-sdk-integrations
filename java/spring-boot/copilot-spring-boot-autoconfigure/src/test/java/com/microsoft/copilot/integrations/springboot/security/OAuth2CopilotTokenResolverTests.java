@@ -2,7 +2,7 @@ package com.microsoft.copilot.integrations.springboot.security;
 
 import java.time.Instant;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 import com.microsoft.copilot.integrations.core.CopilotAgentContext;
 import com.microsoft.copilot.integrations.core.CopilotTokenResolver;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotSecurityAutoConfiguration;

@@ -8,12 +8,12 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.CopilotSession;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.generated.SessionEvent;
-import com.github.copilot.generated.SessionIdleEvent;
-import com.github.copilot.rpc.SessionConfig;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotSession;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.generated.SessionEvent;
+import com.microsoft.copilot.generated.SessionIdleEvent;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
 import com.microsoft.copilot.integrations.core.ConversationId;
 import com.microsoft.copilot.integrations.core.CopilotAgent;
 import com.microsoft.copilot.integrations.core.CopilotAgentEvent;
@@ -52,7 +52,7 @@ class CopilotReactorIntegrationTests {
         reply.setData(data);
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
         when(session.on(any())).thenAnswer(invocation -> {
@@ -73,9 +73,9 @@ class CopilotReactorIntegrationTests {
                             .assertNext(event -> assertThat(event.event()).isSameAs(reply))
                             .assertNext(event -> assertThat(event.event()).isInstanceOf(SessionIdleEvent.class))
                             .verifyComplete();
-                    ArgumentCaptor<SessionConfig> config = ArgumentCaptor.captor();
+                    ArgumentCaptor<CreateSessionOptions> config = ArgumentCaptor.captor();
                     verify(client).createSession(config.capture());
-                    assertThat(config.getValue().isStreaming()).isTrue();
+                    assertThat(config.getValue().getEvents().isStreaming()).isTrue();
                     verify(subscription).close();
                     verify(session).close();
                 });
@@ -95,7 +95,7 @@ class CopilotReactorIntegrationTests {
         var handler = new AtomicReference<Consumer<SessionEvent>>();
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
         when(session.on(any())).thenAnswer(invocation -> {
@@ -129,7 +129,7 @@ class CopilotReactorIntegrationTests {
         reply.setData(data);
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
         when(session.on(any())).thenReturn(mock(Closeable.class));
@@ -184,7 +184,7 @@ class CopilotReactorIntegrationTests {
         var handler = new AtomicReference<Consumer<SessionEvent>>();
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
         when(session.on(any())).thenAnswer(invocation -> {

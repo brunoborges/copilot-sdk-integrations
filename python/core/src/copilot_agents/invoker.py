@@ -16,7 +16,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any, TypeVar
 
-from copilot.generated.session_events import (
+from copilot.session_events import (
     AssistantMessageData,
     ToolExecutionCompleteData,
     ToolExecutionStartData,
@@ -25,7 +25,7 @@ from pydantic import BaseModel, ValidationError
 
 from . import context as _context
 from .context import AgentContext
-from .definition import AgentDefinition
+from .definition import AgentDefinition, byok_options
 from .errors import (
     CopilotConfigurationError,
     CopilotConversationNotFound,
@@ -294,47 +294,54 @@ class AgentInvoker:
             async def permission_handler(request: Any, invocation: Any) -> Any:
                 return await binding.dispatcher.call(lambda: policy(request, invocation))
 
-        options: dict[str, Any] = {"on_permission_request": permission_handler}
+        options: dict[str, Any] = {"permissions": {"on_request": permission_handler}}
+
+        def group(name: str) -> dict[str, Any]:
+            return options.setdefault(name, {})
+
         if definition.model:
             options["model"] = definition.model
         if definition.reasoning_effort:
-            options["reasoning_effort"] = definition.reasoning_effort
+            group("inference")["reasoning_effort"] = definition.reasoning_effort
         system_message = definition.system_message_config()
         if system_message:
             options["system_message"] = system_message
         if definition.tools:
-            options["tools"] = [
+            group("tools")["definitions"] = [
                 tool.to_sdk_tool(agent, dispatcher, expose_errors=definition.expose_tool_errors)
                 for tool in definition.tools
             ]
         if definition.mcp_servers:
-            options["mcp_servers"] = {k: dict(v) for k, v in definition.mcp_servers.items()}
+            group("mcp")["servers"] = {k: dict(v) for k, v in definition.mcp_servers.items()}
         if definition.provider is not None:
-            options["provider"] = dict(definition.provider)
+            inference, github = byok_options(definition.provider, definition.model)
+            group("inference").update(inference)
+            group("github").update(github)
         if definition.available_tools:
-            options["available_tools"] = list(definition.available_tools)
+            group("tools")["available_tools"] = list(definition.available_tools)
         if definition.tool_search is not None:
-            options["tool_search"] = dict(definition.tool_search)
+            group("tools")["search"] = dict(definition.tool_search)
         excluded = definition.effective_excluded_tools
         if excluded:
-            options["excluded_tools"] = list(excluded)
+            group("tools")["excluded_tools"] = list(excluded)
         if definition.excluded_built_in_agents:
-            options["excluded_builtin_agents"] = list(definition.excluded_built_in_agents)
+            group("agents")["excluded_builtin_agents"] = list(definition.excluded_built_in_agents)
         directory = definition.working_directory
         if callable(directory):
             directory = directory(ctx)
         if directory:
             options["working_directory"] = str(directory)
         if definition.additional_directories:
-            options["additional_directories"] = list(definition.additional_directories)
+            group("filesystem")["additional_directories"] = list(definition.additional_directories)
         hooks = session_hooks(definition.hooks, agent, dispatcher)
         if hooks:
-            options["hooks"] = hooks
+            group("hooks")["handlers"] = hooks
         if token is not None:
-            options["github_token"] = token
+            group("github")["token"] = token
         for customizer in definition.customizers:
             customizer(options, ctx)
-        if "on_permission_request" not in options or options["on_permission_request"] is None:
+        permissions = options.get("permissions")
+        if not isinstance(permissions, Mapping) or permissions.get("on_request") is None:
             raise CopilotConfigurationError("Agent customizers must not remove the permission handler")
         return options
 

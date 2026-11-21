@@ -8,13 +8,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.CopilotSession;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.rpc.MessageOptions;
-import com.github.copilot.rpc.MessageSource;
-import com.github.copilot.rpc.SessionConfig;
-import com.github.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotSession;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.rpc.MessageOptions;
+import com.microsoft.copilot.rpc.MessageSource;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
+import com.microsoft.copilot.rpc.ToolDefinition;
 import com.microsoft.copilot.integrations.core.ConversationId;
 import com.microsoft.copilot.integrations.core.CopilotAgent;
 import com.microsoft.copilot.integrations.core.CopilotMessageSources;
@@ -49,7 +49,7 @@ class MessageSourceTests {
     void runtime() {
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            var config = invocation.<SessionConfig>getArgument(0);
+            var config = invocation.<CreateSessionOptions>getArgument(0);
             var session = mock(CopilotSession.class);
             when(session.getSessionId()).thenReturn(config.getSessionId());
             when(session.on(any())).thenReturn(mock(Closeable.class));
@@ -57,7 +57,7 @@ class MessageSourceTests {
                 MessageOptions options = send.getArgument(0);
                 sent.add(options);
                 if (options.getPrompt().equals("delegate")) {
-                    var tool = config.getTools().stream().filter(t -> t.name().equals("ask_helper")).findFirst()
+                    var tool = config.getTools().getDefinitions().stream().filter(t -> t.name().equals("ask_helper")).findFirst()
                             .orElseThrow();
                     tool.handler().invoke(null).get(5, TimeUnit.SECONDS);
                 }

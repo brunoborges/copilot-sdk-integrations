@@ -1,4 +1,4 @@
-"""Framework-neutral agent layer for the GitHub Copilot SDK for Python."""
+"""Framework-neutral agent layer for the Microsoft Copilot SDK for Python."""
 
 from . import policies
 from .context import AgentContext, current_invocation

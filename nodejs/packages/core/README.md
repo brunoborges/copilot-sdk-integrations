@@ -1,6 +1,6 @@
 # @copilot-sdk-integrations/agent-core
 
-Agent Core: the framework-agnostic integration layer for the [GitHub Copilot SDK](https://github.com/github/copilot-sdk) for Node.js. It manages one runtime client per application (lazy start, admission limits, timeouts, graceful shutdown, restart after a crash), declarative agents with Zod-typed tools, permission policies, conversations, streaming events, and a scripted test runtime. [`@copilot-sdk-integrations/nestjs`](../nestjs), [`@copilot-sdk-integrations/fastify`](../fastify), and [`@copilot-sdk-integrations/ai`](../ai) are built on it; see [`DESIGN.md`](../../DESIGN.md) for the full design.
+Agent Core: the framework-agnostic integration layer for the [Microsoft Copilot SDK](https://github.com/microsoft/copilot-sdk) for Node.js. It manages one runtime client per application (lazy start, admission limits, timeouts, graceful shutdown, restart after a crash), declarative agents with Zod-typed tools, permission policies, conversations, streaming events, and a scripted test runtime. [`@copilot-sdk-integrations/nestjs`](../nestjs), [`@copilot-sdk-integrations/fastify`](../fastify), and [`@copilot-sdk-integrations/ai`](../ai) are built on it; see [`DESIGN.md`](../../DESIGN.md) for the full design.
 
 ```sh
 npm install @copilot-sdk-integrations/agent-core zod
@@ -124,7 +124,7 @@ Each iteration uses the agent's permission policy; nothing is approved implicitl
 
 ## Error recovery
 
-`errorRecoveryHooks()` is an opt-in set of `SessionHooks` based on the Copilot SDK cookbook's
+`errorRecoveryHooks()` is an opt-in set of `SessionHooks` based on the Microsoft Copilot SDK cookbook's
 [error-recovery recipe](https://github.com/github/awesome-copilot/blob/main/cookbook/copilot-sdk/python/error-recovery-hooks.md).
 Pass it as global `hooks` (or an agent's `hooks`); it composes with other hooks.
 

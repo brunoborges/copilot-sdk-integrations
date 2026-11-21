@@ -1,4 +1,4 @@
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -7,19 +7,21 @@ namespace CopilotSdk.Extensions.Hosting;
 
 /// <summary>
 /// Maps <see cref="CopilotOptions"/> client-level settings onto <see cref="CopilotClientOptions"/>: the GitHub token,
-/// the runtime endpoint, the host's logger, and runtime OpenTelemetry export.
+/// the runtime connection, the host's logger, and runtime OpenTelemetry export.
 /// </summary>
 /// <remarks>
-/// <see cref="CopilotOptions.InProcess"/> hosts the runtime in this process. Runtime telemetry is enabled only when the
-/// SDK starts the runtime as a child process (no <see cref="CopilotOptions.Endpoint"/>, not in-process) and
-/// <c>OTEL_EXPORTER_OTLP_ENDPOINT</c> is configured. The runtime exports OTLP over HTTP only, so a
-/// <c>grpc</c> <c>OTEL_EXPORTER_OTLP_PROTOCOL</c> is skipped. Message content is never captured.
+/// With an <see cref="CopilotOptions.Endpoint"/>, the client attaches to that runtime over TCP. Otherwise the SDK owns
+/// the runtime: it starts it as a child process over stdio, or hosts it in this process with
+/// <see cref="CopilotOptions.InProcess"/> (or the SDK's <c>COPILOT_SDK_DEFAULT_CONNECTION</c> environment variable).
+/// Runtime telemetry is enabled only for an SDK-owned runtime when <c>OTEL_EXPORTER_OTLP_ENDPOINT</c> is configured.
+/// The runtime exports OTLP over HTTP only, so a <c>grpc</c> <c>OTEL_EXPORTER_OTLP_PROTOCOL</c> is skipped. Message
+/// content is never captured.
 /// </remarks>
 internal sealed class CopilotClientOptionsConfigurator(IServiceProvider services) : ICopilotClientConfigurator
 {
     internal const string OtlpEndpointKey = "OTEL_EXPORTER_OTLP_ENDPOINT";
     internal const string OtlpProtocolKey = "OTEL_EXPORTER_OTLP_PROTOCOL";
-    internal const string LoggerCategory = "GitHub.Copilot.CopilotClient";
+    internal const string LoggerCategory = "Microsoft.Copilot.CopilotClient";
 
     /// <summary>The SDK's environment variable that selects the default connection when none is set.</summary>
     internal const string DefaultConnectionKey = "COPILOT_SDK_DEFAULT_CONNECTION";
@@ -30,45 +32,56 @@ internal sealed class CopilotClientOptionsConfigurator(IServiceProvider services
         var logger = loggerFactory?.CreateLogger(LoggerCategory);
         if (logger is not null)
         {
-            options.Logger ??= logger;
+            options.Observability.Logger ??= logger;
         }
 
         if (copilotOptions.Endpoint is not null)
         {
-            var url = CopilotEndpoint.TryParse(copilotOptions.Endpoint, out var endpoint) ? endpoint.RuntimeUrl : copilotOptions.Endpoint;
-            options.Connection = RuntimeConnection.ForUri(url, copilotOptions.ConnectionToken);
+            options.Runtime = CreateTcpConnection(copilotOptions.Endpoint, copilotOptions.ConnectionToken);
             return;
         }
 
         var token = copilotOptions.GitHubToken ?? ReadEnvironmentToken(services.GetService<IConfiguration>());
         if (token is not null)
         {
-            options.GitHubToken = token;
+            options.GitHub.Token = token;
         }
 
-        if (copilotOptions.InProcess)
-        {
-            options.Connection ??= RuntimeConnection.ForInProcess();
-        }
-
-        if (IsInProcess(options))
-        {
-            // The SDK rejects TelemetryConfig for an in-process runtime.
-            if (!string.IsNullOrWhiteSpace(services.GetService<IConfiguration>()?[OtlpEndpointKey]))
-            {
-                logger?.LogDebug("Copilot runtime telemetry is not enabled: the runtime runs in-process.");
-            }
-
-            return;
-        }
-
-        options.Telemetry ??= CreateTelemetry(services.GetService<IConfiguration>(), logger);
+        options.Runtime ??= CreateOwnedConnection(copilotOptions);
+        options.Observability.Telemetry ??= CreateTelemetry(services.GetService<IConfiguration>(), logger);
     }
 
-    private static bool IsInProcess(CopilotClientOptions options) =>
-        options.Connection is InProcessRuntimeConnection
-        || (options.Connection is null
-            && string.Equals(Environment.GetEnvironmentVariable(DefaultConnectionKey), "inprocess", StringComparison.OrdinalIgnoreCase));
+    /// <summary>
+    /// Attaches to the runtime at <paramref name="endpoint"/>. The SDK takes a bare host and port, so URL forms are
+    /// translated here.
+    /// </summary>
+    internal static TcpRuntimeConnection CreateTcpConnection(string endpoint, string? connectionToken)
+    {
+        if (!CopilotEndpoint.TryParse(endpoint, out var parsed))
+        {
+            throw new InvalidOperationException(
+                $"Copilot endpoint '{endpoint}' is not valid. Expected tcp://host:port, http(s)://host[:port], host:port, or a port number.");
+        }
+
+        return RuntimeConnection.ForTcp(parsed.ConnectionHost, parsed.Port, string.IsNullOrEmpty(connectionToken) ? null : connectionToken);
+    }
+
+    /// <summary>
+    /// The runtime the SDK starts when no endpoint is set: in-process when <see cref="CopilotOptions.InProcess"/> is set,
+    /// the SDK's <c>COPILOT_SDK_DEFAULT_CONNECTION</c> choice when that variable is set, and a child process otherwise.
+    /// </summary>
+    internal static OwnedRuntimeConnection CreateOwnedConnection(CopilotOptions copilotOptions)
+    {
+        if (copilotOptions.InProcess)
+        {
+            return RuntimeConnection.ForInProcess();
+        }
+
+        // The SDK defaults to in-process hosting; keep a child process unless the deployment chose otherwise.
+        return string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(DefaultConnectionKey))
+            ? RuntimeConnection.ForSpawnedStdio()
+            : RuntimeConnection.ForDefault();
+    }
 
     /// <summary>The environment variables checked, in order, when <see cref="CopilotOptions.GitHubToken"/> is not set.</summary>
     internal static readonly string[] TokenEnvironmentKeys = ["COPILOT_GITHUB_TOKEN", "GH_TOKEN", "GITHUB_TOKEN"];

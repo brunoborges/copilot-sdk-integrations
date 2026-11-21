@@ -49,8 +49,8 @@ public class AgentConfiguration {
 
 Reference it with `@CopilotAgent(systemMessageRef = "advisorInstructions")`.
 The `@Named` qualifier is required: CDI beans have no implicit name. The SDK
-types in this example are `com.github.copilot.SystemMessageMode` and
-`com.github.copilot.rpc.SystemMessageConfig`, `SystemMessageSections`,
+types in this example are `com.microsoft.copilot.SystemMessageMode` and
+`com.microsoft.copilot.rpc.SystemMessageConfig`, `SystemMessageSections`,
 `SectionOverride`, and `SectionOverrideAction`; `Map` is `java.util.Map`, and
 `Produces`, `Named`, and `Singleton` come from `jakarta.enterprise.inject` and
 `jakarta.inject`. The example application declares exactly this bean.

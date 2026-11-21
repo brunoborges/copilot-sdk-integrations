@@ -5,7 +5,7 @@ title: Documentation
 # Copilot Agents for FastAPI
 
 `copilot-fastapi` connects the
-[GitHub Copilot SDK for Python](https://github.com/github/copilot-sdk/tree/main/python) to
+[Microsoft Copilot SDK for Python](https://github.com/microsoft/copilot-sdk/tree/main/python) to
 FastAPI. Declare agents as classes, inject them into endpoints with `Depends`, and turn your
 application functions into tools, from both `def` and `async def` endpoints.
 

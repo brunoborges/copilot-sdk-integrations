@@ -7,8 +7,8 @@ import type {
   PermissionRequest,
   PermissionRequestResult,
   PermissionResult,
-  ResumeSessionConfig,
-  SessionConfig,
+  CreateSessionOptions,
+  ResumeSessionOptions,
   SessionEvent,
   SessionHooks,
   Tool,
@@ -16,7 +16,7 @@ import type {
   ToolSet,
   ToolResultObject,
   MessageSource,
-} from "@github/copilot-sdk";
+} from "@microsoft/copilot-sdk";
 import type { ClientFactory, ClientLike, PersistedEventsPage, SessionLike, StructuredSchema } from "../types.js";
 import {
   PromptScript,
@@ -30,7 +30,7 @@ import {
 } from "./script.js";
 
 type EventOf<T extends SessionEvent["type"]> = Extract<SessionEvent, { type: T }>;
-type AnySessionConfig = SessionConfig | ResumeSessionConfig;
+type AnySessionConfig = CreateSessionOptions | ResumeSessionOptions;
 
 /**
  * Turns run in the async context captured when this module loaded, like the real SDK,
@@ -121,8 +121,8 @@ export class CopilotTestRuntime {
   private toolCallSeq = 0;
 
   private _prompts: TestPrompt[] = [];
-  private _createdSessions: SessionConfig[] = [];
-  private _resumedSessions: { sessionId: string; config: ResumeSessionConfig }[] = [];
+  private _createdSessions: CreateSessionOptions[] = [];
+  private _resumedSessions: { sessionId: string; config: ResumeSessionOptions }[] = [];
   private _deletedSessions: string[] = [];
   private _toolCalls: TestToolCall[] = [];
   private _permissionRequests: TestPermissionRequest[] = [];
@@ -212,10 +212,10 @@ export class CopilotTestRuntime {
   get receivedPrompts(): readonly TestPrompt[] {
     return this._prompts;
   }
-  get createdSessions(): readonly SessionConfig[] {
+  get createdSessions(): readonly CreateSessionOptions[] {
     return this._createdSessions;
   }
-  get resumedSessions(): readonly { sessionId: string; config: ResumeSessionConfig }[] {
+  get resumedSessions(): readonly { sessionId: string; config: ResumeSessionOptions }[] {
     return this._resumedSessions;
   }
   get deletedSessions(): readonly string[] {
@@ -305,7 +305,7 @@ export class CopilotTestRuntime {
   }
 
   /** @internal */
-  async createSession(config: SessionConfig): Promise<TestSession> {
+  async createSession(config: CreateSessionOptions): Promise<TestSession> {
     await this.ensureStarted();
     this._createdSessions.push(config);
     const id = config.sessionId ?? randomUUID();
@@ -327,7 +327,7 @@ export class CopilotTestRuntime {
   }
 
   /** @internal */
-  async resumeSession(sessionId: string, config: ResumeSessionConfig): Promise<TestSession> {
+  async resumeSession(sessionId: string, config: ResumeSessionOptions): Promise<TestSession> {
     await this.ensureStarted();
     const state = this.sessions.get(sessionId);
     if (!state) throw new Error(`Session not found: ${sessionId}`);
@@ -499,7 +499,7 @@ export class CopilotTestRuntime {
     try {
       const submitted = await raceAbort(
         Promise.resolve(
-          config.hooks?.onUserPromptSubmitted?.(
+          config.hooks?.handlers?.onUserPromptSubmitted?.(
             { ...this.hookBase(state), prompt },
             { sessionId: state.id },
           ),
@@ -547,7 +547,7 @@ export class CopilotTestRuntime {
           case "reply": {
             openTurn();
             const text = typeof step.text === "function" ? step.text(turn) : step.text;
-            if (config.streaming) {
+            if (config.events?.streaming) {
               const id = randomUUID();
               this.emit(state, "assistant.message_delta", { messageId: id, deltaContent: text }, true);
               assistantMessage(text, { messageId: id });
@@ -648,7 +648,7 @@ export class CopilotTestRuntime {
     signal: AbortSignal,
   ): Promise<TestToolCall> {
     const config = state.config;
-    const hooks: SessionHooks | undefined = config.hooks;
+    const hooks: SessionHooks | undefined = config.hooks?.handlers;
     const record: TestToolCall = { sessionId: state.id, toolCallId, name, args: initialArgs, approved: false };
     this._toolCalls.push(record);
     let args = initialArgs;
@@ -677,9 +677,9 @@ export class CopilotTestRuntime {
     };
 
     try {
-      const tool = (config.tools ?? []).find((t: Tool<any>) => t.name === name);
+      const tool = (config.tools?.definitions ?? []).find((t: Tool<any>) => t.name === name);
       if (!tool) {
-        const registered = (config.tools ?? []).map((t: Tool<any>) => t.name);
+        const registered = (config.tools?.definitions ?? []).map((t: Tool<any>) => t.name);
         return await fail(
           `Tool "${name}" is not registered on session ${state.id}. Registered tools: ${registered.length ? registered.join(", ") : "(none)"}`,
           "tool_not_found",
@@ -801,7 +801,7 @@ export class CopilotTestRuntime {
   ): Promise<boolean> {
     const requestId = randomUUID();
     this.emit(state, "permission.requested", { requestId, permissionRequest: request });
-    const handler = state.config.onPermissionRequest;
+    const handler = state.config.permissions?.onRequest;
     let result: PermissionRequestResult;
     if (!handler) {
       result = { kind: "user-not-available" };
@@ -854,11 +854,11 @@ function toPermissionResult(result: PermissionRequestResult): PermissionResult {
  */
 function isCustomToolEnabled(name: string, config: AnySessionConfig): boolean {
   const matchesEntry = (entry: string) => entry === "custom:*" || entry === `custom:${name}` || entry === name;
-  const list = (value: string[] | ToolSet | undefined) =>
-    value === undefined ? undefined : Array.isArray(value) ? value : value.toArray();
-  const available = list(config.availableTools);
+  const list = (value: readonly string[] | ToolSet | undefined): readonly string[] | undefined =>
+    value === undefined ? undefined : Array.isArray(value) ? value : (value as ToolSet).toArray();
+  const available = list(config.tools?.availableTools);
   if (available !== undefined && !available.some(matchesEntry)) return false;
-  return !(list(config.excludedTools) ?? []).some(matchesEntry);
+  return !(list(config.tools?.excludedTools) ?? []).some(matchesEntry);
 }
 
 function isToolResultObject(value: unknown): value is ToolResultObject {
@@ -923,10 +923,10 @@ class TestClient implements ClientLike {
   isConnected(): boolean {
     return this.runtime.started && (this.epoch === undefined || this.epoch === this.runtime.epoch);
   }
-  createSession(config: SessionConfig): Promise<SessionLike> {
+  createSession(config: CreateSessionOptions): Promise<SessionLike> {
     return this.runtime.createSession(config);
   }
-  resumeSession(sessionId: string, config: ResumeSessionConfig): Promise<SessionLike> {
+  resumeSession(sessionId: string, config: ResumeSessionOptions): Promise<SessionLike> {
     return this.runtime.resumeSession(sessionId, config);
   }
   deleteSession(sessionId: string): Promise<void> {
@@ -967,7 +967,7 @@ export class TestSession implements SessionLike {
   }
 
   /** The latest create/resume config of this session. */
-  get config(): SessionConfig | ResumeSessionConfig {
+  get config(): AnySessionConfig {
     return this.state.config;
   }
 

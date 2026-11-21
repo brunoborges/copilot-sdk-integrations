@@ -1,6 +1,6 @@
 using System.Text.Json;
-using GitHub.Copilot;
-using GitHub.Copilot.Rpc;
+using Microsoft.Copilot;
+using Microsoft.Copilot.Rpc;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -120,11 +120,11 @@ public sealed class ToolAndPermissionTests : IDisposable
     public async Task SessionConfigurationRejectsUnknownPermissions()
     {
         var run = State;
-        var config = new SessionConfig();
+        var config = new CreateSessionOptions();
         Agents.ConfigureSession(config, run, "accessibility");
-        Assert.Equal(["playwright-browser_navigate", "read_latest_accessibility_snapshot", "accessibility_rule_lookup"], config.AvailableTools);
+        Assert.Equal(["playwright-browser_navigate", "read_latest_accessibility_snapshot", "accessibility_rule_lookup"], config.Tools.AvailableTools);
         Assert.Equal(SystemMessageMode.Replace, config.SystemMessage!.Mode);
-        Assert.IsType<PermissionDecisionReject>(await config.OnPermissionRequest!(
+        Assert.IsType<PermissionDecisionReject>(await config.Permissions.OnRequest!(
             Navigation(run.Target!.AbsoluteUri, "browser_evaluate"), new PermissionInvocation { SessionId = "test" }));
     }
 

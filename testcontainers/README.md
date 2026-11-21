@@ -1,10 +1,10 @@
 # Copilot Testcontainers
 
 Run the real Copilot agent runtime harness in a disposable container while
-testing applications that use a Copilot SDK. The image is language-neutral:
+testing applications that use the Microsoft Copilot SDK. The image is language-neutral:
 every Testcontainers ecosystem can use its generic container API. A standalone
 Java helper provides typed configuration and connection details without Spring
-or a transitive Copilot SDK dependency.
+or a transitive Microsoft Copilot SDK dependency.
 
 **Preview.** The Java artifact is unreleased. The
 [`Publish Copilot CLI image` workflow](../.github/workflows/publish-copilot-runtime.yml)
@@ -19,13 +19,13 @@ integration, not an official GitHub runtime image.
 From the repository root, with Docker, Java 21+, and Maven 3.9+:
 
 ```sh
-docker build -t copilot-runtime:1.0.105 testcontainers/image
+docker build -t copilot-runtime:1.0.114 testcontainers/image
 mvn -f testcontainers/pom.xml install
 mvn -f testcontainers/pom.xml -Pcontainer-tests verify
 ```
 
 After the publishing workflow has run, use
-`ghcr.io/brunoborges/copilot-sdk-integrations/copilot-runtime:1.0.105` instead of
+`ghcr.io/brunoborges/copilot-sdk-integrations/copilot-runtime:1.0.114` instead of
 building locally (provided that CLI release has been published). Other available
 tags are `latest` and `<cli-version>-<YYYYMMDD>`. For reproducible CI, pin a
 published digest; the version and daily tags are rebuilt to include base-image
@@ -35,7 +35,7 @@ The image includes the full `copilot` command and defaults to the SDK runtime
 server. Inspect the bundled CLI without starting a server:
 
 ```sh
-docker run --rm --entrypoint copilot copilot-runtime:1.0.105 --version
+docker run --rm --entrypoint copilot copilot-runtime:1.0.114 --version
 ```
 
 The CLI is installed at image build time, not downloaded at container startup.
@@ -66,18 +66,23 @@ See the guide for first-publication and package-visibility setup.
 </dependency>
 ```
 
-Add your preferred Copilot Java SDK separately (tested with `1.0.24`).
+Add the Microsoft Copilot SDK for Java separately (tested with
+`com.microsoft:copilot-sdk:2.0.1`, which requires a protocol 4 runtime such as CLI `1.0.114`).
 
 ```java
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.CopilotClientMode;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.RuntimeConnection;
 import com.microsoft.copilot.integrations.testcontainers.CopilotContainer;
 
-try (var runtime = new CopilotContainer("copilot-runtime:1.0.105")) {
+try (var runtime = new CopilotContainer("copilot-runtime:1.0.114")) {
     runtime.start();
     try (var client = new CopilotClient(new CopilotClientOptions()
-            .setCliUrl(runtime.getEndpoint())
-            .setTcpConnectionToken(runtime.getTcpConnectionToken()))) {
+            .setMode(CopilotClientMode.CODING_AGENT)
+            .setRuntime(RuntimeConnection.forTcp(runtime.getHost(),
+                            runtime.getMappedPort(runtime.getCopilotPort()))
+                    .setConnectionToken(runtime.getTcpConnectionToken())))) {
         client.start().join();
         var status = client.getStatus().join();
         System.out.println(status.getVersion());

@@ -1,4 +1,4 @@
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -10,7 +10,7 @@ public sealed class TelemetryTests
     private static CopilotClientOptions ConfigureClient(Dictionary<string, string?>? settings, Action<CopilotOptions>? configure = null)
     {
         using var sp = TestHost.Build(s => { s.AddLogging(); s.AddCopilot(configure); }, settings);
-        var options = new CopilotClientOptions();
+        var options = new CopilotClientOptions { Mode = CopilotClientMode.Empty };
         new CopilotClientOptionsConfigurator(sp).Configure(options, sp.GetOptions());
         return options;
     }
@@ -20,11 +20,11 @@ public sealed class TelemetryTests
     {
         var options = ConfigureClient(new() { ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:4318" });
 
-        Assert.NotNull(options.Telemetry);
-        Assert.Equal("http://localhost:4318", options.Telemetry.OtlpEndpoint);
-        Assert.Equal("otlp-http", options.Telemetry.ExporterType);
-        Assert.False(options.Telemetry.CaptureContent);
-        Assert.Null(options.Telemetry.OtlpProtocol);
+        Assert.NotNull(options.Observability.Telemetry);
+        Assert.Equal("http://localhost:4318", options.Observability.Telemetry.OtlpEndpoint);
+        Assert.Equal("otlp-http", options.Observability.Telemetry.ExporterType);
+        Assert.False(options.Observability.Telemetry.CaptureContent);
+        Assert.Null(options.Observability.Telemetry.OtlpProtocol);
     }
 
     [Theory]
@@ -38,7 +38,7 @@ public sealed class TelemetryTests
             ["OTEL_EXPORTER_OTLP_PROTOCOL"] = protocol,
         });
 
-        Assert.Equal(protocol, options.Telemetry!.OtlpProtocol);
+        Assert.Equal(protocol, options.Observability.Telemetry!.OtlpProtocol);
     }
 
     [Fact]
@@ -50,11 +50,11 @@ public sealed class TelemetryTests
             ["OTEL_EXPORTER_OTLP_PROTOCOL"] = "grpc",
         });
 
-        Assert.Null(options.Telemetry);
+        Assert.Null(options.Observability.Telemetry);
     }
 
     [Fact]
-    public void NoOtlpEndpoint_NoTelemetry() => Assert.Null(ConfigureClient(null).Telemetry);
+    public void NoOtlpEndpoint_NoTelemetry() => Assert.Null(ConfigureClient(null).Observability.Telemetry);
 
     [Fact]
     public void ExternalRuntime_NoTelemetry_AndNormalizesTcpEndpoint()
@@ -63,22 +63,33 @@ public sealed class TelemetryTests
             new() { ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:4318" },
             o => { o.Endpoint = "tcp://runtime:5000"; o.ConnectionToken = "secret"; });
 
-        Assert.Null(options.Telemetry);
-        var connection = Assert.IsType<UriRuntimeConnection>(options.Connection);
-        Assert.Equal("runtime:5000", connection.Url);
+        Assert.Null(options.Observability.Telemetry);
+        var connection = Assert.IsType<TcpRuntimeConnection>(options.Runtime);
+        Assert.Equal(("runtime", 5000), (connection.Host, connection.Port));
         Assert.Equal("secret", connection.ConnectionToken);
     }
 
     [Theory]
-    [InlineData("5000", "5000")]
-    [InlineData("localhost:5000", "localhost:5000")]
-    [InlineData("http://localhost:5000", "http://localhost:5000")]
-    [InlineData("tcp://[::1]:5000", "[::1]:5000")]
-    public void Endpoint_IsPassedToForUri(string endpoint, string expected)
+    [InlineData("5000", "localhost", 5000)]
+    [InlineData("localhost:5000", "localhost", 5000)]
+    [InlineData("http://localhost:5000", "localhost", 5000)]
+    [InlineData("https://localhost/runtime", "localhost", 443)]
+    [InlineData("tcp://[::1]:5000", "::1", 5000)]
+    public void Endpoint_IsTranslatedToHostAndPort(string endpoint, string host, int port)
     {
         var options = ConfigureClient(null, o => o.Endpoint = endpoint);
 
-        Assert.Equal(expected, Assert.IsType<UriRuntimeConnection>(options.Connection).Url);
+        var connection = Assert.IsType<TcpRuntimeConnection>(options.Runtime);
+        Assert.Equal((host, port), (connection.Host, connection.Port));
+        Assert.Null(connection.ConnectionToken);
+    }
+
+    [Fact]
+    public void NoEndpoint_StartsRuntimeAsChildProcess()
+    {
+        var options = ConfigureClient(null);
+
+        Assert.IsType<SpawnedStdioRuntimeConnection>(options.Runtime);
     }
 
     [Fact]
@@ -86,20 +97,20 @@ public sealed class TelemetryTests
     {
         var options = ConfigureClient(null, o => o.GitHubToken = "ghp");
 
-        Assert.Equal("ghp", options.GitHubToken);
-        Assert.NotNull(options.Logger);
+        Assert.Equal("ghp", options.GitHub.Token);
+        Assert.NotNull(options.Observability.Logger);
     }
 
     [Fact]
     public void ClientConfigurations_RunAfterConfigurators()
     {
         using var sp = TestHost.Build(
-            s => { s.AddLogging(); s.AddCopilot(o => o.ConfigureClient(c => c.Telemetry = null)); },
+            s => { s.AddLogging(); s.AddCopilot(o => o.ConfigureClient(c => c.Observability.Telemetry = null)); },
             new() { ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:4318" });
 
         var options = CopilotClientProvider.CreateClientOptions(sp.GetServices<ICopilotClientConfigurator>(), sp.GetOptions());
 
-        Assert.Null(options.Telemetry);
+        Assert.Null(options.Observability.Telemetry);
     }
 
     [Fact]
@@ -127,15 +138,15 @@ public sealed class TelemetryTests
     }
 
     [Fact]
-    public void InProcess_UsesInProcessConnection_AndSkipsTelemetry()
+    public void InProcess_UsesInProcessConnection_AndExportsTelemetry()
     {
         var options = ConfigureClient(
             new() { ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:4318", ["GH_TOKEN"] = "env-token" },
             o => o.InProcess = true);
 
-        Assert.IsType<InProcessRuntimeConnection>(options.Connection);
-        Assert.Null(options.Telemetry);
-        Assert.Equal("env-token", options.GitHubToken);
+        Assert.IsType<InProcessRuntimeConnection>(options.Runtime);
+        Assert.Equal("http://localhost:4318", options.Observability.Telemetry?.OtlpEndpoint);
+        Assert.Equal("env-token", options.GitHub.Token);
     }
 
     [Fact]

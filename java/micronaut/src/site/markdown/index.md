@@ -6,7 +6,7 @@ title: Copilot Agents for Micronaut
 
 # Copilot Agents for Micronaut
 
-Use the Copilot Java SDK in Micronaut through a managed client bean, typed agents,
+Use the Microsoft Copilot SDK for Java in Micronaut through a managed client bean, typed agents,
 and conversation-bound instances. The runtime owns the agent loop and persisted
 history. Agents are registered at compile time by an annotation processor, in
 keeping with Micronaut's reflection-free dependency injection, and the integration
@@ -17,7 +17,7 @@ metrics, and Reactor streaming.
 | --- | --- |
 | Java | 25 |
 | Micronaut | 5.2 (platform 5.2.3) |
-| Copilot Java SDK | 1.0.24 |
+| Microsoft Copilot SDK for Java | 2.0.1 |
 | Integration | `com.microsoft:copilot-micronaut`, `0.1.0-SNAPSHOT` |
 
 The agent API (`com.microsoft.copilot.integrations.core`: `@CopilotAgent`,

@@ -10,7 +10,7 @@ from typing import Any
 
 from django.conf import settings as django_settings
 
-CONNECTIONS = ("stdio", "uri", "tcp", "inprocess")
+from copilot_agents.connection import CONNECTIONS, LEGACY_MODES, MODES, parse_runtime_url
 
 DEFAULTS: dict[str, Any] = {
     "RUNTIME": {
@@ -23,7 +23,7 @@ DEFAULTS: dict[str, Any] = {
         "LOG_LEVEL": "info",
         "START": "lazy",
         "REQUEST_TIMEOUT": 300,
-        "MODE": "copilot-cli",
+        "MODE": "coding-agent",
     },
     "AUTH": {
         "GITHUB_TOKEN": None,
@@ -140,6 +140,13 @@ def validate(raw: Any) -> list[str]:
             errors.append(f"COPILOT['RUNTIME']['CONNECTION'] must be one of {', '.join(CONNECTIONS)}")
         if runtime["CONNECTION"] == "uri" and not runtime["URL"]:
             errors.append("COPILOT['RUNTIME']['URL'] is required when CONNECTION is 'uri'")
+        elif runtime["CONNECTION"] == "uri":
+            try:
+                parse_runtime_url(runtime["URL"])
+            except ValueError:
+                errors.append("COPILOT['RUNTIME']['URL'] must look like 'host:port' or 'http://host:port'")
+        if runtime["MODE"] not in MODES and runtime["MODE"] not in LEGACY_MODES:
+            errors.append(f"COPILOT['RUNTIME']['MODE'] must be one of {', '.join(MODES)}")
         if runtime["START"] not in ("lazy", "eager"):
             errors.append("COPILOT['RUNTIME']['START'] must be 'lazy' or 'eager'")
         timeout = runtime["REQUEST_TIMEOUT"]

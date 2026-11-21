@@ -26,10 +26,9 @@ from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any
 
-from copilot import ToolInvocation, ToolResult
-from copilot.client import SessionMetadata
-from copilot.generated.rpc import CursorStatus, EventsReadResult
-from copilot.generated.session_events import (
+from copilot import SessionMetadata, ToolInvocation, ToolResult
+from copilot.rpc import CursorStatus, EventsReadResult
+from copilot.session_events import (
     AssistantMessageData,
     PermissionRequestCustomTool,
     SessionEvent,
@@ -157,11 +156,16 @@ def _event(event_type: SessionEventType, data: Any) -> SessionEvent:
     return SessionEvent(data=data, id=uuid.uuid4(), timestamp=datetime.now(UTC), type=event_type)
 
 
+def _group(options: Mapping[str, Any], name: str) -> Mapping[str, Any]:
+    return options.get(name) or {}
+
+
 def _filtered_out(name: str, options: Mapping[str, Any]) -> bool:
-    available = options.get("available_tools")
+    tools = _group(options, "tools")
+    available = tools.get("available_tools")
     if available is not None:
         return not ({"custom:*", f"custom:{name}"} & set(available))
-    return bool({"custom:*", f"custom:{name}"} & set(options.get("excluded_tools") or ()))
+    return bool({"custom:*", f"custom:{name}"} & set(tools.get("excluded_tools") or ()))
 
 
 async def _maybe_await(value: Any) -> Any:
@@ -175,7 +179,7 @@ class _FakeSession:
         self._handlers: list[Callable[[SessionEvent], None]] = []
         self.session_id = stored.session_id
         self.disconnected = False
-        on_event = stored.options.get("on_event")
+        on_event = _group(stored.options, "events").get("on_event")
         if on_event is not None:
             self._handlers.append(on_event)
 
@@ -221,7 +225,7 @@ class _FakeSession:
     async def _call_tool(self, step: _ToolStep) -> None:
         options = self._stored.options
         agent = self._stored.agent
-        tool = next((t for t in options.get("tools") or () if t.name == step.name), None)
+        tool = next((t for t in _group(options, "tools").get("definitions") or () if t.name == step.name), None)
         if tool is None or _filtered_out(step.name, options):
             raise AssertionError(f"Copilot agent {agent!r} has no available tool {step.name!r}")
         call_id = f"call_{uuid.uuid4().hex[:12]}"
@@ -232,7 +236,7 @@ class _FakeSession:
             "timestamp": int(datetime.now(UTC).timestamp() * 1000),
             "cwd": options.get("working_directory", ""),
         }
-        hooks = options.get("hooks") or {}
+        hooks = _group(options, "hooks").get("handlers") or {}
         approved = True
         if not tool.skip_permission:
             request = PermissionRequestCustomTool(
@@ -242,7 +246,7 @@ class _FakeSession:
                 tool_call_id=call_id,
             )
             decision = await _maybe_await(
-                options["on_permission_request"](request, {"session_id": self.session_id})
+                options["permissions"]["on_request"](request, {"session_id": self.session_id})
             )
             approved = str(getattr(decision, "kind", "") or "").startswith("approve")
         if approved and "on_pre_tool_use" in hooks:
@@ -333,11 +337,11 @@ class _FakeClient:
         end = start + (params.max or 200)
         page = list(stored.events[start:end])
         has_more = end < len(stored.events)
-        return EventsReadResult(str(end), CursorStatus.OK, page, has_more)
+        return EventsReadResult(cursor=str(end), cursor_status=CursorStatus.OK, events=page, has_more=has_more)
 
     async def create_session(self, *, session_id: str | None = None, **options: Any) -> _FakeSession:
-        if options.get("on_permission_request") is None:
-            raise ValueError("on_permission_request is required")
+        if _group(options, "permissions").get("on_request") is None:
+            raise ValueError("permissions['on_request'] is required")
         invocation = current_invocation()
         agent = invocation.agent_name if invocation is not None else "default"
         session_id = session_id or uuid.uuid4().hex

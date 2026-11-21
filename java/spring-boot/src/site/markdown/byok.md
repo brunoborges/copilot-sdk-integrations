@@ -17,8 +17,11 @@ BYOK (bring your own key) sends an agent's model requests directly to your own
 model provider, such as OpenAI, Azure OpenAI / Microsoft Foundry, Anthropic,
 Ollama, or another OpenAI-compatible endpoint. Model requests do not go
 through GitHub Copilot and do not consume Copilot usage. A provider applies per session.
-The integration maps provider definitions to the SDK's native `ProviderConfig`.
-See the SDK's [BYOK documentation](https://github.com/github/copilot-sdk/blob/main/docs/auth/byok.md)
+The integration maps provider definitions to the SDK's `ProviderConfig` and registers the
+selected one on each session as a named connection (`NamedProviderConfig` called
+`byok`) under the session's inference options, makes it the default provider, and
+disables Copilot API (CAPI) models for that session (`github.capi.enabled=false`).
+See the SDK's [BYOK documentation](https://github.com/microsoft/copilot-sdk/blob/main/docs/auth/byok.md)
 for provider-specific behavior.
 
 <a id="define-providers-in-configuration"></a>
@@ -105,9 +108,11 @@ ProviderConfig entra(TokenCredential credential) {
 A name defined both as a property and as a `ProviderConfig` bean fails
 initialization. The selected provider is set on both created and resumed
 sessions, because the SDK does not persist provider credentials. Customizers
-run afterwards and may replace it. Code that creates
+run afterwards and may change it through `getInference()`. Code that creates
 native SDK sessions can call `CopilotProviderProperties.Provider.toProviderConfig()`
-to get a fresh configuration.
+to get a fresh configuration. Microsoft Copilot SDK sessions accept providers only as
+named connections under `getInference()`, so map it to a `NamedProviderConfig`, select
+it with `setDefaultProvider`, and disable CAPI as described above.
 
 <a id="security-and-limitations"></a>
 

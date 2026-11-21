@@ -36,7 +36,7 @@ The runtime starts as:
 The binary is found in this order:
 
 1. The `COPILOT_CLI_PATH` environment variable of the AppHost process.
-2. The runtime bundled with the `GitHub.Copilot.SDK` package, copied to the AppHost output
+2. The runtime bundled with the `Microsoft.Copilot.SDK` package, copied to the AppHost output
    (`runtimes/{rid}/native/copilot-runtime`).
 3. `copilot` on `PATH`.
 
@@ -56,7 +56,7 @@ Without an image, the container is built from a Dockerfile that the package writ
 `obj/copilot-runtime` in the AppHost. It:
 
 - starts from `debian:bookworm-slim`;
-- downloads the Copilot CLI release that `GitHub.Copilot.SDK` pins, for `amd64` or `arm64`, and
+- downloads the Copilot CLI release that `Microsoft.Copilot.SDK` pins, for `amd64` or `arm64`, and
   verifies it against the release's `SHA256SUMS.txt`;
 - runs as the non-root user `copilot` (uid `10001`) with `COPILOT_HOME=/home/copilot/.copilot`;
 - listens on port `3000` inside the container.
@@ -67,7 +67,7 @@ build:
 
 ```cs
 builder.AddCopilot("copilot").RunAsContainer(c => c
-    .WithImage("myregistry.azurecr.io/copilot-runtime", "1.0.26")
+    .WithImage("myregistry.azurecr.io/copilot-runtime", "1.0.114")
     .WithLifetime(ContainerLifetime.Persistent));
 ```
 
@@ -174,7 +174,7 @@ builder.AddCopilot("copilot").WithLogLevel(CopilotLogLevel.Debug);
 ```
 
 `WithLogLevel` passes `--log-level` to the runtime. `CopilotLogLevel` comes from
-`GitHub.Copilot.SDK` (namespace `GitHub.Copilot`) and has the members `None`, `Error`, `Warning`,
+`Microsoft.Copilot.SDK` (namespace `Microsoft.Copilot`) and has the members `None`, `Error`, `Warning`,
 `Info`, `Debug`, and `All`. Runtime output appears in the resource's console logs on the dashboard.
 
 ## Reaching the runtime from containers

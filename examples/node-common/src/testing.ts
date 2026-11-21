@@ -66,7 +66,7 @@ export function frameworkTests(createApplication: ApplicationFactory) {
     try {
       const raw = await agent.send({ prompt: command.prompt });
       assert.throws(() => command.validate(raw), /successful Wikipedia article read/);
-      assert.deepEqual(runtime.runtime.createdSessions[0]?.mcpServers?.wikipedia, {
+      assert.deepEqual(runtime.runtime.createdSessions[0]?.mcp?.servers?.wikipedia, {
         type: "stdio", command: "npx", args: ["-y", "wikipedia-mcp@1.0.3"], tools: ["search", "readArticle"], timeout: 30_000,
       });
     } finally {
@@ -85,7 +85,7 @@ export function frameworkTests(createApplication: ApplicationFactory) {
       assert.match(result.review, /educator/);
       assert.equal(runtime.runtime.toolCalls.length, 5);
       assert(runtime.runtime.toolCalls.every((call) => call.approved && !call.error));
-      assert.deepEqual(runtime.runtime.createdSessions[0]?.excludedTools, ["builtin:*"]);
+      assert.deepEqual(runtime.runtime.createdSessions[0]?.tools?.excludedTools, ["builtin:*"]);
     } finally {
       await app.close();
       await runtime.stop();

@@ -35,7 +35,7 @@ from any `CompletionException`.
 To consume only text deltas:
 
 ```java
-import com.github.copilot.generated.AssistantMessageDeltaEvent;
+import com.microsoft.copilot.generated.AssistantMessageDeltaEvent;
 
 Multi<String> deltas = advisor.stream(conversationId, question)
         .map(CopilotAgentEvent::event)

@@ -5,7 +5,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from copilot.generated.session_events import (
+from copilot.session_events import (
     AssistantMessageData,
     SessionEvent,
     SessionEventType,

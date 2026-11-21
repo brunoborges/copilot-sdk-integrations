@@ -46,7 +46,7 @@ class AgentsTest {
         assertEquals("offline-test-model", copilot.sessionConfig("museum").getModel());
         assertFalse(browser.headless());
         assertEquals(1234, browser.timeoutMillis());
-        assertEquals(List.of("custom:approved_fact_lookup"), copilot.sessionConfig("museum").getAvailableTools());
+        assertEquals(List.of("custom:approved_fact_lookup"), copilot.sessionConfig("museum").getTools().getAvailableTools());
         try (var snapshot = new SnapshotStore(Path.of("target"))) {
             snapshot.write("- button");
             accessibilityTools.prepare(snapshot);
@@ -56,7 +56,7 @@ class AgentsTest {
             assertTrue(accessibilityTools.snapshotRead());
             assertEquals(1, accessibilityTools.lookups().get("4.1.2"));
             assertEquals(prompt("accessibility"), copilot.sessionConfig("accessibility").getSystemMessage().getContent());
-            assertEquals(2, copilot.sessionConfig("accessibility").getAvailableTools().size());
+            assertEquals(2, copilot.sessionConfig("accessibility").getTools().getAvailableTools().size());
         }
 
     }
@@ -66,8 +66,8 @@ class AgentsTest {
         research.run("research-test", "{\"topic\":\"Apollo 11\"}").join();
         var config = copilot.sessionConfig("research");
         assertEquals(prompt("research"), config.getSystemMessage().getContent());
-        assertEquals(List.of("search", "readArticle"), config.getMcpServers().get("wikipedia").getTools());
-        assertEquals(1, config.getMcpServers().size());
-        assertTrue(config.getAvailableTools().stream().allMatch(name -> name.startsWith("mcp:")));
+        assertEquals(List.of("search", "readArticle"), config.getMcp().getServers().get("wikipedia").getTools());
+        assertEquals(1, config.getMcp().getServers().size());
+        assertTrue(config.getTools().getAvailableTools().stream().allMatch(name -> name.startsWith("mcp:")));
     }
 }

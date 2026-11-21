@@ -8,7 +8,7 @@
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Copilot Quarkus - Parent</name>
-    <description>Quarkus extension for the GitHub Copilot SDK for Java</description>
+    <description>Quarkus extension for the Microsoft Copilot SDK for Java</description>
     <url>https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/quarkus</url>
 
     <licenses>
@@ -31,7 +31,7 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <quarkus.version>3.40.1</quarkus.version>
-        <copilot-sdk.version>1.0.24</copilot-sdk.version>
+        <copilot-sdk.version>2.0.1</copilot-sdk.version>
         <compiler-plugin.version>3.14.0</compiler-plugin.version>
         <maven-site-plugin.version>3.22.0</maven-site-plugin.version>
         <surefire-plugin.version>3.5.3</surefire-plugin.version>
@@ -47,8 +47,8 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>com.github</groupId>
-                <artifactId>copilot-sdk-java</artifactId>
+                <groupId>com.microsoft</groupId>
+                <artifactId>copilot-sdk</artifactId>
                 <version>${copilot-sdk.version}</version>
             </dependency>
             <dependency>

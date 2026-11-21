@@ -10,14 +10,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeoutException;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.CopilotSession;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.rpc.ToolDefinition;
-import com.github.copilot.rpc.ToolInvocation;
-import com.github.copilot.rpc.ToolNamespace;
-import com.github.copilot.rpc.SessionConfig;
-import com.github.copilot.generated.AssistantUsageEvent;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotSession;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.rpc.ToolInvocation;
+import com.microsoft.copilot.rpc.ToolNamespace;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
+import com.microsoft.copilot.generated.AssistantUsageEvent;
 import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.MicrometerAgentTelemetry;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
@@ -159,8 +159,8 @@ class CopilotObservabilityTests {
             reply.setData(data);
             when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
             when(client.createSession(any())).thenAnswer(invocation -> {
-                var config = invocation.<SessionConfig>getArgument(0);
-                observed.set(config.getTools().getFirst());
+                var config = invocation.<CreateSessionOptions>getArgument(0);
+                observed.set(config.getTools().getDefinitions().getFirst());
                 when(session.getSessionId()).thenReturn(config.getSessionId());
                 return CompletableFuture.completedFuture(session);
             });

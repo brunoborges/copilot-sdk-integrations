@@ -1,4 +1,4 @@
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -145,7 +145,8 @@ internal sealed class CopilotClientProvider : ICopilotClientProvider, IAsyncDisp
 
     internal static CopilotClientOptions CreateClientOptions(IEnumerable<ICopilotClientConfigurator> configurators, CopilotOptions copilotOptions)
     {
-        var clientOptions = new CopilotClientOptions();
+        // Every client runs in Empty mode (CopilotModeClientConfigurator); the SDK requires a mode up front.
+        var clientOptions = new CopilotClientOptions { Mode = CopilotClientMode.Empty };
 
         foreach (var configurator in configurators)
         {

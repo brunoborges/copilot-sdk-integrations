@@ -1,4 +1,4 @@
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +24,7 @@ public sealed class LiveChatClientTests
         services.AddCopilot(o =>
         {
             o.Instructions = "You are a terse test assistant.";
-            o.ConfigureClient(c => c.UseLoggedInUser ??= true);
+            o.ConfigureClient(c => c.GitHub.UseLoggedInUser ??= true);
         });
         await using var sp = services.BuildServiceProvider();
         var chat = sp.GetRequiredService<IChatClient>();

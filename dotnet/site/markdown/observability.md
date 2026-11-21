@@ -52,7 +52,7 @@ Use `tags` to separate liveness and readiness probes, for example
 
 | Category | What it logs |
 | --- | --- |
-| `GitHub.Copilot.CopilotClient` | The SDK's own logs, through the host's `ILoggerFactory`. |
+| `Microsoft.Copilot.CopilotClient` | The SDK's own logs, through the host's `ILoggerFactory`. |
 | `CopilotSdk.Extensions.Hosting.CopilotChatClient` | Sessions created and resumed, per agent. |
 | `CopilotSdk.Extensions.Hosting.CopilotClientProvider` | Client start and stop, including force-stops on shutdown. |
 | `CopilotSdk.Tools` | Tool failures, with the exception, tool call id, and session id. |

@@ -11,8 +11,8 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.github.copilot.CopilotSession;
-import com.github.copilot.rpc.MessageSource;
+import com.microsoft.copilot.CopilotSession;
+import com.microsoft.copilot.rpc.MessageSource;
 
 /**
  * Per-invocation state captured on the caller thread and the cancellation handshake between the caller and

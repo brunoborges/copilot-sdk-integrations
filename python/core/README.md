@@ -1,6 +1,6 @@
 # copilot-agent-core
 
-Framework-neutral agent layer for the [GitHub Copilot SDK for Python](https://pypi.org/project/github-copilot-sdk/).
+Framework-neutral agent layer for the [Microsoft Copilot SDK for Python](https://pypi.org/project/microsoft-copilot-sdk/).
 It is the Python counterpart of [`java-core`](../../java-core/): framework integrations such as
 [`copilot-django`](../django/) build on it, and it can also be used directly.
 
@@ -11,6 +11,7 @@ It is the Python counterpart of [`java-core`](../../java-core/): framework integ
 | `AgentDefinition` | Immutable description of an agent: instructions, model, tools, MCP servers, tool filters, permissions, hooks, working directory, token resolver. `validate()` returns categorized `ConfigIssue`s. |
 | `AgentInvoker` | Runs prompts against a definition: `invoke` / `ainvoke`, `exists` / `aexists`, `delete` / `adelete`, typed (`pydantic`) results. |
 | `CopilotRuntime` | Owns one `CopilotClient` on a dedicated event-loop thread; usable from sync and async code, fork-safe, reusable after `shutdown()`. |
+| `connection` | Builds a `CopilotClient` from integration settings: `stdio`, `tcp` and `inprocess` start a runtime the client owns; `uri` attaches to a running one (the URL is parsed into host and port). Also validates client modes (`coding-agent`, `empty`) and reports whether the runtime has been downloaded. |
 | `tool` / `ToolContext` / `ToolError` | Turns a typed function into a Copilot tool. `ctx: ToolContext` exposes the user, request and conversation. |
 | `policies` | Permission policies: `deny_all`, `allow_all`, `allow_kinds`, `allow_tools`, `allow_mcp_servers`, `allow_read_only`, `allow_registered_tools`, `any_of`. |
 | `SessionStore` | Lists, reads (`get_messages`, without resuming), checks and deletes sessions; `session_id_for(agent, conversation_id, user=...)` maps a conversation to its session ID. Sync and `a`-prefixed async methods. |

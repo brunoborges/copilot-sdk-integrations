@@ -6,8 +6,8 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.generated.SessionEvent;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.generated.SessionEvent;
 
 import com.microsoft.copilot.integrations.core.CopilotAgentContext;
 import com.microsoft.copilot.integrations.core.CopilotAgentListener;

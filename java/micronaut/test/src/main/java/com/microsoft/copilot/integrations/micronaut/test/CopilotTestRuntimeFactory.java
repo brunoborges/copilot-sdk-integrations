@@ -2,7 +2,7 @@ package com.microsoft.copilot.integrations.micronaut.test;
 
 import jakarta.inject.Singleton;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 
 import com.microsoft.copilot.integrations.micronaut.CopilotAgentTelemetryDecorator;
 import io.micronaut.context.annotation.Factory;

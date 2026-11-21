@@ -1,4 +1,4 @@
-import type { SessionEvent } from "@github/copilot-sdk";
+import type { SessionEvent } from "@microsoft/copilot-sdk";
 import { CopilotSessionError } from "./errors.js";
 import type { CopilotAgentEvent } from "./types.js";
 

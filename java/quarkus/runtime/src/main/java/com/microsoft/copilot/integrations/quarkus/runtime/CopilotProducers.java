@@ -6,8 +6,8 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
 
 import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
 import com.microsoft.copilot.integrations.core.CopilotAgents;

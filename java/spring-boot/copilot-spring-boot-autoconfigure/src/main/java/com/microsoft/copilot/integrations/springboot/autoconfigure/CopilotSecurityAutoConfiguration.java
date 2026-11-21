@@ -1,6 +1,6 @@
 package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 import com.microsoft.copilot.integrations.springboot.security.OAuth2CopilotTokenResolver;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

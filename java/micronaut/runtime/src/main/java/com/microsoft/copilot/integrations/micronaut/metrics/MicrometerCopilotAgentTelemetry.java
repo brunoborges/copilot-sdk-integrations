@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import com.github.copilot.generated.AssistantUsageEvent;
+import com.microsoft.copilot.generated.AssistantUsageEvent;
 
 import com.microsoft.copilot.integrations.micronaut.CopilotMetricsTelemetry;
 import com.microsoft.copilot.integrations.micronaut.config.CopilotRuntimeConfig;

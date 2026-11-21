@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.management.health.indicator.HealthIndicator;

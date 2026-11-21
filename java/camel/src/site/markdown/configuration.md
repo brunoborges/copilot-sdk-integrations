@@ -8,7 +8,7 @@ application-managed beans.
 
 | Option | Meaning |
 | --- | --- |
-| `client` | `CopilotClient` to use. Defaults to the single registry bean, otherwise a component-owned client. |
+| `client` | `CopilotClient` to use. Defaults to the single registry bean, otherwise a component-owned stdio client in `CODING_AGENT` mode. |
 | `telemetry` | `CopilotAgentTelemetry`. Defaults to the single registry bean, otherwise none. |
 | `agentSettings` | `CopilotAgentSettings`. Defaults to the single registry bean, otherwise defaults. |
 | `agentTypes` | Comma-separated fully qualified `@CopilotAgent` interface names. |

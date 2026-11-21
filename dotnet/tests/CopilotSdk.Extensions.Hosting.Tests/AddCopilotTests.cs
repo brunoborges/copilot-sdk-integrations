@@ -1,5 +1,5 @@
 using CopilotSdk.Extensions.Hosting;
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -128,15 +128,15 @@ public sealed class AddCopilotTests
         {
             o.Model = "gpt-test";
             o.Instructions = "Be brief.";
-            o.ConfigureSession(c => c.ExcludedTools = ["web_fetch"]);
+            o.ConfigureSession(c => c.Tools.ExcludedTools = ["web_fetch"]);
         }));
 
         var config = sp.GetRequiredService<CopilotSessionConfigFactory>().CreateSessionConfig(Options.DefaultName, sp);
 
         Assert.Equal("gpt-test", config.Model);
         Assert.Equal("Be brief.", config.SystemMessage?.Content);
-        Assert.Equal(["web_fetch"], config.ExcludedTools!);
-        Assert.NotNull(config.OnPermissionRequest);
+        Assert.Equal(["web_fetch"], config.Tools.ExcludedTools!);
+        Assert.NotNull(config.Permissions.OnRequest);
     }
 
     private sealed class SampleTools

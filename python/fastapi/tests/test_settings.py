@@ -28,6 +28,14 @@ def test_environment(monkeypatch):
 def test_uri_requires_url():
     with pytest.raises(ValidationError, match="url"):
         CopilotSettings(runtime={"connection": "uri"})
+    with pytest.raises(ValidationError, match="port"):
+        CopilotSettings(runtime={"connection": "uri", "url": "http://copilot"})
+
+
+def test_mode_is_validated():
+    assert CopilotSettings(runtime={"mode": "copilot-cli"}).runtime.mode == "copilot-cli"
+    with pytest.raises(ValidationError, match="mode"):
+        CopilotSettings(runtime={"mode": "chat"})
 
 
 def test_unknown_override_keys_are_rejected():

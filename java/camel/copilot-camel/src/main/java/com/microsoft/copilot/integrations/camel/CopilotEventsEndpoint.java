@@ -18,7 +18,7 @@ import org.apache.camel.Producer;
 import org.apache.camel.support.DefaultConsumer;
 import org.apache.camel.support.DefaultEndpoint;
 
-import com.github.copilot.generated.SessionEvent;
+import com.microsoft.copilot.generated.SessionEvent;
 
 import com.microsoft.copilot.integrations.core.CopilotAgentContext;
 import com.microsoft.copilot.integrations.core.CopilotAgentListener;

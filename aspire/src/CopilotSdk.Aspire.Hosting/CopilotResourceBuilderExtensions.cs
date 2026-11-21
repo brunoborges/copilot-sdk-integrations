@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Aspire.Hosting.ApplicationModel;
 using CopilotSdk.Aspire.Hosting;
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -16,7 +16,7 @@ public static class CopilotResourceBuilderExtensions
     private const string CaptureMessageContentVariable = "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT";
 
     /// <summary>
-    /// Adds a Copilot runtime. In run mode it starts the <c>copilot-runtime</c> bundled with <c>GitHub.Copilot.SDK</c>
+    /// Adds a Copilot runtime. In run mode it starts the <c>copilot-runtime</c> bundled with <c>Microsoft.Copilot.SDK</c>
     /// as an executable; in publish mode (and after <see cref="RunAsContainer"/>) it runs as a container.
     /// </summary>
     /// <param name="builder">The distributed application builder.</param>
@@ -86,7 +86,7 @@ public static class CopilotResourceBuilderExtensions
     /// <summary>
     /// Runs the runtime as a container instead of an executable. Without <c>WithImage</c>, the image is built from a
     /// Dockerfile shipped with this package (Debian slim plus the checksum-verified Copilot CLI release that
-    /// <c>GitHub.Copilot.SDK</c> pins).
+    /// <c>Microsoft.Copilot.SDK</c> pins).
     /// </summary>
     /// <param name="builder">The runtime resource builder.</param>
     /// <param name="configure">Configures the container, for example <c>WithImage</c> or <c>WithLifetime</c>.</param>
@@ -179,7 +179,7 @@ public static class CopilotResourceBuilderExtensions
 
     /// <summary>
     /// Sets the runtime executable for executable mode (default: <c>COPILOT_CLI_PATH</c>, then the runtime bundled
-    /// with <c>GitHub.Copilot.SDK</c>, then <c>copilot</c> on <c>PATH</c>).
+    /// with <c>Microsoft.Copilot.SDK</c>, then <c>copilot</c> on <c>PATH</c>).
     /// </summary>
     /// <param name="builder">The runtime resource builder.</param>
     /// <param name="path">The executable path; relative paths resolve against the AppHost directory.</param>

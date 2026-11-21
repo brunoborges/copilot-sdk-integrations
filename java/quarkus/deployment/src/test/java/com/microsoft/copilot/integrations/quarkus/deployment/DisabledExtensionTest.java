@@ -7,7 +7,7 @@ import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 
 import com.microsoft.copilot.integrations.core.ConversationId;
 import com.microsoft.copilot.integrations.core.CopilotAgent;

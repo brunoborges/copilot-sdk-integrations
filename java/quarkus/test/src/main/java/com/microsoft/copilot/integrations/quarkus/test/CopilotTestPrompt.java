@@ -1,6 +1,6 @@
 package com.microsoft.copilot.integrations.quarkus.test;
 
-import com.github.copilot.rpc.MessageOptions;
+import com.microsoft.copilot.rpc.MessageOptions;
 
 /**
  * A prompt received by the {@link CopilotTestRuntime}.

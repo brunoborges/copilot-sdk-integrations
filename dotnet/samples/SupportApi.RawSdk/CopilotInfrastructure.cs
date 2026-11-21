@@ -1,4 +1,4 @@
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 /// <summary>Stops the shared runtime with the host, force-stopping it if shutdown times out.</summary>

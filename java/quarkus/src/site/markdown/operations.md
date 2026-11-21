@@ -59,7 +59,7 @@
 | Strict resume fails | Reuse the saved application key with the same interface/name/runtime store; merely allocating and closing a handle does not create history. |
 | Close blocks or callback self-closing fails | Await workflows before closing, keep blocking close off SDK callbacks and the Vert.x event loop, and remember cancelled futures own their session until the abort and cleanup finish. |
 | Blocking call on the event loop | Synchronous `String`/`T` agent methods and `.join()` block; call them from worker threads (for example `@Blocking` or a non-reactive resource method), or return `CompletionStage`/`Multi` from reactive endpoints. |
-| Missing generated tool metadata | Run the SDK's `CopilotToolProcessor` annotation processor (`com.github:copilot-sdk-java`) in the module declaring the annotated methods, keep tool classes top-level, and retain generated classes in the artifact. |
+| Missing generated tool metadata | Run the SDK's `CopilotToolProcessor` annotation processor (`com.microsoft:copilot-sdk`) in the module declaring the annotated methods, keep tool classes top-level, and retain generated classes in the artifact. |
 | Local runtime missing | Set `quarkus.copilot.cli-path` or include the matching SDK runtime classifier. |
 | External address rejected | Supply an explicit valid port; remove credentials, path/trailing slash, query, and fragment. Do not combine `cli-url` with `cli-path`, `cli-args`, or `working-directory`. |
 | Repeated calls lose expected context | Reuse the same authorized conversation key, agent name/interface, and persisted runtime backing store. |
@@ -86,7 +86,7 @@ lock, user authorization implementation, automatic permission approval, or
 automatic CLI installation. Advanced SDK capabilities remain available through
 native beans and customizers. Native images are untested: agent interfaces are
 registered as dynamic proxies and tool metadata classes for reflection, but the
-Copilot SDK itself may need additional native configuration. The experimental
+Microsoft Copilot SDK itself may need additional native configuration. The experimental
 in-process runtime is covered in
 [Configuration](configuration.html#in-process-runtime-experimental) for JVM mode.
 

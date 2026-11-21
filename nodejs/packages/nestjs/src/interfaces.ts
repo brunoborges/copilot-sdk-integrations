@@ -14,8 +14,10 @@ import type {
   ToolInput,
 } from "@copilot-sdk-integrations/agent-core";
 
-// SDK types, derived from core so this package needs no direct `@github/copilot-sdk` dependency.
-export type SessionConfig = Parameters<NonNullable<CopilotAgentDefinition["configureSession"]>>[0];
+// SDK types, derived from core so this package needs no direct `@microsoft/copilot-sdk` dependency.
+export type CreateSessionOptions = Parameters<NonNullable<CopilotAgentDefinition["configureSession"]>>[0];
+/** @deprecated Use {@link CreateSessionOptions}. */
+export type SessionConfig = CreateSessionOptions;
 export type CopilotClientOptions = Parameters<NonNullable<CopilotOptions["configureClient"]>>[0];
 export type ProviderConfig = NonNullable<CopilotAgentDefinition["provider"]>;
 export type MCPServerConfig = NonNullable<CopilotAgentDefinition["mcpServers"]>[string];
@@ -27,12 +29,12 @@ export type CopilotClientAccessor = () => Promise<ClientLike>;
 /** Adjusts the raw SDK client options (after `configureClient`). */
 export type CopilotClientCustomizer = (options: CopilotClientOptions) => CopilotClientOptions;
 
-/** Adjusts the raw SDK session config of every agent (after the agent's own `configureSession`). */
+/** Adjusts the raw SDK session options of every agent (after the agent's own `configureSession`). */
 export type CopilotSessionCustomizer = (
-  config: SessionConfig,
+  config: CreateSessionOptions,
   context: CopilotContext,
   agent: CopilotAgentDefinition,
-) => SessionConfig;
+) => CreateSessionOptions;
 
 /** An injectable permission policy, usable as `permissions: MyPolicy` or as `COPILOT_PERMISSION_POLICY`. */
 export interface CopilotPermissionPolicy {

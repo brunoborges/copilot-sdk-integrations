@@ -75,7 +75,7 @@ public class CopilotContainer extends GenericContainer<CopilotContainer> {
         return host + ":" + getMappedPort(copilotPort);
     }
 
-    /** Returns the legacy Java SDK cliUrl representation; the wire protocol is TCP, not HTTP. */
+    /** Returns the endpoint in the integrations' {@code cli-url} form; the wire protocol is TCP, not HTTP. */
     public String getCliUrl() {
         return "http://" + getEndpoint();
     }

@@ -12,16 +12,16 @@ const assetsDir = join(here, "assets");
 const outDir = join(here, "dist");
 
 const pyproject = readFileSync(join(here, "..", "..", "core", "pyproject.toml"), "utf8");
-const sdkVersion = /"github-copilot-sdk([^"]*)"/.exec(pyproject)?.[1];
-if (!sdkVersion) throw new Error("No github-copilot-sdk dependency in python/core/pyproject.toml");
+const sdkVersion = /"microsoft-copilot-sdk([^"]*)"/.exec(pyproject)?.[1];
+if (!sdkVersion) throw new Error("No microsoft-copilot-sdk dependency in python/core/pyproject.toml");
 const version = "Preview";
 
 const site = {
   name: "Copilot Agents for Django",
-  description: "Guides and reference for using the GitHub Copilot SDK for Python with Django: agents, ORM-aware tools, typed prompts, permissions, and testing.",
+  description: "Guides and reference for using the Microsoft Copilot SDK for Python with Django: agents, ORM-aware tools, typed prompts, permissions, and testing.",
   links: [
     { name: "GitHub", href: "https://github.com/brunoborges/copilot-sdk-integrations/tree/main/python/django" },
-    { name: "Copilot Python SDK", href: "https://github.com/github/copilot-sdk/tree/main/python" },
+    { name: "Copilot Python SDK", href: "https://github.com/microsoft/copilot-sdk/tree/main/python" },
   ],
   menus: [
     {
@@ -51,7 +51,7 @@ const site = {
       ],
     },
   ],
-  footer: `Copilot SDK integration for Django &middot; preview &middot; Python 3.11+ &middot; Django 5.2+ &middot; github-copilot-sdk ${sdkVersion.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}`,
+  footer: `Copilot SDK integration for Django &middot; preview &middot; Python 3.11+ &middot; Django 5.2+ &middot; microsoft-copilot-sdk ${sdkVersion.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}`,
 };
 
 // ---------------------------------------------------------------------------

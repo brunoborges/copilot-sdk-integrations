@@ -98,7 +98,7 @@ html[data-theme="dark"] {
         ]]></head>
         <links>
             <item name="GitHub" href="https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/camel"/>
-            <item name="Copilot Java SDK" href="https://github.com/github/copilot-sdk/tree/main/java"/>
+            <item name="Microsoft Copilot SDK for Java" href="https://github.com/microsoft/copilot-sdk/tree/main/java"/>
         </links>
         <menu name="Start here">
             <item name="Overview" href="index.html"/>

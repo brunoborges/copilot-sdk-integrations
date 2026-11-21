@@ -89,12 +89,13 @@ you plug them in.
 
 ## Replacing the handler
 
-For full control, set the SDK's `OnPermissionRequest` through `ConfigureSession`. It runs after
-the integration's own settings, so it replaces the default handler:
+For full control, set the SDK's `Permissions.OnRequest` through `ConfigureSession`. It runs after
+the integration's own settings, so it replaces the default handler (`PermissionDecision` is in
+`Microsoft.Copilot.Rpc`):
 
 ```cs
 builder.Services.AddCopilot(o => o.ConfigureSession(session =>
-    session.OnPermissionRequest = (request, invocation) =>
+    session.Permissions.OnRequest = (request, invocation) =>
         Task.FromResult(PermissionDecision.Reject("Not allowed."))));
 ```
 

@@ -5,7 +5,7 @@ see [README.md](README.md) for usage.
 
 This document designs `copilot-camel`, an [Apache Camel](https://camel.apache.org/) component that
 brings the GitHub Copilot Harness into Camel routes. It builds on the
-[Copilot SDK for Java](https://github.com/github/copilot-sdk) and reuses the framework-neutral
+[Microsoft Copilot SDK for Java](https://github.com/microsoft/copilot-sdk) and reuses the framework-neutral
 engine in [`java/core`](../core/) (`copilot-core`), the same engine behind the
 [Spring Boot starter](../spring-boot/) and the [Quarkus extension](../quarkus/).
 
@@ -65,7 +65,7 @@ flowchart LR
         ENG["Agent engine: definitions, governance, hooks, invocation"]
     end
     P --> ENG
-    ENG --> SDK["Copilot SDK for Java: CopilotClient / CopilotSession"]
+    ENG --> SDK["Microsoft Copilot SDK for Java: CopilotClient / CopilotSession"]
     SDK <--> RT["Copilot Harness"]
     RT -. tool call .-> T1
     RT -. tool call .-> T2

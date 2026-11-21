@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { z } from "zod";
-import type { PermissionHandler, SessionConfig, SessionEvent, Tool } from "@github/copilot-sdk";
+import type { CreateSessionOptions, PermissionHandler, SessionEvent, Tool } from "@microsoft/copilot-sdk";
 import { CopilotTestRuntime, type TestSession } from "../src/testing/index.js";
 import type { ClientLike, SessionLike } from "../src/types.js";
 
@@ -60,15 +60,15 @@ describe("CopilotTestRuntime", () => {
 
   beforeEach(() => {
     runtime = new CopilotTestRuntime();
-    client = runtime.clientFactory({ workingDirectory: "/work" });
+    client = runtime.clientFactory({ mode: "empty", observability: { logLevel: "debug" } });
   });
 
-  const newSession = (config: Partial<SessionConfig> = {}) =>
-    client.createSession({ onPermissionRequest: approve, ...config } as SessionConfig);
+  const newSession = (config: CreateSessionOptions = {}) =>
+    client.createSession({ ...config, permissions: { onRequest: approve, ...config.permissions } });
 
   describe("client lifecycle", () => {
     it("records client options and start/stop state", async () => {
-      expect(runtime.clientOptions).toEqual([{ workingDirectory: "/work" }]);
+      expect(runtime.clientOptions).toEqual([{ mode: "empty", observability: { logLevel: "debug" } }]);
       expect(runtime.started).toBe(false);
       await client.start();
       expect(runtime.started).toBe(true);
@@ -193,7 +193,7 @@ describe("CopilotTestRuntime", () => {
 
     it("emits a delta for plain replies when the session streams", async () => {
       runtime.onPrompt(/.*/).reply("whole");
-      const session = await newSession({ streaming: true });
+      const session = await newSession({ events: { streaming: true } });
       const events = await run(session, "x");
       expect(events.filter((e) => e.type === "assistant.message_delta").map((e) => e.data.deltaContent)).toEqual(["whole"]);
     });
@@ -261,14 +261,16 @@ describe("CopilotTestRuntime", () => {
       const invocations: unknown[] = [];
       runtime.onPrompt(/order 42/).callTool("lookupOrder", { id: "42" }).thenReply("Order 42 shipped.");
       const session = await newSession({
-        tools: [
-          lookupOrderTool({
-            handler: (args, invocation) => {
-              invocations.push(invocation);
-              return { id: args.id, status: "shipped" };
-            },
-          }),
-        ],
+        tools: {
+          definitions: [
+            lookupOrderTool({
+              handler: (args, invocation) => {
+                invocations.push(invocation);
+                return { id: args.id, status: "shipped" };
+              },
+            }),
+          ],
+        },
       });
       const events = await run(session, "Where is order 42?");
       expect(types(events)).toEqual([
@@ -328,7 +330,7 @@ describe("CopilotTestRuntime", () => {
         .callTool("lookupOrder", { id: "1" })
         .callTool("lookupOrder", { id: "2" })
         .replyWith((turn) => `found ${turn.toolCalls.length}, last ${JSON.stringify(turn.toolResult("lookupOrder"))}`);
-      const session = await newSession({ tools: [lookupOrderTool()] });
+      const session = await newSession({ tools: { definitions: [lookupOrderTool()] } });
       const events = await run(session, "x");
       const requests = events.filter((e) => e.type === "assistant.message" && e.data.toolRequests?.length);
       expect(requests).toHaveLength(1);
@@ -340,8 +342,8 @@ describe("CopilotTestRuntime", () => {
       let called = false;
       runtime.onPrompt(/.*/).callTool("lookupOrder", { id: "1" }).reply("done");
       const session = await newSession({
-        onPermissionRequest: reject,
-        tools: [lookupOrderTool({ handler: () => (called = true) })],
+        permissions: { onRequest: reject },
+        tools: { definitions: [lookupOrderTool({ handler: () => (called = true) })] },
       });
       const events = await run(session, "x");
       expect(called).toBe(false);
@@ -358,7 +360,7 @@ describe("CopilotTestRuntime", () => {
 
     it("denies when there is no permission handler", async () => {
       runtime.onPrompt(/.*/).callTool("lookupOrder", { id: "1" }).reply("done");
-      const session = await client.createSession({ tools: [lookupOrderTool()] } as SessionConfig);
+      const session = await client.createSession({ tools: { definitions: [lookupOrderTool()] } });
       const events = await run(session, "x");
       expect(events.find((e) => e.type === "tool.execution_complete")!.data.success).toBe(false);
       expect(runtime.permissionRequests[0].result).toEqual({ kind: "user-not-available" });
@@ -367,10 +369,12 @@ describe("CopilotTestRuntime", () => {
     it("treats a throwing permission handler as denial", async () => {
       runtime.onPrompt(/.*/).callTool("lookupOrder", { id: "1" }).reply("done");
       const session = await newSession({
-        onPermissionRequest: () => {
-          throw new Error("policy crashed");
+        permissions: {
+          onRequest: () => {
+            throw new Error("policy crashed");
+          },
         },
-        tools: [lookupOrderTool()],
+        tools: { definitions: [lookupOrderTool()] },
       });
       const events = await run(session, "x");
       expect(events.find((e) => e.type === "tool.execution_complete")!.data.success).toBe(false);
@@ -378,7 +382,7 @@ describe("CopilotTestRuntime", () => {
 
     it("skips the permission request for skipPermission tools", async () => {
       runtime.onPrompt(/.*/).callTool("lookupOrder", { id: "7" }).reply("done");
-      const session = await newSession({ onPermissionRequest: reject, tools: [lookupOrderTool({ skipPermission: true })] });
+      const session = await newSession({ permissions: { onRequest: reject }, tools: { definitions: [lookupOrderTool({ skipPermission: true })] } });
       const events = await run(session, "x");
       expect(types(events)).not.toContain("permission.requested");
       expect(events.find((e) => e.type === "tool.execution_complete")!.data.success).toBe(true);
@@ -388,7 +392,7 @@ describe("CopilotTestRuntime", () => {
 
     it("fails the call when the tool is not registered", async () => {
       runtime.onPrompt(/.*/).callTool("missing", {}).reply("done");
-      const session = await newSession({ tools: [lookupOrderTool()] });
+      const session = await newSession({ tools: { definitions: [lookupOrderTool()] } });
       const events = await run(session, "x");
       const complete = events.find((e) => e.type === "tool.execution_complete")!;
       expect(complete.data.success).toBe(false);
@@ -402,13 +406,15 @@ describe("CopilotTestRuntime", () => {
     it("fails the call when the handler throws and continues the turn", async () => {
       runtime.onPrompt(/.*/).callTool("lookupOrder", { id: "1" }).reply("recovered");
       const session = await newSession({
-        tools: [
-          lookupOrderTool({
-            handler: () => {
-              throw new Error("db down");
-            },
-          }),
-        ],
+        tools: {
+          definitions: [
+            lookupOrderTool({
+              handler: () => {
+                throw new Error("db down");
+              },
+            }),
+          ],
+        },
       });
       const events = await run(session, "x");
       expect(events.find((e) => e.type === "tool.execution_complete")!.data).toMatchObject({
@@ -422,7 +428,7 @@ describe("CopilotTestRuntime", () => {
     it("passes ToolResultObject results through and reports failures", async () => {
       runtime.onPrompt(/.*/).callTool("lookupOrder", { id: "1" }).reply("done");
       const session = await newSession({
-        tools: [lookupOrderTool({ handler: () => ({ textResultForLlm: "bad id", resultType: "failure", error: "bad id" }) })],
+        tools: { definitions: [lookupOrderTool({ handler: () => ({ textResultForLlm: "bad id", resultType: "failure", error: "bad id" }) })] },
       });
       const events = await run(session, "x");
       expect(events.find((e) => e.type === "tool.execution_complete")!.data).toMatchObject({
@@ -437,21 +443,23 @@ describe("CopilotTestRuntime", () => {
       runtime.onPrompt("allow").callTool("lookupOrder", { id: "1" }).reply("ok");
       runtime.onPrompt("deny").callTool("lookupOrder", { id: "2" }).reply("ok");
       const session = await newSession({
-        onPermissionRequest: reject,
-        tools: [lookupOrderTool({ handler: (args) => `order ${args.id}` })],
+        permissions: { onRequest: reject },
+        tools: { definitions: [lookupOrderTool({ handler: (args) => `order ${args.id}` })] },
         hooks: {
-          onPreToolUse: (input) => {
-            seen.push(`pre:${input.toolName}:${JSON.stringify(input.toolArgs)}`);
-            return (input.toolArgs as { id: string }).id === "2"
-              ? { permissionDecision: "deny", permissionDecisionReason: "blocked id" }
-              : { permissionDecision: "allow", modifiedArgs: { id: "1b" } };
-          },
-          onPostToolUse: (input) => {
-            seen.push(`post:${input.toolResult.textResultForLlm}`);
-            return { modifiedResult: { textResultForLlm: "redacted", resultType: "success" } };
-          },
-          onPostToolUseFailure: (input) => {
-            seen.push(`failure:${input.error}`);
+          handlers: {
+            onPreToolUse: (input) => {
+              seen.push(`pre:${input.toolName}:${JSON.stringify(input.toolArgs)}`);
+              return (input.toolArgs as { id: string }).id === "2"
+                ? { permissionDecision: "deny", permissionDecisionReason: "blocked id" }
+                : { permissionDecision: "allow", modifiedArgs: { id: "1b" } };
+            },
+            onPostToolUse: (input) => {
+              seen.push(`post:${input.toolResult.textResultForLlm}`);
+              return { modifiedResult: { textResultForLlm: "redacted", resultType: "success" } };
+            },
+            onPostToolUseFailure: (input) => {
+              seen.push(`failure:${input.error}`);
+            },
           },
         },
       });
@@ -476,7 +484,7 @@ describe("CopilotTestRuntime", () => {
 
     it("applies onUserPromptSubmitted rewrites before matching", async () => {
       runtime.onPrompt("rewritten").reply("matched rewrite");
-      const session = await newSession({ hooks: { onUserPromptSubmitted: () => ({ modifiedPrompt: "rewritten" }) } });
+      const session = await newSession({ hooks: { handlers: { onUserPromptSubmitted: () => ({ modifiedPrompt: "rewritten" }) } } });
       const events = await run(session, "original");
       expect(events[0]).toMatchObject({ data: { content: "original", transformedContent: "rewritten" } });
       expect(finalText(events)).toBe("matched rewrite");
@@ -489,7 +497,7 @@ describe("CopilotTestRuntime", () => {
 
     it("parses the final message with the schema", async () => {
       runtime.onPrompt(/.*/).callTool("lookupOrder", { id: "1" }).replyJson({ term: "DI", definition: "Dependency injection" });
-      const session = await newSession({ tools: [lookupOrderTool()] });
+      const session = await newSession({ tools: { definitions: [lookupOrderTool()] } });
       await expect(session.sendAndWait({ prompt: "define DI" }, Answer)).resolves.toEqual({
         term: "DI",
         definition: "Dependency injection",
@@ -567,16 +575,18 @@ describe("CopilotTestRuntime", () => {
       let toolSignal: AbortSignal | undefined;
       runtime.onPrompt(/.*/).callTool("slow", {}).reply("never");
       const session = await newSession({
-        tools: [
-          {
-            name: "slow",
-            skipPermission: true,
-            handler: (_args, invocation) => {
-              toolSignal = invocation.signal;
-              return new Promise(() => {});
+        tools: {
+          definitions: [
+            {
+              name: "slow",
+              skipPermission: true,
+              handler: (_args, invocation) => {
+                toolSignal = invocation.signal;
+                return new Promise(() => {});
+              },
             },
-          },
-        ],
+          ],
+        },
       });
       const { events, idle } = collect(session);
       await session.send({ prompt: "x" });
@@ -601,7 +611,7 @@ describe("CopilotTestRuntime", () => {
 
   describe("sessions", () => {
     it("records the create config and uses the provided sessionId", async () => {
-      const config = { sessionId: "agent-u1-c1", model: "m1", systemMessage: { mode: "append" as const, content: "be nice" }, availableTools: ["custom:*"] } satisfies Partial<SessionConfig>;
+      const config = { sessionId: "agent-u1-c1", model: "m1", systemMessage: { mode: "append" as const, content: "be nice" }, tools: { availableTools: ["custom:*"] } } satisfies CreateSessionOptions;
       const session = await newSession(config);
       expect(session.sessionId).toBe("agent-u1-c1");
       expect(runtime.createdSessions).toHaveLength(1);
@@ -620,9 +630,9 @@ describe("CopilotTestRuntime", () => {
       await run(first, "one");
       await first.disconnect();
 
-      await expect(client.resumeSession("nope", { onPermissionRequest: approve })).rejects.toThrow("Session not found: nope");
+      await expect(client.resumeSession("nope", { permissions: { onRequest: approve } })).rejects.toThrow("Session not found: nope");
 
-      const resumed = await client.resumeSession("s1", { onPermissionRequest: approve, model: "m2" });
+      const resumed = await client.resumeSession("s1", { permissions: { onRequest: approve }, model: "m2" });
       expect(runtime.resumedSessions).toEqual([{ sessionId: "s1", config: expect.objectContaining({ model: "m2" }) }]);
       await run(resumed, "two");
       const history = await resumed.getEvents();

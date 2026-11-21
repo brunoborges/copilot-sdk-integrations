@@ -1,4 +1,4 @@
-import type { SessionEvent } from "@github/copilot-sdk";
+import type { SessionEvent } from "@microsoft/copilot-sdk";
 import { conversationLeaseKey, isNotFoundError, LEASE_MARGIN_MS } from "./agent.js";
 import type { CopilotRuntime } from "./client.js";
 import { getCopilotContext } from "./context.js";
@@ -181,6 +181,7 @@ function toMessage(event: SessionEvent): CopilotSessionMessage | undefined {
   if (event.type !== "user.message" && event.type !== "assistant.message") return undefined;
   if (event.agentId) return undefined;
   const data = event.data as { content?: unknown; messageId?: unknown; parentToolCallId?: unknown };
+  // Histories persisted by older runtimes mark nested messages with `parentToolCallId` instead of `agentId`.
   if (data.parentToolCallId) return undefined;
   const content = typeof data.content === "string" ? data.content : "";
   if (event.type === "assistant.message" && content === "") return undefined;

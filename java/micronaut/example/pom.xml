@@ -96,8 +96,8 @@
                             <version>${project.version}</version>
                         </path>
                         <path>
-                            <groupId>com.github</groupId>
-                            <artifactId>copilot-sdk-java</artifactId>
+                            <groupId>com.microsoft</groupId>
+                            <artifactId>copilot-sdk</artifactId>
                             <version>${copilot-sdk.version}</version>
                         </path>
                     </annotationProcessorPaths>
@@ -109,7 +109,7 @@
                         <annotationProcessor>io.micronaut.annotation.processing.TypeElementVisitorProcessor</annotationProcessor>
                         <annotationProcessor>io.micronaut.annotation.processing.AggregatingTypeElementVisitorProcessor</annotationProcessor>
                         <annotationProcessor>io.micronaut.annotation.processing.BeanDefinitionInjectProcessor</annotationProcessor>
-                        <annotationProcessor>com.github.copilot.tool.CopilotToolProcessor</annotationProcessor>
+                        <annotationProcessor>com.microsoft.copilot.tool.CopilotToolProcessor</annotationProcessor>
                     </annotationProcessors>
                 </configuration>
             </plugin>

@@ -1,5 +1,16 @@
 import { randomUUID } from "node:crypto";
-import type { MCPServerConfig, MessageSource, ResumeSessionConfig, SessionConfig, SessionEvent, SessionHooks, SystemMessageConfig } from "@github/copilot-sdk";
+import type {
+  CreateSessionOptions,
+  MCPServerConfig,
+  MessageSource,
+  ProviderModelConfig,
+  ResumeSessionOptions,
+  SessionEvent,
+  SessionGitHubOptions,
+  SessionHooks,
+  SessionInferenceOptions,
+  SystemMessageConfig,
+} from "@microsoft/copilot-sdk";
 import type { CopilotRuntime } from "./client.js";
 import { bindCopilotContext, getCopilotContext, runWithCopilotContext } from "./context.js";
 import { abortReason, COPILOT_SESSION_ID_PREFIX, deriveSessionId } from "./conversation.js";
@@ -27,6 +38,7 @@ import type {
   ConversationMode,
   CopilotAgentDefinition,
   CopilotMCPServerConfig,
+  CopilotProviderConfig,
   CopilotAgentEvent,
   CopilotContext,
   Instructions,
@@ -355,39 +367,48 @@ async function executeTurn(
     // The SDK's "empty" mode requires an explicit allow-list on every session.
     filters.availableTools = def.builtInTools === true ? ["builtin:*", "custom:*", "mcp:*"] : ["custom:*", "mcp:*"];
   }
-  let config: SessionConfig = {
+  let config: CreateSessionOptions = {
     sessionId,
-    tools,
-    ...filters,
-    onPermissionRequest,
+    tools: { definitions: tools, ...filters },
+    permissions: { onRequest: onPermissionRequest },
   };
   if (def.model !== undefined) config.model = def.model;
-  if (def.reasoningEffort !== undefined) config.reasoningEffort = def.reasoningEffort;
-  if (def.provider !== undefined) config.provider = def.provider;
+  const inference: SessionInferenceOptions = {};
+  if (def.reasoningEffort !== undefined) inference.reasoningEffort = def.reasoningEffort;
+  if (def.provider !== undefined) {
+    const byok = toByokInference(def.provider, def.model);
+    Object.assign(inference, byok.inference);
+    if (byok.model !== undefined) config.model = byok.model;
+    config.github = { capi: { enabled: false } };
+  }
+  if (Object.keys(inference).length > 0) config.inference = inference;
   const systemMessage = toSystemMessage(def.instructions);
   if (systemMessage !== undefined) config.systemMessage = systemMessage;
-  if (def.mcpServers !== undefined) config.mcpServers = await raceAbort(resolveMcpServers(def.mcpServers, context), signal);
-  if (def.customAgents !== undefined) config.customAgents = def.customAgents;
-  if (def.infiniteSessions !== undefined) config.infiniteSessions = { enabled: def.infiniteSessions };
-  if (def.toolSearch !== undefined) config.toolSearch = { ...def.toolSearch };
+  if (def.mcpServers !== undefined) {
+    config.mcp = { servers: await raceAbort(resolveMcpServers(def.mcpServers, context), signal) };
+  }
+  if (def.customAgents !== undefined) config.agents = { definitions: def.customAgents };
+  if (def.infiniteSessions !== undefined) config.state = { infiniteSessions: { enabled: def.infiniteSessions } };
+  if (def.toolSearch !== undefined) config.tools = { ...config.tools, search: { ...def.toolSearch } };
   const hooks = bindHooks(composeHooks(runtime.options.hooks, def.hooks));
-  if (hooks !== undefined) config.hooks = hooks;
-  if (req.streaming) config.streaming = true;
+  if (hooks !== undefined) config.hooks = { handlers: hooks };
+  if (req.streaming) config.events = { streaming: true };
   if (def.configureSession) {
     config = def.configureSession(config, context) ?? config;
     if (config.sessionId !== sessionId) {
       throw new CopilotConfigurationError(`Agent "${def.name}": configureSession must not change the session id`);
     }
-    if (typeof config.onPermissionRequest !== "function") {
+    const permissionHandler = config.permissions?.onRequest;
+    if (typeof permissionHandler !== "function") {
       throw new CopilotConfigurationError(`Agent "${def.name}": configureSession must not remove the permission handler`);
     }
-    if (config.onPermissionRequest !== onPermissionRequest) {
-      config.onPermissionRequest = bindCopilotContext(config.onPermissionRequest);
+    if (permissionHandler !== onPermissionRequest) {
+      config = { ...config, permissions: { ...config.permissions, onRequest: bindCopilotContext(permissionHandler) } };
     }
   }
   const sessionToken = context.githubToken ?? (runtime.options.cliUrl !== undefined ? runtime.options.githubToken : undefined);
-  if (sessionToken !== undefined && config.gitHubToken === undefined && config.gitHubTokenProvider === undefined) {
-    config.gitHubToken = sessionToken;
+  if (sessionToken !== undefined && config.github?.token === undefined && config.github?.tokenProvider === undefined) {
+    config = { ...config, github: { ...config.github, token: sessionToken } as SessionGitHubOptions };
   }
 
   const session = await openSession(client, req, turn, config);
@@ -414,7 +435,7 @@ async function executeTurn(
               if (topLevel) started = true;
               break;
             case "assistant.message":
-              if (topLevel && !event.data.parentToolCallId) {
+              if (topLevel) {
                 started = true;
                 if (typeof event.data.content === "string" && event.data.content.trim() !== "") {
                   lastMessage = event.data.content;
@@ -554,6 +575,51 @@ export async function resolveMcpServers(
   return result;
 }
 
+/** BYOK connection name registered for an agent's `provider`. */
+const BYOK_PROVIDER = "byok";
+
+/**
+ * Translates an agent's single BYOK provider into named-provider inference options: one connection,
+ * used as the default for the session model, plus a model definition when model-specific settings
+ * (`modelId`, `wireModel`, limits, capabilities) are present.
+ */
+function toByokInference(
+  provider: CopilotProviderConfig,
+  model: string | undefined,
+): { inference: SessionInferenceOptions; model?: string } {
+  const { modelId, wireModel, maxPromptTokens, maxContextWindowTokens, maxOutputTokens, capabilities, ...connection } =
+    provider;
+  const inference: SessionInferenceOptions = {
+    providers: [{ ...connection, name: BYOK_PROVIDER }],
+    defaultProvider: BYOK_PROVIDER,
+  };
+  const selected = model ?? modelId ?? wireModel;
+  const settings: Partial<ProviderModelConfig> = Object.fromEntries(
+    Object.entries({ modelId, wireModel, maxPromptTokens, maxContextWindowTokens, maxOutputTokens, capabilities }).filter(
+      ([, value]) => value !== undefined,
+    ),
+  );
+  if (selected !== undefined && Object.keys(settings).length > 0) {
+    inference.models = [{ ...settings, provider: BYOK_PROVIDER, id: selected }];
+  }
+  return selected === undefined ? { inference } : { inference, model: selected };
+}
+
+/** Resume accepts the same options as create, minus the create-only fields. */
+function toResumeOptions(config: CreateSessionOptions): ResumeSessionOptions {
+  const { sessionId: _id, name: _name, cloud: _cloud, filesystem, instructions, ...rest } = config;
+  const resume: ResumeSessionOptions = rest;
+  if (filesystem !== undefined) {
+    const { trustWorkingDirectory: _trust, ...fs } = filesystem;
+    resume.filesystem = fs;
+  }
+  if (instructions !== undefined) {
+    const { refreshCustomInstructions: _refresh, ...rest } = instructions;
+    resume.instructions = rest;
+  }
+  return resume;
+}
+
 async function resolveStringMap(value: ContextualStringMap, context: CopilotContext): Promise<Record<string, string>> {
   const entries = typeof value === "function" ? Object.entries((await value(context)) ?? {}) : Object.entries(value);
   const result: Record<string, string> = {};
@@ -568,17 +634,12 @@ async function openSession(
   client: ClientLike,
   req: TurnRequest,
   turn: TurnRuntime,
-  config: SessionConfig,
+  config: CreateSessionOptions,
 ): Promise<SessionLike> {
   const { sessionId, signal } = turn;
   const lateSession = (s: SessionLike) => void s.disconnect().catch(() => undefined);
   const create = () => raceAbort(client.createSession(config), signal, lateSession);
-  const resume = () => {
-    const { sessionId: _id, name: _name, trustWorkingDirectory: _t, refreshCustomInstructions: _r, cloud: _c, ...rest } =
-      config;
-    const resumeConfig: ResumeSessionConfig = rest;
-    return raceAbort(client.resumeSession(sessionId, resumeConfig), signal, lateSession);
-  };
+  const resume = () => raceAbort(client.resumeSession(sessionId, toResumeOptions(config)), signal, lateSession);
   if (turn.ephemeral) return create();
 
   const conversationId = req.conversationId!;

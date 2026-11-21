@@ -19,13 +19,13 @@ The starter supplies these native SDK beans:
 
 | Bean name | Type | Behavior |
 | --- | --- | --- |
-| `copilotClientOptions` | `com.github.copilot.rpc.CopilotClientOptions` | Maps supported client properties unless an options or client bean replaces that configuration. |
-| `copilotClient` | `com.github.copilot.CopilotClient` | Shared connection owner, closed by Spring when supplied by the starter. |
+| `copilotClientOptions` | `com.microsoft.copilot.rpc.CopilotClientOptions` | Maps supported client properties unless an options or client bean replaces that configuration. |
+| `copilotClient` | `com.microsoft.copilot.CopilotClient` | Shared connection owner, closed by Spring when supplied by the starter. |
 
 Use the SDK directly when the typed agent contract is not appropriate:
 
 ```java
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -42,10 +42,10 @@ public class RuntimeProbe {
 }
 ```
 
-`CopilotClient`, `CopilotSession`, `SessionConfig`, `ResumeSessionConfig`,
+`CopilotClient`, `CopilotSession`, `CreateSessionOptions`, `ResumeSessionOptions`,
 `SystemMessageConfig`, and `ToolDefinition` are SDK APIs, not reimplementations
 provided by this project. Consult the
-[Java SDK documentation](https://github.com/github/copilot-sdk/tree/main/java)
+[Microsoft Copilot SDK for Java documentation](https://github.com/microsoft/copilot-sdk/tree/main/java)
 for their complete contracts.
 
 Close sessions and subscriptions created directly by application code. Do not
@@ -80,11 +80,18 @@ mapping. For example, inside a configuration class:
 ```java
 @Bean
 CopilotClientOptions copilotClientOptions() {
-    return new CopilotClientOptions()
-            .setCliPath("/absolute/path/to/copilot")
-            .setLogLevel("debug");
+    var options = new CopilotClientOptions()
+            .setMode(CopilotClientMode.CODING_AGENT)
+            .setRuntime(RuntimeConnection.forSpawnedStdio("/absolute/path/to/copilot"));
+    options.getObservability().setLogLevel("debug");
+    return options;
 }
 ```
+
+The SDK requires an explicit client mode; the starter's own options use
+`CopilotClientMode.CODING_AGENT`. Without `setRuntime`, the SDK chooses its default
+connection (in-process unless `COPILOT_SDK_DEFAULT_CONNECTION=stdio`), not the
+starter's stdio default.
 
 `eager-start` and `startup-timeout` still control the starter-owned client's
 initialization. SDK options such as `autoStart` retain the value you supply;

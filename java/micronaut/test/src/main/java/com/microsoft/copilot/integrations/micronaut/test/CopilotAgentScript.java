@@ -12,7 +12,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.copilot.generated.SessionEvent;
+import com.microsoft.copilot.generated.SessionEvent;
 
 /**
  * Scripted model behavior for one agent of a {@link CopilotTestRuntime}.

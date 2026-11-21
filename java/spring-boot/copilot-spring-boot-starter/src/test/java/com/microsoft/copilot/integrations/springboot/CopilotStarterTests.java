@@ -14,8 +14,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.copilot.ConnectionState;
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.ConnectionState;
+import com.microsoft.copilot.CopilotClient;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -74,8 +74,8 @@ class CopilotStarterTests {
                 requests.add(request);
                 String method = request.get("method").asText();
                 Map<String, Object> result = switch (method) {
-                    case "connect" -> Map.of("protocolVersion", 2);
-                    case "ping" -> Map.of("protocolVersion", 2, "message", request.get("params").get("message").asText());
+                    case "connect" -> Map.of("protocolVersion", 4);
+                    case "ping" -> Map.of("protocolVersion", 4, "message", request.get("params").get("message").asText());
                     default -> throw new IOException("Unexpected SDK request: " + method);
                 };
                 byte[] response = mapper.writeValueAsBytes(

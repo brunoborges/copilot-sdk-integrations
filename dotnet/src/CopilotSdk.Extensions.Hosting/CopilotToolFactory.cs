@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace CopilotSdk.Extensions.Hosting;
 
 /// <summary>An app tool built for an agent.</summary>
-/// <param name="Function">The function added to <see cref="SessionConfigBase.Tools"/>.</param>
+/// <param name="Function">The function added to <see cref="SessionToolOptions.Definitions"/>.</param>
 /// <param name="RequiresApproval">Whether the tool is marked with <see cref="RequiresApprovalAttribute"/>.</param>
 internal sealed record CopilotToolDefinition(AIFunction Function, bool RequiresApproval)
 {

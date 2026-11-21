@@ -46,7 +46,7 @@ dotnet build CopilotSdk.slnx
 ```
 
 The repository uses central package management (`dotnet/Directory.Packages.props`), which pins
-`GitHub.Copilot.SDK` and `Microsoft.Extensions.AI`. The library brings these in transitively.
+`Microsoft.Copilot.SDK` and `Microsoft.Extensions.AI`. The library brings these in transitively.
 
 ## Register Copilot
 

@@ -1,5 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace CopilotSdk.Aspire.Hosting;
@@ -35,15 +35,15 @@ internal sealed class CopilotRuntimeHealthCheck(CopilotRuntimeResource runtime) 
             return HealthCheckResult.Unhealthy("The Copilot runtime endpoint is not allocated yet.", ex);
         }
 
-        if (!CopilotRuntimeConnectionString.TryParse(connectionString, out var url, out var token))
+        if (!CopilotRuntimeConnectionString.TryParse(connectionString, out var host, out var port, out var token))
         {
-            return HealthCheckResult.Unhealthy($"The connection string of '{runtime.Name}' has no endpoint.");
+            return HealthCheckResult.Unhealthy($"The connection string of '{runtime.Name}' has no valid endpoint.");
         }
 
         await _lock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            var client = await GetClientAsync(connectionString!, url, token).ConfigureAwait(false);
+            var client = await GetClientAsync(connectionString!, host, port, token).ConfigureAwait(false);
             try
             {
                 await client.PingAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -92,7 +92,7 @@ internal sealed class CopilotRuntimeHealthCheck(CopilotRuntimeResource runtime) 
 
     private bool UsesOnlyProviders() => runtime.Models.Count > 0 && runtime.Models.All(m => m.Provider is not null);
 
-    private async ValueTask<CopilotClient> GetClientAsync(string connectionString, string url, string? token)
+    private async ValueTask<CopilotClient> GetClientAsync(string connectionString, string host, int port, string? token)
     {
         if (_client is not null && _clientConnectionString == connectionString)
         {
@@ -100,7 +100,12 @@ internal sealed class CopilotRuntimeHealthCheck(CopilotRuntimeResource runtime) 
         }
 
         await ResetClientAsync().ConfigureAwait(false);
-        _client = new CopilotClient(new CopilotClientOptions { Connection = RuntimeConnection.ForUri(url, token) });
+        // The runtime owns its home and tools; the check only pings it, so no client mode features are needed.
+        _client = new CopilotClient(new CopilotClientOptions
+        {
+            Mode = CopilotClientMode.Empty,
+            Runtime = RuntimeConnection.ForTcp(host, port, string.IsNullOrEmpty(token) ? null : token),
+        });
         _clientConnectionString = connectionString;
         return _client;
     }

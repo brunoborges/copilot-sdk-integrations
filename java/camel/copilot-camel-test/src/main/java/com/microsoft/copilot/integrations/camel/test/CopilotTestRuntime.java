@@ -24,17 +24,17 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.copilot.ConnectionState;
-import com.github.copilot.CopilotClient;
-import com.github.copilot.CopilotSession;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.generated.SessionEvent;
-import com.github.copilot.rpc.MessageOptions;
-import com.github.copilot.rpc.ResumeSessionConfig;
-import com.github.copilot.rpc.SessionConfig;
-import com.github.copilot.rpc.SessionMetadata;
-import com.github.copilot.rpc.ToolDefinition;
-import com.github.copilot.rpc.ToolInvocation;
+import com.microsoft.copilot.ConnectionState;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotSession;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.generated.SessionEvent;
+import com.microsoft.copilot.rpc.MessageOptions;
+import com.microsoft.copilot.rpc.ResumeSessionOptions;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
+import com.microsoft.copilot.rpc.SessionMetadata;
+import com.microsoft.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.rpc.ToolInvocation;
 
 import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
 
@@ -192,7 +192,7 @@ public final class CopilotTestRuntime {
     }
 
     /** The configuration used to create the most recent session of the named agent. */
-    public SessionConfig sessionConfig(String agent) {
+    public CreateSessionOptions sessionConfig(String agent) {
         return lastSession(agent).config();
     }
 
@@ -237,9 +237,9 @@ public final class CopilotTestRuntime {
             case "start()", "stop()", "forceStop()" -> CompletableFuture.completedFuture(null);
             case "close()" -> null;
             case "getState()" -> ConnectionState.CONNECTED;
-            case "createSession(SessionConfig)" -> createSession((SessionConfig) args[0]);
-            case "resumeSession(String,ResumeSessionConfig)" -> resumeSession((String) args[0],
-                    (ResumeSessionConfig) args[1]);
+            case "createSession(CreateSessionOptions)" -> createSession((CreateSessionOptions) args[0]);
+            case "resumeSession(String,ResumeSessionOptions)" -> resumeSession((String) args[0],
+                    (ResumeSessionOptions) args[1]);
             case "getSessionMetadata(String)" -> CompletableFuture.completedFuture(metadata((String) args[0]));
             case "listSessions()" -> CompletableFuture.completedFuture(listSessions());
             case "deleteSession(String)" -> deleteSession((String) args[0]);
@@ -251,7 +251,7 @@ public final class CopilotTestRuntime {
         };
     }
 
-    private CompletableFuture<CopilotSession> createSession(SessionConfig config) {
+    private CompletableFuture<CopilotSession> createSession(CreateSessionOptions config) {
         Objects.requireNonNull(config, "config");
         String id = config.getSessionId() == null ? UUID.randomUUID().toString() : config.getSessionId();
         var state = new SessionState(id, currentAgent.get(), config);
@@ -265,7 +265,7 @@ public final class CopilotTestRuntime {
         return CompletableFuture.completedFuture(open(state));
     }
 
-    private CompletableFuture<CopilotSession> resumeSession(String id, ResumeSessionConfig config) {
+    private CompletableFuture<CopilotSession> resumeSession(String id, ResumeSessionOptions config) {
         SessionState state;
         synchronized (sessions) {
             state = sessions.get(id);
@@ -360,13 +360,13 @@ public final class CopilotTestRuntime {
 
         volatile String agent;
 
-        final SessionConfig config;
+        final CreateSessionOptions config;
 
         final Instant created = Instant.now();
 
         volatile Instant modified = created;
 
-        final List<ResumeSessionConfig> resumes = new CopyOnWriteArrayList<>();
+        final List<ResumeSessionOptions> resumes = new CopyOnWriteArrayList<>();
 
         final List<String> prompts = new CopyOnWriteArrayList<>();
 
@@ -374,14 +374,14 @@ public final class CopilotTestRuntime {
 
         volatile List<ToolDefinition> toolsOverride;
 
-        SessionState(String id, String agent, SessionConfig config) {
+        SessionState(String id, String agent, CreateSessionOptions config) {
             this.id = id;
             this.agent = agent;
             this.config = config;
         }
 
-        void resume(ResumeSessionConfig resume, String caller) {
-            resumes.add(resume == null ? new ResumeSessionConfig() : resume);
+        void resume(ResumeSessionOptions resume, String caller) {
+            resumes.add(resume == null ? new ResumeSessionOptions() : resume);
             toolsOverride = null;
             if (agent == null) {
                 agent = caller;
@@ -393,7 +393,7 @@ public final class CopilotTestRuntime {
             if (toolsOverride != null) {
                 return toolsOverride;
             }
-            var tools = resumes.isEmpty() ? config.getTools() : resumes.get(resumes.size() - 1).getTools();
+            var tools = resumes.isEmpty() ? config.getTools().getDefinitions() : resumes.get(resumes.size() - 1).getTools().getDefinitions();
             return tools == null ? List.of() : tools;
         }
 
@@ -713,7 +713,7 @@ public final class CopilotTestRuntime {
                 }
 
                 @Override
-                public void usage(com.github.copilot.generated.AssistantUsageEvent event) {
+                public void usage(com.microsoft.copilot.generated.AssistantUsageEvent event) {
                     call.usage(event);
                 }
 

@@ -1,7 +1,7 @@
 {
   "name": "@copilot-sdk-integrations/fastify",
   "version": "0.1.0",
-  "description": "Fastify plugin for the GitHub Copilot SDK",
+  "description": "Fastify plugin for the Microsoft Copilot SDK",
   "license": "MIT",
   "type": "module",
   "main": "dist/index.js",

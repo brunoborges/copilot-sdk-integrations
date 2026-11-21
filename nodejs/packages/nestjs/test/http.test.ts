@@ -149,11 +149,11 @@ describe("HTTP integration", () => {
     const res = await request(app.getHttpServer()).get("/ask?q=who").set("x-user", "octocat").set("x-tenant", "acme").expect(200);
     expect(res.body).toEqual({ answer: "checked" });
     expect(JSON.parse(runtime.toolCalls[0].result as string)).toEqual({ principal: "octocat", tenant: "acme" });
-    expect(runtime.createdSessions[0].gitHubToken).toBe("gho_octocat");
+    expect(runtime.createdSessions[0].github?.token).toBe("gho_octocat");
 
     await request(app.getHttpServer()).get("/ask?q=anon").expect(200);
     expect(JSON.parse(runtime.toolCalls[1].result as string)).toEqual({});
-    expect(runtime.createdSessions[1].gitHubToken).toBeUndefined();
+    expect(runtime.createdSessions[1].github?.token).toBeUndefined();
   });
 
   it("streams agent events over SSE", async () => {

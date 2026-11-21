@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
 using CopilotSdk.Extensions.Hosting;
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -241,18 +241,18 @@ public sealed class ToolsTests
         });
         var configurator = sp.GetServices<ICopilotSessionConfigurator>().OfType<CopilotToolsSessionConfigurator>().Single();
 
-        var config = new SessionConfig();
+        var config = new CreateSessionOptions();
         configurator.Configure(Options.DefaultName, config, sp);
-        var plain = new SessionConfig();
+        var plain = new CreateSessionOptions();
         configurator.Configure("plain", plain, sp);
 
-        Assert.Equal(6, config.Tools!.Count);
+        Assert.Equal(6, config.Tools.Definitions!.Count);
         Assert.Equal(
             ["custom:lookup_order", "custom:get_static_info", "custom:custom-name", "custom:fail", "custom:cancel_order", "custom:who_am_i", "mcp:*"],
-            config.AvailableTools);
+            config.Tools.AvailableTools);
         // Named agents inherit the default agent's MCP servers, but not its tools.
-        Assert.Null(plain.Tools);
-        Assert.Equal(["mcp:*"], plain.AvailableTools);
+        Assert.Null(plain.Tools.Definitions);
+        Assert.Equal(["mcp:*"], plain.Tools.AvailableTools);
     }
 
     [Fact]
@@ -261,10 +261,10 @@ public sealed class ToolsTests
         using var sp = Build(s => s.AddCopilot(o => o.McpServers["github"] = new CopilotMcpServerOptions { Url = "https://example.com/mcp" }));
         var configurator = sp.GetServices<ICopilotSessionConfigurator>().OfType<CopilotToolsSessionConfigurator>().Single();
 
-        var config = new SessionConfig();
+        var config = new CreateSessionOptions();
         configurator.Configure(Options.DefaultName, config, sp);
 
-        Assert.Empty(config.AvailableTools!);
+        Assert.Empty(config.Tools.AvailableTools!);
     }
 
     [Fact]
@@ -272,7 +272,7 @@ public sealed class ToolsTests
     {
         var environment = new TestEnvironment { ApplicationName = "My App", ContentRootPath = "/srv/app" };
         var expected = CopilotModeClientConfigurator.GetDefaultBaseDirectory(environment);
-        var options = new CopilotClientOptions();
+        var options = new CopilotClientOptions { Mode = CopilotClientMode.Empty };
 
         Assert.Equal(expected, CopilotModeClientConfigurator.GetDefaultBaseDirectory(environment));
         Assert.Contains("copilot-sdk", expected, StringComparison.Ordinal);
@@ -281,7 +281,7 @@ public sealed class ToolsTests
 
         new CopilotModeClientConfigurator(environment).Configure(options, new CopilotOptions { Endpoint = "http://localhost:1234" });
         Assert.Equal(CopilotClientMode.Empty, options.Mode);
-        Assert.Null(options.BaseDirectory);
+        Assert.Null(options.Runtime);
     }
 
     [Fact]
@@ -291,14 +291,17 @@ public sealed class ToolsTests
         var copilotOptions = new CopilotOptions();
         copilotOptions.ConfigureClient(o =>
         {
-            o.Mode = CopilotClientMode.CopilotCli;
-            o.BaseDirectory = baseDirectory;
+            o.Mode = CopilotClientMode.CodingAgent;
+            if (o.Runtime is OwnedRuntimeConnection runtime)
+            {
+                runtime.BaseDirectory = baseDirectory;
+            }
         });
 
         var options = CopilotClientProvider.CreateClientOptions([new CopilotModeClientConfigurator()], copilotOptions);
 
-        Assert.Equal(CopilotClientMode.CopilotCli, options.Mode);
-        Assert.Equal(baseDirectory, options.BaseDirectory);
+        Assert.Equal(CopilotClientMode.CodingAgent, options.Mode);
+        Assert.Equal(baseDirectory, Assert.IsAssignableFrom<OwnedRuntimeConnection>(options.Runtime).BaseDirectory);
     }
 
     [Fact]

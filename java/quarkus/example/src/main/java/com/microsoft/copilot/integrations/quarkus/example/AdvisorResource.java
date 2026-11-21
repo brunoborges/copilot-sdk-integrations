@@ -11,7 +11,7 @@ import jakarta.ws.rs.core.MediaType;
 
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
-import com.github.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
 
 import com.microsoft.copilot.integrations.core.CopilotAgentEvent;
 import com.microsoft.copilot.integrations.core.CopilotAgents;

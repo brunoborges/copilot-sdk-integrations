@@ -14,7 +14,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.copilot.rpc.SessionMetadata;
+import com.microsoft.copilot.rpc.SessionMetadata;
 
 import com.microsoft.copilot.integrations.core.ConversationId;
 import com.microsoft.copilot.integrations.core.CopilotAgent;

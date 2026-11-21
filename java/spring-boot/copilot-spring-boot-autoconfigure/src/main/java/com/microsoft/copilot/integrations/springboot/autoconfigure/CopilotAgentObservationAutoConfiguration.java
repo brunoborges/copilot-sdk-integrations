@@ -1,6 +1,6 @@
 package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.MicrometerAgentTelemetry;
 import io.micrometer.core.instrument.MeterRegistry;

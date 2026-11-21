@@ -1,5 +1,5 @@
 import { prettifyError } from "zod";
-import type { Tool, ToolInvocation, ToolResultObject } from "@github/copilot-sdk";
+import type { Tool, ToolInvocation, ToolResultObject } from "@microsoft/copilot-sdk";
 import { getCopilotContext, runWithCopilotContext } from "../context.js";
 import { CopilotConfigurationError } from "../errors.js";
 import type { AiSdkToolLike, CopilotContext, CopilotToolDefinition, ToolCallInfo, ToolInput } from "../types.js";
@@ -118,7 +118,7 @@ export function toSdkTools(inputs: ToolInput[] | undefined, options: ToSdkToolsO
 }
 
 /**
- * AI SDK 7 allows `description` to be a function of the tool context. The Copilot SDK needs a
+ * AI SDK 7 allows `description` to be a function of the tool context. The Microsoft Copilot SDK needs a
  * static string at session creation, so it is resolved once with the context current at conversion.
  */
 function resolveDescription(

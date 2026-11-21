@@ -9,24 +9,23 @@ namespace CopilotSdk.Extensions.Hosting;
 /// </summary>
 internal sealed class CopilotEndpoint
 {
-    private CopilotEndpoint(string host, int port, string runtimeUrl)
+    private CopilotEndpoint(string host, int port)
     {
         Host = host;
         Port = port;
-        RuntimeUrl = runtimeUrl;
     }
 
     public string Host { get; }
 
     public int Port { get; }
 
-    /// <summary>The value to pass to <c>RuntimeConnection.ForUri</c>, which does not understand <c>tcp://</c>.</summary>
-    public string RuntimeUrl { get; }
+    /// <summary>The host to pass to <c>RuntimeConnection.ForTcp</c>, which does not accept IPv6 brackets.</summary>
+    public string ConnectionHost => Host.Trim('[', ']');
 
     public bool IsLoopback =>
         string.Equals(Host, "localhost", StringComparison.OrdinalIgnoreCase)
         || Host.EndsWith(".localhost", StringComparison.OrdinalIgnoreCase)
-        || (IPAddress.TryParse(Host.Trim('[', ']'), out var address) && IPAddress.IsLoopback(address));
+        || (IPAddress.TryParse(ConnectionHost, out var address) && IPAddress.IsLoopback(address));
 
     public static bool TryParse(string? value, [NotNullWhen(true)] out CopilotEndpoint? endpoint)
     {
@@ -45,7 +44,7 @@ internal sealed class CopilotEndpoint
                 return false;
             }
 
-            endpoint = new CopilotEndpoint("localhost", portOnly, value);
+            endpoint = new CopilotEndpoint("localhost", portOnly);
             return true;
         }
 
@@ -59,7 +58,7 @@ internal sealed class CopilotEndpoint
 
         if (IsHttp(uri))
         {
-            endpoint = new CopilotEndpoint(uri.Host, uri.Port, value);
+            endpoint = new CopilotEndpoint(uri.Host, uri.Port);
             return true;
         }
 
@@ -68,7 +67,7 @@ internal sealed class CopilotEndpoint
             return false;
         }
 
-        endpoint = new CopilotEndpoint(uri.Host, uri.Port, $"{uri.Host}:{uri.Port}");
+        endpoint = new CopilotEndpoint(uri.Host, uri.Port);
         return true;
     }
 

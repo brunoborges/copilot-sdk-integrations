@@ -5,7 +5,7 @@ import com.microsoft.copilot.integrations.springboot.autoconfigure.EnableCopilot
 
 import java.time.Duration;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 import com.microsoft.copilot.integrations.springboot.agent.fixtures.TestAgent;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsAutoConfiguration;
@@ -70,7 +70,7 @@ class CopilotAgentsAutoConfigurationTests {
 
     @Test
     void missingSdkBacksOff() {
-        runner.withClassLoader(new FilteredClassLoader("com.github.copilot")).run(context ->
+        runner.withClassLoader(new FilteredClassLoader("com.microsoft.copilot")).run(context ->
                 assertThat(context).hasNotFailed().doesNotHaveBean(CopilotAgentsAutoConfiguration.class));
     }
 

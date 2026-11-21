@@ -8,11 +8,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.CopilotSession;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.rpc.MessageOptions;
-import com.github.copilot.rpc.SessionConfig;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotSession;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.rpc.MessageOptions;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
 import com.microsoft.copilot.integrations.springboot.agent.fixtures.TestAgent;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
@@ -122,7 +122,7 @@ class BoundedAgentExecutionTests {
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
             var session = mock(CopilotSession.class);
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             when(session.on(any())).thenReturn(mock(Closeable.class));
             when(session.sendAndWait(any(), anyLong())).thenAnswer(send -> {
                 String prompt = send.<MessageOptions>getArgument(0).getPrompt();

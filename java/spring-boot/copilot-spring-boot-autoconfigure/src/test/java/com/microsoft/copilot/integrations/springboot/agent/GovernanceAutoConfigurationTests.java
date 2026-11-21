@@ -3,9 +3,9 @@ package com.microsoft.copilot.integrations.springboot.agent;
 import com.microsoft.copilot.integrations.core.*;
 
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.PreToolUseHookInput;
-import com.github.copilot.rpc.PreToolUseHookOutput;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.PreToolUseHookInput;
+import com.microsoft.copilot.rpc.PreToolUseHookOutput;
 import com.microsoft.copilot.integrations.springboot.agent.fixtures.TestAgent;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsAutoConfiguration;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsProperties;

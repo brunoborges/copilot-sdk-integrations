@@ -94,7 +94,7 @@ model work. Annotation references support Spring property placeholders.
 
 ## Native SDK beans and sessions
 
-A reference can also name a native `com.github.copilot.rpc.McpServerConfig`
+A reference can also name a native `com.microsoft.copilot.rpc.McpServerConfig`
 bean. This keeps SDK-specific features, including OAuth configuration,
 available without adding a second Spring-specific transport API:
 
@@ -118,9 +118,9 @@ With starter auto-configuration active, inject
 native sessions:
 
 ```java
-var config = new SessionConfig()
-        .setMcpServers(mcpProperties.toServerConfigs())
-        .setOnPermissionRequest(permissionHandler);
+var config = new CreateSessionOptions();
+config.getMcp().setServers(mcpProperties.toServerConfigs());
+config.getPermissions().setOnRequest(permissionHandler);
 ```
 
 `toServerConfigs()` returns a map of all property definitions with fresh SDK

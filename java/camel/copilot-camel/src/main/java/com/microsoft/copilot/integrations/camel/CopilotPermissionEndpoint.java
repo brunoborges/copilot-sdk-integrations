@@ -14,10 +14,10 @@ import org.apache.camel.Producer;
 import org.apache.camel.support.DefaultConsumer;
 import org.apache.camel.support.DefaultEndpoint;
 
-import com.github.copilot.rpc.PermissionHandler;
-import com.github.copilot.rpc.PermissionInvocation;
-import com.github.copilot.rpc.PermissionRequest;
-import com.github.copilot.rpc.PermissionRequestResult;
+import com.microsoft.copilot.rpc.PermissionHandler;
+import com.microsoft.copilot.rpc.PermissionInvocation;
+import com.microsoft.copilot.rpc.PermissionRequest;
+import com.microsoft.copilot.rpc.PermissionRequestResult;
 
 /**
  * {@code copilot:permission:<name>} – decides permission requests in a route. The endpoint registers a

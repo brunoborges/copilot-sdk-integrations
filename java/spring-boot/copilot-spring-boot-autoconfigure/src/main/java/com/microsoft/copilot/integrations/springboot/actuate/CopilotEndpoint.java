@@ -9,10 +9,9 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.ModelInfo;
-import com.github.copilot.rpc.SessionMetadata;
-import com.github.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.SessionMetadata;
+import com.microsoft.copilot.rpc.ToolDefinition;
 import com.microsoft.copilot.integrations.core.CopilotAgent;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.CopilotAgentFactoryBean;
@@ -95,9 +94,9 @@ public class CopilotEndpoint {
 
     public ModelsDescriptor models() {
         var result = query(client::listModels, models -> models.stream().filter(Objects::nonNull)
-                .map(model -> new ModelDescriptor(model.getId(), model.getName(),
-                        model.getPolicy() == null ? null : model.getPolicy().getState(),
-                        model.getSupportedReasoningEfforts(), model.getDefaultReasoningEffort()))
+                .map(model -> new ModelDescriptor(model.id(), model.name(),
+                        model.policy() == null || model.policy().state() == null ? null : model.policy().state().getValue(),
+                        model.supportedReasoningEfforts(), model.defaultReasoningEffort()))
                 .toList());
         return new ModelsDescriptor(result.state(), result.reason(), result.value());
     }

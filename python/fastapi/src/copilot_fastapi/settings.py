@@ -15,6 +15,8 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, PositiveInt, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from copilot_agents.connection import client_mode, parse_runtime_url
+
 Connection = Literal["stdio", "uri", "tcp", "inprocess"]
 
 
@@ -32,12 +34,20 @@ class RuntimeSettings(BaseModel):
     log_level: str = "info"
     start: Literal["lazy", "eager"] = "lazy"
     request_timeout: PositiveFloat = 300.0
-    mode: str = "copilot-cli"
+    mode: str = "coding-agent"
+
+    @field_validator("mode")
+    @classmethod
+    def _known_mode(cls, value: str) -> str:
+        client_mode(value)
+        return value
 
     @model_validator(mode="after")
     def _url_for_uri(self) -> RuntimeSettings:
         if self.connection == "uri" and not self.url:
             raise ValueError("runtime.url is required when runtime.connection is 'uri'")
+        if self.connection == "uri":
+            parse_runtime_url(str(self.url))
         return self
 
 

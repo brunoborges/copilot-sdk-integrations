@@ -13,7 +13,7 @@ import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.support.DefaultEndpoint;
 
-import com.github.copilot.SystemMessageMode;
+import com.microsoft.copilot.SystemMessageMode;
 
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentSettings;

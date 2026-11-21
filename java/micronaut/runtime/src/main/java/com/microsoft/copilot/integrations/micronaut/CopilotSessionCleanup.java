@@ -8,7 +8,7 @@ import jakarta.annotation.PreDestroy;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
 import com.microsoft.copilot.integrations.core.internal.CopilotSessionCleaner;

@@ -1,4 +1,4 @@
-import type { SessionHooks } from "@github/copilot-sdk";
+import type { SessionHooks } from "@microsoft/copilot-sdk";
 import { messageOf } from "../tools/schema.js";
 
 type HookOutput<K extends keyof SessionHooks> = Exclude<Awaited<ReturnType<NonNullable<SessionHooks[K]>>>, void>;

@@ -16,6 +16,16 @@ from .tools import CopilotTool, as_tool
 
 ALL_BUILT_IN_TOOLS = "builtin:*"
 TOOL_SEARCH_KEYS = frozenset({"enabled", "defer_threshold"})
+DEFAULT_PROVIDER_NAME = "byok"
+PROVIDER_MODEL_KEYS = (
+    "model_id",
+    "wire_model",
+    "max_prompt_tokens",
+    "max_context_window_tokens",
+    "max_output_tokens",
+    "capabilities",
+)
+"""Keys of a BYOK ``provider`` mapping that describe the model rather than the connection."""
 
 InstructionsMode = Literal["append", "replace", "customize"]
 Listener = Callable[[AgentContext, Any], Any]
@@ -133,6 +143,8 @@ class AgentDefinition:
         errors += self._validate_tool_search(prefix)
         if self.provider is not None and not self.model:
             errors.append(ConfigIssue("byok", f"{prefix}: a BYOK provider requires a model"))
+        if self.provider is not None and "/" in str(self.provider.get("name") or ""):
+            errors.append(ConfigIssue("byok", f"{prefix}: the BYOK provider name must not contain '/'"))
         names = [t.name for t in self.tools]
         duplicates = sorted({n for n in names if names.count(n) > 1})
         if duplicates:
@@ -183,3 +195,21 @@ class AgentDefinition:
         if self.instructions:
             return {"mode": self.instructions_mode, "content": self.instructions}
         return None
+
+
+def byok_options(provider: Mapping[str, Any], model: str | None) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Translate a single BYOK ``provider`` mapping into SDK ``inference`` and ``github`` options.
+
+    The provider becomes a named connection (``provider["name"]``, default ``"byok"``) that
+    is the session's default provider, and Copilot API models are disabled so the agent's
+    model is always routed to it. Model-specific keys (:data:`PROVIDER_MODEL_KEYS`) become
+    a model definition for the agent's model.
+    """
+    name = str(provider.get("name") or DEFAULT_PROVIDER_NAME)
+    connection = {k: v for k, v in provider.items() if k not in PROVIDER_MODEL_KEYS}
+    connection["name"] = name
+    inference: dict[str, Any] = {"providers": [connection], "default_provider": name}
+    model_config = {k: provider[k] for k in PROVIDER_MODEL_KEYS if k in provider}
+    if model_config and model:
+        inference["models"] = [{"id": model, "provider": name, **model_config}]
+    return inference, {"capi": {"enabled": False}}

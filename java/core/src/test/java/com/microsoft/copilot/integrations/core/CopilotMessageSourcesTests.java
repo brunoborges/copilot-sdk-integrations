@@ -1,6 +1,6 @@
 package com.microsoft.copilot.integrations.core;
 
-import com.github.copilot.rpc.MessageSource;
+import com.microsoft.copilot.rpc.MessageSource;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

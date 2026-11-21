@@ -12,7 +12,7 @@ import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.support.DefaultAsyncProducer;
 
-import com.github.copilot.rpc.MessageSource;
+import com.microsoft.copilot.rpc.MessageSource;
 
 import com.microsoft.copilot.integrations.core.CopilotMessageSources;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;

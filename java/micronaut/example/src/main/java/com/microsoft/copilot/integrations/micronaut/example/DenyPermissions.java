@@ -8,10 +8,10 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.copilot.rpc.PermissionHandler;
-import com.github.copilot.rpc.PermissionInvocation;
-import com.github.copilot.rpc.PermissionRequest;
-import com.github.copilot.rpc.PermissionRequestResult;
+import com.microsoft.copilot.rpc.PermissionHandler;
+import com.microsoft.copilot.rpc.PermissionInvocation;
+import com.microsoft.copilot.rpc.PermissionRequest;
+import com.microsoft.copilot.rpc.PermissionRequestResult;
 
 @Singleton
 @Named("denyPermissions")

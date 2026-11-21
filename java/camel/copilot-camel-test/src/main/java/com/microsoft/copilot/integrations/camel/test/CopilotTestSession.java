@@ -3,11 +3,11 @@ package com.microsoft.copilot.integrations.camel.test;
 import java.util.List;
 import java.util.Map;
 
-import com.github.copilot.rpc.McpServerConfig;
-import com.github.copilot.rpc.ResumeSessionConfig;
-import com.github.copilot.rpc.SessionConfig;
-import com.github.copilot.rpc.SystemMessageConfig;
-import com.github.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.rpc.McpServerConfig;
+import com.microsoft.copilot.rpc.ResumeSessionOptions;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
+import com.microsoft.copilot.rpc.SystemMessageConfig;
+import com.microsoft.copilot.rpc.ToolDefinition;
 
 /**
  * A snapshot of a Copilot session persisted by the {@link CopilotTestRuntime}.
@@ -22,8 +22,8 @@ import com.github.copilot.rpc.ToolDefinition;
  * @param resumes the configurations used to resume the session, in order
  * @param prompts the prompts received by the session, in order
  */
-public record CopilotTestSession(String sessionId, String agent, SessionConfig config,
-        List<ResumeSessionConfig> resumes, List<String> prompts) {
+public record CopilotTestSession(String sessionId, String agent, CreateSessionOptions config,
+        List<ResumeSessionOptions> resumes, List<String> prompts) {
 
     /** Whether the session has been resumed at least once. */
     public boolean resumed() {
@@ -37,7 +37,7 @@ public record CopilotTestSession(String sessionId, String agent, SessionConfig c
 
     /** The tools registered with the session. */
     public List<ToolDefinition> tools() {
-        var tools = resumed() ? lastResume().getTools() : config.getTools();
+        var tools = resumed() ? lastResume().getTools().getDefinitions() : config.getTools().getDefinitions();
         return tools == null ? List.of() : List.copyOf(tools);
     }
 
@@ -53,11 +53,11 @@ public record CopilotTestSession(String sessionId, String agent, SessionConfig c
 
     /** The MCP servers registered with the session. */
     public Map<String, McpServerConfig> mcpServers() {
-        var servers = resumed() ? lastResume().getMcpServers() : config.getMcpServers();
+        var servers = resumed() ? lastResume().getMcp().getServers() : config.getMcp().getServers();
         return servers == null ? Map.of() : Map.copyOf(servers);
     }
 
-    private ResumeSessionConfig lastResume() {
+    private ResumeSessionOptions lastResume() {
         return resumes.get(resumes.size() - 1);
     }
 }

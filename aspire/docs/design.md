@@ -1,11 +1,11 @@
 # Copilot SDK for Aspire: design
 
 Status: **Preview — implemented, not yet published to NuGet** · Targets: Aspire 13.x,
-`GitHub.Copilot.SDK` 1.0.x. The hosting package targets `net8.0`; the client
+`Microsoft.Copilot.SDK` 2.0.x. The hosting package targets `net8.0`; the client
 package targets `net10.0` and `net8.0`.
 
 This document describes the Aspire integration for the
-[GitHub Copilot SDK for .NET](https://github.com/github/copilot-sdk/tree/main/dotnet).
+[Microsoft Copilot SDK for .NET](https://github.com/microsoft/copilot-sdk/tree/main/dotnet).
 It is deliberately **thin and orchestration-focused**. Everything an application
 does with Copilot (agents, `IChatClient`, tools, identity, permissions, testing)
 lives in the [core .NET integration](../../dotnet/docs/design.md). This
@@ -94,7 +94,7 @@ flowchart LR
 
 | Package (working name) | Used in | Depends on |
 | --- | --- | --- |
-| `CopilotSdk.Aspire.Hosting` | AppHost | `Aspire.Hosting`, `GitHub.Copilot.SDK` (bundled runtime, health pings) |
+| `CopilotSdk.Aspire.Hosting` | AppHost | `Aspire.Hosting`, `Microsoft.Copilot.SDK` (bundled runtime, health pings) |
 | `CopilotSdk.Aspire` | Service projects | `CopilotSdk.Extensions.Hosting` (core), `OpenTelemetry.Extensions.Hosting` |
 
 > **Naming.** The `Aspire.*` NuGet prefix is reserved by Microsoft, so the
@@ -164,7 +164,7 @@ builder calls made before or after the swap still apply.
 
 | Mode | When | What runs |
 | --- | --- | --- |
-| **Executable** (default for `aspire run`) | Local development | `--headless --host 127.0.0.1 --port {endpoint}`. The executable is resolved from `COPILOT_CLI_PATH`, then the `copilot-runtime` that `GitHub.Copilot.SDK` places in the AppHost output (`runtimes/{rid}/native/copilot-runtime`), then `copilot` on `PATH`. `WithCliPath(path)` overrides it. No CLI install needed. |
+| **Executable** (default for `aspire run`) | Local development | `--headless --host 127.0.0.1 --port {endpoint}`. The executable is resolved from `COPILOT_CLI_PATH`, then the `copilot-runtime` that `Microsoft.Copilot.SDK` places in the AppHost output (`runtimes/{rid}/native/copilot-runtime`), then `copilot` on `PATH`. `WithCliPath(path)` overrides it. No CLI install needed. |
 | **Container** (`RunAsContainer()`, and always in publish mode) | CI, Linux parity, deployment | Built from a Dockerfile shipped with the package (Debian slim + the checksum-verified CLI release the SDK pins), unless `WithImage(...)` selects a prebuilt image. Binds `0.0.0.0:3000` inside the container, internal-only endpoint. |
 | **Existing** | Shared or remotely managed runtime | `AddCopilot("copilot").AsExisting(endpoint, token)`, or plain `builder.AddConnectionString("copilot")`. Nothing is started. |
 | **Client-managed** (no resource) | Single-service apps | No AppHost resource; core starts the SDK-managed runtime itself. |
@@ -259,7 +259,8 @@ var chat = copilot.AddModel("chat", "gpt-5.4")
 - `WithProvider(provider, wireApi?, type?)` reads the resource's `Uri` or
   `Endpoint` and `Key` connection properties (or connection string keys) and
   adds `Provider=...;ProviderEndpoint=...;ProviderKey=...;WireApi=...` to the
-  model connection string, which core turns into `SessionConfig.Provider`. The
+  model connection string, which core turns into a named session provider
+  (`Inference.Providers`, the session's default provider). The
   type is inferred as `azure` for Azure OpenAI and Foundry resources, otherwise
   `openai`. Keyless (Microsoft Entra ID) providers are not supported yet.
 

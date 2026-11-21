@@ -11,8 +11,8 @@ import logging
 from collections.abc import Callable, Iterable, Mapping
 from typing import TYPE_CHECKING, Any
 
-from copilot.generated.rpc import PermissionDecisionApproveOnce, PermissionDecisionReject
-from copilot.session import PermissionNoResult
+from copilot import PermissionNoResult
+from copilot.rpc import PermissionDecisionApproveOnce, PermissionDecisionReject
 
 from .errors import CopilotConfigurationError
 

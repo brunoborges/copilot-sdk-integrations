@@ -9,8 +9,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
 
 @AutoConfiguration
 @ConditionalOnClass(CopilotClient.class)

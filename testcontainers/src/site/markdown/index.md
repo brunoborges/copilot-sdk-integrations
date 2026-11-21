@@ -1,7 +1,7 @@
 # Copilot Testcontainers
 
 Run the **real Copilot agent runtime harness**, isolated from the test host, and
-connect the application's usual Copilot SDK over authenticated TCP. The portable
+connect the application's usual Microsoft Copilot SDK over authenticated TCP. The portable
 integration is the **image contract**, not a Java-only protocol or mock server.
 Use any language's Testcontainers generic-container API; Java has an optional
 typed helper.
@@ -14,7 +14,7 @@ and multi-arch (`linux/amd64`, `linux/arm64`); local image builds remain support
 ## Architecture and scope
 
 ```text
-Application under test + Copilot SDK
+Application under test + Microsoft Copilot SDK
          | JSON-RPC over authenticated TCP (random mapped host port)
          v
 Testcontainers -> Copilot runtime container -> Copilot service OR BYOK provider
@@ -37,7 +37,7 @@ can use this image. There is deliberately no dependency between the two helpers.
 From the repository root:
 
 ```sh
-docker build -t copilot-runtime:1.0.105 testcontainers/image
+docker build -t copilot-runtime:1.0.114 testcontainers/image
 mvn -f testcontainers/pom.xml install
 mvn -f testcontainers/pom.xml -Pcontainer-tests verify
 ```
@@ -47,13 +47,13 @@ Docker must be running; Java tests require Java 21+ and Maven 3.9+. Normal
 requires Docker and the image and does not skip on missing prerequisites. Override
 an image under test with `-Dcopilot.test.image=your-registry/copilot-runtime:tag`.
 
-The Dockerfile pins CLI `1.0.105`, supports Linux `amd64` and `arm64`, and verifies
+The Dockerfile pins CLI `1.0.114`, supports Linux `amd64` and `arm64`, and verifies
 both release archives against their published SHA256 checksums. It uses the runtime's
 native `--headless --host 0.0.0.0` TCP listener, not a shell proxy. Override the
 release using `--build-arg COPILOT_VERSION=...`, tag the image accordingly, and
 rerun compatibility tests. Do not rely on a floating `latest` tag. The Java
-reference tests use SDK `1.0.24`; other SDK/runtime pairs must have compatible
-protocol versions.
+reference tests use Microsoft Copilot SDK `2.0.1` (protocol 4); other SDK/runtime
+pairs must have compatible protocol versions.
 
 To skip the local build, replace the local image name in every language's
 recipe below with
@@ -140,26 +140,32 @@ never assume `localhost` or bind a fixed host port. For applications in another
 container, attach both to one Testcontainers network and use a network alias plus
 the **internal** port, not the mapped host port.
 
-The helper's `getCliUrl()` returns `http://host:port` for Java/framework compatibility;
-that legacy SDK syntax does not turn the connection into HTTP. Do not probe with
+The helper's `getCliUrl()` returns `http://host:port` for the framework integrations'
+`cli-url` settings, which use only its host and port; the scheme does not turn the
+connection into HTTP. SDK clients attach with `RuntimeConnection.forTcp(host, port)`
+and a separate connection token. Do not probe with
 `curl`, use HTTP waits, or put it behind an HTTP reverse proxy.
 
 ## Java reference
 
 Install the unreleased module locally, then use test-scoped
 `com.microsoft:copilot-testcontainers:0.1.0-SNAPSHOT` and add
-`com.github:copilot-sdk-java:1.0.24` separately.
+`com.microsoft:copilot-sdk:2.0.1` separately.
 
 ```java
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.CopilotClientMode;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.RuntimeConnection;
 import com.microsoft.copilot.integrations.testcontainers.CopilotContainer;
 
-try (var runtime = new CopilotContainer("copilot-runtime:1.0.105")) {
+try (var runtime = new CopilotContainer("copilot-runtime:1.0.114")) {
     runtime.start();
     try (var client = new CopilotClient(new CopilotClientOptions()
-            .setCliUrl(runtime.getEndpoint())
-            .setTcpConnectionToken(runtime.getTcpConnectionToken()))) {
+            .setMode(CopilotClientMode.CODING_AGENT)
+            .setRuntime(RuntimeConnection.forTcp(runtime.getHost(),
+                            runtime.getMappedPort(runtime.getCopilotPort()))
+                    .setConnectionToken(runtime.getTcpConnectionToken())))) {
         client.start().join();
         System.out.println(client.ping("test").join().message());
         // Pass client to your app's test configuration.
@@ -186,7 +192,7 @@ Pass endpoint and token through the framework's ordinary test configuration:
 | Spring Boot | `copilot.cli-url`, `copilot.tcp-connection-token`; or the existing Spring helper with `@ServiceConnection`. |
 | Quarkus | `quarkus.copilot.cli-url`, `quarkus.copilot.tcp-connection-token` via a test resource. |
 | Micronaut | `micronaut.copilot.cli-url`, `micronaut.copilot.tcp-connection-token` via test properties. |
-| Other frameworks | Inject a client configured with the SDK's external-runtime endpoint and TCP connection token. |
+| Other frameworks | Inject a client configured with `RuntimeConnection.forTcp(host, port)` and the TCP connection token. |
 
 Use the framework's external connection mode if one is selected explicitly.
 Do not also configure a local CLI executable or inherit local-login settings.
@@ -198,7 +204,9 @@ the standalone helper intentionally does not auto-register Spring services.
 
 These are equivalent generic-container recipes, not separately published language
 modules. Install each ecosystem's Testcontainers package and, where available,
-the relevant Copilot SDK. These recipes follow the common image contract;
+the relevant Microsoft Copilot SDK package (`@microsoft/copilot-sdk`,
+`microsoft-copilot-sdk`, `Microsoft.Copilot.SDK`, or
+`github.com/microsoft/copilot-sdk/go/v2`). These recipes follow the common image contract;
 the automated end-to-end reference suite is Java.
 
 ### Node.js / TypeScript
@@ -206,18 +214,20 @@ the automated end-to-end reference suite is Java.
 ```typescript
 import { randomUUID } from "node:crypto";
 import { GenericContainer, Wait } from "testcontainers";
-import { CopilotClient } from "@github/copilot-sdk";
+import { CopilotClient, RuntimeConnection } from "@microsoft/copilot-sdk";
 
 const token = randomUUID();
-const runtime = await new GenericContainer("copilot-runtime:1.0.105")
+const runtime = await new GenericContainer("copilot-runtime:1.0.114")
   .withEnvironment({ COPILOT_CONNECTION_TOKEN: token })
   .withExposedPorts(4321)
   .withWaitStrategy(Wait.forListeningPorts())
   .start();
 try {
   const client = new CopilotClient({
-    cliUrl: `${runtime.getHost()}:${runtime.getMappedPort(4321)}`,
-    tcpConnectionToken: token,
+    mode: "coding-agent",
+    runtime: RuntimeConnection.forTcp(runtime.getHost(), runtime.getMappedPort(4321), {
+      connectionToken: token,
+    }),
   });
   try {
     await client.start();
@@ -235,20 +245,24 @@ try {
 ```python
 import asyncio
 import uuid
-from copilot import CopilotClient
+from copilot import CopilotClient, RuntimeConnection
 from testcontainers.core.container import DockerContainer
 from testcontainers.core.wait_strategies import PortWaitStrategy
 
 async def test_runtime():
     token = str(uuid.uuid4())
-    with (DockerContainer("copilot-runtime:1.0.105")
+    with (DockerContainer("copilot-runtime:1.0.114")
           .with_env("COPILOT_CONNECTION_TOKEN", token)
           .with_exposed_ports(4321)
           .waiting_for(PortWaitStrategy(4321))) as runtime:
-        client = CopilotClient({
-            "cli_url": f"{runtime.get_container_host_ip()}:{runtime.get_exposed_port(4321)}",
-            "tcp_connection_token": token,
-        })
+        client = CopilotClient(
+            mode="coding-agent",
+            runtime=RuntimeConnection.for_tcp(
+                runtime.get_container_host_ip(),
+                int(runtime.get_exposed_port(4321)),
+                connection_token=token,
+            ),
+        )
         try:
             await client.start()
             print(await client.ping("test"))
@@ -262,19 +276,19 @@ asyncio.run(test_runtime())
 
 ```csharp
 using DotNet.Testcontainers.Builders;
-using GitHub.Copilot.SDK;
+using Microsoft.Copilot;
 
 var token = Guid.NewGuid().ToString();
 await using var runtime = new ContainerBuilder()
-    .WithImage("copilot-runtime:1.0.105")
+    .WithImage("copilot-runtime:1.0.114")
     .WithEnvironment("COPILOT_CONNECTION_TOKEN", token)
     .WithPortBinding(4321, true)
     .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(4321))
     .Build();
 await runtime.StartAsync();
 await using var client = new CopilotClient(new CopilotClientOptions {
-    CliUrl = $"{runtime.Hostname}:{runtime.GetMappedPublicPort(4321)}",
-    TcpConnectionToken = token,
+    Mode = CopilotClientMode.CodingAgent,
+    Runtime = RuntimeConnection.ForTcp(runtime.Hostname, runtime.GetMappedPublicPort(4321), token),
 });
 await client.StartAsync();
 // Inject client into the application under test.
@@ -289,7 +303,7 @@ token := hex.EncodeToString(tokenBytes)
 runtime, err := testcontainers.GenericContainer(ctx,
     testcontainers.GenericContainerRequest{
         ContainerRequest: testcontainers.ContainerRequest{
-            Image: "copilot-runtime:1.0.105",
+            Image: "copilot-runtime:1.0.114",
             ExposedPorts: []string{"4321/tcp"},
             Env: map[string]string{"COPILOT_CONNECTION_TOKEN": token},
             WaitingFor: wait.ForListeningPort("4321/tcp").SkipInternalCheck(),
@@ -305,7 +319,8 @@ if err != nil { t.Fatal(err) }
 port, err := runtime.MappedPort(ctx, "4321/tcp")
 if err != nil { t.Fatal(err) }
 endpoint := net.JoinHostPort(host, port.Port())
-// Configure the Copilot Go SDK's CLI URL and TCP connection token,
+// Configure the Microsoft Copilot SDK for Go with
+// copilot.TCPConnection{Host: host, Port: port.Int(), ConnectionToken: token},
 // or pass endpoint and token to the application being tested.
 ```
 
@@ -325,7 +340,9 @@ for unsupported languages.
 
 The executable Java `CopilotContainerIT` starts a local OpenAI-compatible SSE
 endpoint, exposes it with `Testcontainers.exposeHostPorts`, and points a real SDK
-session's `ProviderConfig` at `http://host.testcontainers.internal:<port>/v1`.
+session's named inference provider (`NamedProviderConfig`, selected as the default
+provider with Copilot API models disabled) at
+`http://host.testcontainers.internal:<port>/v1`.
 It sets `type=openai`, `wireApi=completions`, an explicit test model and dummy
 provider key, disables built-in tools, and rejects permission requests.
 The test checks the exact assistant reply and verifies that the provider was
@@ -335,8 +352,8 @@ without GitHub authentication or model nondeterminism.
 For real Copilot model tests, inject a Copilot-authorized GitHub token into the
 runtime through `COPILOT_GITHUB_TOKEN` (Java: `withGitHubToken`). For real BYOK
 tests, put provider credentials in session configuration, not the image. Never
-pass GitHub credentials through the SDK's local-process auth options when using
-an external runtime.
+pass GitHub credentials through the SDK client's `github` options when using
+an external runtime; the SDK rejects them for attached TCP connections.
 
 Application tools registered through the SDK execute in the **application/test
 process**, not the runtime container. Runtime built-in tools and local MCP
@@ -357,7 +374,8 @@ tests need more tools. Containerization does not sandbox SDK callback code.
 - An image cannot bind? Check `COPILOT_PORT` range and the matching exposed port.
   Custom port changes do not change the Dockerfile's informational `EXPOSE`.
 - SDK startup fails? Check both token values, runtime/SDK protocol compatibility,
-  and that the SDK is configured for external TCP rather than local stdio.
+  and that the SDK uses an attached `RuntimeConnection.forTcp(host, port)` rather
+than its default in-process or stdio runtime.
 - Provider/MCP connection fails? `localhost` inside the runtime is not the test
   host. Use a shared network alias or Testcontainers' host-port forwarding.
 - Missing image? Build it on the Docker daemon used by the tests or push/pull

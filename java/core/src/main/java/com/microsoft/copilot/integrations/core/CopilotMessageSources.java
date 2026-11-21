@@ -3,7 +3,7 @@ package com.microsoft.copilot.integrations.core;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
-import com.github.copilot.rpc.MessageSource;
+import com.microsoft.copilot.rpc.MessageSource;
 import com.microsoft.copilot.integrations.core.internal.MessageSourceScope;
 
 /**

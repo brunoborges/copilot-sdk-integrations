@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using CopilotSdk.Extensions.Hosting;
-using GitHub.Copilot;
-using GitHub.Copilot.Rpc;
+using Microsoft.Copilot;
+using Microsoft.Copilot.Rpc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -26,13 +26,13 @@ public sealed class PermissionsTests
 
     private static Func<PermissionRequest, PermissionInvocation, Task<PermissionDecision>> GetHandler(IServiceProvider sp, string agentName = "")
     {
-        var config = new SessionConfig();
+        var config = new CreateSessionOptions();
         foreach (var configurator in sp.GetServices<ICopilotSessionConfigurator>())
         {
             configurator.Configure(agentName, config, sp);
         }
 
-        return config.OnPermissionRequest!;
+        return config.Permissions.OnRequest!;
     }
 
     private static PermissionInvocation Invocation(string sessionId = "s1") => new() { SessionId = sessionId };
@@ -211,8 +211,8 @@ public sealed class PermissionsTests
     public async Task AppConfigureSession_OverridesHandler()
     {
         Func<PermissionRequest, PermissionInvocation, Task<PermissionDecision>> custom = (_, _) => Task.FromResult(PermissionDecision.ApproveOnce());
-        using var sp = Build(o => o.ConfigureSession(c => c.OnPermissionRequest = custom));
-        var config = new SessionConfig();
+        using var sp = Build(o => o.ConfigureSession(c => c.Permissions.OnRequest = custom));
+        var config = new CreateSessionOptions();
         foreach (var configurator in sp.GetServices<ICopilotSessionConfigurator>())
         {
             configurator.Configure(Options.DefaultName, config, sp);
@@ -223,8 +223,8 @@ public sealed class PermissionsTests
             configure(config);
         }
 
-        Assert.Same(custom, config.OnPermissionRequest);
-        Assert.IsType<PermissionDecisionApproveOnce>(await config.OnPermissionRequest!(new PermissionRequestRead { Intention = "i", Path = "p" }, Invocation()));
+        Assert.Same(custom, config.Permissions.OnRequest);
+        Assert.IsType<PermissionDecisionApproveOnce>(await config.Permissions.OnRequest!(new PermissionRequestRead { Intention = "i", Path = "p" }, Invocation()));
     }
 
     public sealed class AdminTools

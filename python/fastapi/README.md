@@ -1,6 +1,6 @@
 # copilot-fastapi
 
-FastAPI integration for the [GitHub Copilot SDK for Python](https://pypi.org/project/github-copilot-sdk/).
+FastAPI integration for the [Microsoft Copilot SDK for Python](https://pypi.org/project/microsoft-copilot-sdk/).
 You declare agents as classes and inject them into endpoints with `Depends`. Your
 application functions become tools, so `HTTPException` and your own dependencies keep
 working inside them. Agents work from both `def` and `async def` endpoints. The package

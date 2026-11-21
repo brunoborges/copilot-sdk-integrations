@@ -14,13 +14,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.CopilotSession;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.generated.SessionEvent;
-import com.github.copilot.rpc.MessageOptions;
-import com.github.copilot.rpc.SessionConfig;
-import com.github.copilot.rpc.SessionMetadata;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotSession;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.generated.SessionEvent;
+import com.microsoft.copilot.rpc.MessageOptions;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
+import com.microsoft.copilot.rpc.SessionMetadata;
 import com.microsoft.copilot.integrations.core.CopilotAgentInstance;
 import com.microsoft.copilot.integrations.core.CopilotAgentListener;
 import com.microsoft.copilot.integrations.core.CopilotAgents;
@@ -294,7 +294,7 @@ class BoundAgentTests {
             when(client.getSessionMetadata(anyString())).thenAnswer(invocation ->
                     CompletableFuture.completedFuture(history.get(invocation.<String>getArgument(0))));
             when(client.createSession(any())).thenAnswer(invocation -> {
-                String id = invocation.<SessionConfig>getArgument(0).getSessionId();
+                String id = invocation.<CreateSessionOptions>getArgument(0).getSessionId();
                 var metadata = new SessionMetadata();
                 metadata.setSessionId(id);
                 history.put(id, metadata);

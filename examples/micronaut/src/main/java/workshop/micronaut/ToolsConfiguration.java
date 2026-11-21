@@ -4,13 +4,13 @@ import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Value;
-import com.github.copilot.rpc.PermissionHandler;
+import com.microsoft.copilot.rpc.PermissionHandler;
 import workshop.common.AccessibilityTools;
 import workshop.common.MuseumTools;
 import workshop.common.BrowserOptions;
 import workshop.common.ToolPermissions;
 import workshop.common.WikipediaResearch;
-import com.github.copilot.rpc.McpStdioServerConfig;
+import com.microsoft.copilot.rpc.McpStdioServerConfig;
 
 @Factory
 public class ToolsConfiguration {
