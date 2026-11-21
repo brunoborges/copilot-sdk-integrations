@@ -1,6 +1,6 @@
 # Copilot SDK for Aspire: design
 
-Status: **Preview — implemented, not yet published to NuGet** · Targets: Aspire 13.x,
+Status: **Preview — implemented, released to GitHub Packages (not nuget.org)** · Targets: Aspire 13.x,
 `Microsoft.Copilot.SDK` 2.0.x. The hosting package targets `net8.0`; the client
 package targets `net10.0` and `net8.0`.
 

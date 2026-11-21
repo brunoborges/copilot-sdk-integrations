@@ -1,4 +1,4 @@
-import { defineAgent, type PermissionPolicy } from "@copilot-sdk-integrations/agent-core";
+import { defineAgent, type PermissionPolicy } from "@brunoborges/copilot-agent-core";
 import { z } from "zod";
 import { loadInstructions } from "./resources.js";
 import { loadWorkshopConfig } from "./config.js";

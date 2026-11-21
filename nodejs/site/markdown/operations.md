@@ -205,7 +205,7 @@ it. Non-HTTP contexts rethrow.
 your own handlers. In other frameworks, add an error middleware that applies it:
 
 ```ts
-import { CopilotAdmissionRejectedError, CopilotIntegrationError, CopilotTimeoutError } from "@copilot-sdk-integrations/agent-core";
+import { CopilotAdmissionRejectedError, CopilotIntegrationError, CopilotTimeoutError } from "@brunoborges/copilot-agent-core";
 
 app.use((err, req, res, next) => {
   if (!(err instanceof CopilotIntegrationError)) return next(err);
@@ -217,7 +217,7 @@ app.use((err, req, res, next) => {
 
 ## Errors
 
-All errors extend `CopilotIntegrationError`, exported from `@copilot-sdk-integrations/agent-core`:
+All errors extend `CopilotIntegrationError`, exported from `@brunoborges/copilot-agent-core`:
 
 | Error | Raised when |
 | --- | --- |

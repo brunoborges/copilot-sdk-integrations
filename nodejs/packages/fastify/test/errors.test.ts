@@ -12,7 +12,7 @@ import {
   CopilotShuttingDownError,
   CopilotTimeoutError,
   defineAgent,
-} from "@copilot-sdk-integrations/agent-core";
+} from "@brunoborges/copilot-agent-core";
 import Fastify from "fastify";
 import { describe, expect, it } from "vitest";
 import { copilotErrorHandler, copilotPlugin } from "../src/index.js";

@@ -47,8 +47,8 @@ is done at build time by ArC (Quarkus CDI) instead of Spring auto-configuration.
   `@QuarkusTest`s, plus a Testcontainers `CopilotContainer` test resource.
 
 Permissions are denied unless you supply an explicit `PermissionHandler` bean or
-permission policy; the extension never approves tool use implicitly. No artifacts have
-been published yet.
+permission policy; the extension never approves tool use implicitly. Releases are
+published to GitHub Packages.
 
 ## Modules
 
@@ -63,10 +63,18 @@ been published yet.
 
 ## Quick start
 
-Until releases are published, install the reactor locally:
+Releases are published to GitHub Packages, which requires authentication even for
+public packages. Add the repository to your `pom.xml`, and a token with the
+`read:packages` scope to `~/.m2/settings.xml` as described in
+[Installing released packages](../../README.md#installing-released-packages):
 
-```sh
-./mvnw --batch-mode --no-transfer-progress install
+```xml
+<repositories>
+    <repository>
+        <id>copilot-sdk-integrations</id>
+        <url>https://maven.pkg.github.com/brunoborges/copilot-sdk-integrations</url>
+    </repository>
+</repositories>
 ```
 
 Add the extension to a Quarkus 3.40 application:
@@ -75,9 +83,12 @@ Add the extension to a Quarkus 3.40 application:
 <dependency>
     <groupId>com.microsoft</groupId>
     <artifactId>copilot-quarkus</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
 ```
+
+To try unreleased changes instead, install the reactor locally with
+`./mvnw --batch-mode --no-transfer-progress install` and use `0.1.0-SNAPSHOT`.
 
 Point it at an installed, authenticated Copilot CLI (or set `quarkus.copilot.cli-url`
 to use an existing TCP server):
@@ -223,7 +234,7 @@ Add the test module:
 <dependency>
     <groupId>com.microsoft</groupId>
     <artifactId>copilot-quarkus-test</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <scope>test</scope>
 </dependency>
 ```

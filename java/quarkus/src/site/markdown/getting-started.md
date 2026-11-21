@@ -23,14 +23,37 @@ title: Getting started
 | `copilot-quarkus-test` | Test-scoped support: scripted in-memory `CopilotTestRuntime` that replaces the client in `@QuarkusTest`s, and the Testcontainers `CopilotContainerTestResource`. |
 | `copilot-quarkus-example` | Quarkus REST example with conversational, bound, and streaming agents. Not published. |
 
-The extension targets Quarkus 3.40, Java 21, and Microsoft Copilot SDK 2.0.1. No
-integration artifacts have been published. Install the reactor locally (from
-the `quarkus/` directory) before using its snapshot dependencies in another
-application:
+The extension targets Quarkus 3.40, Java 21, and Microsoft Copilot SDK 2.0.1.
+Releases are published to GitHub Packages, which requires authentication even
+for public packages. Add the repository to your `pom.xml`:
 
-```sh
-./mvnw --batch-mode --no-transfer-progress install
+```xml
+<repositories>
+    <repository>
+        <id>copilot-sdk-integrations</id>
+        <url>https://maven.pkg.github.com/brunoborges/copilot-sdk-integrations</url>
+    </repository>
+</repositories>
 ```
+
+Add matching credentials to `~/.m2/settings.xml`, using a
+[personal access token (classic)](https://github.com/settings/tokens/new?scopes=read:packages)
+with the `read:packages` scope:
+
+```xml
+<settings>
+    <servers>
+        <server>
+            <id>copilot-sdk-integrations</id>
+            <username>YOUR_GITHUB_USERNAME</username>
+            <password>${env.GITHUB_TOKEN}</password>
+        </server>
+    </servers>
+</settings>
+```
+
+See [Installing released packages](https://github.com/brunoborges/copilot-sdk-integrations#installing-released-packages)
+for Gradle and GitHub Actions setup.
 
 Add the extension to a Quarkus application:
 
@@ -38,8 +61,15 @@ Add the extension to a Quarkus application:
 <dependency>
     <groupId>com.microsoft</groupId>
     <artifactId>copilot-quarkus</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
+```
+
+To try unreleased changes, install the reactor locally (from the `java/quarkus/`
+directory) and use `0.1.0-SNAPSHOT` instead:
+
+```sh
+./mvnw --batch-mode --no-transfer-progress install
 ```
 
 There is no separate reactive module. Agent methods returning

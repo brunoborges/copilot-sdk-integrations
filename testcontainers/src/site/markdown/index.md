@@ -6,9 +6,10 @@ integration is the **image contract**, not a Java-only protocol or mock server.
 Use any language's Testcontainers generic-container API; Java has an optional
 typed helper.
 
-This is a community integration with an unreleased Java artifact. The bundled
-CLI/runtime image is published through this repository's GitHub Actions workflow
-to **`ghcr.io/brunoborges/copilot-sdk-integrations/copilot-runtime`**. It is public
+This is a community integration. Its Java artifact is published to GitHub
+Packages (Maven). The bundled CLI/runtime image is published through this
+repository's GitHub Actions workflow to
+**`ghcr.io/brunoborges/copilot-sdk-integrations/copilot-runtime`**. The image is public
 and multi-arch (`linux/amd64`, `linux/arm64`); local image builds remain supported.
 
 ## Architecture and scope
@@ -148,9 +149,40 @@ and a separate connection token. Do not probe with
 
 ## Java reference
 
-Install the unreleased module locally, then use test-scoped
-`com.microsoft:copilot-testcontainers:0.1.0-SNAPSHOT` and add
-`com.microsoft:copilot-sdk:2.0.1` separately.
+The Java helper is released to GitHub Packages, which requires authentication
+even for public packages. Add the repository to your `pom.xml`:
+
+```xml
+<repositories>
+    <repository>
+        <id>copilot-sdk-integrations</id>
+        <url>https://maven.pkg.github.com/brunoborges/copilot-sdk-integrations</url>
+    </repository>
+</repositories>
+```
+
+Add matching credentials to `~/.m2/settings.xml`, using a
+[personal access token (classic)](https://github.com/settings/tokens/new?scopes=read:packages)
+with the `read:packages` scope:
+
+```xml
+<settings>
+    <servers>
+        <server>
+            <id>copilot-sdk-integrations</id>
+            <username>YOUR_GITHUB_USERNAME</username>
+            <password>${env.GITHUB_TOKEN}</password>
+        </server>
+    </servers>
+</settings>
+```
+
+See [Installing released packages](https://github.com/brunoborges/copilot-sdk-integrations#installing-released-packages)
+for Gradle and GitHub Actions setup. Then use test-scoped
+`com.microsoft:copilot-testcontainers:0.1.0` and add
+`com.microsoft:copilot-sdk:2.0.1` separately. To try unreleased changes, install
+the module locally with `mvn -f testcontainers/pom.xml install` and use
+`0.1.0-SNAPSHOT` instead.
 
 ```java
 import com.microsoft.copilot.CopilotClient;

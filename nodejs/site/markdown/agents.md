@@ -98,7 +98,7 @@ job), or `agent-<id>` (another agent). For each turn, the first match wins:
 4. Nothing: the runtime applies its default, `user`.
 
 ```ts
-import { withMessageSource } from "@copilot-sdk-integrations/agent-core";
+import { withMessageSource } from "@brunoborges/copilot-agent-core";
 
 await withMessageSource("system", () => copilot.agent(digest).send({ prompt: "Summarize last night's alerts" }));
 ```

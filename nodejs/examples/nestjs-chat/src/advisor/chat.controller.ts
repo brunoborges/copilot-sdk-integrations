@@ -1,6 +1,6 @@
-import { CopilotApprovalStore, pipeCopilotChatToResponse } from "@copilot-sdk-integrations/ai";
-import { getCopilotContext } from "@copilot-sdk-integrations/agent-core";
-import { CopilotAgents } from "@copilot-sdk-integrations/nestjs";
+import { CopilotApprovalStore, pipeCopilotChatToResponse } from "@brunoborges/copilot-ai";
+import { getCopilotContext } from "@brunoborges/copilot-agent-core";
+import { CopilotAgents } from "@brunoborges/copilot-nestjs";
 import { Body, Controller, Post, Res } from "@nestjs/common";
 import type { UIMessage } from "ai";
 import type { Response } from "express";

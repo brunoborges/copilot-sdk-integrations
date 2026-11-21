@@ -42,7 +42,7 @@ annotation processor, in keeping with Micronaut's reflection-free dependency inj
   Testcontainers `CopilotContainer`.
 
 Permissions are denied unless you supply an explicit `PermissionHandler` bean or permission policy; the
-integration never approves tool use implicitly. No artifacts have been published yet.
+integration never approves tool use implicitly. Releases are published to GitHub Packages.
 
 ## Modules
 
@@ -56,10 +56,17 @@ integration never approves tool use implicitly. No artifacts have been published
 
 ## Quick start
 
-Until releases are published, install the reactor locally:
+Releases are published to GitHub Packages, which requires authentication even for public packages. Add the
+repository to your `pom.xml`, and a token with the `read:packages` scope to `~/.m2/settings.xml` as described in
+[Installing released packages](../../README.md#installing-released-packages):
 
-```sh
-./mvnw --batch-mode --no-transfer-progress install
+```xml
+<repositories>
+    <repository>
+        <id>copilot-sdk-integrations</id>
+        <url>https://maven.pkg.github.com/brunoborges/copilot-sdk-integrations</url>
+    </repository>
+</repositories>
 ```
 
 Add the runtime to a Micronaut 5 application, and the processor next to Micronaut's own annotation processors:
@@ -68,7 +75,7 @@ Add the runtime to a Micronaut 5 application, and the processor next to Micronau
 <dependency>
     <groupId>com.microsoft</groupId>
     <artifactId>copilot-micronaut</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
@@ -82,7 +89,7 @@ Add the runtime to a Micronaut 5 application, and the processor next to Micronau
     <path>
         <groupId>com.microsoft</groupId>
         <artifactId>copilot-micronaut-processor</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.1.0</version>
     </path>
     <!-- Generates tool metadata for @CopilotTool methods -->
     <path>
@@ -96,6 +103,9 @@ Add the runtime to a Micronaut 5 application, and the processor next to Micronau
 The SDK jar also contains an experimental-API checker that rejects the tool processor's generated code, so list
 the processors explicitly, as in the example's [`pom.xml`](example/pom.xml), or pass
 `-Acopilot.experimental.allowed=true`.
+
+To try unreleased changes instead, install the reactor locally with
+`./mvnw --batch-mode --no-transfer-progress install` and use `0.1.0-SNAPSHOT` for both artifacts.
 
 Point the integration at an installed, authenticated Copilot CLI (or set `micronaut.copilot.cli-url` to use an
 existing TCP server):
@@ -297,7 +307,7 @@ Add the test module:
 <dependency>
     <groupId>com.microsoft</groupId>
     <artifactId>copilot-micronaut-test</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <scope>test</scope>
 </dependency>
 ```

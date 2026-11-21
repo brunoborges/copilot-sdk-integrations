@@ -4,7 +4,7 @@ title: Agent Core without a framework
 
 # Agent Core without a framework
 
-`@copilot-sdk-integrations/agent-core` (Agent Core) is the framework-agnostic agent layer on top
+`@brunoborges/copilot-agent-core` (Agent Core) is the framework-agnostic agent layer on top
 of the Microsoft Copilot SDK. It works from Express, Hono, a queue worker, or a script. The NestJS, Fastify,
 and AI SDK packages are built on it.
 <!-- only:nestjs -->
@@ -26,8 +26,17 @@ Fastify apps use the [Fastify plugin](fastify.md) instead of wiring Agent Core b
 
 ## Install
 
+The `@brunoborges` packages are published to GitHub Packages, not npmjs. Point the scope at
+GitHub Packages in your project's `.npmrc`, with a token that has the `read:packages` scope (see
+[Installing released packages](https://github.com/brunoborges/copilot-sdk-integrations#installing-released-packages)):
+
+```ini
+@brunoborges:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
 ```sh
-npm install @copilot-sdk-integrations/agent-core zod
+npm install @brunoborges/copilot-agent-core zod
 ```
 
 ## Create the client
@@ -36,7 +45,7 @@ npm install @copilot-sdk-integrations/agent-core zod
 Create one per application and share it.
 
 ```ts
-import { createCopilot } from "@copilot-sdk-integrations/agent-core";
+import { createCopilot } from "@brunoborges/copilot-agent-core";
 
 const copilot = createCopilot({
   limits: { maxConcurrentTurns: 8 },
@@ -54,7 +63,7 @@ The runtime starts on the first turn. All options are listed under
 
 ```ts
 import { z } from "zod";
-import { defineAgent, permissions } from "@copilot-sdk-integrations/agent-core";
+import { defineAgent, permissions } from "@brunoborges/copilot-agent-core";
 
 const lookupOrder = {
   name: "lookupOrder",
@@ -156,7 +165,7 @@ process.on("SIGTERM", async () => {
 ```ts
 import { readFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
-import { runCopilotLoop } from "@copilot-sdk-integrations/agent-core";
+import { runCopilotLoop } from "@brunoborges/copilot-agent-core";
 
 const result = await runCopilotLoop(copilot.agent(builder), {
   prompt: () => readFile("PROMPT_build.md", "utf8"), // re-read every iteration
@@ -178,7 +187,7 @@ Each iteration uses the agent's permission policy; nothing is approved implicitl
 
 ```ts
 import express from "express";
-import { CopilotIntegrationError, runWithCopilotContext } from "@copilot-sdk-integrations/agent-core";
+import { CopilotIntegrationError, runWithCopilotContext } from "@brunoborges/copilot-agent-core";
 
 const app = express();
 app.use(express.json());
@@ -217,4 +226,4 @@ tools, policies, and hooks. For an AI SDK `useChat` front end, see
 | Events | `mapSessionEvent`, `CopilotAgentEvent` |
 | Loops | `runCopilotLoop`, `CopilotLoopOptions`, `CopilotLoopResult`, `CopilotLoopIteration`, `CopilotLoopStep` |
 | Errors | `CopilotIntegrationError` and subclasses (see [Operations](operations.md#errors)) |
-| Testing | `@copilot-sdk-integrations/agent-core/testing` (see [Testing](testing.md)) |
+| Testing | `@brunoborges/copilot-agent-core/testing` (see [Testing](testing.md)) |

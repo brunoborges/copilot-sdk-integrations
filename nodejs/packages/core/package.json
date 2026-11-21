@@ -1,8 +1,10 @@
 {
-  "name": "@copilot-sdk-integrations/agent-core",
+  "name": "@brunoborges/copilot-agent-core",
   "version": "0.1.0",
   "description": "Framework-agnostic integration layer for the Microsoft Copilot SDK for Node.js",
   "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/brunoborges/copilot-sdk-integrations.git", "directory": "nodejs/packages/core" },
+  "publishConfig": { "registry": "https://npm.pkg.github.com" },
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

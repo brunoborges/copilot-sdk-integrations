@@ -4,6 +4,21 @@ Framework-neutral agent layer for the [Microsoft Copilot SDK for Python](https:/
 It is the Python counterpart of [`java-core`](../../java-core/): framework integrations such as
 [`copilot-django`](../django/) build on it, and it can also be used directly.
 
+## Install
+
+`copilot-django` and `copilot-fastapi` depend on it, so installing either installs it too. The
+packages are attached to each
+[GitHub Release](https://github.com/brunoborges/copilot-sdk-integrations/releases) rather than
+published to PyPI. To use it directly, install it from the release's assets; no token is needed:
+
+```bash
+pip install copilot-agent-core==0.1.0 \
+  --find-links https://github.com/brunoborges/copilot-sdk-integrations/releases/expanded_assets/v0.1.0
+```
+
+Replace `0.1.0` with the latest release. `uv pip install` accepts the same `--find-links`
+option. See [Installing released packages](../../README.md#installing-released-packages).
+
 ## What it provides
 
 | Module | Purpose |

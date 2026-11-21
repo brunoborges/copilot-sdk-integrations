@@ -14,7 +14,19 @@ title: Getting started
 
 ## Install
 
-The packages are not on PyPI yet. Install them from a clone:
+The packages are attached to each
+[GitHub Release](https://github.com/brunoborges/copilot-sdk-integrations/releases) rather than
+published to PyPI. Install from the release's assets; no token is needed:
+
+```sh
+pip install copilot-fastapi==0.1.0 \
+  --find-links https://github.com/brunoborges/copilot-sdk-integrations/releases/expanded_assets/v0.1.0
+```
+
+Replace `0.1.0` with the latest release. `copilot-agent-core` is resolved from the same
+release, and `uv pip install` accepts the same `--find-links` option.
+
+To work from source instead, install editable copies from a clone:
 
 ```sh
 git clone https://github.com/brunoborges/copilot-sdk-integrations

@@ -11,9 +11,10 @@ to the .NET Generic Host: ASP.NET Core APIs, worker services, and back-office ap
 the client lifecycle, conversations, tools with a DI scope per call, a safe default permission
 handler, configuration, health checks, and OpenTelemetry.
 
-> **Status:** preview. The library is implemented and tested, but it has not been published to
-> NuGet. Build it from the [repository](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/dotnet)
-> and reference the project, as the samples do. See [Getting started](getting-started.md).
+> **Status:** preview. The library is implemented, tested, and released to GitHub Packages (not
+> nuget.org). Add the GitHub Packages feed and install the package, or build it from the
+> [repository](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/dotnet) and
+> reference the project, as the samples do. See [Getting started](getting-started.md#add-the-package).
 
 ```cs
 builder.Services.AddCopilot(o =>
@@ -71,7 +72,7 @@ AppHost side.
 
 | Chapter | Covers |
 | --- | --- |
-| [Getting started](getting-started.md) | Prerequisites, referencing the project, a first API with a tool, and running it. |
+| [Getting started](getting-started.md) | Prerequisites, adding the package, a first API with a tool, and running it. |
 | [Configuration](configuration.md) | Every `CopilotOptions` setting, the `Copilot` section, binding order, connection strings, validation, and escape hatches. |
 | [Chat clients and agents](chat-clients.md) | `AddCopilot`, `IChatClient`, named agents with keyed services, per-call `ChatOptions`, and the injectable `CopilotClient`. |
 | [Tools](tools.md) | `WithTools<T>()`, `WithTool(...)`, naming, injected parameters, the DI scope per call, and errors. |

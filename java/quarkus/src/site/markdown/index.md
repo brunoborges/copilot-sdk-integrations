@@ -16,7 +16,7 @@ lifecycle, tool binding, and optional health, metrics, and streaming.
 | Java | 21 |
 | Quarkus | 3.40.1 |
 | Microsoft Copilot SDK for Java | 2.0.1 |
-| Extension | `com.microsoft:copilot-quarkus`, `0.1.0-SNAPSHOT` |
+| Extension | `com.microsoft:copilot-quarkus`, `0.1.0` |
 
 The agent API (`com.microsoft.copilot.integrations.core`) is the same one the
 [Spring Boot starter](../spring-boot/) uses, so agent interfaces, hooks, listeners,
@@ -94,5 +94,6 @@ Edit those sources rather than generated files under `target/site/`. Code blocks
 are highlighted with a locally bundled Highlight.js; use language labels such as
 `java`, `xml`, `ini` (for `application.properties`), `json`, or `sh`.
 
-No extension artifacts have been published. Real example runs require
+Extension artifacts are published to GitHub Packages; see
+[Getting started](getting-started.html#modules-and-installation). Real example runs require
 appropriate Copilot authentication and consume usage.

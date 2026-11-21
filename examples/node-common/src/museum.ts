@@ -1,4 +1,4 @@
-import { defineAgent, defineCopilotTool, permissions } from "@copilot-sdk-integrations/agent-core";
+import { defineAgent, defineCopilotTool, permissions } from "@brunoborges/copilot-agent-core";
 import { z } from "zod";
 import { loadInstructions } from "./resources.js";
 

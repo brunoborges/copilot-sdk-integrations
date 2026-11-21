@@ -25,12 +25,36 @@ title: Getting started
 | `copilot-spring-boot-test` | Test-scoped support: scripted in-memory `CopilotClient`, `@AutoConfigureCopilotTestRuntime`, and Testcontainers `CopilotContainer`. |
 | `copilot-spring-boot-example` | Executable non-web example of raw sessions, typed agents, tools, observations, and streaming. |
 
-No integration artifacts have been published. Install the reactor locally before
-using its snapshot dependencies in another application:
+Releases are published to GitHub Packages, which requires authentication even
+for public packages. Add the repository to your `pom.xml`:
 
-```sh
-./mvnw --batch-mode --no-transfer-progress install
+```xml
+<repositories>
+    <repository>
+        <id>copilot-sdk-integrations</id>
+        <url>https://maven.pkg.github.com/brunoborges/copilot-sdk-integrations</url>
+    </repository>
+</repositories>
 ```
+
+Add matching credentials to `~/.m2/settings.xml`, using a
+[personal access token (classic)](https://github.com/settings/tokens/new?scopes=read:packages)
+with the `read:packages` scope:
+
+```xml
+<settings>
+    <servers>
+        <server>
+            <id>copilot-sdk-integrations</id>
+            <username>YOUR_GITHUB_USERNAME</username>
+            <password>${env.GITHUB_TOKEN}</password>
+        </server>
+    </servers>
+</settings>
+```
+
+See [Installing released packages](https://github.com/brunoborges/copilot-sdk-integrations#installing-released-packages)
+for Gradle and GitHub Actions setup.
 
 For asynchronous text agents and native SDK access:
 
@@ -38,8 +62,15 @@ For asynchronous text agents and native SDK access:
 <dependency>
     <groupId>com.microsoft</groupId>
     <artifactId>copilot-spring-boot-starter</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
+```
+
+To try unreleased changes, install the reactor locally and use `0.1.0-SNAPSHOT`
+instead:
+
+```sh
+./mvnw --batch-mode --no-transfer-progress install
 ```
 
 For reactive agent methods, add `copilot-spring-boot-reactor` instead of, or

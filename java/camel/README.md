@@ -7,7 +7,7 @@ engine in [`java/core`](../core/), so agents behave exactly like the
 [Spring Boot](../spring-boot/) and [Quarkus](../quarkus/) integrations. Design notes:
 [DESIGN.md](DESIGN.md).
 
-> Status: available, unreleased. Build it from this repository.
+> Status: available. Releases are published to GitHub Packages; see [Dependency](#dependency).
 
 [Documentation](https://brunoborges.github.io/copilot-sdk-integrations/camel/)
 includes getting started, route patterns, configuration, permissions, sessions, and testing.
@@ -37,13 +37,28 @@ under `/camel/`.
 
 ## Dependency
 
+Releases are published to GitHub Packages, which requires authentication even for public packages. Add the
+repository to your `pom.xml`, and a token with the `read:packages` scope to `~/.m2/settings.xml` as described in
+[Installing released packages](../../README.md#installing-released-packages):
+
+```xml
+<repositories>
+  <repository>
+    <id>copilot-sdk-integrations</id>
+    <url>https://maven.pkg.github.com/brunoborges/copilot-sdk-integrations</url>
+  </repository>
+</repositories>
+```
+
 ```xml
 <dependency>
   <groupId>com.microsoft</groupId>
   <artifactId>copilot-camel</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.0</version>
 </dependency>
 ```
+
+To try unreleased changes instead, run `./mvnw install` from `java/camel` and use `0.1.0-SNAPSHOT`.
 
 ## Agents as route steps
 

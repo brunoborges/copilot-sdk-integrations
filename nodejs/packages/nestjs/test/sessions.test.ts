@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { Test, type TestingModule } from "@nestjs/testing";
-import { defineAgent, type Copilot } from "@copilot-sdk-integrations/agent-core";
+import { defineAgent, type Copilot } from "@brunoborges/copilot-agent-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { COPILOT, CopilotSessionCleanup, CopilotSessionsService } from "../src/index.js";
 import { CopilotTestRuntime, CopilotTestingModule } from "../src/testing/index.js";

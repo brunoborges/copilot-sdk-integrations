@@ -3,7 +3,7 @@ import { test, mock } from "node:test";
 import { constants } from "node:fs";
 import { open, unlink, symlink, writeFile, mkdir, rm } from "node:fs/promises";
 import { resolve } from "node:path";
-import { evaluatePermission } from "@copilot-sdk-integrations/agent-core";
+import { evaluatePermission } from "@brunoborges/copilot-agent-core";
 import { approvedFactsSchema, createMuseum, exhibits, validateExhibit } from "../src/museum.js";
 import { createAccessibility, validateAccessibility, type Criterion } from "../src/accessibility.js";
 import { MAX_SNAPSHOT_BYTES, SnapshotStore, exactTarget } from "../src/snapshot.js";

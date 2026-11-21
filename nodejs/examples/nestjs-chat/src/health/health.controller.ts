@@ -1,4 +1,4 @@
-import { CopilotHealthIndicator } from "@copilot-sdk-integrations/nestjs";
+import { CopilotHealthIndicator } from "@brunoborges/copilot-nestjs";
 import { Controller, Get } from "@nestjs/common";
 import { HealthCheck, HealthCheckService } from "@nestjs/terminus";
 import { Public } from "../auth/public.decorator";

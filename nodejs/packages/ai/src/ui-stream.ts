@@ -10,7 +10,7 @@ import {
   type CopilotAgentEvent,
   type PermissionRequest,
   type PermissionResponse,
-} from "@copilot-sdk-integrations/agent-core";
+} from "@brunoborges/copilot-agent-core";
 
 /** Response options accepted by the AI SDK response helpers (status, headers, `keepAliveMs`, ...). */
 export type UIMessageStreamResponseInit = Omit<Parameters<typeof createUIMessageStreamResponse>[0], "stream">;

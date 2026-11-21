@@ -6,7 +6,7 @@ title: Reactive streaming
 
 # Reactive streaming
 
-Add `com.microsoft:copilot-spring-boot-reactor:0.1.0-SNAPSHOT`.
+Add `com.microsoft:copilot-spring-boot-reactor:0.1.0`.
 The basic starter does not include Reactor or a web framework.
 
 ```java

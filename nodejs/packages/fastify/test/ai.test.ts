@@ -1,6 +1,6 @@
-import { createApprovalStore } from "@copilot-sdk-integrations/ai";
-import { defineAgent, permissions } from "@copilot-sdk-integrations/agent-core";
-import { parseSse } from "@copilot-sdk-integrations/agent-core/testing";
+import { createApprovalStore } from "@brunoborges/copilot-ai";
+import { defineAgent, permissions } from "@brunoborges/copilot-agent-core";
+import { parseSse } from "@brunoborges/copilot-agent-core/testing";
 import { isToolUIPart, jsonSchema, readUIMessageStream, tool, type UIMessage, type UIMessageChunk } from "ai";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { describe, expect, it } from "vitest";
@@ -61,7 +61,7 @@ describe("copilotAiPlugin", () => {
   it("requires copilotPlugin", async () => {
     const { default: Fastify } = await import("fastify");
     const fastify = Fastify();
-    await expect(fastify.register(copilotAiPlugin).ready()).rejects.toThrow(/@copilot-sdk-integrations\/fastify/);
+    await expect(fastify.register(copilotAiPlugin).ready()).rejects.toThrow(/@brunoborges\/copilot-fastify/);
   });
 
   it("streams a useChat UI message stream with principal-scoped conversations", async () => {

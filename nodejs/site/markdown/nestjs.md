@@ -17,20 +17,22 @@ title: NestJS module
 
 ## Install
 
-The packages are not published yet. Build the workspace and link it, or depend on it from
-a monorepo:
+The packages are published to GitHub Packages, not npmjs, and GitHub Packages requires
+authentication even for public packages. Create a
+[personal access token (classic)](https://github.com/settings/tokens/new?scopes=read:packages)
+with the `read:packages` scope, export it as `GITHUB_TOKEN`, and point the `@brunoborges` scope
+at GitHub Packages in your project's `.npmrc`:
 
-```sh
-git clone https://github.com/brunoborges/copilot-sdk-integrations.git
-cd copilot-sdk-integrations/nodejs
-npm install
-npm run build
+```ini
+@brunoborges:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
-In your application, the NestJS integration needs core, Zod, and the usual NestJS peers:
+The NestJS integration needs core, Zod, and the usual NestJS peers. Zod and the NestJS
+packages still come from npmjs:
 
 ```sh
-npm install @copilot-sdk-integrations/nestjs @copilot-sdk-integrations/agent-core zod
+npm install @brunoborges/copilot-nestjs @brunoborges/copilot-agent-core zod
 npm install @nestjs/common @nestjs/core reflect-metadata rxjs
 ```
 
@@ -40,6 +42,16 @@ Optional peers: `@nestjs/terminus` for the [health check](operations.md#health),
 The packages are ESM only. ESM apps import them directly. CommonJS apps, including the default
 `nest new` setup, load them through `require(esm)`, which works without flags on Node.js
 `^20.19.0 || >=22.12.0`.
+
+To work from source instead, build the workspace and link it, or depend on it from a
+monorepo:
+
+```sh
+git clone https://github.com/brunoborges/copilot-sdk-integrations.git
+cd copilot-sdk-integrations/nodejs
+npm install
+npm run build
+```
 
 Enable decorator metadata in `tsconfig.json`. Return-type inference for streaming methods
 and constructor injection by type rely on it:
@@ -61,7 +73,7 @@ so feature modules can register agents with `forFeature()`.
 ```ts
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { CopilotModule } from "@copilot-sdk-integrations/nestjs";
+import { CopilotModule } from "@brunoborges/copilot-nestjs";
 
 @Module({
   imports: [
@@ -101,8 +113,8 @@ are concrete stubs that `return implementedByCopilot()`; `forFeature()` replaces
 import { z } from "zod";
 import {
   ConversationId, CopilotAgent, Message, P, Returns, UserMessage, implementedByCopilot,
-} from "@copilot-sdk-integrations/nestjs";
-import { permissions } from "@copilot-sdk-integrations/agent-core";
+} from "@brunoborges/copilot-nestjs";
+import { permissions } from "@brunoborges/copilot-agent-core";
 
 const Order = z.object({ id: z.string(), status: z.enum(["shipped", "pending"]) });
 
@@ -144,7 +156,7 @@ DI-managed instance, so they can inject services.
 
 ```ts
 import { Injectable } from "@nestjs/common";
-import { CopilotTool, type CopilotToolInvocation } from "@copilot-sdk-integrations/nestjs";
+import { CopilotTool, type CopilotToolInvocation } from "@brunoborges/copilot-nestjs";
 
 @Injectable()
 export class OrdersTools {

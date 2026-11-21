@@ -16,7 +16,8 @@ this repository's framework integrations rather than unmanaged SDK clients.
 | .NET (Generic Host) | [dotnet](dotnet/README.md) | .NET 10 SDK |
 
 Each framework implements **both agents**. Follow its README from a repository
-checkout: these integrations are unreleased and must be built or installed locally.
+checkout: the examples build against the integrations in this repository rather than
+the [released packages](../README.md#installing-released-packages).
 Language-specific common modules share domain contracts and tools, not framework
 lifecycle management. There is no separate hosted service to deploy.
 

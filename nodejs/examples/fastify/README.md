@@ -1,7 +1,7 @@
 # Fastify example
 
 A small [Fastify 5](https://fastify.dev/) app (ESM) built on the
-[`@copilot-sdk-integrations/fastify`](../../packages/fastify) plugin. It runs the same "Node.js
+[`@brunoborges/copilot-fastify`](../../packages/fastify) plugin. It runs the same "Node.js
 advisor" agent as the [Express example](../express), the Node counterpart of the Spring Boot
 `spring-advisor` sample, written the Fastify way: an app factory, plugins, route schemas, and
 `app.inject()` tests.
@@ -75,6 +75,6 @@ with `API_URL=http://localhost:3000`.
 npm test -w examples/fastify
 ```
 
-The tests build the app with `buildCopilotTestApp` from `@copilot-sdk-integrations/fastify/testing`
+The tests build the app with `buildCopilotTestApp` from `@brunoborges/copilot-fastify/testing`
 (a scripted runtime) and call it with `app.inject()`. They need no credentials and no network
 access.

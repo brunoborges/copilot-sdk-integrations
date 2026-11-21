@@ -11,9 +11,9 @@ views, management commands, or background tasks, synchronously or with `async`/`
 
 > **Status:** preview. Milestones M1 and M2 of the
 > [design](https://github.com/brunoborges/copilot-sdk-integrations/blob/main/python/django/DESIGN.md)
-> are implemented and tested, but the packages are not on PyPI yet. Install them from the
-> [repository](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/python). See
-> [Getting started](getting-started.md).
+> are implemented and tested. The packages are attached to each
+> [GitHub Release](https://github.com/brunoborges/copilot-sdk-integrations/releases) rather
+> than published to PyPI. See [Getting started](getting-started.md).
 
 ```python
 class SupportAgent(CopilotAgent):

@@ -4,7 +4,7 @@ import {
   CopilotIntegrationError,
   copilotErrorCode,
   copilotErrorToHttp,
-} from "@copilot-sdk-integrations/agent-core";
+} from "@brunoborges/copilot-agent-core";
 import type { FastifyError, FastifyReply, FastifyRequest } from "fastify";
 
 /** Fastify-shaped error body sent for Copilot errors. */

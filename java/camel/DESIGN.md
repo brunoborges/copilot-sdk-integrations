@@ -1,7 +1,7 @@
 # Apache Camel integration: design
 
-Status: **MVP implemented** (unreleased). Section 7 lists what is built and what is still planned;
-see [README.md](README.md) for usage.
+Status: **MVP implemented** (released to GitHub Packages). Section 7 lists what is built and what is
+still planned; see [README.md](README.md) for usage.
 
 This document designs `copilot-camel`, an [Apache Camel](https://camel.apache.org/) component that
 brings the GitHub Copilot Harness into Camel routes. It builds on the

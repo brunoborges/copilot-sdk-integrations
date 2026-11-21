@@ -11,8 +11,8 @@
     "start": "node --env-file-if-exists=.env dist/src/main.js"
   },
   "dependencies": {
-    "@copilot-sdk-integrations/agent-core": "0.1.0",
-    "@copilot-sdk-integrations/nestjs": "0.1.0",
+    "@brunoborges/copilot-agent-core": "0.1.0",
+    "@brunoborges/copilot-nestjs": "0.1.0",
     "@workshop/node-common": "1.0.0",
     "@nestjs/common": "^12.2.0",
     "@nestjs/core": "^12.2.0",

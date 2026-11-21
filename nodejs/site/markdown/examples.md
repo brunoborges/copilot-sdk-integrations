@@ -53,8 +53,8 @@ endpoints as the Express example plus a raw-events SSE route.
 
 The Express example shows Agent Core without a framework integration.
 [`examples/express`](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/nodejs/examples/express)
-is a plain Express 5 app that uses only `@copilot-sdk-integrations/agent-core` and
-`@copilot-sdk-integrations/ai`.
+is a plain Express 5 app that uses only `@brunoborges/copilot-agent-core` and
+`@brunoborges/copilot-ai`.
 
 | Feature | Docs |
 | --- | --- |

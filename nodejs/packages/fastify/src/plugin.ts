@@ -10,7 +10,7 @@ import {
   type CopilotAgentDefinition,
   type CopilotAgentEvent,
   type CopilotOptions,
-} from "@copilot-sdk-integrations/agent-core";
+} from "@brunoborges/copilot-agent-core";
 import type { FastifyInstance, FastifyPluginAsync, FastifyReply } from "fastify";
 import fp from "fastify-plugin";
 import { addContextHook, decorateRequestCopilot } from "./context.js";
@@ -20,7 +20,7 @@ import { isCopilot, resolvePluginOptions } from "./options.js";
 import { addHealthRoute, addInfoRoute } from "./routes.js";
 import type { CopilotEventsOptions, CopilotPluginOptions, FastifyCopilot } from "./types.js";
 
-export const PLUGIN_NAME = "@copilot-sdk-integrations/fastify";
+export const PLUGIN_NAME = "@brunoborges/copilot-fastify";
 
 /** SSE response headers set by `reply.copilotEvents()`. */
 export const SSE_HEADERS = {

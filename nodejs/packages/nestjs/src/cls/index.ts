@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import type { CopilotContext } from "@copilot-sdk-integrations/agent-core";
+import type { CopilotContext } from "@brunoborges/copilot-agent-core";
 import { Module, type DynamicModule } from "@nestjs/common";
 import { ClsService } from "nestjs-cls";
 import { COPILOT_CONTEXT_BRIDGE } from "../constants.js";
@@ -7,7 +7,7 @@ import { defaultPrincipal } from "../copilot-context.interceptor.js";
 import type { CopilotContextBridge } from "../interfaces.js";
 
 /** Attribute key (a symbol, so it is never serialized) holding the CLS store captured for a turn. */
-export const CLS_STORE_ATTRIBUTE = Symbol.for("@copilot-sdk-integrations/nestjs:cls-store");
+export const CLS_STORE_ATTRIBUTE = Symbol.for("@brunoborges/copilot-nestjs:cls-store");
 
 export interface CopilotClsOptions {
   /**
@@ -57,7 +57,7 @@ export class ClsCopilotContextBridge implements CopilotContextBridge {
 }
 
 /**
- * Integrates `nestjs-cls` with `CopilotModule` (import from `@copilot-sdk-integrations/nestjs/cls`).
+ * Integrates `nestjs-cls` with `CopilotModule` (import from `@brunoborges/copilot-nestjs/cls`).
  * When an agent is called inside a CLS context (HTTP middleware, guards, interceptors, or
  * `cls.run()` in queue consumers, cron jobs, and other non-HTTP entry points), the principal and
  * attributes are read from the CLS store, and the store is re-entered around `@CopilotTool`,

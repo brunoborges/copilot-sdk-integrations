@@ -8,8 +8,8 @@ No raw SDK client or session is created by the application.
 ## Run
 
 Install the **.NET 10 SDK** and authenticate the Copilot CLI. Run these commands
-from the **repository root**; the project reference builds the unreleased integration
-from source:
+from the **repository root**; the project reference builds the integration in this
+repository from source:
 
 ```sh
 dotnet build examples/dotnet/Workshop.csproj

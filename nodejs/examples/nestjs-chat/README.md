@@ -1,13 +1,13 @@
 # NestJS chat example
 
 A realistic [NestJS](https://nestjs.com/) app that hosts a "Node.js advisor" agent with
-`@copilot-sdk-integrations/nestjs`. The agent is the Node counterpart of the Spring Boot
+`@brunoborges/copilot-nestjs`. The agent is the Node counterpart of the Spring Boot
 `spring-advisor` sample. The app also includes a minimal React UI (`web/`) built on AI SDK
 `useChat`, with buttons for approving tools.
 
 The app deliberately keeps the **default `nest new` setup**: it compiles to **CommonJS**
 (`"module": "commonjs"`, `emitDecoratorMetadata`, no `"type": "module"`). This shows that CJS
-Nest apps can consume the ESM-only `@copilot-sdk-integrations/*` packages through `require(esm)`,
+Nest apps can consume the ESM-only `@brunoborges/copilot-*` packages through `require(esm)`,
 which works without flags on Node `^20.19.0 || >=22.12.0`.
 
 ## What it demonstrates
@@ -88,7 +88,7 @@ npm test -w examples/nestjs-chat
 ```
 
 The tests override `AppCopilotModule` with
-`CopilotTestingModule.forRoot(script)` from `@copilot-sdk-integrations/nestjs/testing`, so they
+`CopilotTestingModule.forRoot(script)` from `@brunoborges/copilot-nestjs/testing`, so they
 need no credentials or runtime process. They run on Vitest with `unplugin-swc`, which provides
 the decorator metadata.
 

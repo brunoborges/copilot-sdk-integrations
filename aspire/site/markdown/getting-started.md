@@ -17,10 +17,39 @@ this page uses a .NET service first and then shows where the other languages fit
 - The toolchain of each service you add: a JDK for Java, Node.js for JavaScript, or Python.
 - A container runtime (Docker or Podman), only if you run the runtime as a container.
 
-## Build the packages
+## Add the packages
 
-The packages are not published to NuGet yet. Clone the repository and build them from
-`aspire/`:
+The integration has two packages:
+
+| Package | Reference it from | Purpose |
+| --- | --- | --- |
+| `CopilotSdk.Aspire.Hosting` | The AppHost | `AddCopilot`, `AddModel`, and the other AppHost APIs. |
+| `CopilotSdk.Aspire` | .NET services only | `AddCopilotClient`, which reads the connection string and adds health checks and telemetry. |
+
+Both are published to GitHub Packages. Every integration in the repository is released under
+one version; this page uses `0.1.0`, and
+[Releases](https://github.com/brunoborges/copilot-sdk-integrations/releases) lists the latest.
+GitHub Packages requires authentication even for public packages: create a
+[personal access token (classic)](https://github.com/settings/tokens/new?scopes=read:packages)
+with the `read:packages` scope and export it as `GITHUB_TOKEN`. Then add the feed, and each
+package to its project:
+
+```bash
+dotnet nuget add source https://nuget.pkg.github.com/brunoborges/index.json \
+  --name copilot-sdk-integrations --username YOUR_GITHUB_USERNAME \
+  --password "$GITHUB_TOKEN" --store-password-in-clear-text
+dotnet add package CopilotSdk.Aspire.Hosting --version 0.1.0   # in the AppHost
+dotnet add package CopilotSdk.Aspire --version 0.1.0           # in each .NET service
+```
+
+`CopilotSdk.Aspire` brings in the core `CopilotSdk.Extensions.Hosting` package from the same
+feed. Services in other languages don't use these packages; to install this repository's Java,
+Node.js, or Python integrations, see
+[Installing released packages](https://github.com/brunoborges/copilot-sdk-integrations#installing-released-packages).
+
+### Build from source
+
+To build the packages yourself, clone the repository and build them from `aspire/`:
 
 ```bash
 git clone https://github.com/brunoborges/copilot-sdk-integrations.git
@@ -29,14 +58,7 @@ dotnet build CopilotSdk.Aspire.slnx
 dotnet test --solution CopilotSdk.Aspire.slnx
 ```
 
-Two packages come out of the build:
-
-| Package | Reference it from | Purpose |
-| --- | --- | --- |
-| `CopilotSdk.Aspire.Hosting` | The AppHost | `AddCopilot`, `AddModel`, and the other AppHost APIs. |
-| `CopilotSdk.Aspire` | .NET services only | `AddCopilotClient`, which reads the connection string and adds health checks and telemetry. |
-
-Until the packages are published, reference them with a project reference:
+Then reference them with project references:
 
 ```xml
 <ItemGroup>

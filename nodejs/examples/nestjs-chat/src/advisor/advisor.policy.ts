@@ -1,5 +1,5 @@
-import type { CopilotPermissionPolicy } from "@copilot-sdk-integrations/nestjs";
-import type { PermissionDecision, PermissionPolicyContext, PermissionRequest } from "@copilot-sdk-integrations/agent-core";
+import type { CopilotPermissionPolicy } from "@brunoborges/copilot-nestjs";
+import type { PermissionDecision, PermissionPolicyContext, PermissionRequest } from "@brunoborges/copilot-agent-core";
 import { Injectable, Logger } from "@nestjs/common";
 
 const READ_ONLY_TOOLS = new Set(["describeTerm", "listNotes"]);

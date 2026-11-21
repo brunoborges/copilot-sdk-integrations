@@ -5,10 +5,12 @@ title: Node.js
 # Node.js
 
 Node.js services connect to the AppHost's runtime with the
-Node.js integrations (`@copilot-sdk-integrations/agent-core`, or the
+Node.js integrations (`@brunoborges/copilot-agent-core`, or the
 [NestJS](https://brunoborges.github.io/copilot-sdk-integrations/nestjs/), [Fastify](https://brunoborges.github.io/copilot-sdk-integrations/fastify/), and AI SDK packages built on it) or with the
 [Microsoft Copilot SDK for Node.js](https://github.com/microsoft/copilot-sdk/tree/main/nodejs)
-(`@microsoft/copilot-sdk`) directly.
+(`@microsoft/copilot-sdk`) directly. The `@brunoborges` packages are published to GitHub Packages;
+see [Installing released packages](https://github.com/brunoborges/copilot-sdk-integrations#installing-released-packages)
+for the `.npmrc` setup.
 
 ## AppHost
 
@@ -49,7 +51,7 @@ The SDK's `RuntimeConnection.forTcp(host, port, { connectionToken })` takes the 
 scheme or IPv6 brackets) and the port as separate arguments, so pass `CHAT_HOST` and `CHAT_PORT`
 to it directly.
 
-## With `@copilot-sdk-integrations/agent-core`
+## With `@brunoborges/copilot-agent-core`
 
 `createCopilot({ cliUrl })` connects to an external runtime, but it has no option for the connection
 token. Pass the token through `configureClient`, which receives the SDK client options before the
@@ -57,7 +59,7 @@ client is created:
 
 ```ts
 import { RuntimeConnection } from "@microsoft/copilot-sdk";
-import { createCopilot, defineAgent } from "@copilot-sdk-integrations/agent-core";
+import { createCopilot, defineAgent } from "@brunoborges/copilot-agent-core";
 
 const cliUrl = `${process.env.CHAT_HOST}:${process.env.CHAT_PORT}`;
 
@@ -109,7 +111,7 @@ const support = defineAgent({
 ```ts
 import { Module } from "@nestjs/common";
 import { RuntimeConnection } from "@microsoft/copilot-sdk";
-import { CopilotModule } from "@copilot-sdk-integrations/nestjs";
+import { CopilotModule } from "@brunoborges/copilot-nestjs";
 
 const cliUrl = `${process.env.CHAT_HOST}:${process.env.CHAT_PORT}`;
 

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { CopilotAgents, toSseEvents } from "@copilot-sdk-integrations/nestjs";
+import { CopilotAgents, toSseEvents } from "@brunoborges/copilot-nestjs";
 import { Body, Controller, Get, HttpCode, NotFoundException, Param, Post, Query, Sse, type MessageEvent } from "@nestjs/common";
 import type { Observable } from "rxjs";
 import { z } from "zod";

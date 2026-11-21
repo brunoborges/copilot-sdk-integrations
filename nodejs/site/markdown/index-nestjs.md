@@ -6,16 +6,16 @@ sites: nestjs
 
 # Copilot Agents for NestJS
 
-`@copilot-sdk-integrations/nestjs` brings the
+`@brunoborges/copilot-nestjs` brings the
 [Microsoft Copilot SDK for Node.js/TypeScript](https://github.com/microsoft/copilot-sdk/tree/main/nodejs)
 to NestJS applications. Declare agents as abstract classes, expose provider methods as tools,
-and inject agents into controllers. Underneath, Agent Core (`@copilot-sdk-integrations/agent-core`)
+and inject agents into controllers. Underneath, Agent Core (`@brunoborges/copilot-agent-core`)
 adds what the SDK leaves to the application: a managed client lifecycle with admission limits,
 typed agents, tools with deny-by-default permissions, server-side conversations, request
 context, streaming, and a scripted test runtime that needs no credentials.
 
-> **Status:** in development. The packages are versioned `0.1.0` and have not been published
-> to npm. Build them from the [repository](https://github.com/brunoborges/copilot-sdk-integrations/tree/main/nodejs).
+> **Status:** preview. The packages are published to GitHub Packages (npm), not npmjs. See
+> [Install](nestjs.md#install).
 
 ```ts
 @CopilotAgent({ name: "support", instructions: "Help customers with orders.", tools: [OrdersTools] })
@@ -43,9 +43,9 @@ Building on Fastify instead? See [Copilot Agents for Fastify](https://brunoborge
 
 | Package | Use it when | Depends on |
 | --- | --- | --- |
-| `@copilot-sdk-integrations/nestjs` | You build a NestJS application and want `CopilotModule`, `@CopilotAgent` classes, `@CopilotTool` providers, request context, HTTP error mapping, SSE, health and info endpoints, and a testing module. | Agent Core, NestJS |
-| `@copilot-sdk-integrations/agent-core` | Always installed with the module. Used directly for agent definitions, permission policies, and [apps without a framework](core.md) such as Express, Hono, or workers. | `@microsoft/copilot-sdk`, `zod` |
-| `@copilot-sdk-integrations/ai` | Your front end uses the AI SDK (`useChat`), or you want `generateText`/`streamText` against Copilot agents. | Agent Core, `ai` |
+| `@brunoborges/copilot-nestjs` | You build a NestJS application and want `CopilotModule`, `@CopilotAgent` classes, `@CopilotTool` providers, request context, HTTP error mapping, SSE, health and info endpoints, and a testing module. | Agent Core, NestJS |
+| `@brunoborges/copilot-agent-core` | Always installed with the module. Used directly for agent definitions, permission policies, and [apps without a framework](core.md) such as Express, Hono, or workers. | `@microsoft/copilot-sdk`, `zod` |
+| `@brunoborges/copilot-ai` | Your front end uses the AI SDK (`useChat`), or you want `generateText`/`streamText` against Copilot agents. | Agent Core, `ai` |
 
 The NestJS module is a thin layer over Agent Core. Every concept on the core pages (agents,
 tools, permissions, conversations, events) applies unchanged in NestJS.

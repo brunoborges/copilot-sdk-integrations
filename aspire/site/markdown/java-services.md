@@ -49,13 +49,14 @@ Both apps receive:
 
 ## Spring Boot
 
-Add the starter:
+Add the starter. It's published to GitHub Packages; add the repository and credentials as shown
+in [Installing released packages](https://github.com/brunoborges/copilot-sdk-integrations#installing-released-packages):
 
 ```xml
 <dependency>
     <groupId>com.microsoft</groupId>
     <artifactId>copilot-spring-boot-starter</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 
@@ -113,13 +114,13 @@ CopilotConnectionDetails copilotConnectionDetails(Environment env) {
 
 ## Quarkus
 
-Add the extension:
+Add the extension, from the same GitHub Packages repository:
 
 ```xml
 <dependency>
     <groupId>com.microsoft</groupId>
     <artifactId>copilot-quarkus</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 </dependency>
 ```
 

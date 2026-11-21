@@ -1,13 +1,20 @@
-# @copilot-sdk-integrations/ai
+# @brunoborges/copilot-ai
 
-This package connects [`@copilot-sdk-integrations/agent-core`](../core) to the [Vercel AI SDK](https://ai-sdk.dev) v7 (`ai@^7`). It has three parts:
+This package connects [`@brunoborges/copilot-agent-core`](../core) to the [Vercel AI SDK](https://ai-sdk.dev) v7 (`ai@^7`). It has three parts:
 
 - **UI message streams**: maps Copilot agent events to the AI SDK UI message stream protocol, so `useChat` frontends work unchanged. Tool approvals are included.
 - **`useChat` handler**: `streamCopilotChat` takes a `useChat` request and turns it into a Copilot turn. History stays on the server, keyed by the chat id. It also handles the approval round trip.
 - **AI SDK provider**: `createCopilotProvider` (alias `copilot`) returns a `LanguageModelV4`, so you can use `generateText` and `streamText` with Copilot agents. `createCopilotAgent` returns an AI SDK `Agent`.
 
+The `@brunoborges` packages are published to GitHub Packages, not npmjs. Point the scope at GitHub Packages in your project's `.npmrc`, with a token that has the `read:packages` scope (see [Installing released packages](https://github.com/brunoborges/copilot-sdk-integrations#installing-released-packages)):
+
+```ini
+@brunoborges:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
 ```bash
-npm install @copilot-sdk-integrations/ai @copilot-sdk-integrations/agent-core ai
+npm install @brunoborges/copilot-ai @brunoborges/copilot-agent-core ai
 ```
 
 ## Chat UI (`useChat`)
@@ -16,8 +23,8 @@ npm install @copilot-sdk-integrations/ai @copilot-sdk-integrations/agent-core ai
 
 ```ts
 // app/api/chat/route.ts
-import { createCopilot, defineAgent, permissions } from "@copilot-sdk-integrations/agent-core";
-import { createCopilotChatResponse } from "@copilot-sdk-integrations/ai";
+import { createCopilot, defineAgent, permissions } from "@brunoborges/copilot-agent-core";
+import { createCopilotChatResponse } from "@brunoborges/copilot-ai";
 import type { UIMessage } from "ai";
 
 const copilot = createCopilot();
@@ -37,7 +44,7 @@ export async function POST(req: Request) {
 ### Express / NestJS
 
 ```ts
-import { pipeCopilotChatToResponse } from "@copilot-sdk-integrations/ai";
+import { pipeCopilotChatToResponse } from "@brunoborges/copilot-ai";
 
 // Express
 app.post("/api/chat", express.json(), async (req, res) => {
@@ -78,7 +85,7 @@ Suspended turns are held in a process-local `CopilotApprovalStore`:
 ### Lower-level mapping
 
 ```ts
-import { toUIMessageStream, toUIMessageStreamResponse, pipeCopilotEventsToResponse } from "@copilot-sdk-integrations/ai";
+import { toUIMessageStream, toUIMessageStreamResponse, pipeCopilotEventsToResponse } from "@brunoborges/copilot-ai";
 
 const events = copilot.agent(support).stream({ prompt, conversationId });
 return toUIMessageStreamResponse(events, {
@@ -106,7 +113,7 @@ return toUIMessageStreamResponse(events, {
 
 ```ts
 import { generateText, streamText } from "ai";
-import { createCopilotProvider } from "@copilot-sdk-integrations/ai";
+import { createCopilotProvider } from "@brunoborges/copilot-ai";
 
 const copilotAI = createCopilotProvider({ copilot, agent: advisor });
 
@@ -132,7 +139,7 @@ const result = streamText({
 
 ```ts
 import { createAgentUIStreamResponse } from "ai";
-import { createCopilotAgent } from "@copilot-sdk-integrations/ai";
+import { createCopilotAgent } from "@brunoborges/copilot-ai";
 
 const agent = createCopilotAgent({ copilot, agent: advisor });
 await agent.generate({ prompt: "Hello" });

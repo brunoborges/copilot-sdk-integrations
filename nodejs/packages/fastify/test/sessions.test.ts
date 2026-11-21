@@ -1,5 +1,5 @@
-import { defineAgent } from "@copilot-sdk-integrations/agent-core";
-import type { CreateTestCopilotOptions } from "@copilot-sdk-integrations/agent-core/testing";
+import { defineAgent } from "@brunoborges/copilot-agent-core";
+import type { CreateTestCopilotOptions } from "@brunoborges/copilot-agent-core/testing";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setup } from "./helpers.js";
 

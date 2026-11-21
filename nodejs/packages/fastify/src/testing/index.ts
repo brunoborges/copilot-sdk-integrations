@@ -1,8 +1,8 @@
-import { createTestCopilot, type CopilotTestRuntime, type CreateTestCopilotOptions, type TestCopilot } from "@copilot-sdk-integrations/agent-core/testing";
-import type { Copilot } from "@copilot-sdk-integrations/agent-core";
+import { createTestCopilot, type CopilotTestRuntime, type CreateTestCopilotOptions, type TestCopilot } from "@brunoborges/copilot-agent-core/testing";
+import type { Copilot } from "@brunoborges/copilot-agent-core";
 import type { FastifyInstance } from "fastify";
 
-export { parseSse, type SseFrame } from "@copilot-sdk-integrations/agent-core/testing";
+export { parseSse, type SseFrame } from "@brunoborges/copilot-agent-core/testing";
 
 export interface CopilotTestApp<App extends FastifyInstance = FastifyInstance> {
   app: App;

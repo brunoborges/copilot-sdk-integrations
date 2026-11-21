@@ -1,11 +1,11 @@
-import type { CopilotApprovalStore } from "@copilot-sdk-integrations/ai";
-import { getCopilotContext, type Copilot, type CopilotOptions } from "@copilot-sdk-integrations/agent-core";
-import { copilotPlugin } from "@copilot-sdk-integrations/fastify";
-import { copilotAiPlugin, type CopilotChatBody } from "@copilot-sdk-integrations/fastify/ai";
+import type { CopilotApprovalStore } from "@brunoborges/copilot-ai";
+import { getCopilotContext, type Copilot, type CopilotOptions } from "@brunoborges/copilot-agent-core";
+import { copilotPlugin } from "@brunoborges/copilot-fastify";
+import { copilotAiPlugin, type CopilotChatBody } from "@brunoborges/copilot-fastify/ai";
 import Fastify, { type FastifyInstance, type FastifyRequest, type FastifyServerOptions } from "fastify";
 import { createAdvisor, Notebook } from "./advisor.js";
 
-declare module "@copilot-sdk-integrations/fastify" {
+declare module "@brunoborges/copilot-fastify" {
   interface CopilotAgentRegistry {
     "node-advisor": ReturnType<typeof createAdvisor>;
   }

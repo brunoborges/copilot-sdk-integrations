@@ -23,7 +23,7 @@ request context into them, and turns failures into tool results instead of crash
 
 ```ts
 import { z } from "zod";
-import { defineCopilotTool } from "@copilot-sdk-integrations/agent-core";
+import { defineCopilotTool } from "@brunoborges/copilot-agent-core";
 
 export const lookupOrder = defineCopilotTool({
   name: "lookupOrder",

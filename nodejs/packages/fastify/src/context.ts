@@ -5,7 +5,7 @@ import {
   type CopilotAgentDefinition,
   type CopilotContext,
   type SendOptions,
-} from "@copilot-sdk-integrations/agent-core";
+} from "@brunoborges/copilot-agent-core";
 import type { FastifyInstance, FastifyReply, FastifyRequest, HookHandlerDoneFunction } from "fastify";
 import type { CopilotContextOptions, FastifyCopilot, RequestCopilot } from "./types.js";
 

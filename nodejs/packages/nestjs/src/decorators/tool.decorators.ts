@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { CopilotConfigurationError, type CopilotAgentEvent, type StructuredSchema } from "@copilot-sdk-integrations/agent-core";
+import { CopilotConfigurationError, type CopilotAgentEvent, type StructuredSchema } from "@brunoborges/copilot-agent-core";
 import { Inject, type Type } from "@nestjs/common";
 import {
   COPILOT,

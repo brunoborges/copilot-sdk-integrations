@@ -16,7 +16,7 @@ optional observations and streaming.
 | Java | 21 |
 | Spring Boot | 4.1.1 |
 | Microsoft Copilot SDK for Java | 2.0.1 |
-| Integration | `com.microsoft`, `0.1.0-SNAPSHOT` |
+| Integration | `com.microsoft`, `0.1.0` |
 
 <a id="choose-your-integration"></a>
 
@@ -101,6 +101,7 @@ The version, checksum, source URL, and
 BSD license are recorded under `src/site/resources/js/vendor/`. Keep the
 license and notice when updating the bundle; no runtime CDN request is made.
 
-No integration artifacts have been published. Real example runs require
+Integration artifacts are published to GitHub Packages; see
+[Getting started](getting-started.html#modules-and-installation). Real example runs require
 appropriate Copilot authentication and consume usage; documentation preview does
 not require authentication.

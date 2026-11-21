@@ -1,4 +1,4 @@
-import { defineAgent, defineCopilotTool, permissions, type CopilotAgentDefinition } from "@copilot-sdk-integrations/agent-core";
+import { defineAgent, defineCopilotTool, permissions, type CopilotAgentDefinition } from "@brunoborges/copilot-agent-core";
 import { tool } from "ai";
 import { z } from "zod";
 

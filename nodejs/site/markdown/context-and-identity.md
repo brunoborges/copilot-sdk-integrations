@@ -38,7 +38,7 @@ and can supply a per-user GitHub token.
 Read it anywhere downstream of a turn:
 
 ```ts
-import { getCopilotContext } from "@copilot-sdk-integrations/agent-core";
+import { getCopilotContext } from "@brunoborges/copilot-agent-core";
 
 const audit = (action: string) => log.info({ action, user: getCopilotContext()?.principal });
 ```
@@ -48,7 +48,7 @@ Tool handlers also receive it as `invocation.context`, and policies as `ctx.cont
 ## Setting the context in core
 
 ```ts
-import { bindCopilotContext, runWithCopilotContext } from "@copilot-sdk-integrations/agent-core";
+import { bindCopilotContext, runWithCopilotContext } from "@brunoborges/copilot-agent-core";
 
 app.post("/chat", (req, res, next) =>
   runWithCopilotContext({ principal: req.user.id, attributes: { tenant: req.user.tenant } }, () =>
@@ -122,7 +122,7 @@ The interceptor only covers HTTP handlers. When the app uses
 `/cls` subpath (the main entry point never imports `nestjs-cls`, an optional peer dependency):
 
 ```ts
-import { CopilotClsModule } from "@copilot-sdk-integrations/nestjs/cls";
+import { CopilotClsModule } from "@brunoborges/copilot-nestjs/cls";
 
 @Module({
   imports: [

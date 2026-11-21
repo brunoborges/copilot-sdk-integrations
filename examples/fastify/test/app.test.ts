@@ -3,7 +3,7 @@ import { createApplication } from "../src/app.js";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
-import { createTestCopilot } from "@copilot-sdk-integrations/agent-core/testing";
+import { createTestCopilot } from "@brunoborges/copilot-agent-core/testing";
 import { createMuseum, exhibits } from "@workshop/node-common";
 
 frameworkTests(createApplication);

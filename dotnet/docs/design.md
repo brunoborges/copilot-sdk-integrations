@@ -1,6 +1,6 @@
 # Copilot SDK for .NET applications: design
 
-Status: **Preview — implemented, not yet published to NuGet** · Targets: .NET 10 and .NET 8,
+Status: **Preview — implemented, released to GitHub Packages (not nuget.org)** · Targets: .NET 10 and .NET 8,
 `Microsoft.Copilot.SDK` 2.0.x, `Microsoft.Extensions.AI` 10.x.
 
 This document describes the integration of the
@@ -511,4 +511,4 @@ writing the same code without it.
 | --- | --- | --- |
 | **1** | `AddCopilot`, configuration, lifecycle, `IChatClient` (conversations, typed results, streaming, cancellation), `WithTools<T>`, default permissions, health check, telemetry; `SupportApi` sample with raw-SDK comparison. | ✅ Done |
 | **2** | Named agents, MCP and BYOK from configuration, per-user tokens, `[RequiresApproval]`, `MaxConcurrentTurns`; `InvoiceWorker` sample. | ✅ Done; a back-office (Blazor) sample is still to come |
-| **3** | Publish to NuGet; revisit §13 based on sample feedback; documentation site chapters. | Planned |
+| **3** | Publish to NuGet; revisit §13 based on sample feedback; documentation site chapters. | In progress: released to GitHub Packages from `v0.1.0`, not yet on nuget.org |

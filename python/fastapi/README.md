@@ -7,9 +7,24 @@ working inside them. Agents work from both `def` and `async def` endpoints. The 
 builds on [`copilot-agent-core`](../core/), the same engine that
 [`copilot-django`](../django/) uses.
 
-Status: **preview** (not yet on PyPI). Documentation: <https://brunoborges.github.io/copilot-sdk-integrations/fastapi/>
+Status: **preview**, released as GitHub Release assets (not on PyPI). Documentation: <https://brunoborges.github.io/copilot-sdk-integrations/fastapi/>
 (source in [`site/`](site/)). [DESIGN.md](DESIGN.md) covers the scope and the
 milestones. Streaming (SSE) and interactive approvals are planned.
+
+## Install
+
+The packages are attached to each
+[GitHub Release](https://github.com/brunoborges/copilot-sdk-integrations/releases) rather than
+published to PyPI. Install from the release's assets; no token is needed:
+
+```bash
+pip install copilot-fastapi==0.1.0 \
+  --find-links https://github.com/brunoborges/copilot-sdk-integrations/releases/expanded_assets/v0.1.0
+```
+
+Replace `0.1.0` with the latest release. `copilot-agent-core` is resolved from the same
+release, and `uv pip install` accepts the same `--find-links` option. See
+[Installing released packages](../../README.md#installing-released-packages).
 
 ## Quickstart
 

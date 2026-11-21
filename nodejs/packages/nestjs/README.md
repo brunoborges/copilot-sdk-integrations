@@ -1,9 +1,16 @@
-# @copilot-sdk-integrations/nestjs
+# @brunoborges/copilot-nestjs
 
-NestJS module for the [Microsoft Copilot SDK](https://github.com/microsoft/copilot-sdk). It provides declarative agents, `@CopilotTool` providers, request-context propagation, per-user tokens, HTTP error mapping, SSE streaming, a Terminus health indicator, and a scripted testing module. It's built on [`@copilot-sdk-integrations/agent-core`](../core); see [`DESIGN.md`](../../DESIGN.md) §4–§15 for the full design.
+NestJS module for the [Microsoft Copilot SDK](https://github.com/microsoft/copilot-sdk). It provides declarative agents, `@CopilotTool` providers, request-context propagation, per-user tokens, HTTP error mapping, SSE streaming, a Terminus health indicator, and a scripted testing module. It's built on [`@brunoborges/copilot-agent-core`](../core); see [`DESIGN.md`](../../DESIGN.md) §4–§15 for the full design.
+
+The `@brunoborges` packages are published to GitHub Packages, not npmjs. Point the scope at GitHub Packages in your project's `.npmrc`, with a token that has the `read:packages` scope (see [Installing released packages](https://github.com/brunoborges/copilot-sdk-integrations#installing-released-packages)):
+
+```ini
+@brunoborges:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
 
 ```sh
-npm install @copilot-sdk-integrations/nestjs @copilot-sdk-integrations/agent-core zod
+npm install @brunoborges/copilot-nestjs @brunoborges/copilot-agent-core zod
 ```
 
 ## Register the module
@@ -157,7 +164,7 @@ providers: [{ provide: CopilotTokenResolver, useClass: PassportGitHubTokenResolv
 When the app uses [`nestjs-cls`](https://papooch.github.io/nestjs-cls/), import `CopilotClsModule` from the `/cls` subpath. The main entry point never imports `nestjs-cls`.
 
 ```ts
-import { CopilotClsModule } from "@copilot-sdk-integrations/nestjs/cls";
+import { CopilotClsModule } from "@brunoborges/copilot-nestjs/cls";
 
 @Module({
   imports: [
@@ -233,6 +240,6 @@ await expect(moduleRef.get(SupportAgent).answer("c1", "Where is order 42?")).res
 expect(moduleRef.get(CopilotTestRuntime).prompts).toEqual(["Where is order 42?"]);
 ```
 
-`CopilotTestingModule` lives in `@copilot-sdk-integrations/nestjs/testing`. It also offers `forRootAsync`. It replaces the runtime with core's scripted `CopilotTestRuntime`, so tests need no process, no credentials, and make no paid requests. Inject the `CopilotTestRuntime` to script replies and inspect its recordings.
+`CopilotTestingModule` lives in `@brunoborges/copilot-nestjs/testing`. It also offers `forRootAsync`. It replaces the runtime with core's scripted `CopilotTestRuntime`, so tests need no process, no credentials, and make no paid requests. Inject the `CopilotTestRuntime` to script replies and inspect its recordings.
 
 Test runners must emit decorator metadata (`emitDecoratorMetadata`) for constructor injection by type. With Vitest, use `unplugin-swc`. The library itself uses explicit `@Inject` tokens.

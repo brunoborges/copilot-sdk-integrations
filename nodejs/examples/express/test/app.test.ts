@@ -1,5 +1,5 @@
-import { createApprovalStore } from "@copilot-sdk-integrations/ai";
-import { createTestCopilot, type CreateTestCopilotOptions, type TestCopilot } from "@copilot-sdk-integrations/agent-core/testing";
+import { createApprovalStore } from "@brunoborges/copilot-ai";
+import { createTestCopilot, type CreateTestCopilotOptions, type TestCopilot } from "@brunoborges/copilot-agent-core/testing";
 import type { UIMessage } from "ai";
 import request from "supertest";
 import { afterEach, describe, expect, it } from "vitest";

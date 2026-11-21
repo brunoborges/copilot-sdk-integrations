@@ -5,7 +5,7 @@ lifespan to own the runtime. No server is exposed: the CLI obtains an agent usin
 the integration's `Copilot.get()` API for background tasks. `app.py` also exposes
 the usual health router for anyone embedding the application.
 
-From the **repository root**, install the unreleased packages locally:
+From the **repository root**, install the packages from this checkout:
 
 ```sh
 uv venv --python 3.12 examples/.venv

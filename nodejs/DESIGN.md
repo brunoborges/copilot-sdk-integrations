@@ -51,7 +51,7 @@ Versions surveyed: `@microsoft/copilot-sdk` 2.0.0, `@nestjs/core` 12.2, `@nestjs
 
 NestJS isn't the only target. Express, Hono, and Koa applications use the
 framework-agnostic core directly (§3), and Fastify applications use the
-`@copilot-sdk-integrations/fastify` plugin, designed in [DESIGN-FASTIFY.md](DESIGN-FASTIFY.md).
+`@brunoborges/copilot-fastify` plugin, designed in [DESIGN-FASTIFY.md](DESIGN-FASTIFY.md).
 
 ---
 
@@ -75,12 +75,12 @@ flowchart TB
   Core --> Apps
 ```
 
-| Package (working name) | Contents | Depends on |
+| Package | Contents | Depends on |
 | --- | --- | --- |
-| `@copilot-sdk-integrations/agent-core` | Client manager, agent definitions and execution, tool adapters, governance, conversation manager, session store interface, event model, test runtime | `@microsoft/copilot-sdk`, `zod` |
-| `@copilot-sdk-integrations/ai` | `copilot()` AI SDK provider, AI SDK `Agent` adapter, Copilot event to UI message stream mapping | core, `ai` |
-| `@copilot-sdk-integrations/nestjs` | `CopilotModule`, decorators, discovery, CLS context, Terminus indicator, testing module | core, `@nestjs/common`, `@nestjs/core`; optional `ai`, `@nestjs/terminus`, `rxjs` |
-| `@copilot-sdk-integrations/fastify` | `copilotPlugin`, decorators, context hook, error handler, SSE, health and info routes; `./ai` `useChat` routes; `./testing` ([DESIGN-FASTIFY.md](DESIGN-FASTIFY.md)) | core, `fastify-plugin`; peer `fastify ^5`; optional `ai` |
+| `@brunoborges/copilot-agent-core` | Client manager, agent definitions and execution, tool adapters, governance, conversation manager, session store interface, event model, test runtime | `@microsoft/copilot-sdk`, `zod` |
+| `@brunoborges/copilot-ai` | `copilot()` AI SDK provider, AI SDK `Agent` adapter, Copilot event to UI message stream mapping | core, `ai` |
+| `@brunoborges/copilot-nestjs` | `CopilotModule`, decorators, discovery, CLS context, Terminus indicator, testing module | core, `@nestjs/common`, `@nestjs/core`; optional `ai`, `@nestjs/terminus`, `rxjs` |
+| `@brunoborges/copilot-fastify` | `copilotPlugin`, decorators, context hook, error handler, SSE, health and info routes; `./ai` `useChat` routes; `./testing` ([DESIGN-FASTIFY.md](DESIGN-FASTIFY.md)) | core, `fastify-plugin`; peer `fastify ^5`; optional `ai` |
 
 Packages live in an npm workspace under `nodejs/packages/*` and are released together
 with one version, like the Spring Boot reactor modules. Toolchain: TypeScript, Vitest,
@@ -96,7 +96,7 @@ CommonJS apps load them through `require(esm)`, which that Node.js floor support
 The core is a plain TypeScript library; any Node.js app can use it without NestJS.
 
 ```ts
-import { createCopilot, defineAgent, permissions } from "@copilot-sdk-integrations/agent-core";
+import { createCopilot, defineAgent, permissions } from "@brunoborges/copilot-agent-core";
 
 const copilot = createCopilot({ cliPath: process.env.COPILOT_CLI_PATH });
 
@@ -495,7 +495,7 @@ expect(moduleRef.get(CopilotTestRuntime).prompts).toEqual(["Where is order 42?"]
 - `CopilotTestingModule` swaps the client for the core's scripted runtime: replies,
   streaming, tool calls into real `@CopilotTool` providers, permission requests,
   failures, recorded prompts. No runtime process, credentials, or paid requests.
-- Without NestJS, `createTestCopilot({ script })` from `@copilot-sdk-integrations/agent-core/testing`
+- Without NestJS, `createTestCopilot({ script })` from `@brunoborges/copilot-agent-core/testing`
   returns `{ copilot, runtime, stop }` (async-disposable) with test-friendly defaults (silent
   logger, throwaway `baseDirectory`, short timeouts).
 - An optional `CopilotContainer` (Testcontainers for Node.js) runs a real runtime in
@@ -541,8 +541,10 @@ expect(moduleRef.get(CopilotTestRuntime).prompts).toEqual(["Where is order 42?"]
 
 ## 18. Open questions
 
-1. **Package scope.** `@copilot-sdk-integrations/*`, an `@brunoborges` scope, or
-   unscoped names? Should align with the Spring starter's coordinates.
+1. **Package scope.** Resolved: packages are published as `@brunoborges/copilot-*`
+   (`copilot-agent-core`, `copilot-ai`, `copilot-nestjs`, `copilot-fastify`), because
+   GitHub Packages' npm registry requires the scope to match the repository owner. The
+   `copilot-` prefix follows the Java artifact IDs, such as `copilot-spring-boot-starter`.
 2. **Agent declaration style.** Abstract classes with decorators (closest to Spring)
    as the primary NestJS API, with `defineAgent` objects as the alternative. Is that
    the right default?
@@ -587,7 +589,7 @@ Where the code differs from the sections above:
 - **AI SDK provider.** Tools passed to `generateText`/`streamText` are rejected;
   declare them on the agent definition.
 - **`nestjs-cls`.** Opt-in through `CopilotClsModule.forRoot()` from the
-  `@copilot-sdk-integrations/nestjs/cls` subpath, so the main entry never loads
+  `@brunoborges/copilot-nestjs/cls` subpath, so the main entry never loads
   `nestjs-cls`. The context is read from CLS when an agent is called, not by the
   interceptor, so non-HTTP entry points work too. The CLS store is restored around DI
   tools, hooks, listeners, and injectable policies. It is not restored around plain
