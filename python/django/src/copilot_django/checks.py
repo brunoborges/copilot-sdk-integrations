@@ -9,6 +9,7 @@ from django.conf import settings as django_settings
 from django.core.checks import Error, Tags, Warning, register
 
 from copilot_agents import CopilotConfigurationError
+from copilot_agents.connection import runtime_download_pending
 from copilot_agents.policies import approves_everything
 
 from . import conf, registry
@@ -64,21 +65,14 @@ def check_runtime(app_configs: Any = None, **kwargs: Any) -> list[Any]:
     runtime = get_settings().RUNTIME
     messages: list[Any] = []
     connection = runtime["CONNECTION"]
-    if connection in ("stdio", "tcp") and not runtime["CLI_PATH"] and not os.environ.get("COPILOT_CLI_PATH"):
-        try:
-            from copilot._cli_download import get_cached_cli_path
-
-            missing = get_cached_cli_path() is None
-        except Exception:  # noqa: BLE001 - SDK internals may change; skip the check
-            missing = False
-        if missing:
-            messages.append(
-                Warning(
-                    "The Copilot runtime has not been downloaded; the first agent call will download it.",
-                    hint="Run `python manage.py copilot_download_runtime` at build time.",
-                    id="copilot.W001",
-                )
+    if runtime_download_pending(connection, runtime["CLI_PATH"]):
+        messages.append(
+            Warning(
+                "The Copilot runtime has not been downloaded; the first agent call will download it.",
+                hint="Run `python manage.py copilot_download_runtime` at build time.",
+                id="copilot.W001",
             )
+        )
     if connection == "stdio":
         try:
             workers = int(os.environ.get("WEB_CONCURRENCY", "0"))

@@ -8,17 +8,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.copilot.rpc.AgentStopHookOutput;
-import com.github.copilot.rpc.PostToolUseFailureHookOutput;
-import com.github.copilot.rpc.PostToolUseHookOutput;
-import com.github.copilot.rpc.PreToolUseHookOutput;
-import com.github.copilot.rpc.SessionEndHookOutput;
-import com.github.copilot.rpc.SessionHooks;
-import com.github.copilot.rpc.SessionStartHookOutput;
-import com.github.copilot.rpc.SubagentStartHookOutput;
-import com.github.copilot.rpc.SubagentStopHookOutput;
-import com.github.copilot.rpc.UserPromptSubmittedHookInput;
-import com.github.copilot.rpc.UserPromptSubmittedHookOutput;
+import com.microsoft.copilot.rpc.AgentStopHookOutput;
+import com.microsoft.copilot.rpc.PostToolUseFailureHookOutput;
+import com.microsoft.copilot.rpc.PostToolUseHookOutput;
+import com.microsoft.copilot.rpc.PreToolUseHookOutput;
+import com.microsoft.copilot.rpc.SessionEndHookOutput;
+import com.microsoft.copilot.rpc.SessionHooks;
+import com.microsoft.copilot.rpc.SessionStartHookOutput;
+import com.microsoft.copilot.rpc.SubagentStartHookOutput;
+import com.microsoft.copilot.rpc.SubagentStopHookOutput;
+import com.microsoft.copilot.rpc.UserPromptSubmittedHookInput;
+import com.microsoft.copilot.rpc.UserPromptSubmittedHookOutput;
 import com.microsoft.copilot.integrations.core.CopilotAgentContext;
 import com.microsoft.copilot.integrations.core.CopilotAgentHooks;
 

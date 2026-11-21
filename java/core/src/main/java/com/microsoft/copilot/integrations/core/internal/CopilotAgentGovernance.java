@@ -8,12 +8,12 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.github.copilot.rpc.McpServerConfig;
-import com.github.copilot.rpc.PermissionHandler;
-import com.github.copilot.rpc.ResumeSessionConfig;
-import com.github.copilot.rpc.SessionConfig;
-import com.github.copilot.rpc.ToolDefinition;
-import com.github.copilot.rpc.ToolSearchConfig;
+import com.microsoft.copilot.rpc.McpServerConfig;
+import com.microsoft.copilot.rpc.PermissionHandler;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
+import com.microsoft.copilot.rpc.ResumeSessionOptions;
+import com.microsoft.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.rpc.ToolSearchConfig;
 import com.microsoft.copilot.integrations.core.CopilotAgent;
 import com.microsoft.copilot.integrations.core.CopilotAgentContext;
 import com.microsoft.copilot.integrations.core.CopilotAgentHooks;
@@ -134,51 +134,51 @@ public record CopilotAgentGovernance(List<String> availableTools, List<String> e
         return CopilotPermissionPolicies.anyOf(handlers);
     }
 
-    void apply(CopilotAgentContext context, SessionConfig config, Supplier<CopilotAgentLifetime.Scope> callbackScope) {
+    void apply(CopilotAgentContext context, CreateSessionOptions config, Supplier<CopilotAgentLifetime.Scope> callbackScope) {
         if (toolSearch != null) {
-            config.setToolSearch(toolSearchConfig());
+            config.getTools().setSearch(toolSearchConfig());
         }
         if (availableTools != null) {
-            config.setAvailableTools(new ArrayList<>(availableTools));
+            config.getTools().setAvailableTools(new ArrayList<>(availableTools));
         }
         if (excludedTools != null) {
-            config.setExcludedTools(new ArrayList<>(excludedTools));
+            config.getTools().setExcludedTools(new ArrayList<>(excludedTools));
         }
         if (excludedBuiltInAgents != null) {
-            config.setExcludedBuiltInAgents(excludedBuiltInAgents);
+            config.getAgents().setExcludedBuiltInAgents(excludedBuiltInAgents);
         }
         if (workingDirectory != null) {
             config.setWorkingDirectory(workingDirectory);
         }
         if (additionalDirectories != null) {
-            config.setAdditionalDirectories(new ArrayList<>(additionalDirectories));
+            config.getFilesystem().setAdditionalDirectories(new ArrayList<>(additionalDirectories));
         }
         if (!hooks.isEmpty()) {
-            config.setHooks(CopilotAgentHookChain.sessionHooks(hooks, context, callbackScope));
+            config.getHooks().setHandlers(CopilotAgentHookChain.sessionHooks(hooks, context, callbackScope));
         }
     }
 
-    void apply(CopilotAgentContext context, ResumeSessionConfig config, Supplier<CopilotAgentLifetime.Scope> callbackScope) {
+    void apply(CopilotAgentContext context, ResumeSessionOptions config, Supplier<CopilotAgentLifetime.Scope> callbackScope) {
         if (toolSearch != null) {
-            config.setToolSearch(toolSearchConfig());
+            config.getTools().setSearch(toolSearchConfig());
         }
         if (availableTools != null) {
-            config.setAvailableTools(new ArrayList<>(availableTools));
+            config.getTools().setAvailableTools(new ArrayList<>(availableTools));
         }
         if (excludedTools != null) {
-            config.setExcludedTools(new ArrayList<>(excludedTools));
+            config.getTools().setExcludedTools(new ArrayList<>(excludedTools));
         }
         if (excludedBuiltInAgents != null) {
-            config.setExcludedBuiltInAgents(excludedBuiltInAgents);
+            config.getAgents().setExcludedBuiltInAgents(excludedBuiltInAgents);
         }
         if (workingDirectory != null) {
             config.setWorkingDirectory(workingDirectory);
         }
         if (additionalDirectories != null) {
-            config.setAdditionalDirectories(new ArrayList<>(additionalDirectories));
+            config.getFilesystem().setAdditionalDirectories(new ArrayList<>(additionalDirectories));
         }
         if (!hooks.isEmpty()) {
-            config.setHooks(CopilotAgentHookChain.sessionHooks(hooks, context, callbackScope));
+            config.getHooks().setHandlers(CopilotAgentHookChain.sessionHooks(hooks, context, callbackScope));
         }
     }
 
@@ -227,7 +227,7 @@ public record CopilotAgentGovernance(List<String> availableTools, List<String> e
      * Chains hook beans into SDK session hooks for one invocation, outside of any agent lifetime. Intended for
      * integration tests that exercise hook composition directly.
      */
-    public static com.github.copilot.rpc.SessionHooks sessionHooks(CopilotAgentContext context, CopilotAgentHooks... hooks) {
+    public static com.microsoft.copilot.rpc.SessionHooks sessionHooks(CopilotAgentContext context, CopilotAgentHooks... hooks) {
         return CopilotAgentHookChain.sessionHooks(List.of(hooks), context, CopilotAgentLifetime.Lease.NONE::enter);
     }
 }

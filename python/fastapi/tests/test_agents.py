@@ -189,7 +189,7 @@ def test_tool_search_is_not_passed_by_default(copilot, fake):
     fake.agent("support").replies("ok")
     copilot.get(SupportAgent).ask("hi")
     assert copilot.definition(SupportAgent).tool_search is None
-    assert "tool_search" not in fake.last_session_options("support")
+    assert "search" not in fake.last_session_options("support").get("tools", {})
 
 
 def test_tool_search_attribute_passed_to_create_and_resume(settings):
@@ -198,10 +198,10 @@ def test_tool_search_attribute_passed_to_create_and_resume(settings):
         fake.agent("searching").replies("1", "2")
         conversation = copilot.get(SearchingAgent, user=USERS["ana"]).conversation("c1")
         conversation.send("first")
-        created = fake.last_session_options("searching")["tool_search"]
+        created = fake.last_session_options("searching")["tools"]["search"]
         conversation.send("second")
         assert fake.resumed == [conversation.session_id]
-        resumed = fake.last_session_options("searching")["tool_search"]
+        resumed = fake.last_session_options("searching")["tools"]["search"]
     assert created == resumed == {"enabled": True, "defer_threshold": 5}
     assert created is not resumed
 

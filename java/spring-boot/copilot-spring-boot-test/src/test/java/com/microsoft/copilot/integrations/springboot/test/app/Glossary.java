@@ -5,8 +5,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.springframework.stereotype.Component;
 
-import com.github.copilot.tool.CopilotTool;
-import com.github.copilot.tool.CopilotToolParam;
+import com.microsoft.copilot.tool.CopilotTool;
+import com.microsoft.copilot.tool.CopilotToolParam;
 
 @Component("glossary")
 public class Glossary {

@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using GitHub.Copilot;
+using Microsoft.Copilot;
 
 namespace CopilotSdk.Extensions.Hosting;
 

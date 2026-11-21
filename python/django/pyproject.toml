@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "copilot-django"
 version = "0.1.0.dev0"
-description = "Django integration for the GitHub Copilot SDK: declarative agents, ORM-aware tools, and permission policies."
+description = "Django integration for the Microsoft Copilot SDK: declarative agents, ORM-aware tools, and permission policies."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"

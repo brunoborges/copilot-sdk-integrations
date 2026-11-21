@@ -20,12 +20,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.github.copilot.rpc.MessageSource;
-import com.github.copilot.rpc.PermissionHandler;
-import com.github.copilot.rpc.PermissionInvocation;
-import com.github.copilot.rpc.PermissionRequest;
-import com.github.copilot.rpc.PermissionRequestResult;
-import com.github.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.rpc.MessageSource;
+import com.microsoft.copilot.rpc.PermissionHandler;
+import com.microsoft.copilot.rpc.PermissionInvocation;
+import com.microsoft.copilot.rpc.PermissionRequest;
+import com.microsoft.copilot.rpc.PermissionRequestResult;
+import com.microsoft.copilot.rpc.ToolDefinition;
 
 import com.microsoft.copilot.integrations.core.ConversationId;
 import com.microsoft.copilot.integrations.core.CopilotAgent;
@@ -139,8 +139,8 @@ class CopilotComponentTest {
         var config = runtime.sessionConfig("support");
         assertThat(config.getModel()).isEqualTo("gpt-5");
         assertThat(config.getSystemMessage().getContent()).isEqualTo("Answer briefly.");
-        assertThat(config.getExcludedTools()).as("endpoint agents run without built-in tools by default").isNotEmpty();
-        assertThat(config.getToolSearch()).isNull();
+        assertThat(config.getTools().getExcludedTools()).as("endpoint agents run without built-in tools by default").isNotEmpty();
+        assertThat(config.getTools().getSearch()).isNull();
     }
 
     @Test
@@ -159,7 +159,7 @@ class CopilotComponentTest {
         });
 
         assertThat(reply.getException()).isNull();
-        var search = runtime.sessionConfig("support").getToolSearch();
+        var search = runtime.sessionConfig("support").getTools().getSearch();
         assertThat(search.getEnabled()).isTrue();
         assertThat(search.getDeferThreshold()).isEqualTo(20);
     }
@@ -259,7 +259,7 @@ class CopilotComponentTest {
         assertThat(call.succeeded()).isTrue();
         assertThat(call.result()).isEqualTo("Order 42 shipped via lookupOrder");
         assertThat(context.getRegistry().lookupByName("lookupOrder")).isInstanceOf(ToolDefinition.class);
-        var policy = runtime.sessionConfig("support").getOnPermissionRequest();
+        var policy = runtime.sessionConfig("support").getPermissions().getOnRequest();
         var request = new PermissionRequest();
         request.setKind(CopilotPermissionPolicies.CUSTOM_TOOL);
         request.setExtensionData(Map.of("toolName", "lookupOrder"));
@@ -297,7 +297,7 @@ class CopilotComponentTest {
 
         var request = new PermissionRequest();
         request.setKind(CopilotPermissionPolicies.SHELL);
-        var result = runtime.sessionConfig("support").getOnPermissionRequest()
+        var result = runtime.sessionConfig("support").getPermissions().getOnRequest()
                 .handle(request, new PermissionInvocation()).join();
 
         assertThat(CopilotPermissionPolicies.isApproval(result)).isFalse();
@@ -315,7 +315,7 @@ class CopilotComponentTest {
         });
         runtime.agent("support").replies("ok");
         template.requestBodyAndHeader("direct:ask", "hi", CopilotConstants.CONVERSATION_ID, "c-1");
-        var handler = runtime.sessionConfig("support").getOnPermissionRequest();
+        var handler = runtime.sessionConfig("support").getPermissions().getOnRequest();
 
         assertThat(handler).isSameAs(context.getRegistry().lookupByNameAndType("reviewer", PermissionHandler.class));
         assertThat(decide(handler, "read").getKind()).startsWith("approve");

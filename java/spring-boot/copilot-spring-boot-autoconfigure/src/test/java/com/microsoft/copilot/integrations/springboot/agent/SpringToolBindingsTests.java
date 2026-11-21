@@ -6,9 +6,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.copilot.rpc.ToolDefinition;
-import com.github.copilot.rpc.ToolInvocation;
-import com.github.copilot.rpc.ToolNamespace;
+import com.microsoft.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.rpc.ToolInvocation;
+import com.microsoft.copilot.rpc.ToolNamespace;
 import com.microsoft.copilot.integrations.springboot.agent.tools.EchoOperations;
 import com.microsoft.copilot.integrations.springboot.agent.tools.EchoTools;
 import org.aopalliance.intercept.MethodInterceptor;

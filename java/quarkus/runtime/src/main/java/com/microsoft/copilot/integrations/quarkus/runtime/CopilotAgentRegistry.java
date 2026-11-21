@@ -12,7 +12,7 @@ import jakarta.inject.Singleton;
 
 import org.eclipse.microprofile.config.ConfigProvider;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 
 import com.microsoft.copilot.integrations.core.internal.BindingContext;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentFactory;

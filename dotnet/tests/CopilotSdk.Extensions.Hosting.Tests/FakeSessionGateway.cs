@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using CopilotSdk.Extensions.Hosting;
-using GitHub.Copilot;
+using Microsoft.Copilot;
 
 namespace CopilotSdk.Extensions.Hosting.Tests;
 
@@ -9,28 +9,28 @@ internal sealed class FakeSessionGateway : ICopilotSessionGateway
 {
     private int _created;
 
-    public ConcurrentQueue<(string? ResumedId, SessionConfigBase Config)> Calls { get; } = new();
+    public ConcurrentQueue<(string? ResumedId, SessionOptionsBase Config)> Calls { get; } = new();
 
     public ConcurrentQueue<FakeSession> Sessions { get; } = new();
 
     /// <summary>Configures each new session (scripts its replies).</summary>
     public Action<FakeSession>? Setup { get; set; }
 
-    public Task<ICopilotSessionHandle> CreateSessionAsync(SessionConfig config, CancellationToken cancellationToken)
+    public Task<ICopilotSessionHandle> CreateSessionAsync(CreateSessionOptions config, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         Calls.Enqueue((null, config));
         return Task.FromResult<ICopilotSessionHandle>(NewSession($"session-{Interlocked.Increment(ref _created)}", config));
     }
 
-    public Task<ICopilotSessionHandle> ResumeSessionAsync(string sessionId, ResumeSessionConfig config, CancellationToken cancellationToken)
+    public Task<ICopilotSessionHandle> ResumeSessionAsync(string sessionId, ResumeSessionOptions config, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         Calls.Enqueue((sessionId, config));
         return Task.FromResult<ICopilotSessionHandle>(NewSession(sessionId, config));
     }
 
-    private FakeSession NewSession(string id, SessionConfigBase config)
+    private FakeSession NewSession(string id, SessionOptionsBase config)
     {
         var session = new FakeSession(id, config);
         Setup?.Invoke(session);
@@ -39,13 +39,13 @@ internal sealed class FakeSessionGateway : ICopilotSessionGateway
     }
 }
 
-internal sealed class FakeSession(string sessionId, SessionConfigBase config) : ICopilotSessionHandle
+internal sealed class FakeSession(string sessionId, SessionOptionsBase config) : ICopilotSessionHandle
 {
     private readonly List<Action<SessionEvent>> _handlers = [];
 
     public string SessionId { get; } = sessionId;
 
-    public SessionConfigBase Config { get; } = config;
+    public SessionOptionsBase Config { get; } = config;
 
     public CopilotSession? Session => null;
 

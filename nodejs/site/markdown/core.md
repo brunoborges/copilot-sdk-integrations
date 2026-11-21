@@ -5,7 +5,7 @@ title: Agent Core without a framework
 # Agent Core without a framework
 
 `@copilot-sdk-integrations/agent-core` (Agent Core) is the framework-agnostic agent layer on top
-of the Copilot SDK. It works from Express, Hono, a queue worker, or a script. The NestJS, Fastify,
+of the Microsoft Copilot SDK. It works from Express, Hono, a queue worker, or a script. The NestJS, Fastify,
 and AI SDK packages are built on it.
 <!-- only:nestjs -->
 NestJS apps use the [`CopilotModule`](nestjs.md) instead of wiring Agent Core by hand.

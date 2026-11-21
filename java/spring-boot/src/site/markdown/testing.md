@@ -138,8 +138,8 @@ the handler throws, the exception is recorded on the call and the turn continues
 | --- | --- |
 | `prompts()` / `prompts(agent)` | Prompt text in arrival order. |
 | `receivedPrompts()` | `CopilotTestPrompt` records with the agent, session ID, `MessageOptions`, and requested response type. |
-| `sessions()` / `sessions(agent)` / `session(id)` / `lastSession(agent)` | `CopilotTestSession` snapshots: creation `SessionConfig`, resume configurations, prompts, `resumed()`, `model()`, `tools()`, `toolNames()`, `systemMessage()`, and `mcpServers()`. |
-| `sessionConfig(agent)` | The creation `SessionConfig` of the agent's latest session. |
+| `sessions()` / `sessions(agent)` / `session(id)` / `lastSession(agent)` | `CopilotTestSession` snapshots: creation `CreateSessionOptions`, resume configurations, prompts, `resumed()`, `model()`, `tools()`, `toolNames()`, `systemMessage()`, and `mcpServers()`. |
+| `sessionConfig(agent)` | The creation `CreateSessionOptions` of the agent's latest session. |
 | `toolCalls()` / `toolCalls(agent)` | `CopilotTestToolCall` records with the arguments, the result or failure, and `succeeded()`. |
 | `aborts()` | IDs of the sessions on which `abort()` was called. |
 
@@ -204,7 +204,7 @@ class CopilotServerTests {
 
     @Container
     @ServiceConnection
-    static CopilotContainer copilot = new CopilotContainer("copilot-runtime:1.0.105");
+    static CopilotContainer copilot = new CopilotContainer("copilot-runtime:1.0.114");
 
     @Autowired
     CopilotClient client;
@@ -228,7 +228,7 @@ The container is ready once the log contains `listening on port <n>`.
 Build the shared image from the repository root:
 
 ```sh
-docker build -t copilot-runtime:1.0.105 testcontainers/image
+docker build -t copilot-runtime:1.0.114 testcontainers/image
 ```
 
 The image uses the native headless runtime's all-interface TCP listener and reads
@@ -240,7 +240,7 @@ The module's own container test runs only when `COPILOT_TEST_IMAGE` is set and
 Docker is available:
 
 ```sh
-COPILOT_TEST_IMAGE=copilot-runtime:1.0.105 ./mvnw -pl copilot-spring-boot-test -am verify
+COPILOT_TEST_IMAGE=copilot-runtime:1.0.114 ./mvnw -pl copilot-spring-boot-test -am verify
 ```
 
 Without Docker or the variable, it is skipped.
@@ -260,7 +260,8 @@ optional `tcpConnectionToken()`.
 When a `CopilotConnectionDetails` bean exists, the auto-configured
 `CopilotClientOptions` uses its URL and token instead of `copilot.cli-url` and
 `copilot.tcp-connection-token`. It also ignores the local-process properties
-`cli-path`, `cli-args`, and `working-directory`. All other `copilot.*` client
+`cli-path`, `cli-args`, and `working-directory`, plus `log-level`, because the
+external server owns its runtime settings. All other `copilot.*` client
 properties still apply.
 
 Without such a bean, behavior is unchanged. You can also declare your own bean, for

@@ -1,4 +1,4 @@
-using GitHub.Copilot;
+using Microsoft.Copilot;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,10 +7,11 @@ builder.Services.AddSingleton(sp => new CopilotClient(new CopilotClientOptions
 {
     // Empty mode: no built-in shell/file/URL tools and no ambient CLI state. It requires a runtime home directory.
     Mode = CopilotClientMode.Empty,
-    BaseDirectory = Directory.CreateDirectory(Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "copilot-sdk", "SupportApi.RawSdk")).FullName,
-    GitHubToken = builder.Configuration["Copilot:GitHubToken"], // null: the logged-in user is used
-    Logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("GitHub.Copilot"),
+    // Run the bundled runtime as a child process (the SDK otherwise defaults to hosting it in-process).
+    Runtime = RuntimeConnection.ForSpawnedStdio(baseDirectory: Directory.CreateDirectory(Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "copilot-sdk", "SupportApi.RawSdk")).FullName),
+    GitHub = { Token = builder.Configuration["Copilot:GitHubToken"] }, // null: the logged-in user is used
+    Observability = { Logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("Microsoft.Copilot") },
 }));
 builder.Services.AddHostedService<CopilotLifetime>();
 builder.Services.AddSingleton<SupportAgent>();

@@ -4,14 +4,14 @@ Status: **approved; phases 1–3 implemented, phase 4 (scale-out) and OpenTeleme
 roadmap** (see §17 and §19). API and package names are working names.
 
 This document designs the Node.js integrations for the
-[Copilot SDK for Node.js/TypeScript](https://github.com/github/copilot-sdk/tree/main/nodejs)
-(`@github/copilot-sdk`):
+[Microsoft Copilot SDK for Node.js/TypeScript](https://github.com/microsoft/copilot-sdk/tree/main/nodejs)
+(`@microsoft/copilot-sdk`):
 
 - a **framework-agnostic core** that holds everything not tied to a framework, and
 - a **NestJS module**, the first framework integration and the closest counterpart to
   the [Spring Boot starter](../java/spring-boot/).
 
-Versions surveyed: `@github/copilot-sdk` 1.0.26, `@nestjs/core` 12.2, `@nestjs/terminus`
+Versions surveyed: `@microsoft/copilot-sdk` 2.0.0, `@nestjs/core` 12.2, `@nestjs/terminus`
 12.1, `ai` 7.0, `rxjs` 7.8.
 
 **Contents**
@@ -59,7 +59,7 @@ framework-agnostic core directly (§3), and Fastify applications use the
 
 ```mermaid
 flowchart TB
-  SDK["@github/copilot-sdk"]
+  SDK["@microsoft/copilot-sdk"]
   Core["core: client manager, agents, tools, governance, conversations, events, testing"]
   AI["ai: AI SDK provider, Agent adapter, UI message stream"]
   Nest["nestjs: CopilotModule, decorators, DI, Terminus, CLS"]
@@ -77,7 +77,7 @@ flowchart TB
 
 | Package (working name) | Contents | Depends on |
 | --- | --- | --- |
-| `@copilot-sdk-integrations/agent-core` | Client manager, agent definitions and execution, tool adapters, governance, conversation manager, session store interface, event model, test runtime | `@github/copilot-sdk`, `zod` |
+| `@copilot-sdk-integrations/agent-core` | Client manager, agent definitions and execution, tool adapters, governance, conversation manager, session store interface, event model, test runtime | `@microsoft/copilot-sdk`, `zod` |
 | `@copilot-sdk-integrations/ai` | `copilot()` AI SDK provider, AI SDK `Agent` adapter, Copilot event to UI message stream mapping | core, `ai` |
 | `@copilot-sdk-integrations/nestjs` | `CopilotModule`, decorators, discovery, CLS context, Terminus indicator, testing module | core, `@nestjs/common`, `@nestjs/core`; optional `ai`, `@nestjs/terminus`, `rxjs` |
 | `@copilot-sdk-integrations/fastify` | `copilotPlugin`, decorators, context hook, error handler, SSE, health and info routes; `./ai` `useChat` routes; `./testing` ([DESIGN-FASTIFY.md](DESIGN-FASTIFY.md)) | core, `fastify-plugin`; peer `fastify ^5`; optional `ai` |
@@ -226,7 +226,7 @@ class itself may be abstract.
 - `CopilotModule.forFeature(agents, { tools })` registers agent classes and tool
   providers in a feature module, the counterpart of Spring's component scanning.
 - Options mirror the `copilot.*` properties: `cliPath`, `cliUrl` (existing TCP
-  server), `startup` (`lazy` | `eager`), `githubToken`, `useLoggedInUser`,
+  server, as `port`, `host:port`, or `http://host:port`), `startup` (`lazy` | `eager`), `githubToken`, `useLoggedInUser`,
   `baseDirectory`, `logLevel`, `limits`, `responseTimeout`, `approvalWindow`
   (how long an `ask-user` permission waits), `restart` (crash recovery, §6),
   `shutdownGracePeriod`, `store`, `providers` (named BYOK providers), `mcpServers`
@@ -265,7 +265,9 @@ class itself may be abstract.
   disconnects sessions, and stops the runtime. Docs remind apps to call
   `app.enableShutdownHooks()`.
 - The runtime is resolved like the Spring starter: `cliPath`, then `COPILOT_CLI_PATH`,
-  then the SDK's bundled platform runtime, or `cliUrl` for an existing server.
+  then the SDK's bundled platform runtime, or `cliUrl` for an existing server. The core
+  always asks for a spawned stdio runtime explicitly (SDK v2 otherwise defaults to an
+  in-process runtime), and maps `cliUrl` to the SDK's TCP connection (`host` + `port`).
 - Built-in tools are **off by default** (`mode: "empty"`) but can be enabled. Docs
   recommend a container per tenant when enabling shell or write tools for multi-user
   apps, because the runtime runs them on the server's host.
@@ -358,7 +360,7 @@ Apps that prefer no decorators register core definitions directly:
   propagates the security context and MDC.
 - **Per-user GitHub tokens**: a `CopilotTokenResolver` provider returns the caller's
   token (`resolve(ctx) => string | undefined`), used as the SDK's per-session
-  `gitHubTokenProvider`. A ready-made resolver reads a Passport GitHub strategy's
+  `github.token`. A ready-made resolver reads a Passport GitHub strategy's
   access token.
 - The **principal** feeds session-id derivation, so users can't resume each other's
   conversations.
@@ -443,7 +445,10 @@ Same as Spring, as configuration objects:
   supported; header functions receive the request context for per-user credentials.
 - Named BYOK providers in `forRoot({ providers })` (OpenAI, Azure OpenAI / Microsoft
   Foundry, Anthropic, Ollama, OpenAI-compatible), selected per agent with
-  `provider: "foundry"`. Keys come from `ConfigService`, never decorators.
+  `provider: "foundry"`. Keys come from `ConfigService`, never decorators. The core
+  registers the provider as the session's only inference provider (the SDK's
+  `inference.providers` and `defaultProvider`) and disables GitHub Copilot inference
+  (`github.capi.enabled: false`) for that session.
 
 ---
 

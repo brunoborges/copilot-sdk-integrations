@@ -4,14 +4,14 @@ Status: **implemented** (phases F1–F3: plugin, streaming and AI SDK, example a
 [§18](#18-implementation-notes) for deviations from the original proposal.
 
 This document designs `@copilot-sdk-integrations/fastify`, a Fastify plugin for the
-[Copilot SDK for Node.js/TypeScript](https://github.com/github/copilot-sdk/tree/main/nodejs).
+[Microsoft Copilot SDK for Node.js/TypeScript](https://github.com/microsoft/copilot-sdk/tree/main/nodejs).
 It is the second framework integration after the [NestJS module](DESIGN.md) and is built
 on the same framework-agnostic core ([DESIGN.md §3](DESIGN.md#3-shared-core)). Everything
 the core owns (client manager, agents, tools, governance, conversations, context, events,
 test runtime) is reused as is; this document only covers what is Fastify-specific.
 
 Versions surveyed: `fastify` 5.12, `fastify-plugin` 6.0, `@fastify/under-pressure` 9.2,
-`@github/copilot-sdk` 1.0.26, `ai` 7.0.
+`@microsoft/copilot-sdk` 2.0.0, `ai` 7.0.
 
 **Contents**
 
@@ -63,7 +63,7 @@ Versions surveyed: `fastify` 5.12, `fastify-plugin` 6.0, `@fastify/under-pressur
 
 ```mermaid
 flowchart TB
-  SDK["@github/copilot-sdk"]
+  SDK["@microsoft/copilot-sdk"]
   Core["core"]
   AI["ai"]
   Nest["nestjs"]

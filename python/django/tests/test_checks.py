@@ -2,6 +2,7 @@ import pytest
 from django.core.management import call_command
 from django.test import override_settings
 
+from copilot_agents import connection
 from copilot_django import CopilotAgent, checks, policies
 
 
@@ -19,6 +20,14 @@ def test_unknown_settings_keys():
         messages = checks.check_settings()
     assert ids(messages) == ["copilot.E001"] * 3
     assert any("URL" in m.msg for m in messages)
+
+
+def test_runtime_url_and_mode_are_validated():
+    with override_settings(COPILOT={"RUNTIME": {"CONNECTION": "uri", "URL": "http://runtime", "MODE": "chat"}}):
+        messages = checks.check_settings()
+    assert ids(messages) == ["copilot.E001"] * 2
+    with override_settings(COPILOT={"RUNTIME": {"CONNECTION": "uri", "URL": "runtime:4321", "MODE": "copilot-cli"}}):
+        assert checks.check_settings() == []
 
 
 def test_agent_problems_map_to_ids(isolated_registry):
@@ -55,7 +64,7 @@ def test_stdio_with_many_workers(monkeypatch):
 
 def test_missing_runtime_binary(monkeypatch):
     monkeypatch.delenv("COPILOT_CLI_PATH", raising=False)
-    monkeypatch.setattr("copilot._cli_download.get_cached_cli_path", lambda *a: None)
+    monkeypatch.setattr(connection, "runtime_downloaded", lambda: False)
     assert ids(checks.check_runtime()) == ["copilot.W001"]
 
 

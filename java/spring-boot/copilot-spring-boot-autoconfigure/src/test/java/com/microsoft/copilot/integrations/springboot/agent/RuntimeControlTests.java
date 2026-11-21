@@ -17,19 +17,19 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.copilot.CopilotClient;
-import com.github.copilot.CopilotSession;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.generated.SessionEvent;
-import com.github.copilot.generated.SessionIdleEvent;
-import com.github.copilot.rpc.GitHubTokenProviderResult;
-import com.github.copilot.rpc.PermissionHandler;
-import com.github.copilot.rpc.PermissionRequest;
-import com.github.copilot.rpc.PermissionRequestResult;
-import com.github.copilot.rpc.ResumeSessionConfig;
-import com.github.copilot.rpc.SessionConfig;
-import com.github.copilot.rpc.SessionMetadata;
-import com.github.copilot.rpc.ToolInvocation;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotSession;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.generated.SessionEvent;
+import com.microsoft.copilot.generated.SessionIdleEvent;
+import com.microsoft.copilot.rpc.GitHubTokenProviderResult;
+import com.microsoft.copilot.rpc.PermissionHandler;
+import com.microsoft.copilot.rpc.PermissionRequest;
+import com.microsoft.copilot.rpc.PermissionRequestResult;
+import com.microsoft.copilot.rpc.ResumeSessionOptions;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
+import com.microsoft.copilot.rpc.SessionMetadata;
+import com.microsoft.copilot.rpc.ToolInvocation;
 import com.microsoft.copilot.integrations.springboot.agent.fixtures.TestAgent;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.CopilotAgentFactoryBean;
@@ -40,8 +40,8 @@ import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgents
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import com.github.copilot.rpc.PreToolUseHookInput;
-import com.github.copilot.rpc.PreToolUseHookOutput;
+import com.microsoft.copilot.rpc.PreToolUseHookInput;
+import com.microsoft.copilot.rpc.PreToolUseHookOutput;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.NoUniqueBeanDefinitionException;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -85,11 +85,11 @@ class RuntimeControlTests {
         var session = session(reply("unused"));
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             openingStarted.countDown();
             return opening;
         }).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
         try (var invoker = invoker()) {
@@ -119,7 +119,7 @@ class RuntimeControlTests {
             return new CompletableFuture<SessionMetadata>();
         }).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
         try (var invoker = invoker()) {
@@ -255,7 +255,7 @@ class RuntimeControlTests {
         when(client.getSessionMetadata(anyString())).thenAnswer(invocation -> CompletableFuture.completedFuture(
                 known.contains(invocation.<String>getArgument(0)) ? new SessionMetadata() : null));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            String id = invocation.<SessionConfig>getArgument(0).getSessionId();
+            String id = invocation.<CreateSessionOptions>getArgument(0).getSessionId();
             known.add(id);
             when(session.getSessionId()).thenReturn(id);
             return CompletableFuture.completedFuture(session);
@@ -273,17 +273,17 @@ class RuntimeControlTests {
             agent.answer("one", "second").get(5, TimeUnit.SECONDS);
             SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("alice", "n/a", "ROLE_USER"));
             agent.answer("one", "third").get(5, TimeUnit.SECONDS);
-            ArgumentCaptor<SessionConfig> created = ArgumentCaptor.captor();
+            ArgumentCaptor<CreateSessionOptions> created = ArgumentCaptor.captor();
             ArgumentCaptor<String> resumedId = ArgumentCaptor.captor();
-            ArgumentCaptor<ResumeSessionConfig> resumed = ArgumentCaptor.captor();
+            ArgumentCaptor<ResumeSessionOptions> resumed = ArgumentCaptor.captor();
             verify(client, org.mockito.Mockito.times(2)).createSession(created.capture());
             verify(client).resumeSession(resumedId.capture(), resumed.capture());
-            assertThat(created.getAllValues()).extracting(SessionConfig::getGitHubToken)
+            assertThat(created.getAllValues()).extracting(options -> options.getGitHub().getToken())
                     .containsExactly("user-token-alice", "user-token-bob");
             var aliceSession = created.getAllValues().get(0).getSessionId();
             assertThat(created.getAllValues().get(1).getSessionId()).isNotEqualTo(aliceSession);
             assertThat(resumedId.getValue()).isEqualTo(aliceSession);
-            assertThat(resumed.getValue().getGitHubToken()).isEqualTo("user-token-alice");
+            assertThat(resumed.getValue().getGitHub().getToken()).isEqualTo("user-token-alice");
             assertThat(contexts).extracting(CopilotAgentContext::agentName).containsOnly("test-agent");
             assertThat(contexts).extracting(CopilotAgentContext::conversationId).containsOnly("one");
             assertThat(contexts).extracting(CopilotAgentContext::sessionId).startsWith(aliceSession);
@@ -308,7 +308,7 @@ class RuntimeControlTests {
         newSessions(session);
         try (var invoker = invoker()) {
             agent(TestAgent.class, invoker).answer("one", "hello").get(5, TimeUnit.SECONDS);
-            ArgumentCaptor<SessionConfig> created = ArgumentCaptor.captor();
+            ArgumentCaptor<CreateSessionOptions> created = ArgumentCaptor.captor();
             verify(client).createSession(created.capture());
             assertThat(created.getValue().getSessionId())
                     .isEqualTo(CopilotAgentInvoker.sessionId(definition(TestAgent.class), "one"));
@@ -336,10 +336,10 @@ class RuntimeControlTests {
         newSessions(session);
         try (var invoker = invoker()) {
             agent(TestAgent.class, invoker).answer("one", "hello").get(5, TimeUnit.SECONDS);
-            ArgumentCaptor<SessionConfig> created = ArgumentCaptor.captor();
+            ArgumentCaptor<CreateSessionOptions> created = ArgumentCaptor.captor();
             verify(client).createSession(created.capture());
-            assertThat(created.getValue().getGitHubToken()).isNull();
-            assertThat(created.getValue().getGitHubTokenProvider()).isNull();
+            assertThat(created.getValue().getGitHub().getToken()).isNull();
+            assertThat(created.getValue().getGitHub().getTokenProvider()).isNull();
         }
     }
 
@@ -353,9 +353,9 @@ class RuntimeControlTests {
         newSessions(session);
         try (var invoker = invoker()) {
             agent(SecondTokenAgent.class, invoker).answer("one", "hello").get(5, TimeUnit.SECONDS);
-            ArgumentCaptor<SessionConfig> created = ArgumentCaptor.captor();
+            ArgumentCaptor<CreateSessionOptions> created = ArgumentCaptor.captor();
             verify(client).createSession(created.capture());
-            assertThat(created.getValue().getGitHubToken()).isEqualTo("second-token");
+            assertThat(created.getValue().getGitHub().getToken()).isEqualTo("second-token");
         }
     }
 
@@ -364,8 +364,8 @@ class RuntimeControlTests {
         beans.registerSingleton("tokens", shared(context -> "resolved"));
         beans.registerSingleton("rotating", (CopilotAgentCustomizer) new CopilotAgentCustomizer() {
             @Override
-            public void customize(CopilotAgentContext context, SessionConfig config) {
-                config.setGitHubTokenProvider(args -> CompletableFuture.completedFuture(
+            public void customize(CopilotAgentContext context, CreateSessionOptions config) {
+                config.getGitHub().setTokenProvider(args -> CompletableFuture.completedFuture(
                         GitHubTokenProviderResult.token("rotating", 3600)));
             }
         });
@@ -373,10 +373,10 @@ class RuntimeControlTests {
         newSessions(session);
         try (var invoker = invoker()) {
             agent(RotatingTokenAgent.class, invoker).answer("one", "hello").get(5, TimeUnit.SECONDS);
-            ArgumentCaptor<SessionConfig> created = ArgumentCaptor.captor();
+            ArgumentCaptor<CreateSessionOptions> created = ArgumentCaptor.captor();
             verify(client).createSession(created.capture());
-            assertThat(created.getValue().getGitHubToken()).isNull();
-            assertThat(created.getValue().getGitHubTokenProvider()).isNotNull();
+            assertThat(created.getValue().getGitHub().getToken()).isNull();
+            assertThat(created.getValue().getGitHub().getTokenProvider()).isNotNull();
         }
     }
 
@@ -412,7 +412,7 @@ class RuntimeControlTests {
             handler.set(invocation.getArgument(0));
             return mock(Closeable.class);
         });
-        var config = new AtomicReference<SessionConfig>();
+        var config = new AtomicReference<CreateSessionOptions>();
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
             config.set(invocation.getArgument(0));
@@ -425,10 +425,10 @@ class RuntimeControlTests {
             // Simulates the SDK delivering callbacks on its own thread.
             Thread.ofPlatform().start(() -> {
                 try {
-                    var tool = config.get().getTools().getFirst();
+                    var tool = config.get().getTools().getDefinitions().getFirst();
                     String output = (String) tool.handler().invoke(new ToolInvocation().setArguments(
                             new ObjectMapper().valueToTree(Map.of("prefix", "user=")))).join();
-                    config.get().getOnPermissionRequest().handle(new PermissionRequest(), null).join();
+                    config.get().getPermissions().getOnRequest().handle(new PermissionRequest(), null).join();
                     handler.get().accept(new SessionIdleEvent());
                     afterCallback.add(currentUser() + "/" + MDC.get("requestId"));
                     response.complete(reply(output));
@@ -462,7 +462,7 @@ class RuntimeControlTests {
             }
         });
         var session = session(null);
-        var config = new AtomicReference<SessionConfig>();
+        var config = new AtomicReference<CreateSessionOptions>();
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
             config.set(invocation.getArgument(0));
@@ -473,7 +473,7 @@ class RuntimeControlTests {
             var response = new CompletableFuture<AssistantMessageEvent>();
             Thread.ofPlatform().start(() -> {
                 try {
-                    config.get().getHooks().getOnPreToolUse()
+                    config.get().getHooks().getHandlers().getOnPreToolUse()
                             .handle(new PreToolUseHookInput().setToolName("view"), null).join();
                     seen.add("after:" + currentUser() + "/" + MDC.get("requestId"));
                     response.complete(reply("ok"));
@@ -502,7 +502,7 @@ class RuntimeControlTests {
                 CompletableFuture.completedFuture(PermissionRequestResult.reject("no")));
         beans.registerSingleton("listener", (CopilotAgentListener) (context, event) -> { });
         var session = session(null);
-        var config = new AtomicReference<SessionConfig>();
+        var config = new AtomicReference<CreateSessionOptions>();
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
             config.set(invocation.getArgument(0));
@@ -510,7 +510,7 @@ class RuntimeControlTests {
             return CompletableFuture.completedFuture(session);
         });
         when(session.sendAndWait(any(), anyLong())).thenAnswer(invocation -> CompletableFuture.supplyAsync(() -> {
-            var tool = config.get().getTools().getFirst();
+            var tool = config.get().getTools().getDefinitions().getFirst();
             try {
                 tool.handler().invoke(new ToolInvocation().setArguments(
                         new ObjectMapper().valueToTree(Map.of("prefix", "user=")))).join();
@@ -565,7 +565,7 @@ class RuntimeControlTests {
     private void newSessions(CopilotSession session) {
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
     }

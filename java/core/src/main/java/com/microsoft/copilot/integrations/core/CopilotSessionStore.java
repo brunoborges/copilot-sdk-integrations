@@ -3,7 +3,7 @@ package com.microsoft.copilot.integrations.core;
 import java.util.List;
 import java.util.Optional;
 
-import com.github.copilot.rpc.SessionMetadata;
+import com.microsoft.copilot.rpc.SessionMetadata;
 
 /**
  * Lists, reads, and deletes the persisted Copilot sessions behind agent conversations. Inject it to build a

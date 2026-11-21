@@ -9,12 +9,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.CopilotSession;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.rpc.MessageOptions;
-import com.github.copilot.rpc.PermissionHandler;
-import com.github.copilot.rpc.SessionConfig;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotSession;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.rpc.MessageOptions;
+import com.microsoft.copilot.rpc.PermissionHandler;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -45,7 +45,7 @@ class ConversationServiceTests {
     void routesInterleavedEventsToTheirOwnConversations() throws Exception {
         var otherSession = mock(CopilotSession.class);
         var otherSubscription = mock(Closeable.class);
-        when(client.createSession(any(SessionConfig.class)))
+        when(client.createSession(any(CreateSessionOptions.class)))
                 .thenReturn(CompletableFuture.completedFuture(session))
                 .thenReturn(CompletableFuture.completedFuture(otherSession));
         when(session.getSessionId()).thenReturn("sdk-1");
@@ -105,11 +105,11 @@ class ConversationServiceTests {
                 secondResponse.complete(null);
             }
         }
-        ArgumentCaptor<SessionConfig> configs = ArgumentCaptor.captor();
+        ArgumentCaptor<CreateSessionOptions> configs = ArgumentCaptor.captor();
         verify(client, times(2)).createSession(configs.capture());
         assertThat(configs.getAllValues().getFirst()).isNotSameAs(configs.getAllValues().getLast());
         assertThat(configs.getAllValues()).allSatisfy(config ->
-                assertThat(config.getOnPermissionRequest()).isSameAs(permissions));
+                assertThat(config.getPermissions().getOnRequest()).isSameAs(permissions));
         verify(client, never()).close();
     }
 
@@ -140,7 +140,7 @@ class ConversationServiceTests {
 
     @Test
     void registrationFailureClosesTheNewSession() {
-        when(client.createSession(any(SessionConfig.class))).thenReturn(CompletableFuture.completedFuture(session));
+        when(client.createSession(any(CreateSessionOptions.class))).thenReturn(CompletableFuture.completedFuture(session));
         var failure = new IllegalStateException("listener registration failed");
         when(session.on(eq(AssistantMessageEvent.class), any())).thenThrow(failure);
         assertThatThrownBy(() -> service.converse("chat", "hello")).isSameAs(failure);
@@ -152,7 +152,7 @@ class ConversationServiceTests {
     @Test
     void creationFailureDoesNotCloseTheSharedClient() {
         var failure = new IllegalStateException("creation failed");
-        when(client.createSession(any(SessionConfig.class))).thenReturn(CompletableFuture.failedFuture(failure));
+        when(client.createSession(any(CreateSessionOptions.class))).thenReturn(CompletableFuture.failedFuture(failure));
         assertThatThrownBy(() -> service.converse("chat", "hello")).hasCause(failure);
         verifyNoInteractions(session, subscription, output);
         verify(client, never()).close();
@@ -160,7 +160,7 @@ class ConversationServiceTests {
 
     @Test
     void synchronousSendFailureAlsoCleansUp() throws Exception {
-        when(client.createSession(any(SessionConfig.class))).thenReturn(CompletableFuture.completedFuture(session));
+        when(client.createSession(any(CreateSessionOptions.class))).thenReturn(CompletableFuture.completedFuture(session));
         when(session.on(eq(AssistantMessageEvent.class), any())).thenReturn(subscription);
         var failure = new IllegalStateException("send failed");
         when(session.sendAndWait(any(MessageOptions.class))).thenThrow(failure);
@@ -195,7 +195,7 @@ class ConversationServiceTests {
     }
 
     private void configureSession(CompletableFuture<AssistantMessageEvent> response) {
-        when(client.createSession(any(SessionConfig.class))).thenReturn(CompletableFuture.completedFuture(session));
+        when(client.createSession(any(CreateSessionOptions.class))).thenReturn(CompletableFuture.completedFuture(session));
         when(session.on(eq(AssistantMessageEvent.class), any())).thenReturn(subscription);
         when(session.sendAndWait(any(MessageOptions.class))).thenReturn(response);
     }

@@ -2,7 +2,7 @@ package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
 import java.util.List;
 
-import com.github.copilot.rpc.PostToolUseFailureHookInput;
+import com.microsoft.copilot.rpc.PostToolUseFailureHookInput;
 import com.microsoft.copilot.integrations.core.CopilotAgentContext;
 import com.microsoft.copilot.integrations.core.CopilotErrorRecoveryHooks;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.SpringBeanLookup;

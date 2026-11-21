@@ -1,6 +1,6 @@
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
-using GitHub.Copilot;
+using Microsoft.Copilot;
 
 namespace CopilotSdk.Extensions.Hosting;
 

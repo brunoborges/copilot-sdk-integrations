@@ -48,7 +48,7 @@ const advisor = defineAgent({
 | `model` | Model id. Default: the runtime's default model. |
 | `reasoningEffort` | `low`, `medium`, `high`, or `xhigh`. |
 | `messageSource` | `user`, `system`, or `agent-<id>` provenance label for prompts (see [Message source](#message-source)). |
-| `provider` | A BYOK [`ProviderConfig`](#byok-providers). |
+| `provider` | A BYOK [`CopilotProviderConfig`](#byok-providers). |
 | `tools` | [Tools](tools.md) the agent can call. |
 | `mcpServers` | [MCP servers](#mcp-servers), keyed by name. |
 | `availableTools` / `excludedTools` | [Tool filters](tools.md#tool-filters); mutually exclusive. |
@@ -58,7 +58,7 @@ const advisor = defineAgent({
 | `hooks` | SDK [session hooks](governance.md#hooks). |
 | `customAgents` | SDK custom (sub-)agent configurations. |
 | `infiniteSessions` | Enable the runtime's infinite-session context compaction. |
-| `configureSession` | Escape hatch to adjust the final SDK session config. |
+| `configureSession` | Escape hatch to adjust the final SDK `CreateSessionOptions`. |
 
 `defineAgent` validates the definition and throws `CopilotConfigurationError` with an
 `Agent "<name>": ...` prefix on invalid input, then freezes it. Definitions are plain data,
@@ -114,7 +114,7 @@ Automatic inference never produces `user`.
 
 ## BYOK providers
 
-Bring your own model keys with the SDK's `ProviderConfig`:
+Bring your own model keys with a `CopilotProviderConfig`:
 
 ```ts
 defineAgent({
@@ -125,7 +125,12 @@ defineAgent({
 ```
 
 `type` is `openai` (default, any OpenAI-compatible API), `azure`, or `anthropic`; local
-servers such as Ollama need only `baseUrl`.
+servers such as Ollama need only `baseUrl`. The provider takes the Microsoft Copilot SDK's
+provider connection settings (`baseUrl`, `apiKey`, `wireApi`, `headers`, ...) plus optional
+model settings (`modelId`, `wireModel`, `maxPromptTokens`, `maxContextWindowTokens`,
+`maxOutputTokens`, `capabilities`). The agent's session registers it as its only inference
+provider (GitHub Copilot inference is disabled for that session), so set `model` (or
+`modelId`/`wireModel`) to the model to use.
 <!-- only:nestjs -->
 
 In NestJS, declare named providers once and reference them by name:
@@ -197,9 +202,12 @@ integer `>= 1`, and setting it together with `enabled: false` is a configuration
 
 ## Session customization
 
-`configureSession(config, context)` receives the final SDK `SessionConfig` and the
+`configureSession(config, context)` receives the final SDK `CreateSessionOptions` and the
 [`CopilotContext`](context-and-identity.md) and returns the config to use. It must not change
-`sessionId` or remove the permission handler; both are rejected.
+`sessionId` or remove the permission handler (`permissions.onRequest`); both are rejected.
+The options are nested (`tools`, `permissions`, `events`, `hooks`, `mcp`, `inference`, `github`,
+...), so copy a nested object before changing it rather than replacing it, for example
+`{ ...config, tools: { ...config.tools, search: { enabled: false } } }`.
 <!-- only:nestjs -->
 In NestJS, providers bound
 to `COPILOT_SESSION_CUSTOMIZER` run after it with `(config, context, agentDefinition)`.

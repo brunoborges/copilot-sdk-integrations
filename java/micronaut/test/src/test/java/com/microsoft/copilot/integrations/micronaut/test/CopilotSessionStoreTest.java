@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.copilot.rpc.SessionMetadata;
+import com.microsoft.copilot.rpc.SessionMetadata;
 
 import com.microsoft.copilot.integrations.core.ConversationId;
 import com.microsoft.copilot.integrations.core.CopilotAgent;

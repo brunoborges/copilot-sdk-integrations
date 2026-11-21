@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.Hosting;
 
 namespace CopilotSdk.Extensions.Hosting;
@@ -11,12 +11,12 @@ namespace CopilotSdk.Extensions.Hosting;
 /// CLI's ambient behavior (custom instructions, plugins, skills, host environment context).
 /// </summary>
 /// <remarks>
-/// Empty mode requires a runtime home (<see cref="CopilotClientOptions.BaseDirectory"/>, <c>COPILOT_HOME</c>) when the
-/// SDK starts the runtime. The default is a stable per-application directory under the local application data folder,
+/// Empty mode requires a runtime home (<see cref="OwnedRuntimeConnection.BaseDirectory"/>, <c>COPILOT_HOME</c>) when the
+/// SDK owns the runtime. The default is a stable per-application directory under the local application data folder,
 /// so sessions survive restarts without mixing with the user's Copilot CLI state. Apps can change
-/// <see cref="CopilotClientOptions.Mode"/> or <see cref="CopilotClientOptions.BaseDirectory"/> with
-/// <see cref="CopilotOptions.ConfigureClient"/>, which runs after this configurator. With an <see cref="CopilotOptions.Endpoint"/>,
-/// the runtime owns its own home and no directory is set.
+/// <see cref="CopilotClientOptions.Mode"/>, <see cref="CopilotClientOptions.Runtime"/>, or its
+/// <see cref="OwnedRuntimeConnection.BaseDirectory"/> with <see cref="CopilotOptions.ConfigureClient"/>, which runs after
+/// this configurator. With an <see cref="CopilotOptions.Endpoint"/>, the runtime owns its own home and no directory is set.
 /// </remarks>
 internal sealed class CopilotModeClientConfigurator(IHostEnvironment? environment = null) : ICopilotClientConfigurator
 {
@@ -24,9 +24,15 @@ internal sealed class CopilotModeClientConfigurator(IHostEnvironment? environmen
     {
         options.Mode = CopilotClientMode.Empty;
 
-        if (copilotOptions.Endpoint is null && string.IsNullOrEmpty(options.BaseDirectory) && options.SessionFs is null)
+        if (copilotOptions.Endpoint is not null || options.SessionFs is not null)
         {
-            options.BaseDirectory = Directory.CreateDirectory(GetDefaultBaseDirectory(environment)).FullName;
+            return;
+        }
+
+        var runtime = options.Runtime ??= CopilotClientOptionsConfigurator.CreateOwnedConnection(copilotOptions);
+        if (runtime is OwnedRuntimeConnection owned && string.IsNullOrEmpty(owned.BaseDirectory))
+        {
+            owned.BaseDirectory = Directory.CreateDirectory(GetDefaultBaseDirectory(environment)).FullName;
         }
     }
 

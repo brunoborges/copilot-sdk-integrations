@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { jsonSchema, tool } from "ai";
-import { defineTool, type Tool, type ToolInvocation, type ToolResultObject } from "@github/copilot-sdk";
+import { defineTool, type Tool, type ToolInvocation, type ToolResultObject } from "@microsoft/copilot-sdk";
 import { runWithCopilotContext } from "../src/context.js";
 import { CopilotConfigurationError } from "../src/errors.js";
 import {

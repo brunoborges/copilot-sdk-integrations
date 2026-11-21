@@ -1,4 +1,4 @@
-using GitHub.Copilot;
+using Microsoft.Copilot;
 
 namespace CopilotSdk.Extensions.Hosting;
 
@@ -9,10 +9,10 @@ namespace CopilotSdk.Extensions.Hosting;
 internal interface ICopilotSessionGateway
 {
     /// <summary>Creates a new session, starting the shared client on first use.</summary>
-    Task<ICopilotSessionHandle> CreateSessionAsync(SessionConfig config, CancellationToken cancellationToken);
+    Task<ICopilotSessionHandle> CreateSessionAsync(CreateSessionOptions config, CancellationToken cancellationToken);
 
     /// <summary>Resumes an existing session, starting the shared client on first use.</summary>
-    Task<ICopilotSessionHandle> ResumeSessionAsync(string sessionId, ResumeSessionConfig config, CancellationToken cancellationToken);
+    Task<ICopilotSessionHandle> ResumeSessionAsync(string sessionId, ResumeSessionOptions config, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -43,14 +43,14 @@ internal interface ICopilotSessionHandle : IAsyncDisposable
 /// <summary>Production <see cref="ICopilotSessionGateway"/> over the shared <see cref="CopilotClient"/>.</summary>
 internal sealed class CopilotSessionGateway(ICopilotClientProvider clientProvider) : ICopilotSessionGateway
 {
-    public async Task<ICopilotSessionHandle> CreateSessionAsync(SessionConfig config, CancellationToken cancellationToken)
+    public async Task<ICopilotSessionHandle> CreateSessionAsync(CreateSessionOptions config, CancellationToken cancellationToken)
     {
         var client = await clientProvider.GetClientAsync(cancellationToken).ConfigureAwait(false);
         var session = await client.CreateSessionAsync(config, cancellationToken).ConfigureAwait(false);
         return new Handle(session);
     }
 
-    public async Task<ICopilotSessionHandle> ResumeSessionAsync(string sessionId, ResumeSessionConfig config, CancellationToken cancellationToken)
+    public async Task<ICopilotSessionHandle> ResumeSessionAsync(string sessionId, ResumeSessionOptions config, CancellationToken cancellationToken)
     {
         var client = await clientProvider.GetClientAsync(cancellationToken).ConfigureAwait(false);
         var session = await client.ResumeSessionAsync(sessionId, config, cancellationToken).ConfigureAwait(false);

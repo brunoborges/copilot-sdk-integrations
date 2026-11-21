@@ -10,9 +10,10 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.github.copilot.ConnectionState;
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.ConnectionState;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.TcpRuntimeConnection;
 
 import com.microsoft.copilot.integrations.springboot.test.app.AdvisorApplication;
 import com.microsoft.copilot.integrations.springboot.test.testcontainers.CopilotContainer;
@@ -39,8 +40,11 @@ class CopilotContainerTests {
 
     @Test
     void connectsToTheContainer() {
-        assertThat(options.getCliUrl()).isEqualTo(copilot.getCliUrl());
-        assertThat(options.getTcpConnectionToken()).isEqualTo(copilot.getTcpConnectionToken());
+        assertThat(options.getRuntime()).isInstanceOfSatisfying(TcpRuntimeConnection.class, tcp -> {
+            assertThat(tcp.getHost()).isEqualTo(copilot.getHost());
+            assertThat(tcp.getPort()).isEqualTo(copilot.getMappedPort(copilot.getCopilotPort()));
+            assertThat(tcp.getConnectionToken()).isEqualTo(copilot.getTcpConnectionToken());
+        });
         client.start().join();
         assertThat(client.getState()).isEqualTo(ConnectionState.CONNECTED);
     }

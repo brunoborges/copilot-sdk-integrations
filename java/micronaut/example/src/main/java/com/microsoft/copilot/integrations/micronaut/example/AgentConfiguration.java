@@ -5,11 +5,11 @@ import java.util.Map;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
-import com.github.copilot.SystemMessageMode;
-import com.github.copilot.rpc.SectionOverride;
-import com.github.copilot.rpc.SectionOverrideAction;
-import com.github.copilot.rpc.SystemMessageConfig;
-import com.github.copilot.rpc.SystemMessageSections;
+import com.microsoft.copilot.SystemMessageMode;
+import com.microsoft.copilot.rpc.SectionOverride;
+import com.microsoft.copilot.rpc.SectionOverrideAction;
+import com.microsoft.copilot.rpc.SystemMessageConfig;
+import com.microsoft.copilot.rpc.SystemMessageSections;
 
 import io.micronaut.context.annotation.Factory;
 

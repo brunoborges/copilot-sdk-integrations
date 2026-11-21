@@ -3,8 +3,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Channels;
-using GitHub.Copilot;
-using GitHub.Copilot.Rpc;
+using Microsoft.Copilot;
+using Microsoft.Copilot.Rpc;
 using Microsoft.Extensions.AI;
 
 /// <summary>
@@ -123,17 +123,17 @@ public sealed class SupportAgent
 
     private async Task<CopilotSession> OpenAsync(string? conversationId, bool streaming, CancellationToken cancellationToken) =>
         conversationId is null
-            ? await _copilot.CreateSessionAsync(Configure(new SessionConfig(), streaming), cancellationToken)
-            : await _copilot.ResumeSessionAsync(conversationId, Configure(new ResumeSessionConfig(), streaming), cancellationToken);
+            ? await _copilot.CreateSessionAsync(Configure(new CreateSessionOptions(), streaming), cancellationToken)
+            : await _copilot.ResumeSessionAsync(conversationId, Configure(new ResumeSessionOptions(), streaming), cancellationToken);
 
-    private T Configure<T>(T config, bool streaming) where T : SessionConfigBase
+    private T Configure<T>(T config, bool streaming) where T : SessionOptionsBase
     {
         config.Model = _model;
         config.SystemMessage = new SystemMessageConfig { Mode = SystemMessageMode.Append, Content = Instructions };
-        config.Tools = [.. _tools];
-        config.AvailableTools = [.. _tools.Select(tool => $"custom:{tool.Name}")]; // Empty mode: offer only our tools
-        config.OnPermissionRequest = DecideAsync;
-        config.Streaming = streaming;
+        config.Tools.Definitions = [.. _tools];
+        config.Tools.AvailableTools = [.. _tools.Select(tool => $"custom:{tool.Name}")]; // Empty mode: offer only our tools
+        config.Permissions.OnRequest = DecideAsync;
+        config.Events.Streaming = streaming;
         return config;
     }
 

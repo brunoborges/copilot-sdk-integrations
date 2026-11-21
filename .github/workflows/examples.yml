@@ -24,8 +24,9 @@ permissions:
   contents: read
 
 jobs:
+  # The Java and Node Playwright versions support Ubuntu 24.04, but not 26.04.
   java:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
@@ -55,7 +56,7 @@ jobs:
         run: ./java/spring-boot/mvnw -q -f examples/java-common/pom.xml test -Dworkshop.browserTest=true
 
   node:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

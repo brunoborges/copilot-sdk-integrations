@@ -17,7 +17,7 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.MethodInfo;
 
-import com.github.copilot.tool.CopilotToolMetadataProvider;
+import com.microsoft.copilot.tool.CopilotToolMetadataProvider;
 
 import com.microsoft.copilot.integrations.core.ConversationId;
 import com.microsoft.copilot.integrations.core.CopilotAgent;

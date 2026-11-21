@@ -90,7 +90,7 @@ by the integration instead:
 | Any type registered in DI | The service, from the call's scope. |
 | `CancellationToken` | Cancelled when the turn is cancelled or times out. |
 | `IServiceProvider` | The call's scoped service provider. |
-| `GitHub.Copilot.ToolInvocation` | The SDK's invocation (tool call id, session id). |
+| `Microsoft.Copilot.ToolInvocation` | The SDK's invocation (tool call id, session id). |
 
 Return values are serialized as the tool result; `Task<T>` and `ValueTask<T>` are awaited.
 
@@ -119,10 +119,10 @@ details never leak into the conversation, and the model can recover or explain.
 
 ## Which tools the model sees
 
-The client runs in the SDK's `Empty` mode, and each session's `AvailableTools` lists
+The client runs in the SDK's `Empty` mode, and each session's `Tools.AvailableTools` lists
 `custom:{name}` for each of the agent's tools, plus `mcp:*` when any
 [MCP server](mcp-servers.md) lists tools. Built-in runtime tools (shell, file edits, URL fetch)
 are not offered at all. Per-call tools passed in `ChatOptions.Tools` are added for that call
 only. To change the list, use
 [`ConfigureSession`](configuration.md#escape-hatches), for example
-`session.ExcludedTools = ["web_fetch"]`.
+`session.Tools.ExcludedTools = ["web_fetch"]`.

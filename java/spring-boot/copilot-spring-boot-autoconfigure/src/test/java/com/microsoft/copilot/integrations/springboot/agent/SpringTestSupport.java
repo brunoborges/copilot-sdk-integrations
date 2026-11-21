@@ -2,8 +2,8 @@ package com.microsoft.copilot.integrations.springboot.agent;
 
 import java.util.List;
 
-import com.github.copilot.rpc.ToolDefinition;
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.CopilotClient;
 import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentExecutionLimits;

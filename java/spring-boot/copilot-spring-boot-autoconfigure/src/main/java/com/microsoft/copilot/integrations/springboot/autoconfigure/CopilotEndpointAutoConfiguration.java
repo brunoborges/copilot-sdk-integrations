@@ -1,6 +1,6 @@
 package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 import com.microsoft.copilot.integrations.springboot.actuate.CopilotEndpoint;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;

@@ -341,12 +341,12 @@ describe("MCP servers with request-context headers", () => {
     await agents.handle(McpAgent).send({ prompt: "x", context: { principal: "alice" } });
     await ref.get(McpAgent).ask("anonymous");
     const [first, second] = ref.get(CopilotTestRuntime).createdSessions;
-    expect(first!.mcpServers!.github).toEqual({
+    expect(first!.mcp!.servers!.github).toEqual({
       type: "http",
       url: "https://api.githubcopilot.com/mcp/",
       headers: { Authorization: "Bearer gho_alice" },
     });
-    expect((second!.mcpServers!.github as { headers?: unknown }).headers).toEqual({});
+    expect((second!.mcp!.servers!.github as { headers?: unknown }).headers).toEqual({});
   });
 });
 

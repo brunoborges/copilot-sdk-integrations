@@ -3,7 +3,7 @@ package com.microsoft.copilot.integrations.quarkus.test;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 
 import com.microsoft.copilot.integrations.quarkus.runtime.CopilotAgentTelemetryDecorator;
 import io.quarkus.arc.properties.UnlessBuildProperty;

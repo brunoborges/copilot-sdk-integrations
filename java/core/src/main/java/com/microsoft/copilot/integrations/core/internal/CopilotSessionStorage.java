@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-import com.github.copilot.ConnectionState;
-import com.github.copilot.CopilotClient;
-import com.github.copilot.generated.SessionEvent;
-import com.github.copilot.generated.rpc.EventsCursorStatus;
-import com.github.copilot.generated.rpc.SessionsReadPersistedEventsParams;
-import com.github.copilot.rpc.SessionMetadata;
+import com.microsoft.copilot.ConnectionState;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.generated.SessionEvent;
+import com.microsoft.copilot.generated.rpc.EventsCursorStatus;
+import com.microsoft.copilot.generated.rpc.SessionsReadPersistedEventsParams;
+import com.microsoft.copilot.rpc.SessionMetadata;
 
 /**
  * Session persistence operations on the shared client. A seam so the session store and cleanup can be tested

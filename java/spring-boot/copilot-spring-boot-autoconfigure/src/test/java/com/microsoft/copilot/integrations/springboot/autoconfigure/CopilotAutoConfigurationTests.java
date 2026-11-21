@@ -9,13 +9,17 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.copilot.ConnectionState;
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.CopilotClientOptions;
-import com.github.copilot.rpc.StdioRuntimeConnection;
+import com.microsoft.copilot.ConnectionState;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.CopilotClientMode;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.RuntimeConnection;
+import com.microsoft.copilot.rpc.SpawnedStdioRuntimeConnection;
+import com.microsoft.copilot.rpc.TcpRuntimeConnection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -45,12 +49,12 @@ class CopilotAutoConfigurationTests {
             assertThat(context.getBean(CopilotClient.class).getState()).isEqualTo(ConnectionState.DISCONNECTED);
             var options = context.getBean(CopilotClientOptions.class);
             assertThat(options.isAutoStart()).isTrue();
-            assertThat(options.isUseStdio()).isTrue();
-            assertThat(options.getCliPath()).isNull();
-            assertThat(options.getCliUrl()).isNull();
-            assertThat(options.getLogLevel()).isEqualTo("info");
-            assertThat(options.getGitHubToken()).isNull();
-            assertThat(options.getUseLoggedInUser()).isEmpty();
+            assertThat(options.getMode()).isEqualTo(CopilotClientMode.CODING_AGENT);
+            assertThat(options.getRuntime()).isInstanceOfSatisfying(SpawnedStdioRuntimeConnection.class,
+                    stdio -> assertThat(stdio.getPath()).isNull());
+            assertThat(options.getObservability().getLogLevel()).isNull();
+            assertThat(options.getGitHub().getToken()).isNull();
+            assertThat(options.getGitHub().getUseLoggedInUser()).isEmpty();
             var properties = context.getBean(CopilotProperties.class);
             assertThat(properties.enabled()).isTrue();
             assertThat(properties.eagerStart()).isFalse();
@@ -66,25 +70,31 @@ class CopilotAutoConfigurationTests {
                 "copilot.startup-timeout=5s").run(context -> {
                     assertThat(context).hasNotFailed();
                     var options = context.getBean(CopilotClientOptions.class);
-                    assertThat(options.getCliPath()).isEqualTo("/missing/copilot");
-                    assertThat(options.getCliArgs()).containsExactly("--custom-flag", "value");
-                    assertThat(options.getCwd()).isEqualTo("/work");
-                    assertThat(options.getLogLevel()).isEqualTo("debug");
+                    assertThat(options.getRuntime()).isInstanceOfSatisfying(SpawnedStdioRuntimeConnection.class,
+                            stdio -> {
+                                assertThat(stdio.getPath()).isEqualTo("/missing/copilot");
+                                assertThat(stdio.getArgs()).containsExactly("--custom-flag", "value");
+                                assertThat(stdio.getWorkingDirectory()).isEqualTo("/work");
+                            });
+                    assertThat(options.getObservability().getLogLevel()).isEqualTo("debug");
                     assertThat(context.getBean(CopilotClient.class).getState()).isEqualTo(ConnectionState.DISCONNECTED);
                     assertThat(context.getBean(CopilotProperties.class).startupTimeout()).isEqualTo(Duration.ofSeconds(5));
                 });
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"4321", "localhost:4321", "http://localhost:4321", "https://localhost:4321", "[::1]:4321"})
-    void mapsExternalServerPropertiesWithoutConnecting(String address) {
+    @CsvSource({"4321, localhost", "localhost:4321, localhost", "http://localhost:4321, localhost",
+            "https://localhost:4321, localhost", "'[::1]:4321', ::1"})
+    void mapsExternalServerPropertiesWithoutConnecting(String address, String host) {
         runner.withPropertyValues("copilot.cli-url=" + address, "copilot.tcp-connection-token=test-token")
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     var options = context.getBean(CopilotClientOptions.class);
-                    assertThat(options.getCliUrl()).isEqualTo(address);
-                    assertThat(options.isUseStdio()).isFalse();
-                    assertThat(options.getTcpConnectionToken()).isEqualTo("test-token");
+                    assertThat(options.getRuntime()).isInstanceOfSatisfying(TcpRuntimeConnection.class, tcp -> {
+                        assertThat(tcp.getHost()).isEqualTo(host);
+                        assertThat(tcp.getPort()).isEqualTo(4321);
+                        assertThat(tcp.getConnectionToken()).isEqualTo("test-token");
+                    });
                     assertThat(context.getBean(CopilotProperties.class).toString()).doesNotContain("test-token");
                     assertThat(context.getBean(CopilotClient.class).getState()).isEqualTo(ConnectionState.DISCONNECTED);
                 });
@@ -96,21 +106,21 @@ class CopilotAutoConfigurationTests {
                 "copilot.cli-args[0]=--flag", "copilot.working-directory=/work").run(context -> {
                     assertThat(context).hasNotFailed();
                     var options = context.getBean(CopilotClientOptions.class);
-                    assertThat(options.getConnection()).isInstanceOfSatisfying(StdioRuntimeConnection.class,
+                    assertThat(options.getRuntime()).isInstanceOfSatisfying(SpawnedStdioRuntimeConnection.class,
                             stdio -> {
                                 assertThat(stdio.getPath()).isEqualTo("/missing/copilot");
                                 assertThat(stdio.getArgs()).containsExactly("--flag");
+                                assertThat(stdio.getWorkingDirectory()).isEqualTo("/work");
                             });
-                    assertThat(options.getCwd()).isEqualTo("/work");
                     assertThat(context.getBean(CopilotClient.class).getState()).isEqualTo(ConnectionState.DISCONNECTED);
                 });
     }
 
     @Test
-    void inProcessConnectionFailsFastWithoutJna() {
+    void inProcessConnectionFailsFastWithoutNativeRuntime() {
         runner.withPropertyValues("copilot.connection=inprocess").run(context ->
                 assertThat(context).hasFailed().getFailure().hasStackTraceContaining(
-                        "copilot.connection=inprocess requires JNA on the classpath"));
+                        "copilot.connection=inprocess requires the native Copilot runtime for this platform"));
     }
 
     @Test
@@ -131,7 +141,7 @@ class CopilotAutoConfigurationTests {
 
     @Test
     void backsOffWhenSdkIsAbsent() {
-        runner.withClassLoader(new FilteredClassLoader("com.github.copilot")).run(context ->
+        runner.withClassLoader(new FilteredClassLoader("com.microsoft.copilot")).run(context ->
                 assertThat(context).hasNotFailed().doesNotHaveBean(CopilotAutoConfiguration.class)
                         .doesNotHaveBean(CopilotProperties.class));
     }
@@ -151,12 +161,14 @@ class CopilotAutoConfigurationTests {
 
     @Test
     void userOptionsReplacePropertyMapping() {
-        var options = new CopilotClientOptions().setCliPath("/custom/copilot").setAutoStart(false);
+        var options = new CopilotClientOptions().setMode(CopilotClientMode.CODING_AGENT)
+                .setRuntime(RuntimeConnection.forSpawnedStdio("/custom/copilot")).setAutoStart(false);
         runner.withBean(CopilotClientOptions.class, () -> options)
                 .withPropertyValues("copilot.cli-path=/ignored/copilot").run(context -> {
                     assertThat(context).hasNotFailed().hasSingleBean(CopilotClientOptions.class);
                     assertThat(context.getBean(CopilotClientOptions.class)).isSameAs(options);
-                    assertThat(options.getCliPath()).isEqualTo("/custom/copilot");
+                    assertThat(((SpawnedStdioRuntimeConnection) options.getRuntime()).getPath())
+                            .isEqualTo("/custom/copilot");
                     assertThat(options.isAutoStart()).isFalse();
                 });
     }
@@ -216,7 +228,7 @@ class CopilotAutoConfigurationTests {
 
     @Test
     void realSdkStartupFailureFailsContextWithoutLaunchingRuntime() {
-        var options = new CopilotClientOptions().setExecutor(task -> {
+        var options = new CopilotClientOptions().setMode(CopilotClientMode.CODING_AGENT).setExecutor(task -> {
             throw new RejectedExecutionException("test executor rejects startup");
         });
         runner.withBean(CopilotClientOptions.class, () -> options)
@@ -263,7 +275,9 @@ class CopilotAutoConfigurationTests {
                 Arguments.of(new String[]{"copilot.connection=inprocess", "copilot.cli-url=localhost:4321"},
                         "copilot.connection=inprocess cannot be combined with copilot.cli-url"),
                 Arguments.of(new String[]{"copilot.cli-url=localhost:4321", "copilot.tcp-connection-token="},
-                        "copilot.tcp-connection-token must not be blank"));
+                        "copilot.tcp-connection-token must not be blank"),
+                Arguments.of(new String[]{"copilot.cli-url=localhost:4321", "copilot.log-level=debug"},
+                        "copilot.log-level cannot be combined with copilot.cli-url"));
     }
 
     @ParameterizedTest
@@ -335,11 +349,11 @@ class CopilotAutoConfigurationTests {
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     var options = context.getBean(CopilotClientOptions.class);
-                    assertThat(options.getCliUrl()).isEqualTo("localhost:5432");
-                    assertThat(options.getTcpConnectionToken()).isEqualTo("container-token");
-                    assertThat(options.isUseStdio()).isFalse();
-                    assertThat(options.getCliPath()).isNull();
-                    assertThat(options.getConnection()).isNull();
+                    assertThat(options.getRuntime()).isInstanceOfSatisfying(TcpRuntimeConnection.class, tcp -> {
+                        assertThat(tcp.getHost()).isEqualTo("localhost");
+                        assertThat(tcp.getPort()).isEqualTo(5432);
+                        assertThat(tcp.getConnectionToken()).isEqualTo("container-token");
+                    });
                     assertThat(context.getBean(CopilotClient.class).getState()).isEqualTo(ConnectionState.DISCONNECTED);
                 });
     }

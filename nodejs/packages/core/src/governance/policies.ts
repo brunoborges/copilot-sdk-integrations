@@ -1,4 +1,4 @@
-import type { PermissionRequestResult } from "@github/copilot-sdk";
+import type { PermissionRequestResult } from "@microsoft/copilot-sdk";
 import { CopilotConfigurationError } from "../errors.js";
 import type { PermissionDecision, PermissionPolicy, PermissionPolicyContext, PermissionRequest } from "../types.js";
 

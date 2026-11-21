@@ -6,7 +6,7 @@ title: Copilot Agents for Spring Boot
 
 # Copilot Agents for Spring Boot
 
-Use the Copilot Java SDK through Spring-managed clients, typed agents, and
+Use the Microsoft Copilot SDK for Java through Spring-managed clients, typed agents, and
 conversation-bound instances. The runtime owns the agent loop and persisted
 history; the integration supplies configuration, lifecycle, tool binding, and
 optional observations and streaming.
@@ -15,7 +15,7 @@ optional observations and streaming.
 | --- | --- |
 | Java | 21 |
 | Spring Boot | 4.1.1 |
-| Copilot Java SDK | 1.0.24 |
+| Microsoft Copilot SDK for Java | 2.0.1 |
 | Integration | `com.microsoft`, `0.1.0-SNAPSHOT` |
 
 <a id="choose-your-integration"></a>

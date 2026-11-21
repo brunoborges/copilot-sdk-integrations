@@ -12,26 +12,26 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.CopilotSession;
-import com.github.copilot.SystemMessageMode;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.generated.SessionEvent;
-import com.github.copilot.rpc.MessageOptions;
-import com.github.copilot.rpc.McpHttpServerConfig;
-import com.github.copilot.rpc.McpStdioServerConfig;
-import com.github.copilot.rpc.PermissionHandler;
-import com.github.copilot.rpc.PermissionRequest;
-import com.github.copilot.rpc.PermissionRequestResult;
-import com.github.copilot.rpc.ProviderConfig;
-import com.github.copilot.rpc.ResumeSessionConfig;
-import com.github.copilot.rpc.SectionOverride;
-import com.github.copilot.rpc.SectionOverrideAction;
-import com.github.copilot.rpc.SessionConfig;
-import com.github.copilot.rpc.SessionMetadata;
-import com.github.copilot.rpc.SystemMessageConfig;
-import com.github.copilot.rpc.SystemMessageSections;
-import com.github.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotSession;
+import com.microsoft.copilot.SystemMessageMode;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.generated.SessionEvent;
+import com.microsoft.copilot.rpc.MessageOptions;
+import com.microsoft.copilot.rpc.McpHttpServerConfig;
+import com.microsoft.copilot.rpc.McpStdioServerConfig;
+import com.microsoft.copilot.rpc.PermissionHandler;
+import com.microsoft.copilot.rpc.PermissionRequest;
+import com.microsoft.copilot.rpc.PermissionRequestResult;
+import com.microsoft.copilot.rpc.ProviderConfig;
+import com.microsoft.copilot.rpc.ResumeSessionOptions;
+import com.microsoft.copilot.rpc.SectionOverride;
+import com.microsoft.copilot.rpc.SectionOverrideAction;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
+import com.microsoft.copilot.rpc.SessionMetadata;
+import com.microsoft.copilot.rpc.SystemMessageConfig;
+import com.microsoft.copilot.rpc.SystemMessageSections;
+import com.microsoft.copilot.rpc.ToolDefinition;
 import com.microsoft.copilot.integrations.springboot.agent.fixtures.TestAgent;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentDefinition;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.internal.CopilotAgentFactoryBean;
@@ -80,18 +80,18 @@ class CopilotAgentTests {
         var customizer = mock(CopilotAgentCustomizer.class);
         beans.registerSingleton("mcpCustomizer", customizer);
         doAnswer(invocation -> {
-            var config = invocation.<SessionConfig>getArgument(1);
-            assertThat(config.getMcpServers()).containsOnlyKeys("files", "remote");
-            config.setMcpServers(Map.of("customized", remote));
+            var config = invocation.<CreateSessionOptions>getArgument(1);
+            assertThat(config.getMcp().getServers()).containsOnlyKeys("files", "remote");
+            config.getMcp().setServers(Map.of("customized", remote));
             return null;
-        }).when(customizer).customize(any(), any(SessionConfig.class));
+        }).when(customizer).customize(any(), any(CreateSessionOptions.class));
         doAnswer(invocation -> {
-            var config = invocation.<ResumeSessionConfig>getArgument(1);
-            assertThat(config.getMcpServers()).containsOnlyKeys("files", "remote");
-            assertThat(((McpStdioServerConfig) config.getMcpServers().get("files")).getTimeout()).isEqualTo(2000);
-            config.setMcpServers(Map.of("customized", remote));
+            var config = invocation.<ResumeSessionOptions>getArgument(1);
+            assertThat(config.getMcp().getServers()).containsOnlyKeys("files", "remote");
+            assertThat(((McpStdioServerConfig) config.getMcp().getServers().get("files")).getTimeout()).isEqualTo(2000);
+            config.getMcp().setServers(Map.of("customized", remote));
             return null;
-        }).when(customizer).customize(any(), any(ResumeSessionConfig.class));
+        }).when(customizer).customize(any(), any(ResumeSessionOptions.class));
         var definition = definition(McpAgent.class, properties);
         assertThat(definition.mcpServers()).containsOnlyKeys("files", "remote");
         assertThat(definition.mcpServers().get("files")).isInstanceOf(McpStdioServerConfig.class);
@@ -101,7 +101,7 @@ class CopilotAgentTests {
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null))
                 .thenReturn(CompletableFuture.completedFuture(new SessionMetadata()));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
         when(client.resumeSession(anyString(), any())).thenReturn(CompletableFuture.completedFuture(session));
@@ -109,12 +109,12 @@ class CopilotAgentTests {
             var agent = agent(McpAgent.class, invoker, properties);
             assertThat(agent.answer("id", "first").get(5, TimeUnit.SECONDS)).isEqualTo("reply");
             assertThat(agent.answer("id", "second").get(5, TimeUnit.SECONDS)).isEqualTo("reply");
-            ArgumentCaptor<SessionConfig> created = ArgumentCaptor.captor();
-            ArgumentCaptor<ResumeSessionConfig> resumed = ArgumentCaptor.captor();
+            ArgumentCaptor<CreateSessionOptions> created = ArgumentCaptor.captor();
+            ArgumentCaptor<ResumeSessionOptions> resumed = ArgumentCaptor.captor();
             verify(client).createSession(created.capture());
             verify(client).resumeSession(anyString(), resumed.capture());
-            assertThat(created.getValue().getMcpServers()).containsOnlyKeys("customized");
-            assertThat(resumed.getValue().getMcpServers()).containsOnlyKeys("customized");
+            assertThat(created.getValue().getMcp().getServers()).containsOnlyKeys("customized");
+            assertThat(resumed.getValue().getMcp().getServers()).containsOnlyKeys("customized");
         }
         var override = new CopilotAgentsProperties(Map.of("mcpAgent",
                 new CopilotAgentsProperties.Agent(null, null, Duration.ofSeconds(60), List.of("remote"))));
@@ -140,7 +140,7 @@ class CopilotAgentTests {
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null))
                 .thenReturn(CompletableFuture.completedFuture(new SessionMetadata()));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
         when(client.resumeSession(anyString(), any())).thenReturn(CompletableFuture.completedFuture(session));
@@ -148,14 +148,14 @@ class CopilotAgentTests {
             var agent = agent(ProviderAgent.class, invoker, properties);
             assertThat(agent.answer("id", "first").get(5, TimeUnit.SECONDS)).isEqualTo("reply");
             assertThat(agent.answer("id", "second").get(5, TimeUnit.SECONDS)).isEqualTo("reply");
-            ArgumentCaptor<SessionConfig> created = ArgumentCaptor.captor();
-            ArgumentCaptor<ResumeSessionConfig> resumed = ArgumentCaptor.captor();
+            ArgumentCaptor<CreateSessionOptions> created = ArgumentCaptor.captor();
+            ArgumentCaptor<ResumeSessionOptions> resumed = ArgumentCaptor.captor();
             verify(client).createSession(created.capture());
             verify(client).resumeSession(anyString(), resumed.capture());
             assertThat(created.getValue().getModel()).isEqualTo("gpt-5.2-codex");
-            assertThat(created.getValue().getProvider().getApiKey()).isEqualTo("key");
+            assertThat(created.getValue().getInference().getProviders().getFirst().getApiKey()).isEqualTo("key");
             assertThat(resumed.getValue().getModel()).isEqualTo("gpt-5.2-codex");
-            assertThat(resumed.getValue().getProvider().getApiKey()).isEqualTo("key");
+            assertThat(resumed.getValue().getInference().getProviders().getFirst().getApiKey()).isEqualTo("key");
         }
         var override = new CopilotAgentsProperties(Map.of("providerAgent",
                 new CopilotAgentsProperties.Agent(null, null, Duration.ofSeconds(60), null, "local")));
@@ -172,7 +172,7 @@ class CopilotAgentTests {
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null))
                 .thenReturn(CompletableFuture.completedFuture(new SessionMetadata()));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
         when(client.resumeSession(anyString(), any())).thenReturn(CompletableFuture.completedFuture(session));
@@ -180,14 +180,14 @@ class CopilotAgentTests {
             var agent = agent(TestAgent.class, invoker, properties);
             assertThat(agent.answer("conversation", "first").get(5, TimeUnit.SECONDS)).isEqualTo("hello");
             assertThat(agent.answer("conversation", "second").get(5, TimeUnit.SECONDS)).isEqualTo("hello");
-            ArgumentCaptor<SessionConfig> created = ArgumentCaptor.captor();
+            ArgumentCaptor<CreateSessionOptions> created = ArgumentCaptor.captor();
             verify(client).createSession(created.capture());
-            ArgumentCaptor<ResumeSessionConfig> resumed = ArgumentCaptor.captor();
+            ArgumentCaptor<ResumeSessionOptions> resumed = ArgumentCaptor.captor();
             verify(client).resumeSession(eq(created.getValue().getSessionId()), resumed.capture());
             assertThat(created.getValue().getSystemMessage().getMode()).isEqualTo(SystemMessageMode.APPEND);
             assertThat(resumed.getValue().getSystemMessage().getContent()).isEqualTo("Be helpful.");
             var request = mock(PermissionRequest.class);
-            assertThat(created.getValue().getOnPermissionRequest().handle(request, null).join().getKind()).isEqualTo("reject");
+            assertThat(created.getValue().getPermissions().getOnRequest().handle(request, null).join().getKind()).isEqualTo("reject");
             verify(session, times(2)).close();
         }
         verify(client, never()).close();
@@ -199,7 +199,7 @@ class CopilotAgentTests {
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
             var session = session("reply");
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             when(session.sendAndWait(any(), anyLong())).thenAnswer(send -> {
                 bothStarted.countDown();
                 assertThat(bothStarted.await(5, TimeUnit.SECONDS)).isTrue();
@@ -212,9 +212,9 @@ class CopilotAgentTests {
             var first = agent.answer("one", "first");
             var second = agent.answer("two", "second");
             CompletableFuture.allOf(first, second).get(5, TimeUnit.SECONDS);
-            ArgumentCaptor<SessionConfig> configs = ArgumentCaptor.captor();
+            ArgumentCaptor<CreateSessionOptions> configs = ArgumentCaptor.captor();
             verify(client, times(2)).createSession(configs.capture());
-            assertThat(configs.getAllValues()).extracting(SessionConfig::getSessionId).doesNotHaveDuplicates();
+            assertThat(configs.getAllValues()).extracting(CreateSessionOptions::getSessionId).doesNotHaveDuplicates();
         }
     }
 
@@ -227,7 +227,7 @@ class CopilotAgentTests {
         when(session.abort()).thenReturn(abort);
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
         when(session.sendAndWait(any(), anyLong())).thenAnswer(invocation -> {
@@ -283,7 +283,7 @@ class CopilotAgentTests {
         doThrow(new IOException("unsubscribe failed")).when(subscription).close();
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
         var settings = new CopilotAgentsProperties(Map.of("test-agent",
@@ -308,7 +308,7 @@ class CopilotAgentTests {
         when(session.on(any())).thenReturn(subscribed);
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
         when(session.sendAndWait(any(), anyLong())).thenAnswer(invocation -> {
@@ -355,7 +355,7 @@ class CopilotAgentTests {
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null))
                 .thenReturn(CompletableFuture.completedFuture(new SessionMetadata()));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
         when(client.resumeSession(anyString(), any())).thenReturn(CompletableFuture.completedFuture(session));
@@ -365,16 +365,16 @@ class CopilotAgentTests {
             var agent = agent(CustomizedAgent.class, invoker, settings);
             agent.answer("same", "first").get(5, TimeUnit.SECONDS);
             agent.answer("same", "second").get(5, TimeUnit.SECONDS);
-            ArgumentCaptor<SessionConfig> created = ArgumentCaptor.captor();
-            ArgumentCaptor<ResumeSessionConfig> resumed = ArgumentCaptor.captor();
+            ArgumentCaptor<CreateSessionOptions> created = ArgumentCaptor.captor();
+            ArgumentCaptor<ResumeSessionOptions> resumed = ArgumentCaptor.captor();
             verify(client).createSession(created.capture());
             verify(client).resumeSession(anyString(), resumed.capture());
             assertThat(created.getValue().getSystemMessage()).isSameAs(system);
             assertThat(resumed.getValue().getSystemMessage()).isSameAs(system);
-            assertThat(created.getValue().getTools()).extracting(ToolDefinition::name).containsExactly("tool");
-            assertThat(resumed.getValue().getTools()).extracting(ToolDefinition::name).containsExactly("tool");
+            assertThat(created.getValue().getTools().getDefinitions()).extracting(ToolDefinition::name).containsExactly("tool");
+            assertThat(resumed.getValue().getTools().getDefinitions()).extracting(ToolDefinition::name).containsExactly("tool");
             assertThat(created.getValue().getModel()).isEqualTo("external-model");
-            assertThat(resumed.getValue().getReasoningEffort()).isEqualTo("high");
+            assertThat(resumed.getValue().getInference().getReasoningEffort()).isEqualTo("high");
             verify(customizer).customize(any(), eq(created.getValue()));
             verify(customizer).customize(any(), eq(resumed.getValue()));
             assertThat(org.springframework.test.util.ReflectionTestUtils.getField(invoker, "pending"))
@@ -387,7 +387,7 @@ class CopilotAgentTests {
         var session = session("unused");
         when(client.getSessionMetadata(anyString())).thenReturn(CompletableFuture.completedFuture(null));
         when(client.createSession(any())).thenAnswer(invocation -> {
-            when(session.getSessionId()).thenReturn(invocation.<SessionConfig>getArgument(0).getSessionId());
+            when(session.getSessionId()).thenReturn(invocation.<CreateSessionOptions>getArgument(0).getSessionId());
             return CompletableFuture.completedFuture(session);
         });
         var registrationFailure = new IllegalStateException("registration failed");

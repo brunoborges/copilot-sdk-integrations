@@ -7,7 +7,8 @@ title: Node.js
 Node.js services connect to the AppHost's runtime with the
 Node.js integrations (`@copilot-sdk-integrations/agent-core`, or the
 [NestJS](https://brunoborges.github.io/copilot-sdk-integrations/nestjs/), [Fastify](https://brunoborges.github.io/copilot-sdk-integrations/fastify/), and AI SDK packages built on it) or with the
-Copilot SDK for Node.js (`@github/copilot-sdk`) directly.
+[Microsoft Copilot SDK for Node.js](https://github.com/microsoft/copilot-sdk/tree/main/nodejs)
+(`@microsoft/copilot-sdk`) directly.
 
 ## AppHost
 
@@ -34,15 +35,19 @@ builder.AddJavaScriptApp("nest", "../nest", "start")  // runs a package.json scr
 Both apps receive `CHAT_HOST`, `CHAT_PORT`, `CHAT_CONNECTIONTOKEN`, and `CHAT_MODEL`, among others.
 See the [Environment variable reference](environment-variables.md).
 
-## The runtime URL
+## The runtime address
 
-The Node.js SDK's `RuntimeConnection.forUri` accepts a port, `host:port`, `[ipv6]:port`, or
-`http(s)://host:port`. It doesn't accept `tcp://`, so build the URL from `CHAT_HOST` and `CHAT_PORT`
+The integrations' `cliUrl` option accepts a port, `host:port`, `[ipv6]:port`, or
+`http(s)://host:port`. It doesn't accept `tcp://`, so build it from `CHAT_HOST` and `CHAT_PORT`
 rather than using `CHAT_ENDPOINT`:
 
 ```ts
 const cliUrl = `${process.env.CHAT_HOST}:${process.env.CHAT_PORT}`;
 ```
+
+The SDK's `RuntimeConnection.forTcp(host, port, { connectionToken })` takes the host (without a
+scheme or IPv6 brackets) and the port as separate arguments, so pass `CHAT_HOST` and `CHAT_PORT`
+to it directly.
 
 ## With `@copilot-sdk-integrations/agent-core`
 
@@ -51,7 +56,7 @@ token. Pass the token through `configureClient`, which receives the SDK client o
 client is created:
 
 ```ts
-import { RuntimeConnection } from "@github/copilot-sdk";
+import { RuntimeConnection } from "@microsoft/copilot-sdk";
 import { createCopilot, defineAgent } from "@copilot-sdk-integrations/agent-core";
 
 const cliUrl = `${process.env.CHAT_HOST}:${process.env.CHAT_PORT}`;
@@ -60,7 +65,7 @@ const copilot = createCopilot({
   cliUrl,
   configureClient: (options) => ({
     ...options,
-    connection: RuntimeConnection.forUri(cliUrl, {
+    runtime: RuntimeConnection.forTcp(process.env.CHAT_HOST!, Number(process.env.CHAT_PORT), {
       connectionToken: process.env.CHAT_CONNECTIONTOKEN,
     }),
   }),
@@ -103,7 +108,7 @@ const support = defineAgent({
 
 ```ts
 import { Module } from "@nestjs/common";
-import { RuntimeConnection } from "@github/copilot-sdk";
+import { RuntimeConnection } from "@microsoft/copilot-sdk";
 import { CopilotModule } from "@copilot-sdk-integrations/nestjs";
 
 const cliUrl = `${process.env.CHAT_HOST}:${process.env.CHAT_PORT}`;
@@ -114,7 +119,9 @@ const cliUrl = `${process.env.CHAT_HOST}:${process.env.CHAT_PORT}`;
       cliUrl,
       configureClient: (options) => ({
         ...options,
-        connection: RuntimeConnection.forUri(cliUrl, { connectionToken: process.env.CHAT_CONNECTIONTOKEN }),
+        runtime: RuntimeConnection.forTcp(process.env.CHAT_HOST!, Number(process.env.CHAT_PORT), {
+          connectionToken: process.env.CHAT_CONNECTIONTOKEN,
+        }),
       }),
       agents: { support: { model: process.env.CHAT_MODEL } },
     }),
@@ -126,20 +133,30 @@ export class AppModule {}
 `agents` holds per-agent overrides keyed by agent name, so the model from the AppHost applies to the
 `@CopilotAgent` named `support`.
 
-## With the Copilot SDK directly
+## With the Microsoft Copilot SDK directly
 
 ```ts
-import { CopilotClient, RuntimeConnection } from "@github/copilot-sdk";
+import { CopilotClient, RuntimeConnection } from "@microsoft/copilot-sdk";
 
 const client = new CopilotClient({
-  connection: RuntimeConnection.forUri(`${process.env.CHAT_HOST}:${process.env.CHAT_PORT}`, {
+  mode: "empty",
+  runtime: RuntimeConnection.forTcp(process.env.CHAT_HOST!, Number(process.env.CHAT_PORT), {
     connectionToken: process.env.CHAT_CONNECTIONTOKEN,
   }),
 });
+
+const session = await client.createSession({
+  model: process.env.CHAT_MODEL,
+  tools: { availableTools: [] },
+});
 ```
 
-Then create sessions with `model: process.env.CHAT_MODEL`. Don't set `gitHubToken` or
-`useLoggedInUser` on the client; the SDK rejects them for an external runtime.
+`mode` is required. `"empty"` suits a service that shares the runtime with other services: sessions
+get no built-in tools, and each session must list the tools it allows in `tools.availableTools`
+(`custom:<name>` for your own tools, `mcp:*` for MCP tools, or `[]` for none). Use
+`mode: "coding-agent"` for the CLI's built-in tools, which run with the runtime's access to its host.
+Don't set `github.token` or `github.useLoggedInUser` on the client; the SDK rejects them for an
+external runtime.
 
 ## BYOK providers
 

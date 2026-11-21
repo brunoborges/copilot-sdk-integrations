@@ -34,7 +34,7 @@ public interface CopilotRuntimeConfig {
     /** Working directory for a managed local Copilot CLI runtime. */
     Optional<String> workingDirectory();
 
-    /** Runtime log level; omitted values retain the SDK default. */
+    /** Log level for a runtime the client starts; omitted values retain the runtime default. Not valid with cli-url. */
     Optional<String> logLevel();
 
     /** Address of an existing Copilot server (port, host:port, or HTTP-style URI) instead of a managed runtime. */
@@ -45,8 +45,8 @@ public interface CopilotRuntimeConfig {
 
     /**
      * Runtime transport: {@code stdio} or the experimental {@code inprocess}, which hosts the runtime in this JVM and
-     * needs JNA and the platform {@code com.github:copilot-sdk-java-runtime} artifact. Omitted values keep the SDK
-     * default (the {@code cli-url} server, {@code COPILOT_SDK_DEFAULT_CONNECTION}, or stdio).
+     * needs JNA (an SDK dependency) and the platform {@code com.microsoft:copilot-sdk-runtime} artifact. Omitted values
+     * use the {@code cli-url} server if set, else {@code COPILOT_SDK_DEFAULT_CONNECTION=inprocess}, else stdio.
      */
     Optional<Connection> connection();
 

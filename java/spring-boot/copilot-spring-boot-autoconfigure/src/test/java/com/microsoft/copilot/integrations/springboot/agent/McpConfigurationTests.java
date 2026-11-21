@@ -5,9 +5,9 @@ import com.microsoft.copilot.integrations.core.*;
 import java.time.Duration;
 import java.util.List;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.McpHttpServerConfig;
-import com.github.copilot.rpc.McpStdioServerConfig;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.McpHttpServerConfig;
+import com.microsoft.copilot.rpc.McpStdioServerConfig;
 import com.microsoft.copilot.integrations.springboot.agent.fixtures.TestAgent;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsAutoConfiguration;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsProperties;

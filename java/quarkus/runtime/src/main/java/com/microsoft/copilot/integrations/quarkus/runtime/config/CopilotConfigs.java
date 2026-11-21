@@ -1,12 +1,11 @@
 package com.microsoft.copilot.integrations.quarkus.runtime.config;
 
-import java.net.URI;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 
-import com.github.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
 
 import com.microsoft.copilot.integrations.core.internal.Assert;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentExecutionLimits;
@@ -97,33 +96,10 @@ public final class CopilotConfigs {
         Assert.isTrue(token == null || cliUrl != null,
                 "quarkus.copilot.tcp-connection-token requires quarkus.copilot.cli-url");
 
-        var options = new CopilotClientOptions();
-        if (cliPath != null) {
-            options.setCliPath(cliPath);
-        }
-        if (!cliArgs.isEmpty()) {
-            options.setCliArgs(cliArgs.toArray(String[]::new));
-        }
-        if (workingDirectory != null) {
-            options.setCwd(workingDirectory);
-        }
-        if (logLevel != null) {
-            options.setLogLevel(logLevel);
-        }
-        if (cliUrl != null) {
-            validateServerAddress(cliUrl);
-            options.setCliUrl(cliUrl).setUseStdio(false);
-        }
-        if (token != null) {
-            options.setTcpConnectionToken(token);
-        }
         var connection = config.connection().orElse(null);
-        if (connection == CopilotRuntimeConfig.Connection.STDIO) {
-            CopilotRuntimeConnections.useStdio(options, "quarkus.copilot.");
-        } else if (connection == CopilotRuntimeConfig.Connection.INPROCESS) {
-            CopilotRuntimeConnections.useInProcess(options, "quarkus.copilot.");
-        }
-        return options;
+        return CopilotRuntimeConnections.clientOptions("quarkus.copilot.", new CopilotRuntimeConnections.Settings(cliPath,
+                cliArgs, workingDirectory, logLevel, cliUrl, token,
+                connection == null ? null : CopilotRuntimeConnections.Transport.valueOf(connection.name())));
     }
 
     public static void requirePositive(Duration timeout, String name) {
@@ -139,24 +115,5 @@ public final class CopilotConfigs {
     private static String text(Optional<String> value, String name) {
         Assert.isTrue(value.isEmpty() || !value.get().isBlank(), name + " must not be blank");
         return value.orElse(null);
-    }
-
-    private static void validateServerAddress(String address) {
-        String message = "quarkus.copilot.cli-url must specify a host and port (1-65535), or just a port; "
-                + "credentials, paths, queries, and fragments are not supported";
-        URI uri;
-        try {
-            String normalized = address.matches("[0-9]+") ? "http://localhost:" + address : address;
-            uri = URI.create(normalized.contains("://") ? normalized : "http://" + normalized);
-        } catch (IllegalArgumentException ex) {
-            // URI parser messages may contain credentials; expose only the property name.
-            throw new IllegalArgumentException(message);
-        }
-        Assert.isTrue(("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme()))
-                        && uri.getHost() != null && uri.getPort() > 0 && uri.getPort() <= 65535
-                        && uri.getRawUserInfo() == null
-                        && (uri.getRawPath() == null || uri.getRawPath().isEmpty())
-                        && uri.getRawQuery() == null && uri.getRawFragment() == null,
-                message);
     }
 }

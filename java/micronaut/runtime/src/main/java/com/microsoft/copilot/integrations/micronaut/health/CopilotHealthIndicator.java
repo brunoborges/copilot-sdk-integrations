@@ -15,9 +15,9 @@ import jakarta.inject.Singleton;
 
 import org.reactivestreams.Publisher;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.GetAuthStatusResponse;
-import com.github.copilot.rpc.GetStatusResponse;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.GetAuthStatusResponse;
+import com.microsoft.copilot.rpc.GetStatusResponse;
 
 import com.microsoft.copilot.integrations.micronaut.CopilotRuntimeAccess;
 import com.microsoft.copilot.integrations.micronaut.config.CopilotConfigs;

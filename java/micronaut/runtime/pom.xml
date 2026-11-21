@@ -10,7 +10,7 @@
 
     <artifactId>copilot-micronaut</artifactId>
     <name>Copilot Micronaut - Runtime</name>
-    <description>Micronaut integration for the GitHub Copilot SDK for Java: client, declarative agents, health, info,
+    <description>Micronaut integration for the Microsoft Copilot SDK for Java: client, declarative agents, health, info,
         management endpoint, metrics, security, and Reactor streaming</description>
 
     <dependencies>
@@ -19,8 +19,8 @@
             <artifactId>copilot-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.github</groupId>
-            <artifactId>copilot-sdk-java</artifactId>
+            <groupId>com.microsoft</groupId>
+            <artifactId>copilot-sdk</artifactId>
         </dependency>
         <dependency>
             <groupId>io.micronaut</groupId>

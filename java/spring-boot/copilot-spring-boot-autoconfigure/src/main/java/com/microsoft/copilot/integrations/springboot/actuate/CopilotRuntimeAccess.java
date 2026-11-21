@@ -5,8 +5,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.github.copilot.ConnectionState;
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.ConnectionState;
+import com.microsoft.copilot.CopilotClient;
 
 /** Guards runtime calls so diagnostics never implicitly start a lazily configured client. */
 final class CopilotRuntimeAccess {

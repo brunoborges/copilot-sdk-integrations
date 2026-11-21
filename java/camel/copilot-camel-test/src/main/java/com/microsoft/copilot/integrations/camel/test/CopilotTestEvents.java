@@ -10,18 +10,18 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.github.copilot.generated.AssistantMessageDeltaEvent;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.generated.AssistantUsageEvent;
-import com.github.copilot.generated.SessionErrorEvent;
-import com.github.copilot.generated.SessionEvent;
-import com.github.copilot.generated.SessionIdleEvent;
-import com.github.copilot.generated.ToolExecutionCompleteEvent;
-import com.github.copilot.generated.ToolExecutionStartEvent;
-import com.github.copilot.generated.UserMessageEvent;
+import com.microsoft.copilot.generated.AssistantMessageDeltaEvent;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.generated.AssistantUsageEvent;
+import com.microsoft.copilot.generated.SessionErrorEvent;
+import com.microsoft.copilot.generated.SessionEvent;
+import com.microsoft.copilot.generated.SessionIdleEvent;
+import com.microsoft.copilot.generated.ToolExecutionCompleteEvent;
+import com.microsoft.copilot.generated.ToolExecutionStartEvent;
+import com.microsoft.copilot.generated.UserMessageEvent;
 
 /**
- * Factories for Copilot SDK {@link SessionEvent session events}, used by {@link CopilotTestRuntime} and by tests
+ * Factories for Microsoft Copilot SDK {@link SessionEvent session events}, used by {@link CopilotTestRuntime} and by tests
  * that script additional events with {@link CopilotAgentScript#emits(SessionEvent...)}.
  *
  * <p>Events are built from their JSON wire representation using the same Jackson configuration as the SDK, so any

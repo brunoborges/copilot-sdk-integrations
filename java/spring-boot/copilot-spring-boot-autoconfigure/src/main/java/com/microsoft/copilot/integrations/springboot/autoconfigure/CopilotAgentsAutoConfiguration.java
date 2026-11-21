@@ -2,7 +2,7 @@ package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
 import java.time.Clock;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;
 import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
 import com.microsoft.copilot.integrations.core.CopilotAgents;

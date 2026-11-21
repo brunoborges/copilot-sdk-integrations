@@ -6,8 +6,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.ProviderConfig;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.ProviderConfig;
 import com.microsoft.copilot.integrations.springboot.agent.fixtures.TestAgent;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsAutoConfiguration;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsProperties;

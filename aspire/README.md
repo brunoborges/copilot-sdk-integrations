@@ -1,7 +1,7 @@
 # copilot-aspire
 
 [Aspire](https://aspire.dev/) integration for the
-[GitHub Copilot SDKs](https://github.com/github/copilot-sdk).
+[Microsoft Copilot SDKs](https://github.com/microsoft/copilot-sdk).
 
 📖 **[Documentation](https://brunoborges.github.io/copilot-sdk-integrations/aspire/)**
 

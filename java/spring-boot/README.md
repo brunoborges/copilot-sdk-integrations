@@ -1,7 +1,7 @@
 # copilot-spring-boot
 
-Spring Boot starter for the [Copilot SDK for Java](https://github.com/github/copilot-sdk/tree/main/java),
-targeting **Spring Boot 4.1.1**, **Java 21**, and Copilot SDK **1.0.24**.
+Spring Boot starter for the [Microsoft Copilot SDK for Java](https://github.com/microsoft/copilot-sdk/tree/main/java),
+targeting **Spring Boot 4.1.1**, **Java 21**, and Microsoft Copilot SDK **2.0.1**.
 
 📖 **[Read the documentation](https://brunoborges.github.io/copilot-sdk-integrations/spring-boot/)**
 ([chapter sources](DOCS.md)).
@@ -137,7 +137,7 @@ copilot:
 ```
 
 See also the SDK's
-[BYOK documentation](https://github.com/github/copilot-sdk/blob/main/docs/auth/byok.md).
+[BYOK documentation](https://github.com/microsoft/copilot-sdk/blob/main/docs/auth/byok.md).
 
 ## Documentation
 

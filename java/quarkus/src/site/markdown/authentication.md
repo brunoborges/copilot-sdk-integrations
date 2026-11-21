@@ -17,9 +17,9 @@ title: Per-user authentication
 
 By default every session uses the ambient credentials of the shared
 `CopilotClient`: the signed-in CLI user, `GH_TOKEN`/`GITHUB_TOKEN`, or the
-client's `gitHubToken` option. A multi-user application can instead run each
+client's `github.token` option (`ClientGitHubOptions`). A multi-user application can instead run each
 turn as the end user. The SDK accepts a GitHub token per session
-(`SessionConfig`/`ResumeSessionConfig.setGitHubToken`). The extension fills it
+(`getGitHub().setToken(...)` on `CreateSessionOptions`/`ResumeSessionOptions`). The extension fills it
 from a `CopilotTokenResolver`.
 
 <a id="token-resolvers"></a>

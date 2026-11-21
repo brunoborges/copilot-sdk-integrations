@@ -29,6 +29,8 @@ from copilot_agents import (
     SessionCleanup,
     SessionStore,
 )
+from copilot_agents.connection import build_client as build_sdk_client
+from copilot_agents.connection import runtime_download_pending
 from copilot_agents.executor import ThreadPoolDispatcher
 from copilot_agents.policies import approves_everything
 from copilot_agents.testing import CopilotTestRuntime
@@ -150,31 +152,23 @@ class Copilot:
 
     def build_client(self) -> Any:
         """Create an SDK ``CopilotClient`` from settings (not started)."""
-        from copilot import CopilotClient, RuntimeConnection
-
         runtime = self.settings.runtime
-        token = runtime.connection_token.get_secret_value() if runtime.connection_token else None
-        if runtime.connection == "uri":
-            connection = RuntimeConnection.for_uri(runtime.url, connection_token=token)
-        elif runtime.connection == "tcp":
-            connection = RuntimeConnection.for_tcp(port=runtime.port, connection_token=token, path=runtime.cli_path)
-        elif runtime.connection == "inprocess":
-            connection = RuntimeConnection.for_inprocess()
-        else:
-            connection = RuntimeConnection.for_stdio(path=runtime.cli_path)
         base = self.settings.base_directory
         base.mkdir(parents=True, exist_ok=True)
-        kwargs: dict[str, Any] = {
-            "connection": connection,
-            "base_directory": str(base),
-            "log_level": runtime.log_level,
-            "mode": runtime.mode,
-        }
-        if self.settings.auth.github_token:
-            kwargs["github_token"] = self.settings.auth.github_token.get_secret_value()
-        if self.settings.telemetry:
-            kwargs["telemetry"] = {str(k).lower(): v for k, v in self.settings.telemetry.items()}
-        return CopilotClient(**kwargs)
+        token = self.settings.auth.github_token
+        telemetry = self.settings.telemetry
+        return build_sdk_client(
+            runtime.connection,
+            mode=runtime.mode,
+            url=runtime.url,
+            connection_token=runtime.connection_token.get_secret_value() if runtime.connection_token else None,
+            cli_path=runtime.cli_path,
+            port=runtime.port,
+            base_directory=str(base),
+            log_level=runtime.log_level,
+            github_token=token.get_secret_value() if token else None,
+            telemetry={str(k).lower(): v for k, v in telemetry.items()} if telemetry else None,
+        )
 
     # -- agents -----------------------------------------------------------------------
 
@@ -352,18 +346,11 @@ class Copilot:
     def _runtime_warnings(self) -> list[str]:
         runtime = self.settings.runtime
         warnings: list[str] = []
-        if runtime.connection in ("stdio", "tcp") and not runtime.cli_path and not os.environ.get("COPILOT_CLI_PATH"):
-            try:
-                from copilot._cli_download import get_cached_cli_path
-
-                missing = get_cached_cli_path() is None
-            except Exception:  # noqa: BLE001 - SDK internals may change; skip the check
-                missing = False
-            if missing:
-                warnings.append(
-                    "The Copilot runtime has not been downloaded; the first agent call will download it. "
-                    "Run `python -m copilot download-runtime` at build time."
-                )
+        if runtime_download_pending(runtime.connection, runtime.cli_path):
+            warnings.append(
+                "The Copilot runtime has not been downloaded; the first agent call will download it. "
+                "Run `python -m copilot download-runtime` at build time."
+            )
         if runtime.connection == "stdio":
             try:
                 workers = int(os.environ.get("WEB_CONCURRENCY", "0"))

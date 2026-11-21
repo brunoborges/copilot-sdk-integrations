@@ -4,15 +4,17 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import com.github.copilot.ConnectionState;
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.CopilotClientOptions;
-import com.github.copilot.rpc.GetAuthStatusResponse;
-import com.github.copilot.rpc.GetStatusResponse;
-import com.github.copilot.rpc.ModelInfo;
-import com.github.copilot.rpc.ModelPolicy;
-import com.github.copilot.rpc.RuntimeConnection;
-import com.github.copilot.rpc.SessionMetadata;
+import com.microsoft.copilot.ConnectionState;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.generated.rpc.Model;
+import com.microsoft.copilot.generated.rpc.ModelCapabilities;
+import com.microsoft.copilot.generated.rpc.ModelPolicy;
+import com.microsoft.copilot.generated.rpc.ModelPolicyState;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.GetAuthStatusResponse;
+import com.microsoft.copilot.rpc.GetStatusResponse;
+import com.microsoft.copilot.rpc.RuntimeConnection;
+import com.microsoft.copilot.rpc.SessionMetadata;
 import com.microsoft.copilot.integrations.springboot.actuate.fixtures.InspectedAgent;
 import com.microsoft.copilot.integrations.springboot.agent.tools.EchoTools;
 import com.microsoft.copilot.integrations.springboot.autoconfigure.CopilotAgentsAutoConfiguration;
@@ -251,14 +253,9 @@ class CopilotActuatorTests {
     @Test
     void endpointListsModelsAndStarterSessionsWhenConnected() {
         when(client.getState()).thenReturn(ConnectionState.CONNECTED);
-        var model = mock(ModelInfo.class);
-        var policy = mock(ModelPolicy.class);
-        when(policy.getState()).thenReturn("enabled");
-        when(model.getId()).thenReturn("gpt-5");
-        when(model.getName()).thenReturn("GPT-5");
-        when(model.getPolicy()).thenReturn(policy);
-        when(model.getSupportedReasoningEfforts()).thenReturn(List.of("low", "high"));
-        when(model.getDefaultReasoningEffort()).thenReturn("low");
+        var model = Model.builder().id("gpt-5").name("GPT-5").capabilities(ModelCapabilities.builder().build())
+                .policy(ModelPolicy.builder().state(ModelPolicyState.ENABLED).build())
+                .supportedReasoningEfforts(List.of("low", "high")).defaultReasoningEffort("low").build();
         when(client.listModels()).thenReturn(CompletableFuture.completedFuture(List.of(model)));
         var owned = session("agent-abc", "Summary");
         var foreign = session("cli-session", "Other");
@@ -324,8 +321,8 @@ class CopilotActuatorTests {
                         CopilotInfoContributorAutoConfiguration.class))
                 .withBean(CopilotClient.class, () -> client);
         runner.withPropertyValues("copilot.cli-url=localhost:4321", "copilot.tcp-connection-token=tcp-secret")
-                .withBean(CopilotClientOptions.class, () -> new CopilotClientOptions().setCliUrl("localhost:4321")
-                        .setUseStdio(false).setTcpConnectionToken("tcp-secret"))
+                .withBean(CopilotClientOptions.class, () -> new CopilotClientOptions()
+                        .setRuntime(RuntimeConnection.forTcp("localhost", 4321).setConnectionToken("tcp-secret")))
                 .run(context -> {
                     var builder = new Info.Builder();
                     context.getBean(CopilotInfoContributor.class).contribute(builder);
@@ -333,7 +330,7 @@ class CopilotActuatorTests {
                     @SuppressWarnings("unchecked")
                     var copilot = (java.util.Map<String, Object>) info.get("copilot");
                     assertThat(copilot).containsEntry("connection", java.util.Map.of("mode", "external-server"));
-                    assertThat(copilot.get("sdk")).isEqualTo(java.util.Map.of("version", "1.0.24"));
+                    assertThat(copilot.get("sdk")).isEqualTo(java.util.Map.of("version", "2.0.1"));
                     assertThat(((java.util.Map<?, ?>) copilot.get("starter")).get("version"))
                             .isNotEqualTo(CopilotInfoContributor.UNKNOWN);
                     assertThat(info.toString()).doesNotContain("tcp-secret", "4321");
@@ -341,9 +338,12 @@ class CopilotActuatorTests {
                 });
         runner.withPropertyValues("management.info.copilot.enabled=false")
                 .run(context -> assertThat(context).doesNotHaveBean(CopilotInfoContributor.class));
-        assertThat(CopilotInfoContributor.connectionMode(new CopilotClientOptions())).isEqualTo("stdio");
         assertThat(CopilotInfoContributor.connectionMode(new CopilotClientOptions()
-                .setConnection(RuntimeConnection.forInProcess()))).isEqualTo("in-process");
+                .setRuntime(RuntimeConnection.forSpawnedStdio()))).isEqualTo("stdio");
+        assertThat(CopilotInfoContributor.connectionMode(new CopilotClientOptions()
+                .setRuntime(RuntimeConnection.forSpawnedTcp()))).isEqualTo("tcp");
+        assertThat(CopilotInfoContributor.connectionMode(new CopilotClientOptions()
+                .setRuntime(RuntimeConnection.forInProcess()))).isEqualTo("in-process");
         assertThat(CopilotInfoContributor.connectionMode(null)).isEqualTo("unknown");
     }
 

@@ -4,9 +4,9 @@ import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.GetAuthStatusResponse;
-import com.github.copilot.rpc.GetStatusResponse;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.GetAuthStatusResponse;
+import com.microsoft.copilot.rpc.GetStatusResponse;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.util.Assert;

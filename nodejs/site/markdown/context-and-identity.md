@@ -193,7 +193,7 @@ For each turn:
 2. Otherwise, the token resolver's result, raced against the turn's abort signal.
 3. When connected to an external runtime (`cliUrl`), the client's `githubToken` as a fallback.
 
-The resolved token becomes the session's `gitHubToken` unless `configureSession` already set
-one. When spawning a local runtime, the client's `githubToken` is used for the whole client.
+The resolved token becomes the session's `github.token` unless `configureSession` already set
+`github.token` or `github.tokenProvider`. When spawning a local runtime, the client's `githubToken` is used for the whole client.
 Combine per-user tokens with context-derived
 [MCP headers](agents.md#mcp-servers) to call the GitHub MCP server as the user.

@@ -9,12 +9,12 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.copilot.rpc.PostToolUseFailureHookInput;
-import com.github.copilot.rpc.PostToolUseFailureHookOutput;
-import com.github.copilot.rpc.PostToolUseHookInput;
-import com.github.copilot.rpc.PostToolUseHookOutput;
-import com.github.copilot.rpc.SessionEndHookInput;
-import com.github.copilot.rpc.SessionEndHookOutput;
+import com.microsoft.copilot.rpc.PostToolUseFailureHookInput;
+import com.microsoft.copilot.rpc.PostToolUseFailureHookOutput;
+import com.microsoft.copilot.rpc.PostToolUseHookInput;
+import com.microsoft.copilot.rpc.PostToolUseHookOutput;
+import com.microsoft.copilot.rpc.SessionEndHookInput;
+import com.microsoft.copilot.rpc.SessionEndHookOutput;
 
 /**
  * Opt-in hooks that keep an agent working when tools fail, instead of stopping with a partial answer.

@@ -84,7 +84,7 @@ MCP tools are deny-by-default, like everything else the
 [default permission handler](permissions.md#the-default-handler) doesn't recognize:
 
 - `Tools` is passed to the runtime, so only the listed tools are exposed.
-- When any server lists tools, the session's `AvailableTools` includes `mcp:*`.
+- When any server lists tools, the session's `Tools.AvailableTools` includes `mcp:*`.
 - A call is approved only if its server is configured on the agent and the tool is listed
   (by its name, or as `{server}-{name}`), or the list contains `"*"`.
 - An empty `Tools` list allows none of the server's tools.

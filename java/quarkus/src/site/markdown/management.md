@@ -74,7 +74,7 @@ Example response from `/q/health/ready`:
       "data": {
         "state": "CONNECTED",
         "version": "1.2.3",
-        "protocolVersion": 3,
+        "protocolVersion": 4,
         "authenticated": true,
         "authType": "user",
         "host": "https://github.com",
@@ -149,7 +149,7 @@ runtime:
 {
   "copilot": {
     "extension": { "version": "0.1.0-SNAPSHOT" },
-    "sdk": { "version": "1.0.24" },
+    "sdk": { "version": "2.0.1" },
     "connection": { "mode": "stdio" }
   }
 }

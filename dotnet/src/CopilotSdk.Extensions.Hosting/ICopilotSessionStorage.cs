@@ -1,4 +1,4 @@
-using GitHub.Copilot;
+using Microsoft.Copilot;
 
 namespace CopilotSdk.Extensions.Hosting;
 
@@ -47,8 +47,8 @@ internal sealed class CopilotSessionStorage(ICopilotClientProvider clientProvide
         string? cursor = null;
         do
         {
-            var page = await client.Rpc.Sessions.ReadPersistedEventsAsync(sessionId, cursor, PageSize, null, cancellationToken).ConfigureAwait(false);
-            if (page.CursorStatus == GitHub.Copilot.Rpc.EventsCursorStatus.Expired)
+            var page = await client.Rpc.Sessions.ReadPersistedEventsAsync(sessionId: sessionId, cursor: cursor, max: PageSize, cancellationToken: cancellationToken).ConfigureAwait(false);
+            if (page.CursorStatus == Microsoft.Copilot.Rpc.EventsCursorStatus.Expired)
             {
                 throw new InvalidOperationException($"Reading the history of Copilot session '{sessionId}' expired before it completed.");
             }

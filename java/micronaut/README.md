@@ -1,7 +1,7 @@
 # copilot-micronaut
 
-Micronaut integration for the [Copilot SDK for Java](https://github.com/github/copilot-sdk/tree/main/java),
-targeting **Micronaut 5.2** (platform 5.2.3), **Java 25**, and Copilot SDK **1.0.24**.
+Micronaut integration for the [Microsoft Copilot SDK for Java](https://github.com/microsoft/copilot-sdk/tree/main/java),
+targeting **Micronaut 5.2** (platform 5.2.3), **Java 25**, and Microsoft Copilot SDK **2.0.1**.
 
 It offers the same programming model as the [Spring Boot starter](../spring-boot/) and the
 [Quarkus extension](../quarkus/): the `com.microsoft.copilot.integrations.core` API (`@CopilotAgent`,
@@ -86,9 +86,9 @@ Add the runtime to a Micronaut 5 application, and the processor next to Micronau
     </path>
     <!-- Generates tool metadata for @CopilotTool methods -->
     <path>
-        <groupId>com.github</groupId>
-        <artifactId>copilot-sdk-java</artifactId>
-        <version>1.0.24</version>
+        <groupId>com.microsoft</groupId>
+        <artifactId>copilot-sdk</artifactId>
+        <version>2.0.1</version>
     </path>
 </annotationProcessorPaths>
 ```
@@ -105,17 +105,12 @@ micronaut.copilot.cli-path=/absolute/path/to/copilot
 ```
 
 To run the runtime inside the JVM instead, set the experimental `micronaut.copilot.connection=inprocess`
-(or `stdio` to pin the child-process transport). It needs JNA and the platform runtime artifact:
+(or `stdio` to pin the child-process transport). It needs the platform runtime artifact (JNA already comes with the SDK):
 
 ```xml
 <dependency>
-  <groupId>net.java.dev.jna</groupId>
-  <artifactId>jna</artifactId>
-  <version>5.19.1</version>
-</dependency>
-<dependency>
-  <groupId>com.github</groupId>
-  <artifactId>copilot-sdk-java-runtime</artifactId>
+  <groupId>com.microsoft</groupId>
+  <artifactId>copilot-sdk-runtime</artifactId>
   <version>${copilot-sdk.version}</version>
   <classifier>darwin-arm64</classifier>
 </dependency>
@@ -190,6 +185,8 @@ Beans looked up by type (hooks, return-type adapters, telemetry decorators) are 
 
 The integration's default beans (`CopilotClient`, `CopilotClientOptions`, `CopilotAgents`, telemetry) are
 `@Secondary`, so an application bean of the same type wins; use `@Replaces` to remove a default entirely.
+An application `CopilotClientOptions` bean must set a client mode (the integration uses
+`CopilotClientMode.CODING_AGENT`) because the Microsoft Copilot SDK requires one.
 
 ### Error-recovery hooks
 

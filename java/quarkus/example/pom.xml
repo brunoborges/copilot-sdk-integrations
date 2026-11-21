@@ -81,13 +81,13 @@
                 <configuration>
                     <annotationProcessorPaths>
                         <path>
-                            <groupId>com.github</groupId>
-                            <artifactId>copilot-sdk-java</artifactId>
+                            <groupId>com.microsoft</groupId>
+                            <artifactId>copilot-sdk</artifactId>
                             <version>${copilot-sdk.version}</version>
                         </path>
                     </annotationProcessorPaths>
                     <annotationProcessors>
-                        <annotationProcessor>com.github.copilot.tool.CopilotToolProcessor</annotationProcessor>
+                        <annotationProcessor>com.microsoft.copilot.tool.CopilotToolProcessor</annotationProcessor>
                     </annotationProcessors>
                 </configuration>
             </plugin>

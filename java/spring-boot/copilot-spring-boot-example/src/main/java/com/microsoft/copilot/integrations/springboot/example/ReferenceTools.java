@@ -2,8 +2,8 @@ package com.microsoft.copilot.integrations.springboot.example;
 
 import java.util.Locale;
 
-import com.github.copilot.tool.CopilotTool;
-import com.github.copilot.tool.CopilotToolParam;
+import com.microsoft.copilot.tool.CopilotTool;
+import com.microsoft.copilot.tool.CopilotToolParam;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 

@@ -1,6 +1,6 @@
 package com.microsoft.copilot.integrations.core;
 
-import com.github.copilot.generated.AssistantUsageEvent;
+import com.microsoft.copilot.generated.AssistantUsageEvent;
 
 /** Optional instrumentation SPI; implementations must not record prompts or conversation keys as metric tags. */
 public interface CopilotAgentTelemetry {

@@ -1,6 +1,6 @@
 # @copilot-sdk-integrations/fastify
 
-Fastify plugin for the GitHub Copilot SDK. It provides `fastify.copilot` and request-bound agent handles, request-context propagation to tools and policies, HTTP error mapping, SSE streaming, AI SDK `useChat` support, health and info routes, and a scripted testing helper. It's built on [`@copilot-sdk-integrations/agent-core`](../core); see [`DESIGN-FASTIFY.md`](../../DESIGN-FASTIFY.md) for the full design.
+Fastify plugin for the [Microsoft Copilot SDK](https://github.com/microsoft/copilot-sdk). It provides `fastify.copilot` and request-bound agent handles, request-context propagation to tools and policies, HTTP error mapping, SSE streaming, AI SDK `useChat` support, health and info routes, and a scripted testing helper. It's built on [`@copilot-sdk-integrations/agent-core`](../core); see [`DESIGN-FASTIFY.md`](../../DESIGN-FASTIFY.md) for the full design.
 
 ```sh
 npm install @copilot-sdk-integrations/fastify @copilot-sdk-integrations/agent-core fastify zod

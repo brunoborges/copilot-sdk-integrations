@@ -30,8 +30,8 @@ Core is configured with `createCopilot(options)`. The Fastify plugin takes the s
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `cliPath` | `COPILOT_CLI_PATH`, then the SDK's bundled runtime | Path to the Copilot runtime to spawn. |
-| `cliUrl` | none | Connect to an existing runtime server instead of spawning one. Exclusive with `cliPath`. |
+| `cliPath` | `COPILOT_CLI_PATH`, then the SDK's bundled runtime | Path to the Copilot runtime to spawn over stdio. |
+| `cliUrl` | none | Connect to an existing runtime server over TCP instead of spawning one: `"4321"`, `"host:4321"`, `"[::1]:4321"`, or `"http://host:4321"`. Exclusive with `cliPath`. |
 <!-- only:nestjs -->
 | `startup` | `"lazy"` | `lazy` starts the runtime on the first turn. `eager`: NestJS starts it at bootstrap, and bootstrap fails if it can't start; in core, call `copilot.start()` yourself. |
 <!-- /only -->
@@ -40,8 +40,8 @@ Core is configured with `createCopilot(options)`. The Fastify plugin takes the s
 <!-- /only -->
 | `githubToken` | none | Service GitHub token. With `cliUrl`, a per-session fallback token; see [token precedence](context-and-identity.md#token-precedence). |
 | `useLoggedInUser` | `true` when no token is configured | Use the user logged in to the Copilot CLI. Setting it together with `cliUrl` is an error: an external runtime manages its own authentication. |
-| `baseDirectory` | `COPILOT_HOME`, then `~/.copilot` | Runtime state directory. |
-| `logLevel` | runtime default | Runtime log level: `none`, `error`, `warning`, `info`, `debug`, or `all`. |
+| `baseDirectory` | `COPILOT_HOME`, then `~/.copilot` | Runtime state directory of the spawned runtime. Ignored with `cliUrl`. |
+| `logLevel` | runtime default | Runtime log level (the SDK's `observability.logLevel`): `none`, `error`, `warning`, `info`, `debug`, or `all`. |
 | `limits.maxConcurrentTurns` | `16` | Turns running at once across all agents. |
 | `limits.maxQueuedTurns` | `64` | Turns waiting for a slot before `CopilotAdmissionRejectedError`. |
 | `limits.conversationWaitMs` | `30000` | How long a turn waits for a busy conversation. |
@@ -52,7 +52,7 @@ Core is configured with `createCopilot(options)`. The Fastify plugin takes the s
 | `hooks` | none | Global [hooks](governance.md#hooks), run before each agent's hooks. |
 | `onEvent` | none | Global [event listener](streaming.md#global-event-listeners) `(event, context)`. |
 | `tokenResolver` | none | Per-user [GitHub token](context-and-identity.md#per-user-github-tokens) resolver. |
-| `configureClient` | none | `(options) => options`: adjust the raw SDK `CopilotClientOptions`. |
+| `configureClient` | none | `(options) => options`: adjust the raw SDK `CopilotClientOptions` (`runtime`, `github`, `observability`, ...). |
 | `clientFactory` | SDK `CopilotClient` | Replace the SDK client (the test runtime uses this). |
 <!-- only:nestjs -->
 | `logger` | console, `[copilot]` prefix, debug dropped | A `CopilotLogger` (`debug`, `info`, `warn`, `error`). NestJS uses its `Logger`. |
@@ -62,7 +62,9 @@ Core is configured with `createCopilot(options)`. The Fastify plugin takes the s
 <!-- /only -->
 
 The SDK client always runs in its `empty` mode: no default tools or instructions leak in;
-each agent declares what it uses.
+each agent declares what it uses. Without `cliUrl`, the integration always spawns the runtime as a
+child process over stdio (`RuntimeConnection.forSpawnedStdio`), rather than the Microsoft Copilot
+SDK's in-process default.
 
 ## Runtime connection and authentication
 

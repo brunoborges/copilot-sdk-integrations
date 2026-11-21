@@ -1,6 +1,6 @@
 # copilot-django
 
-Django integration for the [GitHub Copilot SDK for Python](https://pypi.org/project/github-copilot-sdk/).
+Django integration for the [Microsoft Copilot SDK for Python](https://pypi.org/project/microsoft-copilot-sdk/).
 Declare agents as classes, expose ORM-aware functions as tools, and call agents from views,
 management commands or Celery tasks, sync or async. Built on [`copilot-agent-core`](../core/).
 
@@ -110,7 +110,7 @@ COPILOT = {
         "CONNECTION": "stdio",       # stdio | uri | tcp | inprocess
         "URL": None, "CONNECTION_TOKEN": None, "CLI_PATH": None, "PORT": 0,
         "BASE_DIRECTORY": None,       # default: BASE_DIR / ".copilot"
-        "LOG_LEVEL": "info", "START": "lazy", "REQUEST_TIMEOUT": 300, "MODE": "copilot-cli",
+        "LOG_LEVEL": "info", "START": "lazy", "REQUEST_TIMEOUT": 300, "MODE": "coding-agent",
     },
     "AUTH": {"GITHUB_TOKEN": None, "TOKEN_RESOLVER": None},
     "DEFAULTS": {"MODEL": None, "REASONING_EFFORT": None,

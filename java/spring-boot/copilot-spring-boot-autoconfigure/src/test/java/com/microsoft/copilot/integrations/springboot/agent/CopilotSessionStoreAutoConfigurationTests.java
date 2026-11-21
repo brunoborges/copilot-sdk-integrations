@@ -5,8 +5,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.SessionMetadata;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.SessionMetadata;
 import com.microsoft.copilot.integrations.core.CopilotSessionStore;
 import com.microsoft.copilot.integrations.springboot.agent.fixtures.TestAgent;
 import com.microsoft.copilot.integrations.core.internal.CopilotAgentInvoker;

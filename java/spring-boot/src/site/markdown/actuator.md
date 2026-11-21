@@ -68,7 +68,7 @@ Example details (shown according to `management.endpoint.health.show-details`):
   "details": {
     "state": "CONNECTED",
     "version": "1.2.3",
-    "protocolVersion": 3,
+    "protocolVersion": 4,
     "authenticated": true,
     "authType": "user",
     "host": "https://github.com",
@@ -134,7 +134,7 @@ because runtime-generated summaries can contain prompt or business content.
 {
   "copilot": {
     "starter": { "version": "0.1.0-SNAPSHOT" },
-    "sdk": { "version": "1.0.24" },
+    "sdk": { "version": "2.0.1" },
     "connection": { "mode": "stdio" }
   }
 }

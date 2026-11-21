@@ -16,7 +16,7 @@ import jakarta.inject.Singleton;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 
 import com.microsoft.copilot.integrations.core.ConversationId;
 import com.microsoft.copilot.integrations.core.CopilotAgent;
@@ -114,7 +114,7 @@ class CopilotAgentIntegrationTest {
         assertEquals("DI means something", helper.ask("c-1", "What is DI?").join());
         assertEquals("Answer briefly.", copilot.sessionConfig("helper").getSystemMessage().getContent());
         assertEquals("gpt-test", copilot.sessionConfig("helper").getModel());
-        assertEquals(20, copilot.sessionConfig("helper").getToolSearch().getDeferThreshold());
+        assertEquals(20, copilot.sessionConfig("helper").getTools().getSearch().getDeferThreshold());
         assertTrue(copilot.toolCalls("helper").get(0).succeeded());
     }
 

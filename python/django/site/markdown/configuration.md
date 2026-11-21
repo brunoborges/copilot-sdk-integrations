@@ -19,7 +19,7 @@ COPILOT = {
         "LOG_LEVEL": "info",
         "START": "lazy",              # lazy | eager
         "REQUEST_TIMEOUT": 300,       # seconds per agent call
-        "MODE": "copilot-cli",
+        "MODE": "coding-agent",       # coding-agent | empty
     },
     "AUTH": {
         "GITHUB_TOKEN": None,         # None: the runtime's signed-in user
@@ -53,6 +53,14 @@ COPILOT = {
 | `tcp` | Start a runtime that listens on `PORT`. |
 | `inprocess` | Load the runtime as a library in the Django process. |
 
+`URL` is `host:port`, `http://host:port` or a port number. A `uri` runtime is started and
+configured elsewhere, so `AUTH.GITHUB_TOKEN`, `LOG_LEVEL`, `BASE_DIRECTORY` and `TELEMETRY`
+aren't applied to it.
+
+`MODE` is the runtime's client mode: `"coding-agent"` (the default) starts with Copilot
+CLI-like defaults, and `"empty"` leaves every feature to be enabled explicitly. The
+pre-2.0 name `"copilot-cli"` is still accepted as an alias of `"coding-agent"`.
+
 The runtime starts on the first agent call (`START: "lazy"`) or when Django starts
 (`"eager"`). It runs on its own event-loop thread, survives `fork()` (for example under
 Gunicorn `--preload`), and shuts down when settings change in tests.
@@ -77,6 +85,14 @@ class DocsAgent(CopilotAgent):
     mcp_servers = ["docs"]
     provider = "azure"
 ```
+
+The agent's sessions use the provider as their default model provider, with GitHub Copilot
+models turned off. Keys such as `type`, `base_url`, `api_key`, `azure` and `headers` configure
+the connection; its optional `name` (default `"byok"`) must not contain `/`. The keys
+`wire_model`, `model_id`, `max_prompt_tokens`, `max_context_window_tokens`,
+`max_output_tokens` and `capabilities` describe the agent's model instead. If the provider's
+model name contains `/`, give the agent a plain `model` and set the provider's name as
+`wire_model`.
 
 `copilot_check` redacts secrets such as tokens, API keys, and authorization headers.
 

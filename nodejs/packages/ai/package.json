@@ -1,7 +1,7 @@
 {
   "name": "@copilot-sdk-integrations/ai",
   "version": "0.1.0",
-  "description": "AI SDK adapter for the Copilot SDK integrations",
+  "description": "AI SDK adapter for the Microsoft Copilot SDK integrations",
   "license": "MIT",
   "type": "module",
   "main": "dist/index.js",

@@ -12,9 +12,9 @@ import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.eclipse.microprofile.health.HealthCheckResponseBuilder;
 import org.eclipse.microprofile.health.Readiness;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.GetAuthStatusResponse;
-import com.github.copilot.rpc.GetStatusResponse;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.GetAuthStatusResponse;
+import com.microsoft.copilot.rpc.GetStatusResponse;
 
 import com.microsoft.copilot.integrations.quarkus.runtime.CopilotRuntimeAccess;
 import com.microsoft.copilot.integrations.quarkus.runtime.config.CopilotConfigs;

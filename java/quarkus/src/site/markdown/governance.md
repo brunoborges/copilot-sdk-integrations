@@ -29,7 +29,7 @@ All three are applied to both newly created and resumed sessions, before
 ## Restrict the tools an agent can see
 
 `@CopilotAgent` attributes and per-agent properties map directly onto the SDK
-`SessionConfig`/`ResumeSessionConfig` settings of the same names:
+`CreateSessionOptions`/`ResumeSessionOptions` settings of the same names:
 
 | Annotation attribute | Property | SDK setting |
 | --- | --- | --- |

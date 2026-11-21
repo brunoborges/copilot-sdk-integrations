@@ -23,7 +23,7 @@ title: Getting started
 | `copilot-quarkus-test` | Test-scoped support: scripted in-memory `CopilotTestRuntime` that replaces the client in `@QuarkusTest`s, and the Testcontainers `CopilotContainerTestResource`. |
 | `copilot-quarkus-example` | Quarkus REST example with conversational, bound, and streaming agents. Not published. |
 
-The extension targets Quarkus 3.40, Java 21, and Copilot SDK 1.0.24. No
+The extension targets Quarkus 3.40, Java 21, and Microsoft Copilot SDK 2.0.1. No
 integration artifacts have been published. Install the reactor locally (from
 the `quarkus/` directory) before using its snapshot dependencies in another
 application:
@@ -57,9 +57,9 @@ classifier artifact. For example:
 
 ```xml
 <dependency>
-    <groupId>com.github</groupId>
-    <artifactId>copilot-sdk-java-runtime</artifactId>
-    <version>1.0.24</version>
+    <groupId>com.microsoft</groupId>
+    <artifactId>copilot-sdk-runtime</artifactId>
+    <version>2.0.1</version>
     <classifier>linux-x64</classifier>
 </dependency>
 ```

@@ -2,7 +2,7 @@ namespace CopilotSdk.Aspire.Hosting;
 
 /// <summary>
 /// The Dockerfile used for the runtime container when no image is set with <c>WithImage</c>. It installs the
-/// Copilot CLI release that <c>GitHub.Copilot.SDK</c> pins and verifies its checksum.
+/// Copilot CLI release that <c>Microsoft.Copilot.SDK</c> pins and verifies its checksum.
 /// </summary>
 internal static class CopilotDockerfile
 {

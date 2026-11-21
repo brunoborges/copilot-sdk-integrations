@@ -1,6 +1,6 @@
 package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
-import com.github.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotClient;
 import com.microsoft.copilot.integrations.springboot.actuate.CopilotHealthIndicator;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;

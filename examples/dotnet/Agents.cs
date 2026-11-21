@@ -1,7 +1,7 @@
 using System.Text.Json;
 using CopilotSdk.Extensions.Hosting;
-using GitHub.Copilot;
-using GitHub.Copilot.Rpc;
+using Microsoft.Copilot;
+using Microsoft.Copilot.Rpc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 
@@ -65,24 +65,24 @@ public static class Agents
             options.ConfigureSession(config =>
             {
                 config.SystemMessage = new SystemMessageConfig { Mode = SystemMessageMode.Replace, Content = ResearchInstructions };
-                config.AvailableTools = ["wikipedia-search", "wikipedia-readArticle"];
-                config.OnPermissionRequest = (request, _) => Task.FromResult(
+                config.Tools.AvailableTools = ["wikipedia-search", "wikipedia-readArticle"];
+                config.Permissions.OnRequest = (request, _) => Task.FromResult(
                     ResearchAllowed(request) ? PermissionDecision.ApproveOnce() : PermissionDecision.Reject("Only Wikipedia search/read is allowed."));
             });
         });
         return services;
     }
 
-    public static void ConfigureSession(SessionConfigBase config, RunState run, string mode)
+    public static void ConfigureSession(SessionOptionsBase config, RunState run, string mode)
     {
         config.SystemMessage = new SystemMessageConfig
         {
             Mode = SystemMessageMode.Replace, Content = mode == "museum" ? CuratorInstructions : ReviewerInstructions
         };
-        config.AvailableTools = mode == "museum"
+        config.Tools.AvailableTools = mode == "museum"
             ? run.Research is null ? ["approved_fact_lookup"] : ["approved_fact_lookup", "approved_wikipedia_fact_lookup"]
             : ["playwright-browser_navigate", "read_latest_accessibility_snapshot", "accessibility_rule_lookup"];
-        config.OnPermissionRequest = (request, _) => Task.FromResult(
+        config.Permissions.OnRequest = (request, _) => Task.FromResult(
             Allowed(request, run, mode) ? PermissionDecision.ApproveOnce() :
                 PermissionDecision.Reject("Only the configured read-only tools and exact target navigation are allowed."));
     }

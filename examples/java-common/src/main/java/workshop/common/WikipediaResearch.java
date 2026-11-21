@@ -6,9 +6,9 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.copilot.rpc.McpStdioServerConfig;
-import com.github.copilot.rpc.PermissionHandler;
-import com.github.copilot.rpc.PermissionRequestResult;
+import com.microsoft.copilot.rpc.McpStdioServerConfig;
+import com.microsoft.copilot.rpc.PermissionHandler;
+import com.microsoft.copilot.rpc.PermissionRequestResult;
 import com.microsoft.copilot.integrations.core.CopilotPermissionPolicies;
 
 public final class WikipediaResearch {

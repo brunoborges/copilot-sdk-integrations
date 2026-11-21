@@ -1,7 +1,7 @@
 # copilot-dotnet
 
 .NET integration for the
-[GitHub Copilot SDK for .NET](https://github.com/github/copilot-sdk/tree/main/dotnet),
+[Microsoft Copilot SDK for .NET](https://github.com/microsoft/copilot-sdk/tree/main/dotnet),
 for business applications built on the Generic Host and ASP.NET Core: web APIs,
 worker services, and back-office apps.
 

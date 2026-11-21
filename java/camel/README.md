@@ -2,7 +2,7 @@
 
 `copilot-camel` is an [Apache Camel](https://camel.apache.org/) component that runs GitHub Copilot
 agents from routes and exposes routes to agents as tools, permission handlers, and event sinks.
-It is built on the [Copilot SDK for Java](https://github.com/github/copilot-sdk) and the shared
+It is built on the [Microsoft Copilot SDK for Java](https://github.com/microsoft/copilot-sdk) and the shared
 engine in [`java/core`](../core/), so agents behave exactly like the
 [Spring Boot](../spring-boot/) and [Quarkus](../quarkus/) integrations. Design notes:
 [DESIGN.md](DESIGN.md).
@@ -166,7 +166,7 @@ The Java SDK has no error-occurred hook, so transient model or runtime errors ar
 
 | Option | Description |
 | --- | --- |
-| `client` | `CopilotClient` to use. Default: the single registry bean, else one owned by the component. |
+| `client` | `CopilotClient` to use. Default: the single registry bean, else one owned by the component (stdio, `CODING_AGENT` mode). |
 | `telemetry` | `CopilotAgentTelemetry`. Default: the single registry bean, else none. |
 | `agentSettings` | `CopilotAgentSettings`. Default: the single registry bean, else defaults. |
 | `agentTypes` | Comma-separated `@CopilotAgent` interface names. |

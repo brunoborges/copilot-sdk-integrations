@@ -3,8 +3,8 @@ package com.microsoft.copilot.integrations.springboot.example;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.copilot.rpc.ToolDefinition;
-import com.github.copilot.rpc.ToolInvocation;
+import com.microsoft.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.rpc.ToolInvocation;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

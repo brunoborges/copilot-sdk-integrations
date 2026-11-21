@@ -23,7 +23,7 @@ public class AdvisorApplication {
 
             @Override
             public Object adapt(CopilotAgentInvocation invocation) {
-                var events = Collections.synchronizedList(new ArrayList<com.github.copilot.generated.SessionEvent>());
+                var events = Collections.synchronizedList(new ArrayList<com.microsoft.copilot.generated.SessionEvent>());
                 Object reply = invocation.invoke(event -> events.add(event.event())).join();
                 return new Transcript(events, (String) reply);
             }

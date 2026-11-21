@@ -19,6 +19,7 @@ COPILOT_RUNTIME__BASE_DIRECTORY=...        # default: ./.copilot
 COPILOT_RUNTIME__LOG_LEVEL=info
 COPILOT_RUNTIME__START=lazy                # lazy | eager
 COPILOT_RUNTIME__REQUEST_TIMEOUT=300       # seconds per agent call
+COPILOT_RUNTIME__MODE=coding-agent         # coding-agent | empty
 COPILOT_AUTH__GITHUB_TOKEN=...             # unset: the runtime's signed-in user
 COPILOT_AUTH__TOKEN_RESOLVER=app.auth.GitHubTokens
 COPILOT_DEFAULTS__MODEL=gpt-5
@@ -53,6 +54,14 @@ Tokens and connection tokens are `SecretStr` values, so they never appear in `re
 | `tcp` | Start a runtime that listens on `port`. |
 | `inprocess` | Load the runtime as a library in the application process. |
 
+`url` is `host:port`, `http://host:port` or a port number. A `uri` runtime is started and
+configured elsewhere, so `auth.github_token`, `log_level`, `base_directory` and `telemetry`
+aren't applied to it.
+
+`mode` is the runtime's client mode: `coding-agent` (the default) starts with Copilot
+CLI-like defaults, and `empty` leaves every feature to be enabled explicitly. The pre-2.0
+name `copilot-cli` is still accepted as an alias of `coding-agent`.
+
 The runtime starts on the first agent call (`start=lazy`) or in the app's lifespan
 (`start=eager`). It runs on its own event-loop thread and shuts down when the lifespan ends.
 
@@ -72,6 +81,14 @@ class DocsAgent(CopilotAgent):
 ```
 
 An agent can also pass a mapping of server configs or a provider mapping directly.
+
+The agent's sessions use the provider as their default model provider, with GitHub Copilot
+models turned off. Keys such as `type`, `base_url`, `api_key`, `azure` and `headers` configure
+the connection; its optional `name` (default `"byok"`) must not contain `/`. The keys
+`wire_model`, `model_id`, `max_prompt_tokens`, `max_context_window_tokens`,
+`max_output_tokens` and `capabilities` describe the agent's model instead. If the provider's
+model name contains `/`, give the agent a plain `model` and set the provider's name as
+`wire_model`.
 
 ## Per-agent overrides
 

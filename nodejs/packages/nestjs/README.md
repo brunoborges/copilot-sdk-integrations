@@ -1,6 +1,6 @@
 # @copilot-sdk-integrations/nestjs
 
-NestJS module for the GitHub Copilot SDK. It provides declarative agents, `@CopilotTool` providers, request-context propagation, per-user tokens, HTTP error mapping, SSE streaming, a Terminus health indicator, and a scripted testing module. It's built on [`@copilot-sdk-integrations/agent-core`](../core); see [`DESIGN.md`](../../DESIGN.md) §4–§15 for the full design.
+NestJS module for the [Microsoft Copilot SDK](https://github.com/microsoft/copilot-sdk). It provides declarative agents, `@CopilotTool` providers, request-context propagation, per-user tokens, HTTP error mapping, SSE streaming, a Terminus health indicator, and a scripted testing module. It's built on [`@copilot-sdk-integrations/agent-core`](../core); see [`DESIGN.md`](../../DESIGN.md) §4–§15 for the full design.
 
 ```sh
 npm install @copilot-sdk-integrations/nestjs @copilot-sdk-integrations/agent-core zod

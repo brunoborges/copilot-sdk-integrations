@@ -5,8 +5,8 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <!-- GHCP001: experimental GitHub.Copilot.SDK APIs. -->
-    <NoWarn>$(NoWarn);GHCP001</NoWarn>
+    <!-- MCPSDK001: experimental Microsoft.Copilot.SDK APIs. -->
+    <NoWarn>$(NoWarn);MCPSDK001</NoWarn>
   </PropertyGroup>
 
 </Project>

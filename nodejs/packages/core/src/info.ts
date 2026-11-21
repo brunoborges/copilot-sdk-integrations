@@ -1,6 +1,5 @@
-import type { ProviderConfig } from "@github/copilot-sdk";
 import { toSdkTools } from "./tools/index.js";
-import type { CopilotAgentDefinition, CopilotCapacity, CopilotClientState } from "./types.js";
+import type { CopilotAgentDefinition, CopilotCapacity, CopilotClientState, CopilotProviderConfig } from "./types.js";
 
 /** Read-only description of an agent. Never includes provider keys or MCP headers/env. */
 export interface CopilotAgentInfo {
@@ -31,7 +30,7 @@ export interface CopilotInfo {
 
 export interface DescribeAgentOptions {
   /** Named providers; an agent whose `provider` is one of them is reported by name. */
-  providers?: Record<string, ProviderConfig>;
+  providers?: Record<string, CopilotProviderConfig>;
   /** Include the agent's instructions. Default: false (they may contain sensitive prompt engineering). */
   includeInstructions?: boolean;
 }

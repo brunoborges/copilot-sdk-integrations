@@ -11,7 +11,7 @@ internal static class CopilotRuntimeLocator
     internal const string CliPathVariable = "COPILOT_CLI_PATH";
 
     /// <summary>
-    /// Resolution order: <c>COPILOT_CLI_PATH</c>, the <c>copilot-runtime</c> that <c>GitHub.Copilot.SDK</c> copies to
+    /// Resolution order: <c>COPILOT_CLI_PATH</c>, the <c>copilot-runtime</c> that <c>Microsoft.Copilot.SDK</c> copies to
     /// <c>runtimes/{rid}/native</c> in the AppHost output, then <c>copilot</c> on <c>PATH</c>.
     /// </summary>
     public static string Resolve(string baseDirectory, Func<string, string?> getEnvironmentVariable)
@@ -46,7 +46,7 @@ internal static class CopilotRuntimeLocator
         return path;
     }
 
-    /// <summary>The Copilot CLI version <c>GitHub.Copilot.SDK</c> pins, used for the container image.</summary>
+    /// <summary>The Copilot CLI version <c>Microsoft.Copilot.SDK</c> pins, used for the container image.</summary>
     public static string CliVersion { get; } =
         typeof(CopilotRuntimeLocator).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
             .FirstOrDefault(a => a.Key == "CopilotCliVersion")?.Value is { Length: > 0 } version

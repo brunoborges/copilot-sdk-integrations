@@ -13,7 +13,7 @@
 
     <artifactId>copilot-spring-boot-starter</artifactId>
     <name>Copilot Spring Boot Starter</name>
-    <description>Dependency-only starter for the Copilot Java SDK and Spring Boot integration.</description>
+    <description>Dependency-only starter for the Microsoft Copilot SDK for Java and Spring Boot integration.</description>
 
     <dependencies>
         <dependency>
@@ -21,8 +21,8 @@
             <artifactId>copilot-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.github</groupId>
-            <artifactId>copilot-sdk-java</artifactId>
+            <groupId>com.microsoft</groupId>
+            <artifactId>copilot-sdk</artifactId>
         </dependency>
         <dependency>
             <groupId>com.microsoft</groupId>

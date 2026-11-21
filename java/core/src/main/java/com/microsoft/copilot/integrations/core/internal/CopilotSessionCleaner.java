@@ -11,7 +11,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.github.copilot.rpc.SessionMetadata;
+import com.microsoft.copilot.rpc.SessionMetadata;
 
 /**
  * Deletes agent sessions not modified within a maximum age. Frameworks call {@link #sweep()} from their native

@@ -1,23 +1,23 @@
 package com.microsoft.copilot.integrations.core;
 
-import com.github.copilot.rpc.AgentStopHookInput;
-import com.github.copilot.rpc.AgentStopHookOutput;
-import com.github.copilot.rpc.PostToolUseFailureHookInput;
-import com.github.copilot.rpc.PostToolUseFailureHookOutput;
-import com.github.copilot.rpc.PostToolUseHookInput;
-import com.github.copilot.rpc.PostToolUseHookOutput;
-import com.github.copilot.rpc.PreToolUseHookInput;
-import com.github.copilot.rpc.PreToolUseHookOutput;
-import com.github.copilot.rpc.SessionEndHookInput;
-import com.github.copilot.rpc.SessionEndHookOutput;
-import com.github.copilot.rpc.SessionStartHookInput;
-import com.github.copilot.rpc.SessionStartHookOutput;
-import com.github.copilot.rpc.SubagentStartHookInput;
-import com.github.copilot.rpc.SubagentStartHookOutput;
-import com.github.copilot.rpc.SubagentStopHookInput;
-import com.github.copilot.rpc.SubagentStopHookOutput;
-import com.github.copilot.rpc.UserPromptSubmittedHookInput;
-import com.github.copilot.rpc.UserPromptSubmittedHookOutput;
+import com.microsoft.copilot.rpc.AgentStopHookInput;
+import com.microsoft.copilot.rpc.AgentStopHookOutput;
+import com.microsoft.copilot.rpc.PostToolUseFailureHookInput;
+import com.microsoft.copilot.rpc.PostToolUseFailureHookOutput;
+import com.microsoft.copilot.rpc.PostToolUseHookInput;
+import com.microsoft.copilot.rpc.PostToolUseHookOutput;
+import com.microsoft.copilot.rpc.PreToolUseHookInput;
+import com.microsoft.copilot.rpc.PreToolUseHookOutput;
+import com.microsoft.copilot.rpc.SessionEndHookInput;
+import com.microsoft.copilot.rpc.SessionEndHookOutput;
+import com.microsoft.copilot.rpc.SessionStartHookInput;
+import com.microsoft.copilot.rpc.SessionStartHookOutput;
+import com.microsoft.copilot.rpc.SubagentStartHookInput;
+import com.microsoft.copilot.rpc.SubagentStartHookOutput;
+import com.microsoft.copilot.rpc.SubagentStopHookInput;
+import com.microsoft.copilot.rpc.SubagentStopHookOutput;
+import com.microsoft.copilot.rpc.UserPromptSubmittedHookInput;
+import com.microsoft.copilot.rpc.UserPromptSubmittedHookOutput;
 
 /**
  * Bean adapter for SDK session hooks. Reference beans from {@link CopilotAgent#hookRefs()}, target agents

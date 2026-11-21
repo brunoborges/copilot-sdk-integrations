@@ -41,7 +41,9 @@ ordered with Micronaut's `@Order`/`Ordered`, lower values first.
 
 The integration's default beans (`CopilotClient`, `CopilotClientOptions`,
 `CopilotAgents`, telemetry) are `@Secondary`, so an application bean of the same
-type wins; use `@Replaces` to remove a default entirely.
+type wins; use `@Replaces` to remove a default entirely. An application
+`CopilotClientOptions` bean must set a client mode (the integration uses
+`CopilotClientMode.CODING_AGENT`) because the Microsoft Copilot SDK requires one.
 
 <a id="permissions"></a>
 

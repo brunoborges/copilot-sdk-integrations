@@ -1,10 +1,10 @@
 # Copilot SDK for .NET applications: design
 
 Status: **Preview — implemented, not yet published to NuGet** · Targets: .NET 10 and .NET 8,
-`GitHub.Copilot.SDK` 1.0.x, `Microsoft.Extensions.AI` 10.x.
+`Microsoft.Copilot.SDK` 2.0.x, `Microsoft.Extensions.AI` 10.x.
 
 This document describes the integration of the
-[GitHub Copilot SDK for .NET](https://github.com/github/copilot-sdk/tree/main/dotnet)
+[Microsoft Copilot SDK for .NET](https://github.com/microsoft/copilot-sdk/tree/main/dotnet)
 for business applications on the .NET Generic Host: ASP.NET Core APIs, worker
 services, and Blazor apps. It matches the code in
 [`src/CopilotSdk.Extensions.Hosting`](../src/CopilotSdk.Extensions.Hosting/).
@@ -36,8 +36,8 @@ Everything else uses the SDK's own types, so SDK documentation keeps applying.
 
 ### Non-goals
 
-- A second API over `SessionConfig`. Advanced settings are set on the SDK types
-  directly (§3.5).
+- A second API over the SDK's session options. Advanced settings are set on the
+  SDK types directly (§3.5).
 - Several ways to call an agent. There is one primary surface (`IChatClient`)
   and one escape hatch (`CopilotClient`).
 - Orchestrating the runtime for distributed apps (Aspire's job), and agent
@@ -77,7 +77,7 @@ public sealed class OrderTools(IOrderRepository orders)
 ```
 
 [`SupportApi.RawSdk`](../samples/SupportApi.RawSdk/) implements the same
-endpoints and behavior directly against `GitHub.Copilot.SDK`. Non-blank,
+endpoints and behavior directly against `Microsoft.Copilot.SDK`. Non-blank,
 non-comment C# lines, excluding the shared domain code
 ([details](../samples/README.md)):
 
@@ -143,7 +143,7 @@ Named agents inherit the default agent's code delegates, MCP servers, and
     "ResponseTimeout": "00:02:00",
     "MaxConcurrentTurns": null,          // optional cap across the app
     "EagerStart": false,                 // start with the host instead of on first use
-    "InProcess": false,                  // host the runtime in this process (experimental)
+    "InProcess": false,                  // host the runtime in this process instead of a child process
     "SessionRetention": null,            // delete sessions idle this long, for example "7.00:00:00"
 
     "GitHubToken": null,                 // service identity for the SDK-managed runtime; use a secret store
@@ -174,7 +174,9 @@ read from the default agent only.
   or a loopback port number.
 - **`McpServers`** mirror the SDK's stdio and HTTP server configs (`Type` is
   `http`/`sse` or `stdio`/`local`, inferred from `Url` or `Command`). `Provider`
-  is the SDK's `ProviderConfig`.
+  uses the SDK's `ProviderConfig` shape; sessions register it as the named
+  provider `byok`, make it the default provider, and turn off Copilot API
+  models, so every model of the session is served by the provider.
 - **Connection string** `ConnectionStrings:copilot` (or `ConnectionName`) is
   what an Aspire AppHost provides (§3.6). Keys, case-insensitive: `Endpoint`,
   `ConnectionToken`, `Model`, `Provider`, `ProviderEndpoint`, `ProviderKey`,
@@ -206,8 +208,11 @@ translation layer to learn or keep in sync:
 
 ```csharp
 builder.Services.AddCopilot(o => o
-    .ConfigureClient(client => client.BaseDirectory = "/var/copilot")            // CopilotClientOptions
-    .ConfigureSession(session => session.ExcludedTools = ["web_fetch"]));        // SessionConfigBase (create and resume)
+    .ConfigureClient(client =>                                                   // CopilotClientOptions
+    {
+        if (client.Runtime is OwnedRuntimeConnection runtime) runtime.BaseDirectory = "/var/copilot";
+    })
+    .ConfigureSession(session => session.Tools.ExcludedTools = ["web_fetch"]));  // SessionOptionsBase (create and resume)
 
 app.MapGet("/models", (CopilotClient copilot) => copilot.ListModelsAsync());      // the shared client
 ```
@@ -327,7 +332,7 @@ The default handler lets the app's own tools run and denies everything else:
 | MCP server tools | Approved only if listed in the server's `Tools` (or `"*"`). An empty list allows none. |
 | Everything else (shell, file write, URL fetch, …) | Denied. |
 
-The session's `AvailableTools` is limited to `custom:{name}` for each app tool,
+The session's `Tools.AvailableTools` is limited to `custom:{name}` for each app tool,
 plus `mcp:*` when any MCP server lists tools, so built-in tools aren't offered
 in the first place.
 
@@ -347,7 +352,7 @@ has `ToolName`, `Arguments` (`JsonElement`), `GetArgument<T>(name)`,
 `Services` (the calling turn's services), `CancellationToken`, and `Request`
 (the raw SDK `PermissionRequest`).
 
-For anything else, set the SDK's `OnPermissionRequest` through
+For anything else, set the SDK's `Permissions.OnRequest` through
 `ConfigureSession`; it replaces the default handler. Approval UIs (queues,
 SignalR prompts) belong in the app, not the library.
 
@@ -382,7 +387,7 @@ SDK-managed runtime does not pick them up on its own. They are ignored when
 
 **Mode and runtime home.** The client runs with `Mode = Empty`: built-in
 tools, skills, memory, and custom instructions are off by design. Unless
-`Endpoint` or `BaseDirectory` is set, the SDK-managed runtime uses a per-app
+`Endpoint` or the runtime's `BaseDirectory` is set, the SDK-managed runtime uses a per-app
 home under `LocalApplicationData/copilot-sdk/{app}-{hash}`, so it doesn't mix
 with interactive CLI sessions. The signed-in user still works locally.
 `ConfigureClient` can override both.
@@ -394,9 +399,11 @@ with interactive CLI sessions. The signed-in user still works locally.
 - **Lifecycle**: the client starts on first use (or at host start with
   `EagerStart`) and stops with the host, force-stopping if shutdown times out.
 - **Connection**: with no `Endpoint`, the SDK starts its bundled runtime as a
-  child process, or hosts it in-process with `InProcess` (experimental in the
-  SDK; runtime OpenTelemetry export is skipped because the SDK rejects it
-  in-process); with an `Endpoint`, the client connects to it.
+  child process (stdio), or hosts it in-process with `InProcess` or the SDK's
+  `COPILOT_SDK_DEFAULT_CONNECTION` environment variable. The integration sets
+  the child process explicitly, because the SDK's own default is in-process.
+  With an `Endpoint`, the client connects to it over TCP: URL forms are reduced
+  to a host and port, and `ConnectionToken` is passed separately.
 - **Concurrency**: when `MaxConcurrentTurns` is set, extra turns wait in a
   queue of up to 8× the limit; beyond that the call throws
   `InvalidOperationException`.
@@ -421,7 +428,7 @@ builder.Services.AddHealthChecks().AddCopilot();
 Result data includes `authenticated`, `login`, `authType`, and `host`.
 
 - **Logs**: the SDK logs through the host's `ILoggerFactory` under
-  `GitHub.Copilot.CopilotClient`.
+  `Microsoft.Copilot.CopilotClient`.
 - **Traces and metrics**: `IChatClient` is wrapped with `Microsoft.Extensions.AI`
   `UseOpenTelemetry` (GenAI conventions, sensitive data off), so
   `AddSource("Experimental.Microsoft.Extensions.AI")` is enough. Tool calls run
@@ -430,8 +437,7 @@ Result data includes `authenticated`, `login`, `authType`, and `host`.
   `OTEL_EXPORTER_OTLP_ENDPOINT` is set, the runtime exports its own spans
   (model calls) over OTLP/HTTP, without message content. A `grpc`
   `OTEL_EXPORTER_OTLP_PROTOCOL` skips it, since the runtime exports HTTP only.
-  Edge case: an in-process runtime configured through `ConfigureClient`
-  together with the OTLP variables throws when the client starts.
+  This applies to both child-process and in-process runtimes.
 
 ---
 
@@ -441,16 +447,19 @@ Result data includes `authenticated`, `login`, `authType`, and `host`.
   with any fake or mock (`services.AddSingleton<IChatClient>(fake)` in
   `WebApplicationFactory`). Tool classes are plain classes and are tested
   directly.
-- **Microsoft Agent Framework**: use `Microsoft.Agents.AI.GitHub.Copilot`
-  (`copilotClient.AsAIAgent(...)`) with the injected `CopilotClient`. No extra
-  package is needed.
+- **Microsoft Agent Framework**: the Agent Framework's Copilot adapter
+  (`Microsoft.Agents.AI.GitHub.Copilot`, `copilotClient.AsAIAgent(...)`) is
+  built on the previous SDK (`GitHub.Copilot.SDK` 1.x) and isn't compatible
+  with `Microsoft.Copilot.SDK` 2.x, so it can't use the injected
+  `CopilotClient` until a version for SDK 2.x ships. Wrap the injected
+  `IChatClient` in a `ChatClientAgent` instead.
 
 ---
 
 ## 12. Package and layout
 
 One package: **`CopilotSdk.Extensions.Hosting`** (working name). It depends on
-`GitHub.Copilot.SDK`, `Microsoft.Extensions.AI`, and the hosting, options, and
+`Microsoft.Copilot.SDK`, `Microsoft.Extensions.AI`, and the hosting, options, and
 health-check abstractions.
 
 ```
@@ -475,7 +484,7 @@ writing the same code without it.
 | Idea | Why not now |
 | --- | --- |
 | Source-generated typed agent interfaces | `GetResponseAsync<T>()` already returns typed results in one line. |
-| `AIAgent` registration package | `Microsoft.Agents.AI.GitHub.Copilot` already provides it. |
+| `AIAgent` registration package | The Agent Framework's `ChatClientAgent` wraps the injected `IChatClient`; its Copilot adapter doesn't support SDK 2.x yet. |
 | ASP.NET Core package (user tokens, endpoints) | `GitHubTokenProvider` is one line; .NET 10 has built-in server-sent events. |
 | Approval queue, app-side conversation index, diagnostics endpoint | App-specific. `ICopilotSessionStore` covers what the runtime already keeps. |
 | Warm-session caching | Sessions are resumed per call; revisit if latency matters. |

@@ -7,8 +7,8 @@
     <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <!-- GHCP001: experimental GitHub.Copilot.SDK APIs (session GitHubTokenProvider, typed SendAndWaitAsync<T>). -->
-    <NoWarn>$(NoWarn);GHCP001</NoWarn>
+    <!-- MCPSDK001: experimental Microsoft.Copilot.SDK APIs (session GitHubTokenProvider, typed SendAndWaitAsync<T>). -->
+    <NoWarn>$(NoWarn);MCPSDK001</NoWarn>
   </PropertyGroup>
 
 </Project>

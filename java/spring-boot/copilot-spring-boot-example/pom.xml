@@ -54,7 +54,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <annotationProcessors>
-                        <annotationProcessor>com.github.copilot.tool.CopilotToolProcessor</annotationProcessor>
+                        <annotationProcessor>com.microsoft.copilot.tool.CopilotToolProcessor</annotationProcessor>
                     </annotationProcessors>
                 </configuration>
             </plugin>

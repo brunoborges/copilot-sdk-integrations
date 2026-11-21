@@ -1,6 +1,6 @@
 import pytest
-from copilot.generated.rpc import PermissionDecisionApproveOnce
-from copilot.generated.session_events import PermissionRequestCustomTool, PermissionRequestMcp
+from copilot.rpc import PermissionDecisionApproveOnce
+from copilot.session_events import PermissionRequestCustomTool, PermissionRequestMcp
 
 from copilot_agents import AgentDefinition, CopilotConfigurationError, policies, tool
 

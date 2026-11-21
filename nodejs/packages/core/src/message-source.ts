@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import type { MessageSource } from "@github/copilot-sdk";
+import type { MessageSource } from "@microsoft/copilot-sdk";
 import { CopilotConfigurationError } from "./errors.js";
 
 export type { MessageSource };

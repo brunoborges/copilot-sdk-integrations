@@ -8,8 +8,8 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.copilot.rpc.CopilotClientOptions;
-import com.github.copilot.rpc.StdioRuntimeConnection;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.SpawnedStdioRuntimeConnection;
 
 import io.micronaut.context.ApplicationContext;
 
@@ -22,8 +22,8 @@ class CopilotConnectionConfigTest {
     void stdioConnectionPinsTheLocalRuntime() {
         try (var context = ApplicationContext.run(with("micronaut.copilot.connection", "stdio",
                 "micronaut.copilot.cli-path", "/opt/copilot"))) {
-            var connection = assertInstanceOf(StdioRuntimeConnection.class,
-                    context.getBean(CopilotClientOptions.class).getConnection());
+            var connection = assertInstanceOf(SpawnedStdioRuntimeConnection.class,
+                    context.getBean(CopilotClientOptions.class).getRuntime());
             assertTrue("/opt/copilot".equals(connection.getPath()));
         }
     }

@@ -7,7 +7,7 @@
     <artifactId>copilot-core</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <name>Copilot Agent Core</name>
-    <description>Framework-neutral declarative agent API and engine for the GitHub Copilot SDK for Java, shared by the
+    <description>Framework-neutral declarative agent API and engine for the Microsoft Copilot SDK for Java, shared by the
         Spring Boot and Quarkus integrations</description>
     <url>https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/core</url>
 
@@ -21,7 +21,7 @@
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <copilot-sdk.version>1.0.24</copilot-sdk.version>
+        <copilot-sdk.version>2.0.1</copilot-sdk.version>
         <junit.version>5.13.4</junit.version>
         <assertj.version>3.27.6</assertj.version>
         <compiler-plugin.version>3.14.0</compiler-plugin.version>
@@ -42,8 +42,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.github</groupId>
-            <artifactId>copilot-sdk-java</artifactId>
+            <groupId>com.microsoft</groupId>
+            <artifactId>copilot-sdk</artifactId>
             <version>${copilot-sdk.version}</version>
         </dependency>
         <dependency>

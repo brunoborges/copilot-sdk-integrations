@@ -22,8 +22,8 @@ Unreferenced service methods are not exposed just because they are Spring beans.
 Example service:
 
 ```java
-import com.github.copilot.tool.CopilotTool;
-import com.github.copilot.tool.CopilotToolParam;
+import com.microsoft.copilot.tool.CopilotTool;
+import com.microsoft.copilot.tool.CopilotToolParam;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -50,7 +50,7 @@ Enable the SDK processor in the module compiling the annotated tool methods:
     <artifactId>maven-compiler-plugin</artifactId>
     <configuration>
         <annotationProcessors>
-            <annotationProcessor>com.github.copilot.tool.CopilotToolProcessor</annotationProcessor>
+            <annotationProcessor>com.microsoft.copilot.tool.CopilotToolProcessor</annotationProcessor>
         </annotationProcessors>
     </configuration>
 </plugin>
@@ -61,7 +61,7 @@ processor classpath/path. Generated `$$CopilotToolMeta` companions are required.
 Missing metadata fails initialization with a compiler-configuration hint; the
 integration does not substitute another schema engine.
 
-Annotation-based tooling is experimental in SDK 1.0.24. If also using the SDK's
+Annotation-based tooling is experimental in Microsoft Copilot SDK 2.0.1. If also using the SDK's
 experimental-API checker, follow its opt-in requirements. The complete build
 configuration is demonstrated in
 [the example POM](https://github.com/brunoborges/copilot-sdk-integrations/blob/main/java/spring-boot/copilot-spring-boot-example/pom.xml).

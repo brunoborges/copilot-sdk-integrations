@@ -1,5 +1,5 @@
 /**
- * Spring Boot auto-configuration for the Copilot SDK for Java.
+ * Spring Boot auto-configuration for the Microsoft Copilot SDK for Java.
  *
  * <p>The agent API ({@code com.microsoft.copilot.integrations.core}) comes from the shared
  * {@code com.microsoft.copilot.integrations.core} module. The {@code autoconfigure}, {@code actuate}, and {@code security}
@@ -8,7 +8,7 @@
  */
 @SuppressWarnings("requires-transitive-automatic")
 module com.microsoft.copilot.integrations.springboot.autoconfigure {
-    requires transitive com.github.copilot.java;
+    requires transitive com.microsoft.copilot.java;
     requires transitive com.microsoft.copilot.integrations.core;
     requires transitive spring.aop;
     requires transitive spring.beans;

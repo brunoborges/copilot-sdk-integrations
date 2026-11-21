@@ -1,5 +1,6 @@
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using Aspire.Hosting.ApplicationModel;
 
 namespace CopilotSdk.Aspire.Hosting;
@@ -7,21 +8,48 @@ namespace CopilotSdk.Aspire.Hosting;
 internal static class CopilotRuntimeConnectionString
 {
     /// <summary>
-    /// Reads the runtime URL (in the form <c>RuntimeConnection.ForUri</c> accepts) and token from a connection string.
+    /// Reads the runtime host and port (in the form <c>RuntimeConnection.ForTcp</c> accepts) and token from a
+    /// connection string. The endpoint may be <c>tcp://host:port</c>, <c>http(s)://host[:port]</c>, <c>host:port</c>,
+    /// or a loopback <c>port</c>; only the host and port are used.
     /// </summary>
-    public static bool TryParse(string? connectionString, [NotNullWhen(true)] out string? url, out string? token)
+    public static bool TryParse(string? connectionString, [NotNullWhen(true)] out string? host, out int port, out string? token)
     {
-        url = null;
+        host = null;
+        port = 0;
         token = null;
-        if (!TryGetValues(connectionString, out var values) || !values.TryGetValue("Endpoint", out var endpoint))
+        if (!TryGetValues(connectionString, out var values)
+            || !values.TryGetValue("Endpoint", out var endpoint)
+            || !TryParseEndpoint(endpoint, out host, out port))
         {
             return false;
         }
 
         values.TryGetValue("ConnectionToken", out token);
-        url = Uri.TryCreate(endpoint, UriKind.Absolute, out var uri) && uri.Scheme == "tcp" ? $"{uri.Host}:{uri.Port}" : endpoint;
         return true;
     }
+
+    private static bool TryParseEndpoint(string endpoint, [NotNullWhen(true)] out string? host, out int port)
+    {
+        host = null;
+        if (int.TryParse(endpoint, NumberStyles.None, CultureInfo.InvariantCulture, out port))
+        {
+            host = "localhost";
+            return IsValidPort(port);
+        }
+
+        var value = endpoint.Contains("://", StringComparison.Ordinal) ? endpoint : "tcp://" + endpoint;
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || string.IsNullOrEmpty(uri.Host) || !IsValidPort(uri.Port))
+        {
+            return false;
+        }
+
+        // ForTcp takes IPv6 addresses without brackets.
+        host = uri.Host.Trim('[', ']');
+        port = uri.Port;
+        return true;
+    }
+
+    private static bool IsValidPort(int port) => port is > 0 and <= 65535;
 
     /// <summary>
     /// Reads <c>key=value</c> pairs; a bare absolute URI becomes <c>Endpoint</c>.

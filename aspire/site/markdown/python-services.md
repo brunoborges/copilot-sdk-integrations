@@ -5,8 +5,8 @@ title: Python
 # Python
 
 Python services connect to the AppHost's runtime with the
-[Copilot SDK for Python](https://github.com/github/copilot-sdk/tree/main/python)
-(`github-copilot-sdk`). This repository has no Python framework integration, so the service uses the
+[Microsoft Copilot SDK for Python](https://github.com/microsoft/copilot-sdk/tree/main/python)
+(`microsoft-copilot-sdk`, imported as `copilot`). This repository has no Python framework integration, so the service uses the
 SDK directly.
 
 ## AppHost
@@ -37,16 +37,16 @@ See the [Environment variable reference](environment-variables.md).
 ## Install the SDK
 
 ```bash
-pip install github-copilot-sdk
+pip install microsoft-copilot-sdk
 ```
 
-The examples on this page were checked against version `1.0.26`.
+The examples on this page were checked against version `2.0.1`.
 
 ## Connect to the runtime
 
-`RuntimeConnection.for_uri` connects to a runtime that is already running. It accepts a port,
-`host:port`, or a full `http(s)://` URL. Build the address from `CHAT_HOST` and `CHAT_PORT`, not from
-`CHAT_ENDPOINT`, whose scheme is `tcp://`:
+`RuntimeConnection.for_tcp` connects to a runtime that is already running. It takes the host and the
+port as separate arguments, so pass `CHAT_HOST` and `CHAT_PORT` (not `CHAT_ENDPOINT`, which is a
+`tcp://` URL):
 
 ```python
 import os
@@ -57,10 +57,12 @@ from copilot.session import PermissionHandler
 
 def copilot_client() -> CopilotClient:
     return CopilotClient(
-        connection=RuntimeConnection.for_uri(
-            f"{os.environ['CHAT_HOST']}:{os.environ['CHAT_PORT']}",
+        mode="empty",
+        runtime=RuntimeConnection.for_tcp(
+            os.environ["CHAT_HOST"],
+            int(os.environ["CHAT_PORT"]),
             connection_token=os.environ["CHAT_CONNECTIONTOKEN"],
-        )
+        ),
     )
 
 
@@ -68,15 +70,21 @@ async def ask(question: str) -> str | None:
     async with copilot_client() as client:
         session = await client.create_session(
             model=os.environ["CHAT_MODEL"],
-            on_permission_request=PermissionHandler.approve_all,
+            tools={"available_tools": []},
+            permissions={"on_request": PermissionHandler.approve_all},
         )
         reply = await session.send_and_wait(question, timeout=60.0)
         return reply.data.content if reply else None
 ```
 
-`connection_token` is a keyword-only argument. Don't pass `github_token` or `use_logged_in_user` to
-the client: the SDK rejects them for a runtime it connects to, because that runtime manages its own
-sign-in.
+`connection_token` is a keyword-only argument. Don't pass `github={"token": ...}` or
+`github={"use_logged_in_user": ...}` to the client: the SDK rejects them for a runtime it connects to,
+because that runtime manages its own sign-in.
+
+`mode` is required. `"empty"` suits a service that shares the runtime with other services: sessions
+get no built-in tools, and each session must list the tools it allows in `tools.available_tools`
+(the names of your own tools as `custom:<name>`, `mcp:*` for MCP tools, or `[]` for none). Use
+`mode="coding-agent"` for the CLI's built-in tools, which run with the runtime's access to its host.
 
 `PermissionHandler.approve_all` approves every tool call, which suits a demo. In a real service,
 pass a handler that decides per request. Without a handler, permission requests stay pending.
@@ -96,11 +104,12 @@ from copilot.session import PermissionHandler
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    connection = RuntimeConnection.for_uri(
-        f"{os.environ['CHAT_HOST']}:{os.environ['CHAT_PORT']}",
+    runtime = RuntimeConnection.for_tcp(
+        os.environ["CHAT_HOST"],
+        int(os.environ["CHAT_PORT"]),
         connection_token=os.environ["CHAT_CONNECTIONTOKEN"],
     )
-    async with CopilotClient(connection=connection) as client:
+    async with CopilotClient(mode="empty", runtime=runtime) as client:
         app.state.copilot = client
         yield
 
@@ -112,8 +121,9 @@ app = FastAPI(lifespan=lifespan)
 async def ask(question: str) -> dict:
     session = await app.state.copilot.create_session(
         model=os.environ["CHAT_MODEL"],
-        reasoning_effort=os.environ.get("Copilot__ReasoningEffort"),
-        on_permission_request=PermissionHandler.approve_all,
+        inference={"reasoning_effort": os.environ.get("Copilot__ReasoningEffort")},
+        tools={"available_tools": []},
+        permissions={"on_request": PermissionHandler.approve_all},
     )
     reply = await session.send_and_wait(question, timeout=60.0)
     return {"answer": reply.data.content if reply else None}
@@ -128,23 +138,29 @@ When the AppHost calls `WithMcpServer`, pass the injected URL to the session:
 ```python
 session = await client.create_session(
     model=os.environ["CHAT_MODEL"],
-    mcp_servers={
-        "docs": {
-            "type": "http",
-            "url": os.environ["Copilot__McpServers__docs__Url"],
-            "tools": ["search_docs", "get_page"],
+    mcp={
+        "servers": {
+            "docs": {
+                "type": "http",
+                "url": os.environ["Copilot__McpServers__docs__Url"],
+                "tools": ["search_docs", "get_page"],
+            },
         },
     },
-    on_permission_request=PermissionHandler.approve_all,
+    tools={"available_tools": ["mcp:*"]},
+    permissions={"on_request": PermissionHandler.approve_all},
 )
 ```
+
+In `empty` mode, `mcp:*` in `available_tools` lets the session use MCP tools; each server's `tools`
+list still limits which of its tools are offered.
 
 See [MCP servers](mcp-servers.md).
 
 ## BYOK providers
 
-Provider settings are only in `ConnectionStrings__chat`. Parse it and pass the values as the
-session's `provider`:
+Provider settings are only in `ConnectionStrings__chat`. Parse it, register the values as a named
+provider, and make that provider the session's default:
 
 ```python
 parts = dict(
@@ -153,18 +169,23 @@ parts = dict(
     if pair
 )
 
-provider = None
+inference = None
+github = None
 if "Provider" in parts:
-    provider = {"type": parts["Provider"], "base_url": parts["ProviderEndpoint"]}
+    provider = {"name": "byok", "type": parts["Provider"], "base_url": parts["ProviderEndpoint"]}
     if parts.get("ProviderKey"):
         provider["api_key"] = parts["ProviderKey"]
     if "WireApi" in parts:
         provider["wire_api"] = parts["WireApi"]
+    inference = {"default_provider": "byok", "providers": [provider]}
+    github = {"capi": {"enabled": False}}  # serve only the provider's models
 
 session = await client.create_session(
     model=parts["Model"],
-    provider=provider,
-    on_permission_request=PermissionHandler.approve_all,
+    inference=inference,
+    github=github,
+    tools={"available_tools": []},
+    permissions={"on_request": PermissionHandler.approve_all},
 )
 ```
 
@@ -173,7 +194,7 @@ See [Models and BYOK providers](models.md#bring-your-own-key-providers).
 ## Telemetry
 
 The runtime exports its own traces to the Aspire dashboard. Your service exports its spans with
-the OpenTelemetry SDK for Python, as any Python app under Aspire does. The Copilot SDK for Python
-can propagate W3C trace context to the runtime so the two connect; install it with the `telemetry`
-extra (`pip install "github-copilot-sdk[telemetry]"`) and see the SDK's README for the `telemetry`
-options. See also [Telemetry and health](telemetry-and-health.md).
+the OpenTelemetry SDK for Python, as any Python app under Aspire does. The Microsoft Copilot SDK for
+Python can propagate W3C trace context to the runtime so the two connect; install it with the
+`telemetry` extra (`pip install "microsoft-copilot-sdk[telemetry]"`) and see the SDK's README for its
+telemetry options. See also [Telemetry and health](telemetry-and-health.md).

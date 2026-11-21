@@ -215,14 +215,14 @@ describe("toolSearch", () => {
   it("applies the decorator value and lets configuration overrides win", async () => {
     const plain = await compile([CopilotTestingModule.forRoot((rt) => rt.onPrompt(/.*/).reply("ok")), CopilotModule.forFeature([SearcherAgent])]);
     await plain.get(SearcherAgent).ask("hi");
-    expect(plain.get(CopilotTestRuntime).createdSessions[0].toolSearch).toEqual({ deferThreshold: 10 });
+    expect(plain.get(CopilotTestRuntime).createdSessions[0].tools?.search).toEqual({ deferThreshold: 10 });
 
     const overridden = await compile([
       CopilotTestingModule.forRoot((rt) => rt.onPrompt(/.*/).reply("ok"), { agents: { searcher: { toolSearch: { enabled: false } } } }),
       CopilotModule.forFeature([SearcherAgent]),
     ]);
     await overridden.get(SearcherAgent).ask("hi");
-    expect(overridden.get(CopilotTestRuntime).createdSessions[0].toolSearch).toEqual({ enabled: false });
+    expect(overridden.get(CopilotTestRuntime).createdSessions[0].tools?.search).toEqual({ enabled: false });
   });
 
   it("rejects invalid toolSearch overrides at bootstrap", async () => {

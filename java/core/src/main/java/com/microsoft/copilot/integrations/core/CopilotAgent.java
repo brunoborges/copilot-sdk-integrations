@@ -6,7 +6,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.github.copilot.SystemMessageMode;
+import com.microsoft.copilot.SystemMessageMode;
 
 /**
  * Declares a Copilot agent interface whose abstract methods are implemented by a generated proxy.

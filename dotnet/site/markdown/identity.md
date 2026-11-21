@@ -102,13 +102,11 @@ By default the SDK starts its bundled runtime as a child process. Set `Copilot:I
 { "Copilot": { "InProcess": true } }
 ```
 
-In-process hosting is experimental in the SDK (diagnostic `GHCP001`; set it in code inside
-`#pragma warning disable GHCP001`, or bind it from configuration). The token resolution and
-runtime home below apply unchanged. Runtime OpenTelemetry export is not available in-process,
-so `OTEL_EXPORTER_OTLP_ENDPOINT` is ignored for the runtime (MEAI telemetry still works).
-`InProcess` cannot be combined with `Endpoint`, and a connection string's endpoint is ignored
-when it is set. The SDK's `COPILOT_SDK_DEFAULT_CONNECTION=inprocess` environment variable is
-also honored.
+The token resolution, runtime home, and [runtime telemetry](observability.md) below apply
+unchanged. `InProcess` cannot be combined with `Endpoint`, and a connection string's endpoint is
+ignored when it is set. The SDK's `COPILOT_SDK_DEFAULT_CONNECTION` environment variable (for
+example `inprocess`) is also honored. Without either setting, the integration keeps the child
+process, even though the SDK's own default is in-process.
 
 ## Client mode and runtime home
 
@@ -116,14 +114,17 @@ The client runs with `Mode = CopilotClientMode.Empty`: built-in tools, skills, p
 and the CLI's custom instructions are off by design, and only your tools and MCP servers are
 offered.
 
-Unless `Endpoint` or `BaseDirectory` is set, the SDK-managed runtime uses a per-app home under
+Unless `Endpoint` or the runtime's `BaseDirectory` is set, the SDK-managed runtime uses a per-app home under
 the local application data folder, `copilot-sdk/{app}-{hash}`, where the hash is derived from
 the application name and content root. Its state survives restarts and doesn't mix with your
 interactive Copilot CLI sessions; the signed-in user still works locally. Override either with
 `ConfigureClient`:
 
 ```cs
-builder.Services.AddCopilot(o => o.ConfigureClient(client => client.BaseDirectory = "/var/copilot"));
+builder.Services.AddCopilot(o => o.ConfigureClient(client =>
+{
+    if (client.Runtime is OwnedRuntimeConnection runtime) runtime.BaseDirectory = "/var/copilot";
+}));
 ```
 
 ## Lifecycle
@@ -134,4 +135,4 @@ builder.Services.AddCopilot(o => o.ConfigureClient(client => client.BaseDirector
 - **One client per app:** every agent shares one `CopilotClient` and one runtime, configured
   from the default agent.
 - **Logging:** the SDK logs through the host's `ILoggerFactory` under
-  `GitHub.Copilot.CopilotClient`.
+  `Microsoft.Copilot.CopilotClient`.

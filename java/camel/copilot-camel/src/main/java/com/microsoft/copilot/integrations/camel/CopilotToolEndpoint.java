@@ -17,9 +17,9 @@ import org.apache.camel.support.ResourceHelper;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.copilot.rpc.ToolDefinition;
-import com.github.copilot.rpc.ToolInvocation;
-import com.github.copilot.rpc.ToolResultObject;
+import com.microsoft.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.rpc.ToolInvocation;
+import com.microsoft.copilot.rpc.ToolResultObject;
 
 import com.microsoft.copilot.integrations.core.internal.StructuredResponse;
 

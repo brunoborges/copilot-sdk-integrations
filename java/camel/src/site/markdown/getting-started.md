@@ -66,7 +66,9 @@ public class SupportApplication {
 ```
 
 The component uses a single `CopilotClient` registry bean if present, or creates its
-own client. Stop the context to release component-owned resources; application-supplied
+own client. The component-owned client runs in `CopilotClientMode.CODING_AGENT` and
+starts the Copilot CLI as a child process (stdio), or hosts the runtime in process when
+`COPILOT_SDK_DEFAULT_CONNECTION=inprocess`. A client you supply must set its own mode. Stop the context to release component-owned resources; application-supplied
 clients remain the application's responsibility.
 
 ## External configuration

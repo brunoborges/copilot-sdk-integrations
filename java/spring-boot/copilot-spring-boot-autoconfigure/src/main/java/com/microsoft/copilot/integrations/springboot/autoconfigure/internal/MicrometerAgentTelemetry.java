@@ -9,7 +9,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
-import com.github.copilot.generated.AssistantUsageEvent;
+import com.microsoft.copilot.generated.AssistantUsageEvent;
 import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.observation.Observation;

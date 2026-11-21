@@ -1,4 +1,4 @@
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
@@ -7,7 +7,7 @@ namespace CopilotSdk.Extensions.Hosting.Tests;
 
 public sealed class HealthCheckTests : IAsyncDisposable
 {
-    private readonly CopilotClient _client = new(new CopilotClientOptions { Connection = RuntimeConnection.ForUri("localhost:1") });
+    private readonly CopilotClient _client = new(new CopilotClientOptions { Mode = CopilotClientMode.Empty, Runtime = RuntimeConnection.ForTcp("localhost", 1) });
 
     public ValueTask DisposeAsync() => _client.DisposeAsync();
 

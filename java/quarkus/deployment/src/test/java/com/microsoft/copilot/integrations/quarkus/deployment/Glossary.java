@@ -3,8 +3,8 @@ package com.microsoft.copilot.integrations.quarkus.deployment;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
-import com.github.copilot.tool.CopilotTool;
-import com.github.copilot.tool.CopilotToolParam;
+import com.microsoft.copilot.tool.CopilotTool;
+import com.microsoft.copilot.tool.CopilotToolParam;
 
 @Singleton
 @Named("glossary")

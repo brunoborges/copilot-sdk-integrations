@@ -161,7 +161,7 @@ def test_partition_isolates_conversations(fake, runtime):
 def test_static_token_is_passed(fake, runtime):
     fake.agent("support").replies("ok")
     make(runtime, token_resolver=StaticTokenResolver("ghu_x")).invoke("x")
-    assert fake.last_session_options("support")["github_token"] == "ghu_x"
+    assert fake.last_session_options("support")["github"]["token"] == "ghu_x"
 
 
 def test_session_options_reflect_definition(fake, runtime):
@@ -169,23 +169,36 @@ def test_session_options_reflect_definition(fake, runtime):
     make(runtime, model="gpt-5", instructions="Be brief.", built_in_tools=False).invoke("x")
     options = fake.last_session_options("support")
     assert options["model"] == "gpt-5"
-    assert "builtin:*" in options["excluded_tools"]
+    assert "builtin:*" in options["tools"]["excluded_tools"]
     assert options["system_message"]["content"] == "Be brief."
+
+
+def test_byok_provider_becomes_default_named_provider(fake, runtime):
+    fake.agent("support").replies("ok")
+    provider = {"type": "openai", "base_url": "http://llm", "api_key": "k", "wire_model": "gpt-4o-2024"}
+    make(runtime, model="gpt-4o", provider=provider).invoke("x")
+    options = fake.last_session_options("support")
+    assert options["inference"] == {
+        "providers": [{"type": "openai", "base_url": "http://llm", "api_key": "k", "name": "byok"}],
+        "default_provider": "byok",
+        "models": [{"id": "gpt-4o", "provider": "byok", "wire_model": "gpt-4o-2024"}],
+    }
+    assert options["github"] == {"capi": {"enabled": False}}
 
 
 def test_tool_search_not_passed_by_default(fake, runtime):
     fake.agent("support").replies("ok")
     make(runtime).invoke("x")
-    assert "tool_search" not in fake.last_session_options("support")
+    assert "search" not in fake.last_session_options("support").get("tools", {})
 
 
 def test_tool_search_passed_to_create_and_resume(fake, runtime):
     fake.agent("support").replies("one", "two")
     invoker = make(runtime, tool_search={"enabled": True, "defer_threshold": 5})
     invoker.invoke("a", conversation_id="c1")
-    created = fake.last_session_options("support")["tool_search"]
+    created = fake.last_session_options("support")["tools"]["search"]
     invoker.invoke("b", conversation_id="c1")
-    resumed = fake.last_session_options("support")["tool_search"]
+    resumed = fake.last_session_options("support")["tools"]["search"]
     assert fake.resumed == [invoker.session_id("c1")]
     assert created == resumed == {"enabled": True, "defer_threshold": 5}
     assert created is not resumed and created is not invoker.definition.tool_search

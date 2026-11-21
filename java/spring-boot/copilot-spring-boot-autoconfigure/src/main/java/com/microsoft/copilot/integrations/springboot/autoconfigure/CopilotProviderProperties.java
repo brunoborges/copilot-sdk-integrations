@@ -5,8 +5,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import com.github.copilot.rpc.AzureOptions;
-import com.github.copilot.rpc.ProviderConfig;
+import com.microsoft.copilot.rpc.AzureOptions;
+import com.microsoft.copilot.rpc.ProviderConfig;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.util.Assert;

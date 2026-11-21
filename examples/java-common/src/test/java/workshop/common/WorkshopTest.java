@@ -18,7 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.copilot.rpc.PermissionRequest;
+import com.microsoft.copilot.rpc.PermissionRequest;
 
 class WorkshopTest {
     Path workspace;

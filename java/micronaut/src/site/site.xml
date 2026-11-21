@@ -10,7 +10,7 @@
     </skin>
     <body>
         <head><![CDATA[
-<meta name="description" content="Copilot SDK for Java in Micronaut: compile-time agents, bean tools, Reactor streaming, security, management, and test support."/>
+<meta name="description" content="Microsoft Copilot SDK for Java in Micronaut: compile-time agents, bean tools, Reactor streaming, security, management, and test support."/>
 <script>
   (() => {
     const param = new URLSearchParams(window.location.search).get("theme");
@@ -98,7 +98,7 @@ html[data-theme="dark"] {
         ]]></head>
         <links>
             <item name="GitHub" href="https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/micronaut"/>
-            <item name="Copilot Java SDK" href="https://github.com/github/copilot-sdk/tree/main/java"/>
+            <item name="Microsoft Copilot SDK for Java" href="https://github.com/microsoft/copilot-sdk/tree/main/java"/>
         </links>
         <menu name="Start here">
             <item name="Documentation" href="index.html"/>
@@ -118,7 +118,7 @@ html[data-theme="dark"] {
             <item name="Example application" href="examples.html"/>
         </menu>
         <footer><![CDATA[
-<p>Copilot Agents for Micronaut &middot; Java 25 &middot; Micronaut 5.2 &middot; Copilot SDK 1.0.24</p>
+<p>Copilot Agents for Micronaut &middot; Java 25 &middot; Micronaut 5.2 &middot; Microsoft Copilot SDK 2.0.1</p>
         ]]></footer>
     </body>
 </site>

@@ -16,7 +16,7 @@
     <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Copilot Spring Boot</name>
-    <description>Spring Boot integration foundation for the Copilot SDK for Java.</description>
+    <description>Spring Boot integration foundation for the Microsoft Copilot SDK for Java.</description>
     <url>https://github.com/brunoborges/copilot-sdk-integrations/tree/main/java/spring-boot</url>
 
     <licenses>
@@ -39,15 +39,15 @@
     <properties>
         <java.version>21</java.version>
         <maven.compiler.release>21</maven.compiler.release>
-        <copilot-sdk.version>1.0.24</copilot-sdk.version>
+        <copilot-sdk.version>2.0.1</copilot-sdk.version>
         <maven-site-plugin.version>3.22.0</maven-site-plugin.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.github</groupId>
-                <artifactId>copilot-sdk-java</artifactId>
+                <groupId>com.microsoft</groupId>
+                <artifactId>copilot-sdk</artifactId>
                 <version>${copilot-sdk.version}</version>
             </dependency>
             <dependency>

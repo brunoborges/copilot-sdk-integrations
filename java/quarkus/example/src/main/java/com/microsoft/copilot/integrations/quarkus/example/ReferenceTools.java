@@ -5,8 +5,8 @@ import java.util.Locale;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Named;
 
-import com.github.copilot.tool.CopilotTool;
-import com.github.copilot.tool.CopilotToolParam;
+import com.microsoft.copilot.tool.CopilotTool;
+import com.microsoft.copilot.tool.CopilotToolParam;
 
 @ApplicationScoped
 @Named("referenceTools")

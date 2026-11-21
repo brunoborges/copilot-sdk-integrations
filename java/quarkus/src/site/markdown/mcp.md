@@ -83,7 +83,7 @@ resolved from MicroProfile Config.
 
 ## Native SDK beans and sessions
 
-A reference can also name a native `com.github.copilot.rpc.McpServerConfig`
+A reference can also name a native `com.microsoft.copilot.rpc.McpServerConfig`
 CDI bean. This keeps SDK-specific features, including OAuth configuration,
 available without adding a second Quarkus-specific transport API. CDI beans
 have no implicit name, so give the producer an explicit `@Named`:
@@ -117,10 +117,11 @@ convert it with `com.microsoft.copilot.integrations.quarkus.runtime.config.Copil
 @Inject
 CopilotRuntimeConfig config;
 
-SessionConfig sessionConfig() {
-    return new SessionConfig()
-            .setMcpServers(CopilotConfigs.mcp(config).toServerConfigs())
-            .setOnPermissionRequest(permissionHandler);
+CreateSessionOptions sessionConfig() {
+    var options = new CreateSessionOptions();
+    options.getMcp().setServers(CopilotConfigs.mcp(config).toServerConfigs());
+    options.getPermissions().setOnRequest(permissionHandler);
+    return options;
 }
 ```
 

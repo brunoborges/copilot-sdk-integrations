@@ -1,4 +1,4 @@
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -79,10 +79,10 @@ public sealed class OptionsTests
                 s.AddCopilot(o =>
                 {
                     o.GitHubTokenProvider = tokens;
-                    o.ConfigureSession(c => c.ExcludedTools = ["a"]);
-                    o.ConfigureClient(c => c.BaseDirectory = "/x");
+                    o.ConfigureSession(c => c.Tools.ExcludedTools = ["a"]);
+                    o.ConfigureClient(c => c.Runtime = RuntimeConnection.ForSpawnedStdio(baseDirectory: "/x"));
                 });
-                s.AddCopilot("triage", o => o.ConfigureSession(c => c.Streaming = true));
+                s.AddCopilot("triage", o => o.ConfigureSession(c => c.Events.Streaming = true));
             },
             new() { ["Copilot:Model"] = "m" });
 
@@ -159,22 +159,22 @@ public sealed class OptionsTests
                 };
             }));
 
-        var config = new SessionConfig();
+        var config = new CreateSessionOptions();
         new CopilotOptionsSessionConfigurator(sp.GetRequiredService<IOptionsMonitor<CopilotOptions>>())
             .Configure(Options.DefaultName, config, sp);
 
         Assert.Equal("m", config.Model);
-        Assert.Equal("high", config.ReasoningEffort);
+        Assert.Equal("high", config.Inference.ReasoningEffort);
         Assert.Equal(SystemMessageMode.Append, config.SystemMessage!.Mode);
         Assert.Equal("Be brief.", config.SystemMessage.Content);
 
-        var http = Assert.IsType<McpHttpServerConfig>(config.McpServers!["docs"]);
+        var http = Assert.IsType<McpHttpServerConfig>(config.Mcp.Servers!["docs"]);
         Assert.Equal("https://docs/mcp", http.Url);
         Assert.Equal(["search"], http.Tools);
         Assert.Equal(5000, http.Timeout);
         Assert.Equal("v", http.Headers!["X-Key"]);
 
-        var stdio = Assert.IsType<McpStdioServerConfig>(config.McpServers["fs"]);
+        var stdio = Assert.IsType<McpStdioServerConfig>(config.Mcp.Servers["fs"]);
         Assert.Equal("npx", stdio.Command);
         Assert.Equal(["-y", "server-fs"], stdio.Args);
         Assert.Equal("1", stdio.Env!["A"]);
@@ -200,15 +200,15 @@ public sealed class OptionsTests
     {
         using var sp = TestHost.Build(s => s.AddCopilot());
 
-        var config = new SessionConfig();
+        var config = new CreateSessionOptions();
         new CopilotOptionsSessionConfigurator(sp.GetRequiredService<IOptionsMonitor<CopilotOptions>>())
             .Configure(Options.DefaultName, config, sp);
 
         Assert.Null(config.Model);
         Assert.Null(config.SystemMessage);
-        Assert.Null(config.McpServers);
-        Assert.Null(config.Provider);
-        Assert.Null(config.ToolSearch);
+        Assert.Null(config.Mcp.Servers);
+        Assert.Null(config.Inference.Providers);
+        Assert.Null(config.Tools.Search);
     }
 
     [Fact]
@@ -236,14 +236,14 @@ public sealed class OptionsTests
         using var sp = TestHost.Build(s => s.AddCopilot(o => o.ToolSearch = new() { Enabled = true, DeferThreshold = 12 }));
         var configurator = new CopilotOptionsSessionConfigurator(sp.GetRequiredService<IOptionsMonitor<CopilotOptions>>());
 
-        var created = new SessionConfig();
-        var resumed = new ResumeSessionConfig();
+        var created = new CreateSessionOptions();
+        var resumed = new ResumeSessionOptions();
         configurator.Configure(Options.DefaultName, created, sp);
         configurator.Configure(Options.DefaultName, resumed, sp);
 
-        Assert.Equal((true, 12), (created.ToolSearch!.Enabled, created.ToolSearch.DeferThreshold));
-        Assert.Equal((true, 12), (resumed.ToolSearch!.Enabled, resumed.ToolSearch.DeferThreshold));
-        Assert.NotSame(created.ToolSearch, resumed.ToolSearch);
+        Assert.Equal((true, 12), (created.Tools.Search!.Enabled, created.Tools.Search.DeferThreshold));
+        Assert.Equal((true, 12), (resumed.Tools.Search!.Enabled, resumed.Tools.Search.DeferThreshold));
+        Assert.NotSame(created.Tools.Search, resumed.Tools.Search);
     }
 
     [Fact]
@@ -251,10 +251,10 @@ public sealed class OptionsTests
     {
         using var sp = TestHost.Build(s => s.AddCopilot(), new() { ["Copilot:ToolSearch:Enabled"] = "false" });
 
-        var config = new SessionConfig();
+        var config = new CreateSessionOptions();
         new CopilotOptionsSessionConfigurator(sp.GetRequiredService<IOptionsMonitor<CopilotOptions>>())
             .Configure(Options.DefaultName, config, sp);
 
-        Assert.Equal((false, null), (config.ToolSearch!.Enabled, config.ToolSearch.DeferThreshold));
+        Assert.Equal((false, null), (config.Tools.Search!.Enabled, config.Tools.Search.DeferThreshold));
     }
 }

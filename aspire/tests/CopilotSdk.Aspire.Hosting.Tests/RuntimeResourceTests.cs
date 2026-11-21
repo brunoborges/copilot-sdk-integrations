@@ -1,6 +1,6 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using static CopilotSdk.Aspire.Hosting.Tests.TestHelpers;
@@ -40,7 +40,7 @@ public class RuntimeResourceTests
 
         var runtime = builder.AddCopilot("copilot").Resource;
 
-        // GitHub.Copilot.SDK build targets flow to this project and copy the runtime to its output.
+        // Microsoft.Copilot.SDK build targets flow to this project and copy the runtime to its output.
         var bundled = CopilotRuntimeLocator.GetBundledRuntimePath(AppContext.BaseDirectory);
         Assert.NotNull(bundled);
         Assert.True(File.Exists(bundled));
@@ -186,16 +186,23 @@ public class RuntimeResourceTests
     [Fact]
     public void RuntimeConnectionString_ParsesTcpEndpoint()
     {
-        Assert.True(CopilotRuntimeConnectionString.TryParse("Endpoint=tcp://localhost:5000;ConnectionToken=abc", out var url, out var token));
-        Assert.Equal("localhost:5000", url);
+        Assert.True(CopilotRuntimeConnectionString.TryParse("Endpoint=tcp://localhost:5000;ConnectionToken=abc", out var host, out var port, out var token));
+        Assert.Equal(("localhost", 5000), (host, port));
         Assert.Equal("abc", token);
 
-        Assert.True(CopilotRuntimeConnectionString.TryParse("Endpoint=https://copilot.example.com", out url, out token));
-        Assert.Equal("https://copilot.example.com", url);
+        Assert.True(CopilotRuntimeConnectionString.TryParse("Endpoint=https://copilot.example.com", out host, out port, out token));
+        Assert.Equal(("copilot.example.com", 443), (host, port));
         Assert.Null(token);
 
-        Assert.False(CopilotRuntimeConnectionString.TryParse("ConnectionToken=abc", out _, out _));
-        Assert.False(CopilotRuntimeConnectionString.TryParse(null, out _, out _));
+        Assert.True(CopilotRuntimeConnectionString.TryParse("Endpoint=tcp://[::1]:5000", out host, out port, out _));
+        Assert.Equal(("::1", 5000), (host, port));
+
+        Assert.True(CopilotRuntimeConnectionString.TryParse("Endpoint=runtime:5000", out host, out port, out _));
+        Assert.Equal(("runtime", 5000), (host, port));
+
+        Assert.False(CopilotRuntimeConnectionString.TryParse("Endpoint=tcp://localhost", out _, out _, out _));
+        Assert.False(CopilotRuntimeConnectionString.TryParse("ConnectionToken=abc", out _, out _, out _));
+        Assert.False(CopilotRuntimeConnectionString.TryParse(null, out _, out _, out _));
     }
 
     private static int GetFreePort()

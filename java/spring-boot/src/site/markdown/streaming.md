@@ -38,7 +38,7 @@ To consume only text deltas:
 ```java
 Flux<String> deltas = advisor.stream(conversationId, question)
         .map(CopilotAgentEvent::event)
-        .ofType(com.github.copilot.generated.AssistantMessageDeltaEvent.class)
+        .ofType(com.microsoft.copilot.generated.AssistantMessageDeltaEvent.class)
         .map(delta -> delta.getData().deltaContent());
 ```
 

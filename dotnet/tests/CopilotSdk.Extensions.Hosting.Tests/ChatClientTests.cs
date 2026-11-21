@@ -1,5 +1,5 @@
 using CopilotSdk.Extensions.Hosting;
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,7 +32,7 @@ public sealed class ChatClientTests
 
         public FakeSession Session => Assert.Single(Gateway.Sessions);
 
-        public SessionConfigBase Config => Assert.Single(Gateway.Calls).Config;
+        public SessionOptionsBase Config => Assert.Single(Gateway.Calls).Config;
 
         public ValueTask DisposeAsync() => Services.DisposeAsync();
     }
@@ -55,7 +55,7 @@ public sealed class ChatClientTests
 
         var call = Assert.Single(f.Gateway.Calls);
         Assert.Null(call.ResumedId);
-        Assert.IsType<SessionConfig>(call.Config);
+        Assert.IsType<CreateSessionOptions>(call.Config);
         Assert.Equal("hi", Assert.Single(f.Session.Sent).Prompt);
         Assert.Equal("Hello!", response.Text);
         Assert.Equal("session-1", response.ConversationId);
@@ -84,7 +84,7 @@ public sealed class ChatClientTests
 
         var call = Assert.Single(f.Gateway.Calls);
         Assert.Equal("conv-42", call.ResumedId);
-        Assert.IsType<ResumeSessionConfig>(call.Config);
+        Assert.IsType<ResumeSessionOptions>(call.Config);
         Assert.Equal("second", Assert.Single(f.Session.Sent).Prompt);
         Assert.Equal("conv-42", response.ConversationId);
         Assert.True(f.Session.Disposed);
@@ -154,8 +154,8 @@ public sealed class ChatClientTests
 
         var config = f.Config;
         Assert.Equal("override-model", config.Model);
-        Assert.Equal("xhigh", config.ReasoningEffort);
-        var added = Assert.Single(config.Tools!, t => t.Name == "per_call_tool");
+        Assert.Equal("xhigh", config.Inference.ReasoningEffort);
+        var added = Assert.Single(config.Tools.Definitions!, t => t.Name == "per_call_tool");
         Assert.Equal(true, added.AdditionalProperties["skip_permission"]);
     }
 
@@ -355,8 +355,8 @@ public sealed class ChatClientTests
         await f.Chat.GetResponseAsync("hi", cancellationToken: TestContext.Current.CancellationToken);
 
         var config = f.Config;
-        Assert.Null(config.GitHubToken);
-        var provider = config.GitHubTokenProvider!;
+        Assert.Null(config.GitHub.Token);
+        var provider = config.GitHub.TokenProvider!;
         var initial = await provider(new GitHubTokenProviderArgs { Host = "https://github.com", Reason = GitHubTokenRequestReason.Initial });
         Assert.Equal("alice-1", initial.Token!.AccessToken);
         Assert.Equal(CopilotChatClient.TokenExpiresInSeconds, initial.Token.ExpiresIn);
@@ -383,7 +383,7 @@ public sealed class ChatClientTests
             Assert.Equal(Options.DefaultName, context.AgentName);
             Assert.NotNull(context.Services.GetService<CopilotTurnContextRegistry>());
 
-            var tool = (AIFunction)session.Config.Tools!.Single(t => t.Name == "whoami");
+            var tool = (AIFunction)session.Config.Tools.Definitions!.Single(t => t.Name == "whoami");
             Task<object?> toolTask;
             using (ExecutionContext.SuppressFlow())
             {
@@ -439,7 +439,7 @@ public sealed class ChatClientTests
         var updates = await f.Chat.GetStreamingResponseAsync("hi", cancellationToken: TestContext.Current.CancellationToken)
             .ToListAsync(TestContext.Current.CancellationToken);
 
-        Assert.True(f.Config.Streaming);
+        Assert.True(f.Config.Events.Streaming);
         Assert.All(updates, u => Assert.Equal("session-1", u.ConversationId));
         var response = updates.ToChatResponse();
         Assert.Equal("Hello", response.Text);

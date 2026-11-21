@@ -1,5 +1,5 @@
 using CopilotSdk.Extensions.Hosting;
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -8,7 +8,7 @@ namespace CopilotSdk.Extensions.Hosting.Tests;
 
 public sealed class LifecycleTests
 {
-    private static CopilotClient NewClient() => new(new CopilotClientOptions { Connection = RuntimeConnection.ForUri("localhost:1") });
+    private static CopilotClient NewClient() => new(new CopilotClientOptions { Mode = CopilotClientMode.Empty, Runtime = RuntimeConnection.ForTcp("localhost", 1) });
 
     private static CopilotClientProvider NewProvider(
         Func<CopilotClient, CancellationToken, Task>? start = null,

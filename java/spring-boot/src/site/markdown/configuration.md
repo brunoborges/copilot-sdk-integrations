@@ -25,7 +25,7 @@ profiles, environment values, and command-line arguments. Use explicit duration
 units such as `30s` or `250ms`.
 
 Only the integration-owned keys below are mapped automatically. Arbitrary
-`SessionConfig` fields are not forwarded from similarly named properties.
+`CreateSessionOptions` fields are not forwarded from similarly named properties.
 Use SDK beans/customizers for settings not listed here.
 
 <a id="client-properties"></a>
@@ -43,41 +43,37 @@ The binding type is `com.microsoft.copilot.integrations.springboot.autoconfigure
 | `copilot.cli-path` | String | Unset | Explicit local executable; non-blank if supplied. SDK resolves the runtime when omitted. |
 | `copilot.cli-args` | List of strings | Empty | Additional local runtime arguments; blank elements are rejected. |
 | `copilot.working-directory` | String | Unset | Local process working directory; omitted values retain SDK defaults. Not a per-session working directory. |
-| `copilot.log-level` | String | SDK default, `info` | Non-blank, forwarded to SDK/CLI without an integration-specific level enum. |
-| `copilot.cli-url` | String | Unset | Existing raw-TCP server address; switches the default options away from stdio. |
+| `copilot.log-level` | String | Unset (runtime default) | Non-blank, forwarded to a runtime the client starts without an integration-specific level enum. Rejected with `cli-url`. |
+| `copilot.cli-url` | String | Unset | Existing TCP server address; switches the default options away from stdio. |
 | `copilot.tcp-connection-token` | String | Unset | Non-blank external-server token; requires `cli-url`. |
-| `copilot.connection` | `stdio`, `inprocess` | Unset | Runtime transport; `inprocess` (experimental) hosts the runtime in the JVM. Unset keeps the SDK default. |
+| `copilot.connection` | `stdio`, `inprocess` | Unset | Runtime transport; `inprocess` (experimental) hosts the runtime in the JVM. Unset uses `cli-url` if set, else `COPILOT_SDK_DEFAULT_CONNECTION=inprocess`, else stdio. |
 
-`cli-url` cannot be combined with `cli-path`, non-empty `cli-args`, or
-`working-directory`. Supported address forms include `4321`, `localhost:4321`,
+`cli-url` cannot be combined with `cli-path`, non-empty `cli-args`,
+`working-directory`, or `log-level`. Supported address forms include `4321`, `localhost:4321`,
 `http://localhost:4321`, and `[::1]:4321`. Ports must be 1-65535. URI credentials,
 paths (including a trailing `/`), queries, and fragments are rejected.
 
-**SDK 1.0.24 uses raw TCP for external-server connections. Neither `http://`
-nor `https://` enables HTTP or TLS.** Use a trusted local connection or a
+**The SDK attaches to external servers over raw TCP
+(`RuntimeConnection.forTcp(host, port)`); only the host and port of `cli-url` are used.
+Neither `http://` nor `https://` enables HTTP or TLS.** Use a trusted local connection or a
 separately secured tunnel, especially when sending a connection token. The
 external server owns its GitHub authentication and process lifecycle.
 
 A `CopilotConnectionDetails` bean takes precedence over `cli-url` and
 `tcp-connection-token`. Testcontainers `@ServiceConnection` registers one, for example.
-When that bean is present, `cli-path`, `cli-args`, and `working-directory` are
-ignored; see [Testing](testing.html#connection-details).
+When that bean is present, `cli-path`, `cli-args`, `working-directory`, and
+`log-level` are ignored; see [Testing](testing.html#connection-details).
 
 ### In-process runtime (experimental)
 
 Set `copilot.connection=inprocess` to host the Copilot runtime inside the JVM
-instead of starting a CLI child process. Add JNA and the native runtime for
-each platform you deploy to:
+instead of starting a CLI child process. The SDK already depends on JNA; add the
+native runtime for each platform you deploy to:
 
 ```xml
 <dependency>
-  <groupId>net.java.dev.jna</groupId>
-  <artifactId>jna</artifactId>
-  <version>5.19.1</version>
-</dependency>
-<dependency>
-  <groupId>com.github</groupId>
-  <artifactId>copilot-sdk-java-runtime</artifactId>
+  <groupId>com.microsoft</groupId>
+  <artifactId>copilot-sdk-runtime</artifactId>
   <version>${copilot-sdk.version}</version>
   <classifier>darwin-arm64</classifier>
 </dependency>

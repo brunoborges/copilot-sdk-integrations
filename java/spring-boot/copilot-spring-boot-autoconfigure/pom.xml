@@ -13,7 +13,7 @@
 
     <artifactId>copilot-spring-boot-autoconfigure</artifactId>
     <name>Copilot Spring Boot Auto-configuration</name>
-    <description>Configuration and lifecycle management for the Copilot Java SDK.</description>
+    <description>Configuration and lifecycle management for the Microsoft Copilot SDK for Java.</description>
 
     <dependencies>
         <dependency>
@@ -22,8 +22,8 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>com.github</groupId>
-            <artifactId>copilot-sdk-java</artifactId>
+            <groupId>com.microsoft</groupId>
+            <artifactId>copilot-sdk</artifactId>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -110,7 +110,7 @@
                 <configuration>
                     <annotationProcessors>
                         <annotationProcessor>org.springframework.boot.configurationprocessor.ConfigurationMetadataAnnotationProcessor</annotationProcessor>
-                        <annotationProcessor>com.github.copilot.tool.CopilotToolProcessor</annotationProcessor>
+                        <annotationProcessor>com.microsoft.copilot.tool.CopilotToolProcessor</annotationProcessor>
                     </annotationProcessors>
                     <annotationProcessorPaths>
                         <path>
@@ -118,8 +118,8 @@
                             <artifactId>spring-boot-configuration-processor</artifactId>
                         </path>
                         <path>
-                            <groupId>com.github</groupId>
-                            <artifactId>copilot-sdk-java</artifactId>
+                            <groupId>com.microsoft</groupId>
+                            <artifactId>copilot-sdk</artifactId>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>

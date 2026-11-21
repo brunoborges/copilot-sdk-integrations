@@ -10,16 +10,21 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.CopilotClientOptions;
-import com.github.copilot.rpc.MessageOptions;
-import com.github.copilot.rpc.ProviderConfig;
-import com.github.copilot.rpc.PermissionRequestResult;
-import com.github.copilot.rpc.SessionConfig;
+import com.microsoft.copilot.AllowCopilotExperimental;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.CopilotClientMode;
+import com.microsoft.copilot.rpc.CapiSessionOptions;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
+import com.microsoft.copilot.rpc.MessageOptions;
+import com.microsoft.copilot.rpc.NamedProviderConfig;
+import com.microsoft.copilot.rpc.PermissionRequestResult;
+import com.microsoft.copilot.rpc.RuntimeConnection;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.Testcontainers;
 
+@AllowCopilotExperimental
 class CopilotContainerIT {
 
     private CopilotContainer runtime() {
@@ -27,8 +32,9 @@ class CopilotContainerIT {
     }
 
     private CopilotClient client(CopilotContainer runtime, String token) {
-        return new CopilotClient(new CopilotClientOptions()
-                .setCliUrl(runtime.getEndpoint()).setTcpConnectionToken(token));
+        return new CopilotClient(new CopilotClientOptions().setMode(CopilotClientMode.CODING_AGENT)
+                .setRuntime(RuntimeConnection.forTcp(runtime.getHost(), runtime.getMappedPort(runtime.getCopilotPort()))
+                        .setConnectionToken(token)));
     }
 
     @Test
@@ -88,14 +94,17 @@ class CopilotContainerIT {
                 runtime.start();
                 try (var client = client(runtime, runtime.getTcpConnectionToken())) {
                     client.start().get(30, TimeUnit.SECONDS);
-                    var config = new SessionConfig().setModel("test-model").setStreaming(true)
-                            .setAvailableTools(java.util.List.of())
-                            .setOnPermissionRequest((request, invocation) ->
-                                    java.util.concurrent.CompletableFuture.completedFuture(
-                                            PermissionRequestResult.reject("Tools are disabled in this test")))
-                            .setProvider(new ProviderConfig().setType("openai").setWireApi("completions")
-                                    .setApiKey("local-test-key")
-                                    .setBaseUrl("http://host.testcontainers.internal:" + provider.getAddress().getPort() + "/v1"));
+                    var config = new CreateSessionOptions().setModel("test-model");
+                    config.getEvents().setStreaming(true);
+                    config.getTools().setAvailableTools(java.util.List.of());
+                    config.getPermissions().setOnRequest((request, invocation) ->
+                            java.util.concurrent.CompletableFuture.completedFuture(
+                                    PermissionRequestResult.reject("Tools are disabled in this test")));
+                    config.getInference().setProviders(java.util.List.of(new NamedProviderConfig().setName("test")
+                                    .setType("openai").setWireApi("completions").setApiKey("local-test-key")
+                                    .setBaseUrl("http://host.testcontainers.internal:" + provider.getAddress().getPort() + "/v1")))
+                            .setDefaultProvider("test");
+                    config.getGitHub().setCapi(new CapiSessionOptions().setEnabled(false));
                     try (var session = client.createSession(config).get(30, TimeUnit.SECONDS)) {
                         var answer = session.sendAndWait(new MessageOptions().setPrompt("Say hello."),
                                 30_000).get(45, TimeUnit.SECONDS);

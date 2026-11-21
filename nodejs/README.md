@@ -5,7 +5,7 @@ Status: **in development, not published**. Docs:
 [Copilot Agents for Fastify](https://brunoborges.github.io/copilot-sdk-integrations/fastify/).
 
 Integrations for the
-[Copilot SDK for Node.js/TypeScript](https://github.com/github/copilot-sdk/tree/main/nodejs):
+[Microsoft Copilot SDK for Node.js/TypeScript](https://github.com/microsoft/copilot-sdk/tree/main/nodejs):
 
 - **agent-core**: a framework-agnostic layer on top of the SDK for client lifecycle, typed agents, tools,
   governance (deny-by-default permissions), conversations, and a scripted test runtime.

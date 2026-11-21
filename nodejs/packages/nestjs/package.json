@@ -1,7 +1,7 @@
 {
   "name": "@copilot-sdk-integrations/nestjs",
   "version": "0.1.0",
-  "description": "NestJS module for the GitHub Copilot SDK",
+  "description": "NestJS module for the Microsoft Copilot SDK",
   "license": "MIT",
   "type": "module",
   "main": "dist/index.js",

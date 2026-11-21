@@ -11,7 +11,7 @@ meet in the environment variables that Aspire injects through `WithReference`.
 <figure class="arch">
 <svg viewBox="0 0 860 362" role="img" aria-labelledby="hiw-title hiw-desc" xmlns="http://www.w3.org/2000/svg">
 <title id="hiw-title">AppHost resources and the services that connect to them</title>
-<desc id="hiw-desc">In the C# AppHost, AddCopilot adds the runtime process or container (headless, TCP, connection token), an MCP server and the chat model, which has a reasoning effort and a provider. WithReference(chat) injects CHAT environment variables into services written in any language: .NET uses AddCopilotClient, Java uses copilot.cli-url or quarkus.copilot.cli-url, Node.js uses createCopilot and Python uses RuntimeConnection.for_uri.</desc>
+<desc id="hiw-desc">In the C# AppHost, AddCopilot adds the runtime process or container (headless, TCP, connection token), an MCP server and the chat model, which has a reasoning effort and a provider. WithReference(chat) injects CHAT environment variables into services written in any language: .NET uses AddCopilotClient, Java uses copilot.cli-url or quarkus.copilot.cli-url, Node.js uses createCopilot and Python uses RuntimeConnection.for_tcp.</desc>
 <defs>
 <marker id="hiw-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arch-head" d="M0 0 10 5 0 10z"/></marker>
 </defs>
@@ -48,15 +48,16 @@ meet in the environment variables that Aspire injects through `WithReference`.
 <text class="arch-code-sm" x="522" y="245">createCopilot({ cliUrl, configureClient })</text>
 <rect class="arch-node" x="506" y="272" width="328" height="60" rx="10"/>
 <text class="arch-title" x="522" y="297" style="font-size:14px">Python</text>
-<text class="arch-code-sm" x="522" y="317">RuntimeConnection.for_uri(...)</text>
+<text class="arch-code-sm" x="522" y="317">RuntimeConnection.for_tcp(...)</text>
 </svg>
 </figure>
 
 ## The runtime resource
 
-`AddCopilot("copilot")` adds a `CopilotRuntimeResource`. It is the same headless Copilot
-runtime that every Copilot SDK starts for you when you don't point it elsewhere. Under Aspire it
-runs once, as a resource, and services connect to it over TCP instead of starting their own.
+`AddCopilot("copilot")` adds a `CopilotRuntimeResource`. It is the same Copilot runtime that
+every Copilot SDK hosts for you (in-process or as a child process) when you don't point it
+elsewhere. Under Aspire it runs once, headless, as a resource, and services connect to it over TCP
+instead of hosting their own.
 
 The runtime:
 

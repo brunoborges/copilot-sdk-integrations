@@ -6,24 +6,24 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.CopilotClientOptions;
-import com.github.copilot.rpc.InProcessRuntimeConnection;
-import com.github.copilot.rpc.StdioRuntimeConnection;
-import com.github.copilot.rpc.TcpRuntimeConnection;
-import com.github.copilot.rpc.UriRuntimeConnection;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.InProcessRuntimeConnection;
+import com.microsoft.copilot.rpc.SpawnedStdioRuntimeConnection;
+import com.microsoft.copilot.rpc.SpawnedTcpRuntimeConnection;
+import com.microsoft.copilot.rpc.TcpRuntimeConnection;
 import org.springframework.boot.actuate.info.Info;
 import org.springframework.boot.actuate.info.InfoContributor;
 
 /**
- * Contributes a {@code copilot} section with the starter version, Copilot SDK version, and
+ * Contributes a {@code copilot} section with the starter version, Microsoft Copilot SDK version, and
  * client connection mode. It never contacts the Copilot runtime.
  */
 public class CopilotInfoContributor implements InfoContributor {
 
     static final String UNKNOWN = "unknown";
     private static final String STARTER_PROPERTIES = "META-INF/copilot-spring-boot.properties";
-    private static final String SDK_PROPERTIES = "META-INF/maven/com.github/copilot-sdk-java/pom.properties";
+    private static final String SDK_PROPERTIES = "META-INF/maven/com.microsoft/copilot-sdk/pom.properties";
 
     private final String connectionMode;
 
@@ -53,14 +53,14 @@ public class CopilotInfoContributor implements InfoContributor {
         if (options == null) {
             return UNKNOWN;
         }
-        var connection = options.getConnection();
-        if (connection instanceof StdioRuntimeConnection) {
+        var connection = options.getRuntime();
+        if (connection instanceof SpawnedStdioRuntimeConnection) {
             return "stdio";
         }
-        if (connection instanceof TcpRuntimeConnection) {
+        if (connection instanceof SpawnedTcpRuntimeConnection) {
             return "tcp";
         }
-        if (connection instanceof UriRuntimeConnection) {
+        if (connection instanceof TcpRuntimeConnection) {
             return "external-server";
         }
         if (connection instanceof InProcessRuntimeConnection) {
@@ -69,10 +69,12 @@ public class CopilotInfoContributor implements InfoContributor {
         if (connection != null) {
             return "custom";
         }
-        if (options.getCliUrl() != null) {
-            return "external-server";
+        // The SDK resolves an unset runtime from COPILOT_SDK_DEFAULT_CONNECTION, defaulting to in-process.
+        String value = System.getenv("COPILOT_SDK_DEFAULT_CONNECTION");
+        if ("stdio".equalsIgnoreCase(value)) {
+            return "stdio";
         }
-        return options.isUseStdio() ? "stdio" : "tcp";
+        return value == null || value.isEmpty() || "inprocess".equalsIgnoreCase(value) ? "in-process" : UNKNOWN;
     }
 
     private static String version(Class<?> type, String resource) {

@@ -70,7 +70,7 @@ unscripted turn is a test failure.
 | `prompts(agent)` | Prompts the agent was sent, in order. |
 | `tool_calls(agent=None)` | `RecordedToolCall`s with `name`, `arguments`, `approved`, `ok`, and `text`. |
 | `sessions(agent=None)` | IDs of sessions that still exist. Ephemeral sessions are deleted after each call. |
-| `last_session_options(agent)` | The SDK options of the agent's most recent session: model, tools, MCP servers, filters, ... |
+| `last_session_options(agent)` | The SDK options of the agent's most recent session, nested as in `create_session`: `model`, `tools`, `mcp`, `permissions`, ... |
 | `created`, `resumed`, `deleted`, `aborted` | Session IDs, in order. |
 
 A denied tool call is recorded with `approved=False`, which makes it easy to test permission

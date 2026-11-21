@@ -34,7 +34,7 @@ jobs:
           cache: maven
           cache-dependency-path: testcontainers/pom.xml
       - name: Build runtime image
-        run: docker build -t copilot-runtime:1.0.105 testcontainers/image
+        run: docker build -t copilot-runtime:1.0.114 testcontainers/image
       - name: Test Java integration against the real runtime
         run: mvn --batch-mode --no-transfer-progress -f testcontainers/pom.xml -Pcontainer-tests verify
       - name: Build documentation

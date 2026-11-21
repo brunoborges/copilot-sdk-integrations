@@ -1,5 +1,5 @@
 using Aspire.Hosting.ApplicationModel;
-using GitHub.Copilot;
+using Microsoft.Copilot;
 
 namespace CopilotSdk.Aspire.Hosting;
 
@@ -8,7 +8,7 @@ namespace CopilotSdk.Aspire.Hosting;
 /// </summary>
 /// <remarks>
 /// <para>
-/// By default the runtime runs as an executable: the <c>copilot-runtime</c> bundled with <c>GitHub.Copilot.SDK</c>
+/// By default the runtime runs as an executable: the <c>copilot-runtime</c> bundled with <c>Microsoft.Copilot.SDK</c>
 /// in the AppHost output. <c>RunAsContainer</c> (and publish mode) swap it for a <see cref="CopilotContainerResource"/>
 /// with the same name, and <c>AsExisting</c> swaps it for a connection string. Every mode exposes the same
 /// <see cref="ConnectionStringExpression"/>: <c>Endpoint=tcp://{host}:{port};ConnectionToken={token}</c>.

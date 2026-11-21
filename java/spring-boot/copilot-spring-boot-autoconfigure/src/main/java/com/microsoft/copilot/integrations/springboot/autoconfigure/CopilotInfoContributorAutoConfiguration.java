@@ -1,7 +1,7 @@
 package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
 import com.microsoft.copilot.integrations.springboot.actuate.CopilotInfoContributor;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.info.ConditionalOnEnabledInfoContributor;

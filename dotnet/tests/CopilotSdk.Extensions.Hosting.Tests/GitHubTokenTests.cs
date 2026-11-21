@@ -1,4 +1,4 @@
-using GitHub.Copilot;
+using Microsoft.Copilot;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CopilotSdk.Extensions.Hosting.Tests;
@@ -8,7 +8,7 @@ public sealed class GitHubTokenTests
     private static CopilotClientOptions ConfigureClient(Dictionary<string, string?> settings)
     {
         using var sp = TestHost.Build(s => s.AddCopilot(), settings);
-        var options = new CopilotClientOptions();
+        var options = new CopilotClientOptions { Mode = CopilotClientMode.Empty };
         new CopilotClientOptionsConfigurator(sp).Configure(options, sp.GetOptions());
         return options;
     }
@@ -18,7 +18,7 @@ public sealed class GitHubTokenTests
     {
         var options = ConfigureClient(new() { ["Copilot:GitHubToken"] = "configured", ["GH_TOKEN"] = "env" });
 
-        Assert.Equal("configured", options.GitHubToken);
+        Assert.Equal("configured", options.GitHub.Token);
     }
 
     [Theory]
@@ -29,7 +29,7 @@ public sealed class GitHubTokenTests
     {
         var options = ConfigureClient(new() { [key] = "env-token" });
 
-        Assert.Equal("env-token", options.GitHubToken);
+        Assert.Equal("env-token", options.GitHub.Token);
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public sealed class GitHubTokenTests
             ["COPILOT_GITHUB_TOKEN"] = "copilot",
         });
 
-        Assert.Equal("copilot", options.GitHubToken);
+        Assert.Equal("copilot", options.GitHub.Token);
     }
 
     [Fact]
@@ -50,7 +50,7 @@ public sealed class GitHubTokenTests
     {
         var options = ConfigureClient([]);
 
-        Assert.Null(options.GitHubToken);
+        Assert.Null(options.GitHub.Token);
     }
 
     [Fact]
@@ -58,6 +58,6 @@ public sealed class GitHubTokenTests
     {
         var options = ConfigureClient(new() { ["Copilot:Endpoint"] = "localhost:3000", ["GH_TOKEN"] = "env" });
 
-        Assert.Null(options.GitHubToken);
+        Assert.Null(options.GitHub.Token);
     }
 }

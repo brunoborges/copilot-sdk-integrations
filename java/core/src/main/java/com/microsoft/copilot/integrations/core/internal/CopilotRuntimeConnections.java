@@ -3,6 +3,7 @@ package com.microsoft.copilot.integrations.core.internal;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -13,73 +14,170 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.function.Predicate;
 
-import com.github.copilot.AllowCopilotExperimental;
-import com.github.copilot.CopilotClient;
-import com.github.copilot.rpc.CopilotClientOptions;
-import com.github.copilot.rpc.RuntimeConnection;
+import com.microsoft.copilot.AllowCopilotExperimental;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.rpc.CopilotClientMode;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.RuntimeConnection;
+import com.microsoft.copilot.rpc.TcpRuntimeConnection;
 
 /**
- * Applies an explicit runtime connection ({@code <prefix>connection}) to SDK client options for the framework
- * integrations, failing fast with configuration-property names instead of the SDK's option names.
+ * Builds SDK client options from the framework integrations' connection settings, failing fast with
+ * configuration-property names instead of the SDK's option names.
+ *
+ * <p>The integrations always use {@link CopilotClientMode#CODING_AGENT}, the Copilot CLI-equivalent defaults. When
+ * {@code <prefix>connection} is omitted, a {@code <prefix>cli-url} attaches to that server over TCP; otherwise
+ * {@code COPILOT_SDK_DEFAULT_CONNECTION=inprocess} selects the in-process runtime and anything else spawns a stdio
+ * child process.
  *
  * <p>The in-process connection is experimental in the SDK. It loads the runtime's native library through JNA instead of
  * starting a child process, so it needs JNA and the platform classifier artifact
- * {@code com.github:copilot-sdk-java-runtime:<version>:<classifier>} at run time, and it rejects per-process settings
- * (CLI path, arguments, working directory, environment, telemetry) and server settings (URL, TCP token).
+ * {@code com.microsoft:copilot-sdk-runtime:<version>:<classifier>} at run time, and it rejects per-process settings
+ * (CLI path, arguments, working directory) and server settings (URL, TCP token).
  */
 @AllowCopilotExperimental
 public final class CopilotRuntimeConnections {
 
     static final String JNA_CLASS = "com.sun.jna.Native";
     static final String CLI_PATH_ENV = "COPILOT_CLI_PATH";
+    static final String DEFAULT_CONNECTION_ENV = "COPILOT_SDK_DEFAULT_CONNECTION";
     static final String RUNTIME_FILENAME = "runtime.node";
-    static final String RUNTIME_ARTIFACT = "com.github:copilot-sdk-java-runtime";
+    static final String RUNTIME_ARTIFACT = "com.microsoft:copilot-sdk-runtime";
+
+    /** Explicit runtime transport selected by {@code <prefix>connection}. */
+    public enum Transport {
+        /** Child process over stdin/stdout, regardless of {@code COPILOT_SDK_DEFAULT_CONNECTION}. */
+        STDIO,
+        /** Runtime hosted inside this JVM (experimental). */
+        INPROCESS
+    }
+
+    /**
+     * Connection settings shared by the framework integrations; {@code null} values are unset.
+     *
+     * @param cliPath explicit executable path for a spawned runtime
+     * @param cliArgs extra arguments for a spawned runtime
+     * @param workingDirectory working directory for a spawned runtime
+     * @param logLevel runtime log level for a runtime owned by the client
+     * @param cliUrl existing server address (port, host:port, or HTTP-style URI)
+     * @param tcpConnectionToken authentication token for an existing TCP server
+     * @param transport explicit transport, or {@code null} for the default described on the class
+     */
+    public record Settings(String cliPath, List<String> cliArgs, String workingDirectory, String logLevel,
+            String cliUrl, String tcpConnectionToken, Transport transport) {
+
+        public Settings {
+            cliArgs = cliArgs == null ? List.of() : List.copyOf(cliArgs);
+        }
+    }
 
     private CopilotRuntimeConnections() {
     }
 
     /**
-     * Pins the child-process stdio transport so that {@code COPILOT_SDK_DEFAULT_CONNECTION} cannot switch it.
+     * Builds client options with an explicit mode and runtime connection.
      *
-     * @param options options built from the other connection settings
      * @param prefix configuration prefix including the trailing dot, such as {@code copilot.}
+     * @param settings the integration's connection settings
+     * @return new client options
+     * @throws IllegalArgumentException if settings conflict or the server address is invalid
+     * @throws IllegalStateException if the in-process runtime is requested but JNA or the native runtime is missing
      */
-    public static void useStdio(CopilotClientOptions options, String prefix) {
-        rejectConflicts(prefix, "stdio", Arrays.asList(
-                conflict(options.getCliUrl() != null, prefix + "cli-url"),
-                conflict(options.getTcpConnectionToken() != null, prefix + "tcp-connection-token")),
-                "the stdio connection starts its own runtime");
-        var stdio = RuntimeConnection.forStdio(options.getCliPath());
-        if (options.getCliArgs() != null) {
-            stdio.setArgs(List.of(options.getCliArgs()));
+    public static CopilotClientOptions clientOptions(String prefix, Settings settings) {
+        return clientOptions(prefix, settings, System.getenv(DEFAULT_CONNECTION_ENV));
+    }
+
+    static CopilotClientOptions clientOptions(String prefix, Settings settings, String defaultConnection) {
+        var options = new CopilotClientOptions().setMode(CopilotClientMode.CODING_AGENT);
+        RuntimeConnection runtime = connection(prefix, settings, defaultConnection);
+        if (settings.logLevel() != null) {
+            Assert.isTrue(!(runtime instanceof TcpRuntimeConnection), () -> prefix + "log-level cannot be combined "
+                    + "with " + prefix + "cli-url: the external server owns its runtime settings");
+            options.getObservability().setLogLevel(settings.logLevel());
         }
-        options.setConnection(stdio);
+        return options.setRuntime(runtime);
     }
 
     /**
-     * Hosts the runtime in this process after verifying that no rejected option is set and that JNA and the native
-     * runtime for this platform are available.
+     * Attaches to an existing runtime server over TCP.
      *
-     * @param options options built from the other connection settings
-     * @param prefix configuration prefix including the trailing dot, such as {@code copilot.}
-     * @throws IllegalArgumentException if a setting the in-process runtime rejects is present
-     * @throws IllegalStateException if JNA or the native runtime library is missing
+     * @param prefix configuration prefix including the trailing dot, used in error messages
+     * @param address server address: a port, {@code host:port}, or {@code http(s)://host:port}
+     * @param connectionToken optional server token
+     * @return the attached connection
+     * @throws IllegalArgumentException if the address has no valid host and port, or has credentials, a path, a
+     *         query, or a fragment
      */
-    public static void useInProcess(CopilotClientOptions options, String prefix) {
-        rejectConflicts(prefix, "inprocess", Arrays.asList(
-                conflict(options.getCliPath() != null, prefix + "cli-path"),
-                conflict(options.getCliArgs() != null && options.getCliArgs().length > 0, prefix + "cli-args"),
-                conflict(options.getCwd() != null, prefix + "working-directory"),
-                conflict(options.getCliUrl() != null, prefix + "cli-url"),
-                conflict(options.getTcpConnectionToken() != null, prefix + "tcp-connection-token"),
-                conflict(options.getEnvironment() != null && !options.getEnvironment().isEmpty(),
-                        "CopilotClientOptions.environment"),
-                conflict(options.getTelemetry() != null, "CopilotClientOptions.telemetry")),
-                "the in-process runtime shares this process, so per-process settings cannot be honored and no "
-                        + "separate server is used; set environment variables and the working directory on the host "
-                        + "process instead");
-        requireInProcessRuntime(prefix + "connection=inprocess");
-        options.setConnection(RuntimeConnection.forInProcess());
+    public static TcpRuntimeConnection attach(String prefix, String address, String connectionToken) {
+        String message = prefix + "cli-url must specify a host and port (1-65535), or just a port; "
+                + "credentials, paths, queries, and fragments are not supported";
+        URI uri;
+        try {
+            String normalized = address.matches("[0-9]+") ? "http://localhost:" + address : address;
+            uri = URI.create(normalized.contains("://") ? normalized : "http://" + normalized);
+        } catch (IllegalArgumentException ex) {
+            // URI parser messages may contain credentials; expose only the property name.
+            throw new IllegalArgumentException(message);
+        }
+        Assert.isTrue(("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme()))
+                        && uri.getHost() != null && uri.getPort() > 0 && uri.getPort() <= 65535
+                        && uri.getRawUserInfo() == null
+                        && (uri.getRawPath() == null || uri.getRawPath().isEmpty())
+                        && uri.getRawQuery() == null && uri.getRawFragment() == null,
+                message);
+        String host = uri.getHost();
+        if (host.startsWith("[") && host.endsWith("]")) {
+            host = host.substring(1, host.length() - 1);
+        }
+        try {
+            return RuntimeConnection.forTcp(host, uri.getPort()).setConnectionToken(connectionToken);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
+    private static RuntimeConnection connection(String prefix, Settings settings, String defaultConnection) {
+        if (settings.transport() == Transport.STDIO) {
+            rejectConflicts(prefix, "stdio", Arrays.asList(
+                    conflict(settings.cliUrl() != null, prefix + "cli-url"),
+                    conflict(settings.tcpConnectionToken() != null, prefix + "tcp-connection-token")),
+                    "the stdio connection starts its own runtime");
+            return stdio(settings);
+        }
+        if (settings.transport() == Transport.INPROCESS) {
+            rejectConflicts(prefix, "inprocess", Arrays.asList(
+                    conflict(settings.cliPath() != null, prefix + "cli-path"),
+                    conflict(!settings.cliArgs().isEmpty(), prefix + "cli-args"),
+                    conflict(settings.workingDirectory() != null, prefix + "working-directory"),
+                    conflict(settings.cliUrl() != null, prefix + "cli-url"),
+                    conflict(settings.tcpConnectionToken() != null, prefix + "tcp-connection-token")),
+                    "the in-process runtime shares this process, so per-process settings cannot be honored and no "
+                            + "separate server is used; set environment variables and the working directory on the "
+                            + "host process instead");
+            requireInProcessRuntime(prefix + "connection=inprocess");
+            return RuntimeConnection.forInProcess();
+        }
+        if (settings.cliUrl() != null) {
+            return attach(prefix, settings.cliUrl(), settings.tcpConnectionToken());
+        }
+        if (defaultConnection == null || defaultConnection.isEmpty() || "stdio".equalsIgnoreCase(defaultConnection)) {
+            return stdio(settings);
+        }
+        Assert.isTrue("inprocess".equalsIgnoreCase(defaultConnection), () -> "Invalid " + DEFAULT_CONNECTION_ENV
+                + " value '" + defaultConnection + "'. Expected 'inprocess', 'stdio', or unset.");
+        // An explicit executable still selects the child process, as in earlier SDK releases.
+        return settings.cliPath() != null ? stdio(settings) : RuntimeConnection.forInProcess();
+    }
+
+    private static RuntimeConnection stdio(Settings settings) {
+        var stdio = RuntimeConnection.forSpawnedStdio(settings.cliPath());
+        if (!settings.cliArgs().isEmpty()) {
+            stdio.setArgs(settings.cliArgs());
+        }
+        if (settings.workingDirectory() != null) {
+            stdio.setWorkingDirectory(settings.workingDirectory());
+        }
+        return stdio;
     }
 
     /**
@@ -122,7 +220,7 @@ public final class CopilotRuntimeConnections {
         if (onPath != null && hasAdjacentRuntime(onPath, classifiers)) {
             return null;
         }
-        String version = sdkVersion == null ? "<copilot-sdk-java version>" : sdkVersion;
+        String version = sdkVersion == null ? "<copilot-sdk version>" : sdkVersion;
         String artifacts = classifiers.stream().map(classifier -> RUNTIME_ARTIFACT + ":" + version + ":" + classifier)
                 .reduce((first, second) -> first + " (glibc) or " + second + " (musl)").orElseThrow();
         return setting + " requires the native Copilot runtime for this platform; add " + artifacts

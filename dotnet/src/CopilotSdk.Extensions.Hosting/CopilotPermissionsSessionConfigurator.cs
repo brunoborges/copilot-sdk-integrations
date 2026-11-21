@@ -1,6 +1,6 @@
 using System.Text.Json;
-using GitHub.Copilot;
-using GitHub.Copilot.Rpc;
+using Microsoft.Copilot;
+using Microsoft.Copilot.Rpc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -11,7 +11,7 @@ namespace CopilotSdk.Extensions.Hosting;
 /// <see cref="CopilotOptions.OnApproval"/>, listed MCP tools are allowed, and everything else is denied.
 /// </summary>
 /// <remarks>
-/// An app can replace the handler by setting <see cref="SessionConfigBase.OnPermissionRequest"/> in
+/// An app can replace the handler by setting <see cref="SessionPermissionOptions.OnRequest"/> in
 /// <see cref="CopilotOptions.ConfigureSession"/>, which runs after this configurator.
 /// </remarks>
 internal sealed partial class CopilotPermissionsSessionConfigurator(
@@ -27,10 +27,10 @@ internal sealed partial class CopilotPermissionsSessionConfigurator(
     private readonly ILogger _logger =
         (loggerFactory ?? Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance).CreateLogger("CopilotSdk.Permissions");
 
-    public void Configure(string agentName, SessionConfigBase config, IServiceProvider services)
+    public void Configure(string agentName, SessionOptionsBase config, IServiceProvider services)
     {
         var tools = catalog.GetTools(agentName);
-        config.OnPermissionRequest = (request, invocation) => DecideAsync(agentName, tools, request, invocation);
+        config.Permissions.OnRequest = (request, invocation) => DecideAsync(agentName, tools, request, invocation);
     }
 
     internal Task<PermissionDecision> DecideAsync(

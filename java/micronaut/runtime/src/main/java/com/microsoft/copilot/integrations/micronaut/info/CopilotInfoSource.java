@@ -8,7 +8,7 @@ import jakarta.inject.Singleton;
 
 import org.reactivestreams.Publisher;
 
-import com.github.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
 
 import com.microsoft.copilot.integrations.micronaut.config.CopilotRuntimeConfig;
 import io.micronaut.context.BeanProvider;

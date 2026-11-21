@@ -25,6 +25,7 @@ export type {
   CopilotToolInvocation,
   CopilotToolSource,
   CopilotInstance,
+  CreateSessionOptions,
   SessionConfig,
   CopilotClientOptions,
   ProviderConfig,

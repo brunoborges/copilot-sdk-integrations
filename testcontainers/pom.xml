@@ -18,8 +18,8 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <testcontainers.version>2.0.5</testcontainers.version>
-        <copilot-sdk.version>1.0.24</copilot-sdk.version>
-        <copilot.test.image>copilot-runtime:1.0.105</copilot.test.image>
+        <copilot-sdk.version>2.0.1</copilot-sdk.version>
+        <copilot.test.image>copilot-runtime:1.0.114</copilot.test.image>
     </properties>
     <dependencies>
         <dependency>
@@ -28,8 +28,8 @@
             <version>${testcontainers.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github</groupId>
-            <artifactId>copilot-sdk-java</artifactId>
+            <groupId>com.microsoft</groupId>
+            <artifactId>copilot-sdk</artifactId>
             <version>${copilot-sdk.version}</version>
             <scope>test</scope>
         </dependency>

@@ -22,16 +22,16 @@ import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.github.copilot.CopilotClient;
-import com.github.copilot.CopilotSession;
-import com.github.copilot.rpc.MessageOptions;
-import com.github.copilot.rpc.MessageSource;
-import com.github.copilot.rpc.PermissionHandler;
-import com.github.copilot.rpc.ResumeSessionConfig;
-import com.github.copilot.rpc.SessionConfig;
-import com.github.copilot.rpc.ToolDefinition;
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.generated.AssistantUsageEvent;
+import com.microsoft.copilot.CopilotClient;
+import com.microsoft.copilot.CopilotSession;
+import com.microsoft.copilot.rpc.MessageOptions;
+import com.microsoft.copilot.rpc.MessageSource;
+import com.microsoft.copilot.rpc.PermissionHandler;
+import com.microsoft.copilot.rpc.ResumeSessionOptions;
+import com.microsoft.copilot.rpc.CreateSessionOptions;
+import com.microsoft.copilot.rpc.ToolDefinition;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.generated.AssistantUsageEvent;
 import com.microsoft.copilot.integrations.core.CopilotAgentContext;
 import com.microsoft.copilot.integrations.core.CopilotTokenResolver;
 import com.microsoft.copilot.integrations.core.CopilotAgentTelemetry;
@@ -458,64 +458,70 @@ public final class CopilotAgentInvoker implements AutoCloseable {
             if (owner.requiresHistory()) {
                 throw new CopilotConversationNotFoundException(definition.name());
             }
-            var config = new SessionConfig().setSessionId(context.sessionId())
-                    .setOnPermissionRequest(definition.permissions());
+            var config = new CreateSessionOptions().setSessionId(context.sessionId());
+            config.getPermissions().setOnRequest(definition.permissions());
             if (!definition.model().isEmpty()) {
                 config.setModel(definition.model());
             }
             if (!definition.reasoningEffort().isEmpty()) {
-                config.setReasoningEffort(definition.reasoningEffort());
+                config.getInference().setReasoningEffort(definition.reasoningEffort());
             }
-            config.setSystemMessage(definition.systemMessage()).setTools(definition.tools());
+            config.setSystemMessage(definition.systemMessage());
+            config.getTools().setDefinitions(definition.tools());
             if (!definition.mcpServers().isEmpty()) {
-                config.setMcpServers(definition.mcpServers());
+                config.getMcp().setServers(definition.mcpServers());
             }
             if (definition.provider() != null) {
-                config.setProvider(definition.provider());
+                ProviderBindings.apply(definition.provider(), definition.model(), config.getInference(),
+                        config.getGitHub());
             }
             definition.governance().apply(context, config, () -> callbackScope(owner, state));
             definition.customizers().forEach(customizer -> customizer.customize(context, config));
             if (streaming) {
-                config.setStreaming(true);
+                config.getEvents().setStreaming(true);
             }
-            if (state.gitHubToken() != null && config.getGitHubToken() == null && config.getGitHubTokenProvider() == null) {
-                config.setGitHubToken(state.gitHubToken());
+            var github = config.getGitHub();
+            if (state.gitHubToken() != null && github.getToken() == null && github.getTokenProvider() == null) {
+                github.setToken(state.gitHubToken());
             }
-            config.setTools(propagatedTools(observedTools(attributedTools(config.getTools(), definition.name()), observation, owner), state));
+            config.getTools().setDefinitions(propagatedTools(observedTools(attributedTools(config.getTools().getDefinitions(), definition.name()), observation, owner), state));
             Assert.isTrue(context.sessionId().equals(config.getSessionId()), "Agent customizers must not change the session ID");
-            Assert.notNull(config.getOnPermissionRequest(), "Agent customizers must not remove the permission handler");
-            config.setOnPermissionRequest(propagatedPermissions(ownedPermissions(config.getOnPermissionRequest(), owner), state));
+            Assert.notNull(config.getPermissions().getOnRequest(), "Agent customizers must not remove the permission handler");
+            config.getPermissions().setOnRequest(propagatedPermissions(ownedPermissions(config.getPermissions().getOnRequest(), owner), state));
             var session = state.join(client.createSession(config), definition.responseTimeout(), CopilotAgentInvoker::closeQuietly);
             owner.sessionOpened();
             return session;
         }
-        var config = new ResumeSessionConfig().setOnPermissionRequest(definition.permissions());
+        var config = new ResumeSessionOptions();
+        config.getPermissions().setOnRequest(definition.permissions());
         if (!definition.model().isEmpty()) {
             config.setModel(definition.model());
         }
         if (!definition.reasoningEffort().isEmpty()) {
-            config.setReasoningEffort(definition.reasoningEffort());
+            config.getInference().setReasoningEffort(definition.reasoningEffort());
         }
-        config.setSystemMessage(definition.systemMessage()).setTools(definition.tools());
+        config.setSystemMessage(definition.systemMessage());
+        config.getTools().setDefinitions(definition.tools());
         if (!definition.mcpServers().isEmpty()) {
-            config.setMcpServers(definition.mcpServers());
+            config.getMcp().setServers(definition.mcpServers());
         }
         // Provider credentials are not persisted with the session, so resumption must resupply them.
         if (definition.provider() != null) {
-            config.setProvider(definition.provider());
+            ProviderBindings.apply(definition.provider(), definition.model(), config.getInference(), config.getGitHub());
         }
         definition.governance().apply(context, config, () -> callbackScope(owner, state));
         definition.customizers().forEach(customizer -> customizer.customize(context, config));
         if (streaming) {
-            config.setStreaming(true);
+            config.getEvents().setStreaming(true);
         }
         // Session tokens are not persisted with the session, so resumption must resupply them.
-        if (state.gitHubToken() != null && config.getGitHubToken() == null && config.getGitHubTokenProvider() == null) {
-            config.setGitHubToken(state.gitHubToken());
+        var github = config.getGitHub();
+        if (state.gitHubToken() != null && github.getToken() == null && github.getTokenProvider() == null) {
+            github.setToken(state.gitHubToken());
         }
-        config.setTools(propagatedTools(observedTools(attributedTools(config.getTools(), definition.name()), observation, owner), state));
-        Assert.notNull(config.getOnPermissionRequest(), "Agent customizers must not remove the permission handler");
-        config.setOnPermissionRequest(propagatedPermissions(ownedPermissions(config.getOnPermissionRequest(), owner), state));
+        config.getTools().setDefinitions(propagatedTools(observedTools(attributedTools(config.getTools().getDefinitions(), definition.name()), observation, owner), state));
+        Assert.notNull(config.getPermissions().getOnRequest(), "Agent customizers must not remove the permission handler");
+        config.getPermissions().setOnRequest(propagatedPermissions(ownedPermissions(config.getPermissions().getOnRequest(), owner), state));
         var session = state.join(client.resumeSession(context.sessionId(), config), definition.responseTimeout(), CopilotAgentInvoker::closeQuietly);
         owner.sessionOpened();
         return session;

@@ -7,7 +7,7 @@ sites: fastify
 # Copilot Agents for Fastify
 
 `@copilot-sdk-integrations/fastify` is a Fastify 5 plugin for the
-[GitHub Copilot SDK for Node.js/TypeScript](https://github.com/github/copilot-sdk/tree/main/nodejs).
+[Microsoft Copilot SDK for Node.js/TypeScript](https://github.com/microsoft/copilot-sdk/tree/main/nodejs).
 Register it once, declare agents with `defineAgent`, and call them from routes through
 `request.copilot`. Underneath, Agent Core (`@copilot-sdk-integrations/agent-core`) adds what the
 SDK leaves to the application: a managed client lifecycle with admission limits, typed agents,
@@ -39,7 +39,7 @@ Building on NestJS instead? See [Copilot Agents for NestJS](https://brunoborges.
 | Component | Version |
 | --- | --- |
 | Node.js | `^20.19.0` or `>=22.12.0` (ESM-only packages) |
-| Copilot SDK (`@github/copilot-sdk`) | `^1.0.26` |
+| Microsoft Copilot SDK (`@microsoft/copilot-sdk`) | `^2.0.0` |
 | Zod | `^4` |
 | Fastify | `^5` |
 | Vercel AI SDK (`ai`), optional | `^7` |
@@ -49,7 +49,7 @@ Building on NestJS instead? See [Copilot Agents for NestJS](https://brunoborges.
 | Package | Use it when | Depends on |
 | --- | --- | --- |
 | `@copilot-sdk-integrations/fastify` | You build a Fastify 5 app and want `fastify.copilot` and request-bound agents, request context, HTTP error mapping, SSE, `useChat` routes with approvals, health and info routes, and `app.inject()` testing. | Agent Core, Fastify (`ai` for `useChat`) |
-| `@copilot-sdk-integrations/agent-core` | Always installed with the plugin. Used directly for agent definitions, tools, and permission policies, and for [apps without a framework](core.md) such as Express, Hono, or workers. | `@github/copilot-sdk`, `zod` |
+| `@copilot-sdk-integrations/agent-core` | Always installed with the plugin. Used directly for agent definitions, tools, and permission policies, and for [apps without a framework](core.md) such as Express, Hono, or workers. | `@microsoft/copilot-sdk`, `zod` |
 | `@copilot-sdk-integrations/ai` | Your front end uses the AI SDK (`useChat`), or you want `generateText`/`streamText` against Copilot agents. | Agent Core, `ai` |
 
 The Fastify plugin is a thin layer over Agent Core. Every concept on the core pages (agents,

@@ -1,7 +1,7 @@
 # copilot-quarkus
 
-Quarkus extension for the [Copilot SDK for Java](https://github.com/github/copilot-sdk/tree/main/java),
-targeting **Quarkus 3.40**, **Java 21**, and Copilot SDK **1.0.24**.
+Quarkus extension for the [Microsoft Copilot SDK for Java](https://github.com/microsoft/copilot-sdk/tree/main/java),
+targeting **Quarkus 3.40**, **Java 21**, and Microsoft Copilot SDK **2.0.1**.
 
 📖 **[Read the documentation](https://brunoborges.github.io/copilot-sdk-integrations/quarkus/)**
 ([chapter sources](src/site/markdown/)).
@@ -138,7 +138,7 @@ public class ReferenceTools {
 ```
 
 Enable the SDK's `CopilotToolProcessor` annotation processor (artifact
-`com.github:copilot-sdk-java`) in your compiler configuration, as in the example's
+`com.microsoft:copilot-sdk`) in your compiler configuration, as in the example's
 [`pom.xml`](example/pom.xml).
 
 Beans looked up by type (hooks, return-type adapters, telemetry decorators) are
@@ -275,7 +275,7 @@ Open `target/site/index.html`, or run `./mvnw -N site:run` and browse
 ```
 
 Native images are not yet tested. Agent interfaces are registered as dynamic proxies
-and tool metadata classes for reflection, but the Copilot SDK itself may require
+and tool metadata classes for reflection, but the Microsoft Copilot SDK itself may require
 additional native configuration.
 
 ## License

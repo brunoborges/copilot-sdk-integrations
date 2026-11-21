@@ -6,9 +6,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.github.copilot.rpc.McpHttpServerConfig;
-import com.github.copilot.rpc.McpServerConfig;
-import com.github.copilot.rpc.McpStdioServerConfig;
+import com.microsoft.copilot.rpc.McpHttpServerConfig;
+import com.microsoft.copilot.rpc.McpServerConfig;
+import com.microsoft.copilot.rpc.McpStdioServerConfig;
 import com.microsoft.copilot.integrations.core.internal.Assert;
 
 /**

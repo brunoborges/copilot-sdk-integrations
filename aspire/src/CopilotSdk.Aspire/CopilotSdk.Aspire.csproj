@@ -4,7 +4,7 @@
     <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
     <TargetFramework></TargetFramework>
     <RootNamespace>CopilotSdk.Aspire</RootNamespace>
-    <Description>Aspire client integration for the GitHub Copilot SDK: connects a service to a Copilot runtime resource and applies Aspire health check and telemetry defaults on top of CopilotSdk.Extensions.Hosting.</Description>
+    <Description>Aspire client integration for the Microsoft Copilot SDK: connects a service to a Copilot runtime resource and applies Aspire health check and telemetry defaults on top of CopilotSdk.Extensions.Hosting.</Description>
   </PropertyGroup>
 
   <ItemGroup>

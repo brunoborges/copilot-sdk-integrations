@@ -13,7 +13,7 @@ import jakarta.enterprise.inject.Typed;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-import com.github.copilot.generated.AssistantUsageEvent;
+import com.microsoft.copilot.generated.AssistantUsageEvent;
 
 import com.microsoft.copilot.integrations.quarkus.runtime.CopilotMetricsTelemetry;
 import io.micrometer.core.instrument.MeterRegistry;

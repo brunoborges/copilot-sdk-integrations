@@ -1,4 +1,4 @@
-import type { SessionConfig } from "@github/copilot-sdk";
+import type { SessionToolOptions } from "@microsoft/copilot-sdk";
 import { CopilotConfigurationError } from "../errors.js";
 import type { CopilotAgentDefinition } from "../types.js";
 
@@ -99,9 +99,9 @@ export function validateToolFilters(
 }
 
 /**
- * Translates the agent's tool filters into SDK `SessionConfig` fields:
+ * Translates the agent's tool filters into SDK session `tools` options:
  *
- * | Agent definition                          | SessionConfig                                   |
+ * | Agent definition                          | `tools` session options                         |
  * | ----------------------------------------- | ----------------------------------------------- |
  * | `availableTools: [...]`                   | `availableTools: [...]` (copied verbatim)       |
  * | `excludedTools: [...]`                    | `excludedTools: [...]`                          |
@@ -114,8 +114,8 @@ export function validateToolFilters(
  */
 export function buildToolFilterConfig(
   def: CopilotAgentDefinition,
-): Pick<SessionConfig, "availableTools" | "excludedTools"> {
-  const config: Pick<SessionConfig, "availableTools" | "excludedTools"> = {};
+): Pick<SessionToolOptions, "availableTools" | "excludedTools"> {
+  const config: Pick<SessionToolOptions, "availableTools" | "excludedTools"> = {};
   if (def.availableTools !== undefined) {
     config.availableTools = [...def.availableTools];
   }

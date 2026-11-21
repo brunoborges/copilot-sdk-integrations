@@ -2,10 +2,10 @@
 FROM debian:bookworm-slim
 
 ARG TARGETARCH
-ARG COPILOT_VERSION=1.0.105
+ARG COPILOT_VERSION=1.0.114
 LABEL org.opencontainers.image.source="https://github.com/brunoborges/copilot-sdk-integrations" \
       org.opencontainers.image.title="Copilot CLI for Testcontainers" \
-      org.opencontainers.image.description="Copilot CLI and runtime harness for the Copilot SDK Testcontainers integration" \
+      org.opencontainers.image.description="Copilot CLI and runtime harness for the Microsoft Copilot SDK Testcontainers integration" \
       org.opencontainers.image.version="${COPILOT_VERSION}"
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates curl git \

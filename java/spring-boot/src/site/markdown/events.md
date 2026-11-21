@@ -26,8 +26,8 @@ These contracts are in `com.microsoft.copilot.integrations.core`:
 Bind listener bean names with `@CopilotAgent(listenerRefs = "agentMessages")`:
 
 ```java
-import com.github.copilot.generated.AssistantMessageEvent;
-import com.github.copilot.generated.SessionEvent;
+import com.microsoft.copilot.generated.AssistantMessageEvent;
+import com.microsoft.copilot.generated.SessionEvent;
 import com.microsoft.copilot.integrations.core.CopilotAgentContext;
 import com.microsoft.copilot.integrations.core.CopilotAgentListener;
 import org.springframework.stereotype.Component;
@@ -61,8 +61,8 @@ for another invocation on the same serialized conversation.
 `CopilotAgentCustomizer` has two default no-op methods:
 
 ```java
-void customize(CopilotAgentContext context, SessionConfig config);
-void customize(CopilotAgentContext context, ResumeSessionConfig config);
+void customize(CopilotAgentContext context, CreateSessionOptions config);
+void customize(CopilotAgentContext context, ResumeSessionOptions config);
 ```
 
 Register a bean and select it with `@CopilotAgent(customizerRefs = "workspace")`.
@@ -73,12 +73,12 @@ For example, inside a configuration class:
 CopilotAgentCustomizer workspace() {
     return new CopilotAgentCustomizer() {
         @Override
-        public void customize(CopilotAgentContext context, SessionConfig config) {
+        public void customize(CopilotAgentContext context, CreateSessionOptions config) {
             config.setWorkingDirectory("/srv/approved-workspace");
         }
 
         @Override
-        public void customize(CopilotAgentContext context, ResumeSessionConfig config) {
+        public void customize(CopilotAgentContext context, ResumeSessionOptions config) {
             config.setWorkingDirectory("/srv/approved-workspace");
         }
     };

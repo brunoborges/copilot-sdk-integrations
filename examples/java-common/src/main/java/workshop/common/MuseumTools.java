@@ -1,6 +1,6 @@
 package workshop.common;
 
-import com.github.copilot.tool.CopilotTool;
+import com.microsoft.copilot.tool.CopilotTool;
 
 public class MuseumTools {
     private Exhibit exhibit;

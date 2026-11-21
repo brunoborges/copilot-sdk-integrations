@@ -1,6 +1,5 @@
 package com.microsoft.copilot.integrations.springboot.autoconfigure;
 
-import java.net.URI;
 import java.time.Duration;
 import java.util.List;
 
@@ -8,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.util.Assert;
 
-import com.github.copilot.rpc.CopilotClientOptions;
+import com.microsoft.copilot.rpc.CopilotClientOptions;
 
 import com.microsoft.copilot.integrations.core.internal.CopilotRuntimeConnections;
 
@@ -19,11 +18,12 @@ import com.microsoft.copilot.integrations.core.internal.CopilotRuntimeConnection
  * @param cliPath explicit executable path for a managed local runtime
  * @param cliArgs extra arguments for a managed local runtime
  * @param workingDirectory working directory for a managed local runtime
- * @param logLevel runtime log level; omitted values retain the SDK default
- * @param cliUrl existing server address (port, host:port, or HTTP-style URI)
+ * @param logLevel runtime log level for a runtime started by the client; omitted values retain the runtime default
+ *        and it cannot be combined with {@code cliUrl}
+ * @param cliUrl existing server address (port, host:port, or HTTP-style URI), attached over TCP
  * @param tcpConnectionToken authentication token for an existing TCP server
- * @param connection runtime transport: {@code stdio} or the experimental {@code inprocess}; omitted values keep the
- *        SDK default (the {@code cli-url} server, {@code COPILOT_SDK_DEFAULT_CONNECTION}, or stdio)
+ * @param connection runtime transport: {@code stdio} or the experimental {@code inprocess}; omitted values use the
+ *        {@code cli-url} server if set, else {@code COPILOT_SDK_DEFAULT_CONNECTION=inprocess}, else stdio
  */
 @ConfigurationProperties("copilot")
 public record CopilotProperties(
@@ -67,37 +67,15 @@ public record CopilotProperties(
         Assert.isTrue(tcpConnectionToken == null || cliUrl != null,
                 "copilot.tcp-connection-token requires copilot.cli-url");
 
-        var options = new CopilotClientOptions();
-        if (cliPath != null) {
-            options.setCliPath(cliPath);
-        }
-        if (!cliArgs.isEmpty()) {
-            options.setCliArgs(cliArgs.toArray(String[]::new));
-        }
-        if (workingDirectory != null) {
-            options.setCwd(workingDirectory);
-        }
-        if (logLevel != null) {
-            options.setLogLevel(logLevel);
-        }
-        if (cliUrl != null) {
-            validateServerAddress(cliUrl);
-            options.setCliUrl(cliUrl).setUseStdio(false);
-        }
-        if (tcpConnectionToken != null) {
-            options.setTcpConnectionToken(tcpConnectionToken);
-        }
-        if (connection == Connection.STDIO) {
-            CopilotRuntimeConnections.useStdio(options, "copilot.");
-        } else if (connection == Connection.INPROCESS) {
-            CopilotRuntimeConnections.useInProcess(options, "copilot.");
-        }
-        return options;
+        return CopilotRuntimeConnections.clientOptions("copilot.", new CopilotRuntimeConnections.Settings(cliPath,
+                cliArgs, workingDirectory, logLevel, cliUrl, tcpConnectionToken,
+                connection == null ? null : CopilotRuntimeConnections.Transport.valueOf(connection.name())));
     }
 
     CopilotClientOptions toOptions(CopilotConnectionDetails details) {
         Assert.notNull(details.cliUrl(), "CopilotConnectionDetails.cliUrl() is required");
-        return new CopilotProperties(enabled, eagerStart, startupTimeout, null, List.of(), null, logLevel,
+        // The external server owns its runtime settings, so copilot.log-level does not apply to it.
+        return new CopilotProperties(enabled, eagerStart, startupTimeout, null, List.of(), null, null,
                 details.cliUrl(), details.tcpConnectionToken(), null).toOptions();
     }
 
@@ -109,24 +87,5 @@ public record CopilotProperties(
 
     private static void requireText(String value, String name) {
         Assert.isTrue(value == null || !value.isBlank(), name + " must not be blank");
-    }
-
-    private static void validateServerAddress(String address) {
-        String message = "copilot.cli-url must specify a host and port (1-65535), or just a port; "
-                + "credentials, paths, queries, and fragments are not supported";
-        URI uri;
-        try {
-            String normalized = address.matches("[0-9]+") ? "http://localhost:" + address : address;
-            uri = URI.create(normalized.contains("://") ? normalized : "http://" + normalized);
-        } catch (IllegalArgumentException ex) {
-            // URI parser messages may contain credentials; expose only the property name.
-            throw new IllegalArgumentException(message);
-        }
-        Assert.isTrue(("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme()))
-                        && uri.getHost() != null && uri.getPort() > 0 && uri.getPort() <= 65535
-                        && uri.getRawUserInfo() == null
-                        && (uri.getRawPath() == null || uri.getRawPath().isEmpty())
-                        && uri.getRawQuery() == null && uri.getRawFragment() == null,
-                message);
     }
 }

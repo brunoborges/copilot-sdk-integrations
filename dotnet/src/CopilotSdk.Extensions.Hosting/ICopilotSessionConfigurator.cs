@@ -1,10 +1,10 @@
-using GitHub.Copilot;
+using Microsoft.Copilot;
 
 namespace CopilotSdk.Extensions.Hosting;
 
 /// <summary>
-/// Contributes settings to the SDK session config for an agent, for both new
-/// (<see cref="SessionConfig"/>) and resumed (<see cref="ResumeSessionConfig"/>) sessions.
+/// Contributes settings to the SDK session options for an agent, for both new
+/// (<see cref="CreateSessionOptions"/>) and resumed (<see cref="ResumeSessionOptions"/>) sessions.
 /// </summary>
 /// <remarks>
 /// Register with <c>services.TryAddEnumerable(ServiceDescriptor.Singleton&lt;ICopilotSessionConfigurator, T&gt;())</c>.
@@ -14,7 +14,7 @@ namespace CopilotSdk.Extensions.Hosting;
 internal interface ICopilotSessionConfigurator
 {
     /// <param name="agentName">The agent name (<see cref="Microsoft.Extensions.Options.Options.DefaultName"/> for the default agent).</param>
-    /// <param name="config">The session config being built.</param>
+    /// <param name="config">The session options being built.</param>
     /// <param name="services">The service provider of the current call.</param>
-    void Configure(string agentName, SessionConfigBase config, IServiceProvider services);
+    void Configure(string agentName, SessionOptionsBase config, IServiceProvider services);
 }

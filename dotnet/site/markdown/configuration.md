@@ -29,7 +29,7 @@ Configuration overrides code, so operators can change a model or a timeout witho
     "ResponseTimeout": "00:02:00",
     "MaxConcurrentTurns": null,          // optional cap across the app
     "EagerStart": false,                 // start with the host instead of on first use
-    "InProcess": false,                  // host the runtime in this process (experimental)
+    "InProcess": false,                  // host the runtime in this process instead of a child process
     "SessionRetention": null,            // delete sessions idle this long, for example "7.00:00:00"
 
     "GitHubToken": null,                 // service identity for the SDK-managed runtime; use a secret store
@@ -62,20 +62,20 @@ Environment variables follow the usual .NET convention, for example
 | `ResponseTimeout` | `00:02:00` | Maximum time for a turn. The turn is aborted and `TimeoutException` is thrown when it elapses. |
 | `MaxConcurrentTurns` | none | Optional cap on concurrent turns across the app. Extra turns wait in a queue of up to 8× the limit. *Client-level.* |
 | `EagerStart` | `false` | Start the client with the host instead of on first use. *Client-level.* |
-| `InProcess` | `false` | Host the runtime in this process instead of a child process. Experimental in the SDK (`GHCP001`). Runtime OpenTelemetry export is not available in-process. Cannot be combined with `Endpoint`. *Client-level.* |
+| `InProcess` | `false` | Host the runtime in this process instead of a child process. Cannot be combined with `Endpoint`. *Client-level.* |
 | `SessionRetention` | none | Delete sessions not modified for this long. See [Conversations](conversations.md#session-lifetime). *Client-level.* |
 | `GitHubToken` | none | Service identity for the SDK-managed runtime. Cannot be combined with `Endpoint`. *Client-level.* |
-| `Endpoint` | none | A shared, running runtime: `tcp://host:port`, `http(s)://host:port`, `host:port`, or a loopback port number. When unset, the SDK starts its bundled runtime. *Client-level.* |
+| `Endpoint` | none | A shared, running runtime: `tcp://host:port`, `http(s)://host:port`, `host:port`, or a loopback port number. When unset, the SDK starts its bundled runtime as a child process (or in-process with `InProcess`). *Client-level.* |
 | `ConnectionToken` | none | Shared secret for `Endpoint`; required when the endpoint is not loopback. *Client-level.* |
 | `ConnectionName` | `copilot` | The connection string (`ConnectionStrings:{name}`) to read. |
 | `McpServers` | empty | MCP servers keyed by name. See [MCP servers](mcp-servers.md). |
-| `Provider` | none | Bring-your-own-key model provider, the SDK's `ProviderConfig`. See [BYOK providers](#byok-providers). |
+| `Provider` | none | Bring-your-own-key model provider, in the SDK's `ProviderConfig` shape. See [BYOK providers](#byok-providers). |
 | `ToolSearch:Enabled` | runtime default (enabled) | Enables or disables tool search, which defers MCP and external tool definitions behind a built-in `tool_search_tool` once the agent has many tools. Useful for large MCP servers such as GitHub or Playwright. |
 | `ToolSearch:DeferThreshold` | runtime default (`30`) | Tool count above which MCP and external tools are deferred. Must be at least 1, and cannot be set when `ToolSearch:Enabled` is `false`. |
 | `GitHubTokenProvider` | none | Code only. Supplies a per-user GitHub token at the start of each turn. See [Runtime and identity](identity.md#per-user-identity). |
 | `OnApproval` | none | Code only. Decides calls to `[RequiresApproval]` tools. See [Approvals and permissions](permissions.md). |
 | `ConfigureClient(...)` | — | Code only. Configures the SDK's `CopilotClientOptions`. *Client-level.* |
-| `ConfigureSession(...)` | — | Code only. Configures the SDK's `SessionConfigBase` for new and resumed sessions. |
+| `ConfigureSession(...)` | — | Code only. Configures the SDK's `SessionOptionsBase` for new and resumed sessions. |
 
 *Client-level* settings are read from the default agent only, because every agent shares one
 `CopilotClient` and runtime. `CopilotOptions.SectionName` is `"Copilot"` and
@@ -151,9 +151,11 @@ documentation.
 }
 ```
 
-`Provider:BaseUrl` is required when `Provider` is set. With a BYOK provider, the
-[health check](observability.md#health-checks) reports Healthy even when the runtime is not
-signed in to GitHub.
+`Provider:BaseUrl` is required when `Provider` is set. Each session registers the provider as the
+named provider `byok`, makes it the default provider, and turns off Copilot API models, so every
+model of the session is served by the provider. `ModelId`, `WireModel`, `MaxPromptTokens`, and
+`MaxOutputTokens` become a model definition for the session's model. With a BYOK provider, the [health check](observability.md#health-checks) reports
+Healthy even when the runtime is not signed in to GitHub.
 
 ## Validation
 
@@ -179,8 +181,11 @@ translation layer to learn:
 
 ```cs
 builder.Services.AddCopilot(o => o
-    .ConfigureClient(client => client.BaseDirectory = "/var/copilot")            // CopilotClientOptions
-    .ConfigureSession(session => session.ExcludedTools = ["web_fetch"]));        // SessionConfigBase (create and resume)
+    .ConfigureClient(client =>                                                   // CopilotClientOptions
+    {
+        if (client.Runtime is OwnedRuntimeConnection runtime) runtime.BaseDirectory = "/var/copilot";
+    })
+    .ConfigureSession(session => session.Tools.ExcludedTools = ["web_fetch"]));  // SessionOptionsBase (create and resume)
 ```
 
 Both run after the integration's own settings, so they can replace them. `ConfigureClient` is

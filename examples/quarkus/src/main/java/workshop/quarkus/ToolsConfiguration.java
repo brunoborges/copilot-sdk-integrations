@@ -4,13 +4,13 @@ import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import com.github.copilot.rpc.PermissionHandler;
+import com.microsoft.copilot.rpc.PermissionHandler;
 import workshop.common.AccessibilityTools;
 import workshop.common.MuseumTools;
 import workshop.common.BrowserOptions;
 import workshop.common.ToolPermissions;
 import workshop.common.WikipediaResearch;
-import com.github.copilot.rpc.McpStdioServerConfig;
+import com.microsoft.copilot.rpc.McpStdioServerConfig;
 
 @Singleton
 public class ToolsConfiguration {
